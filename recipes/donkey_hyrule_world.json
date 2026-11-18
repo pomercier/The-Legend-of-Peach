@@ -1,0 +1,17 @@
+{
+  "name": "Donkey Kong dans Hyrule (Crossover 3 Jeux !)",
+  "custom_title": "DONKEY HYRULE WORLD",
+  "base_rom": "roms/zelda_alttp.sfc",
+  "donors": [
+    { "alias": "smw", "path": "roms/super_mario_world.sfc" },
+    { "alias": "dkc", "path": "roms/donkey_kong_country.sfc" }
+  ],
+  "rules": [
+    { "target": "hero", "donor": "dkc", "source": "dk" },
+    { "target": "audio_percussion", "donor": "dkc", "source": "percussion" },
+    { "target": "soldiers", "donor": "smw", "source": "goomba" },
+    { "target": "elite_knights", "donor": "smw", "source": "spiny" },
+    { "target": "sewer_enemies", "donor": "smw", "source": "sewer_pack" },
+    { "target": "items", "donor": "smw", "source": "items_pack" }
+  ]
+}

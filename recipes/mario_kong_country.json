@@ -1,0 +1,13 @@
+{
+  "name": "Mario dans Donkey Kong Country",
+  "custom_title": "MARIO KONG COUNTRY",
+  "base_rom": "roms/donkey_kong_country.sfc",
+  "donors": [
+    { "alias": "smw", "path": "roms/super_mario_world.sfc" },
+    { "alias": "zelda", "path": "roms/zelda_alttp.sfc" }
+  ],
+  "rules": [
+    { "target": "hero", "donor": "smw", "source": "mario" },
+    { "target": "audio_percussion", "donor": "zelda", "source": "percussion" }
+  ]
+}
