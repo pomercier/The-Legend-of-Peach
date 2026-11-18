@@ -378,7 +378,7 @@ fn find_alttp_gfx_table(zelda: &[u8]) -> Option<(usize, usize, usize)> {
     None
 }
 
-fn load_alttp_3bpp_sheet(zelda: &[u8], sheet: usize) -> Option<(Vec<u8>, usize, usize)> {
+pub(crate) fn load_alttp_3bpp_sheet(zelda: &[u8], sheet: usize) -> Option<(Vec<u8>, usize, usize)> {
     let (z_bk, z_hi, z_lo) = find_alttp_gfx_table(zelda)?;
     if sheet >= 223 {
         return None;
@@ -2050,7 +2050,7 @@ fn apply_rule_to_zelda(
                 }
             }
         }
-        "world_rocks" => {
+        "world_rocks" | "rocks" => {
             if let Some((tile, _)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, false) {
                 for &ow_sheet in &[0x06usize, 0x07, 0x08] {
                     if patch_alttp_comp_sheet_helper(

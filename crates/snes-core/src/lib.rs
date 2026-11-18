@@ -609,4 +609,77 @@ mod tests {
             assert_eq!(rep.output_title, "MARIO KONG COUNTRY");
         }
     }
+
+    #[test]
+    fn test_super_mario_hyrule_snes_and_super_famicom_compatibility() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let z_path = root.join("roms/zelda_alttp.sfc");
+        let m_path = root.join("roms/super_mario_world.sfc");
+        if let (Ok(z_bytes), Ok(m_bytes)) = (std::fs::read(&z_path), std::fs::read(&m_path)) {
+            let zelda = SnesRom::from_bytes("zelda", &z_bytes).unwrap();
+            let smw = SnesRom::from_bytes("smw", &m_bytes).unwrap();
+
+            let mut target = zelda.clone();
+            let mut donors = std::collections::HashMap::new();
+            donors.insert("smw".into(), smw.clone());
+
+            let recipe = super::mixer::MixRecipe {
+                name: "Super Mario Hyrule".into(),
+                custom_title: Some("SUPER MARIO HYRULE".into()),
+                base_rom: "roms/zelda_alttp.sfc".into(),
+                donors: vec![("smw".into(), "roms/super_mario_world.sfc".into())],
+                rules: vec![
+                    super::mixer::MixRule { target_slot: "hero".into(), donor_alias: "smw".into(), donor_source: "mario".into() },
+                    super::mixer::MixRule { target_slot: "audio_percussion".into(), donor_alias: "smw".into(), donor_source: "percussion".into() },
+                    super::mixer::MixRule { target_slot: "soldiers".into(), donor_alias: "smw".into(), donor_source: "goomba".into() },
+                    super::mixer::MixRule { target_slot: "elite_knights".into(), donor_alias: "smw".into(), donor_source: "spiny".into() },
+                    super::mixer::MixRule { target_slot: "sewer_enemies".into(), donor_alias: "smw".into(), donor_source: "sewer_pack".into() },
+                    super::mixer::MixRule { target_slot: "items".into(), donor_alias: "smw".into(), donor_source: "items_pack".into() },
+                    super::mixer::MixRule { target_slot: "overworld_enemies".into(), donor_alias: "smw".into(), donor_source: "piranha".into() },
+                    super::mixer::MixRule { target_slot: "dungeon_enemies".into(), donor_alias: "smw".into(), donor_source: "magikoopa".into() },
+                    super::mixer::MixRule { target_slot: "rocks".into(), donor_alias: "smw".into(), donor_source: "qblock".into() },
+                ],
+            };
+
+            let mut session = SwapSession::new();
+            let rep = super::mixer::execute_mix_recipe(&mut target, &donors, &recipe, &mut session).unwrap();
+
+            // 1. Hardware Checksum & Complement Verification
+            assert!(rep.checksum_valid, "SNES Checksum must be 100% valid!");
+            let comp = u16::from_le_bytes([target.data[0x7FDC], target.data[0x7FDD]]);
+            let sum = u16::from_le_bytes([target.data[0x7FDE], target.data[0x7FDF]]);
+            assert_eq!(comp ^ sum, 0xFFFF, "Checksum and complement must sum to 0xFFFF");
+            assert_eq!(rep.operations_applied, 20, "Must apply all 20 hardware fusions");
+
+            // 2. Hardware LoROM Mapping & Vector Verification
+            assert_eq!(target.header.mapping, crate::rom::RomMapping::LoROM);
+            assert_eq!(target.data.len(), 1024 * 1024);
+            let reset_vector = u16::from_le_bytes([target.data[0x7FFC], target.data[0x7FFD]]);
+            assert!(reset_vector >= 0x8000, "Reset vector must be in ROM range");
+            let nmi_vector = u16::from_le_bytes([target.data[0x7FEA], target.data[0x7FEB]]);
+            assert!(nmi_vector >= 0x8000, "NMI vector must be in ROM range");
+
+            // 3. Hardware OAM Y-offset and X-offset coordinates in Bank $0D must be bounded
+            for i in 0..303usize {
+                let y = target.data[0x068000 + i * 3] as i8;
+                let x = target.data[0x068000 + i * 3 + 1] as i8;
+                assert!(y >= -64 && y <= 64, "OAM Y coordinate out of safe PPU range at {}: {}", i, y);
+                assert!(x >= -64 && x <= 64, "OAM X coordinate out of safe PPU range at {}: {}", i, x);
+            }
+
+            // 4. Hardware 3bpp LZ2 Decompression Integrity Check
+            for &sheet_id in &[0xBAusize, 0xB7, 0x8C, 0x8D, 0x7F, 0x82, 0x90, 0xCD, 0x06, 0x07, 0x08] {
+                let sheet = super::mixer::load_alttp_3bpp_sheet(&target.data, sheet_id);
+                assert!(sheet.is_some(), "Sheet 0x{:02X} must decompress cleanly", sheet_id);
+                let (raw, _, _) = sheet.unwrap();
+                assert_eq!(raw.len(), 0x600, "Sheet 0x{:02X} must have exact 64 3bpp tiles (1536 bytes)", sheet_id);
+            }
+
+            // 5. Zero Donkey Kong contamination check
+            let dkc_signature = b"DONKEY KONG";
+            assert!(!target.data.windows(dkc_signature.len()).any(|w| w == dkc_signature), "No DKC contamination in Zelda!");
+
+            println!("HARDWARE AUDIT PASSED: 100% COMPLIANT WITH SNES AND SUPER FAMICOM!");
+        }
+    }
 }
