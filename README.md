@@ -32,7 +32,7 @@
 
 **The Legend of Peach: A Mario to the Mushroom Kingdom** is a fan-made Super Nintendo (SNES) total-conversion crossover that transforms *The Legend of Zelda: A Link to the Past* into a sprawling 16-bit *Super Mario World* action-adventure.
 
-Powered by a pure, headless **Rust** binary transformation engine, the project reads your own legally obtained original backups of *A Link to the Past* and *Super Mario World*, applies **177 verified SNES hardware patches** across graphics, 65c816 assembly, palettes, world tilesets, bosses, and native SPC700 N-SPC music, and outputs a **bit-for-bit deterministic 2 MiB SNES LoROM cartridge image**.
+Powered by a pure, headless **Rust** binary transformation engine, the project reads your own legally obtained original backups of *A Link to the Past* and *Super Mario World*, applies **182 verified SNES hardware patches** across graphics, 65c816 assembly, palettes, world tilesets, all 12 bosses, live French dialogue & compression dictionaries, and **13 native SPC700 N-SPC music tracks**, and outputs a **bit-for-bit deterministic 2 MiB SNES LoROM cartridge image**.
 
 > **Zero Copyrighted ROMs Included:** This repository contains **only original Rust source code, tooling, and documentation**. You must provide your own legal personal backups of both required SNES games to build the crossover locally. See [Required Original Games](#required-original-games).
 
@@ -40,7 +40,7 @@ Powered by a pure, headless **Rust** binary transformation engine, the project r
 
 ## Gameplay Showcase
 
-All screenshots below are **authentic, unretouched captures** from the locally built ROM running live in **Mednafen (`snes_faust` and cycle-accurate `bsnes`)**, integer-scaled `3×` nearest-neighbor (`768×672`) directly from native `256×224` SNES video output.
+All screenshots below are **authentic, unretouched captures** from the locally built `v0.2.0` ROM running live in **Mednafen (`snes_faust` and cycle-accurate `bsnes`)**, integer-scaled `3×` nearest-neighbor (`768×672`) directly from native `256×224` SNES video output.
 
 <table>
   <tr>
@@ -50,27 +50,27 @@ All screenshots below are **authentic, unretouched captures** from the locally b
     </td>
     <td align="center" width="50%">
       <img src="docs/media/screenshots/02_overworld_mario.png" alt="Mario outside his Mushroom-roof house in the overworld" width="100%" /><br />
-      <sub><strong>Mushroom Kingdom Overworld</strong> — Mario outside his red polka-dot Mushroom Roof house with SMW smiling bushes, Turn-Blocks, patrolling Koopa, and Mario HUD.</sub>
+      <sub><strong>Mushroom Kingdom Overworld</strong> — Mario outside his red polka-dot Mushroom Roof house with SMW smiling bushes, Turn-Blocks, patrolling Koopa, and sleek Bullet Bill HUD.</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/media/screenshots/03_magikoopa_shop.png" alt="Kamek Magikoopa shop selling Super Mushroom, Yoshi Berry, and Black Bob-omb" width="100%" /><br />
-      <sub><strong>Kamek's Toad Town Shop</strong> — Magikoopa shopkeeper stocking Super Mushrooms, Yoshi Berries, and Black Bob-ombs for Gold Coins.</sub>
+      <img src="docs/media/screenshots/11_start_menu_yoshis.png" alt="Start Menu with YOSHIS 7 Spotted Yoshi Eggs, Bullet Bill, Bob-ombs, Fire Flower, and Emerald Green Koopa Shell Shield" width="100%" /><br />
+      <sub><strong>Mario Start Inventory Menu</strong> — Jet-Black Bullet Bill &amp; Bob-ombs, Fire Flower, SMW Hammer, <strong>7 Spotted SMW Yoshi Eggs</strong> (<code>YOSHIS</code>), and Emerald Green Koopa Shell shield.</sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/media/screenshots/04_bowser_castle.png" alt="Bowser's Final Castle with SMW bricks and carved Stone King Bowser Statues" width="100%" /><br />
-      <sub><strong>Bowser's Castle Architecture</strong> — Dungeon brick walls and carved Stone King Bowser Statues replacing Hyrule stonework.</sub>
+      <img src="docs/media/screenshots/03_magikoopa_shop.png" alt="Kamek Magikoopa shop selling Super Mushroom (150), Mini-Mushroom (10), and 10 Jet-Black Bob-ombs (50)" width="100%" /><br />
+      <sub><strong>Kamek's Toad Town Shop</strong> — Magikoopa shopkeeper with crisp <code>150 / 10 / 50</code> coin prices, Super Mushroom, and 10-pack Jet-Black SMW Bob-ombs.</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/media/screenshots/07_boss_lemmy_circus.png" alt="Koopaling #5 Lemmy Koopa boss fight in the Ice Palace" width="100%" /><br />
-      <sub><strong>Koopaling #5 — Lemmy Koopa</strong> — Rainbow Mohawk and bouncing circus ball encased in the Ice Palace crystal chamber.</sub>
+      <img src="docs/media/screenshots/12_boss_chargin_chucks.png" alt="Eastern Palace Boss — 6 Giant 32x32 Hopping SMW Chargin' Chucks" width="100%" /><br />
+      <sub><strong>Eastern Palace Boss — 6 Chargin' Chucks</strong> — Seamless 32×32 hopping SMW Chargin' Chucks replacing Armos Knights (enraged blazing red on the final survivor!).</sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/media/screenshots/09_boss_king_bowser.png" alt="Final Boss Giant King Bowser in the Pyramid" width="100%" /><br />
-      <sub><strong>Final Showdown — Giant King Bowser</strong> — Multi-sheet King Bowser with emerald spiked shell, crimson mane, and exclusive BGR555 palettes.</sub>
+      <img src="docs/media/screenshots/09_boss_king_bowser.png" alt="Final Boss Giant King Bowser in cycle-accurate bsnes" width="100%" /><br />
+      <sub><strong>Final Showdown — Giant King Bowser (bsnes)</strong> — Multi-sheet King Bowser with emerald spiked shell, crimson mane, exclusive BGR555 palettes, and dedicated Final Bowser N-SPC theme.</sub>
     </td>
   </tr>
 </table>
@@ -82,23 +82,25 @@ All screenshots below are **authentic, unretouched captures** from the locally b
 ### World, Characters & Visual Overhaul
 - **Custom 3D Intro & Title Sequence:** 32 pre-rendered 4bpp frames of rotating 3D Super Mushroom, Fire Flower, and Super Star relics streamed via custom 65c816 VBlank DMA routines in LoROM banks `$20..$22`, paired with the giant **`THE LEGEND OF PEACH: A MARIO TO THE MUSHROOM KINGDOM`** title logo and rewritten story crawl.
 - **Playable Hero & Mushroom Kingdom Cast:**
-  - Full playable **Mario** animation set (walk, sword slash, Green Koopa Shell shield, spin attack, and overhead block/bush carry with fixed OAM carry-height offset).
+  - Full playable **Mario** animation set (walk, sword slash, Emerald Green Koopa Shell shield, spin attack, and overhead block/bush carry with fixed OAM carry-height offset).
   - **Princess Peach**, **Uncle Luigi** (rebuilt from Mario's proportions in green with clean OAM head/body alignment), **Toad**, **Yoshi**, and **Kamek (Magikoopa)** shopkeeper.
-- **Mario HUD & Inventory:** Gold Coins, Black Bob-ombs, Bullet Bills, Bill Blaster, Green Koopa Shell, Super Mushroom life containers, and Mushroom / Fire Flower / Super Star quest relics.
-- **16-Sheet SMW Bestiary:** Koopa Troopas (with corrected weapon grip offsets), Goombas, Spinies, Rex, Spike Tops, Piranha Plants, Boos, Dry Bones, Thwomps, and Cheep Cheeps across overworld, caves, water, and dungeons.
-- **9 Worldwide Background Tilesets:** Mario's red polka-dot Mushroom Roof house (`bg:4D`), SMW smiling bushes, Turn-Blocks, Question Blocks, SMW Castle Brick walls (`bg:0D`), and carved Stone King Bowser Statues (`bg:18/19`).
+- **Cohesive Mario HUD & Start Inventory:** Jet-Black & White **SMW Bullet Bill** (`BILL BLASTER`), **Jet-Black SMW Bob-ombs** across HUD, ground drops, chests, and shops (zero blue bombs anywhere!), Gold Coins, Super Mushroom life containers, **`YOSHIS` 7 Spotted SMW Yoshi Eggs**, Emerald Green Koopa Shell shield, and Mushroom / Fire Flower / Super Star quest relics.
+- **16-Sheet SMW Bestiary & 9 Worldwide Tilesets:** Koopa Troopas (with corrected weapon grip offsets), Goombas, Spinies, Rex, Spike Tops, Piranha Plants, Boos, Dry Bones, Thwomps, Cheep Cheeps, Mario's red polka-dot Mushroom Roof house (`bg:4D`), SMW smiling bushes, Turn-Blocks, Question Blocks, SMW Castle Brick walls (`bg:0D`), and carved Stone King Bowser Statues (`bg:18/19`).
+- **Full French Script & Compression Dictionary Conversion:** Live-patched Bank `$0C` French compression dictionary (`Ganon` → `Bowser`, `rubis` → `pièces`, `Sahasrahla` → `Papy Toad`, `Perle de Lune` → `Lune 3-UP`) plus Bank `$1C` script rewriting (`Zelda` → `Peach`, `Agahnim` → `Bowser`, `Hyrule` → `Champi`, `Cocorico` → `ToadTown`, `Excalibur` → `Épée Star`, `Sages` → `Toads`, `jeunes filles` → `jeunes Yoshi`).
 
-### Complete Boss Roster
+### Complete 100% Super Mario World Boss Roster (All 12 Bosses!)
+- **Eastern Palace:** **6 Giant 32×32 Hopping SMW Chargin' Chucks** (blue football gear turning enraged red on the final survivor).
+- **Desert Palace & Tower of Hera:** **3 Giant Pokeys** and **Giant Wiggler**.
+- **Castle Tower:** **King Bowser** (symmetric 32×32 front, back, and upgraded golden-snout side profile with zero leftover vanilla Agahnim tiles).
 - **All 7 Koopalings:** Morton Koopa Jr. (iron spiked visor & flaming mace tail), Wendy O. Koopa (candy rings), Winged Iggy Koopa, Roy Koopa (pink shades), Lemmy Koopa (rainbow Mohawk & circus ball), Larry Koopa (+12 Mini-Spinies), and Ludwig von Koopa (+Dino Torch & Frost Koopa).
-- **Classic Giant Bosses:** **3 Giant Pokeys** (Desert Palace) and **Giant Wiggler** (Tower of Hera).
 - **Final Boss:** **Giant King Bowser** built across 4 dedicated sprite sheets and 2 exclusive BGR555 palettes.
 
-### Native SNES Hardware Audio (No MSU-1 Required)
-- **10 Native SPC700 N-SPC Tracks:** Super Mario melodies compiled directly into *A Link to the Past*'s native `$D000` N-SPC audio engine — including Title/Overworld, SMW Athletic, Ghost House, Underground, Koopalings/Bowser Boss battles, and Fanfares — running natively on the SNES Sony SPC700 sound chip.
+### Native SNES Hardware Audio (13 N-SPC Tracks — No MSU-1 Required)
+- **13 Native SPC700 N-SPC Tracks:** Super Mario melodies compiled directly into *A Link to the Past*'s native `$D000` N-SPC audio engine — including Title/Intro (SMB 1-1), Light World Overworld (SMW Overworld), Toad Town & Lost Woods (SMW Athletic), Dark World Overworld (**SMW Valley of Bowser**), Kamek/Toad Shops (**SMW Bonus Room / Yoshi's House**), Haunted Dungeons (SMW Ghost House), Castles (SMW Castle), Underground Caves (SMB 1-2), Koopalings Bosses (SMW Koopalings), Final Showdown (**SMW Final King Bowser Battle**), Sanctuary (SMW Peach), Starman Action, and Course Clear Fanfare.
 
 ### Pure Rust Reproducible Build Pipeline
 - **Strict SHA-256 Input Enforcement:** Automatically strips optional 512-byte SMC copier headers in memory and verifies exact No-Intro input ROM hashes before touching a byte.
-- **100% Deterministic 2 MiB LoROM Output:** Compiles and builds in under 1 second, automatically audits bank alignment, zero patch overlaps, LC_LZ2 decompression round-trips across all 46 modified sheets, and valid SNES header checksum/complement (`0x464D` / `0xB9B2`).
+- **100% Deterministic 2 MiB LoROM Output:** Compiles and builds in under 1 second, automatically audits bank alignment, zero patch overlaps, LC_LZ2 decompression round-trips across all 46 modified sheets, and valid SNES header checksum/complement (`0xEE72` / `0x118D`).
 
 ---
 
@@ -106,7 +108,7 @@ All screenshots below are **authentic, unretouched captures** from the locally b
 
 Storm clouds gather over the Mushroom Kingdom. **Princess Peach** calls out telepathically from the castle dungeon, where **Bowser** and his seven **Koopalings** have seized control of the royal strongholds and twisted the realm into a dark shadow of itself.
 
-Waking in his mushroom-roofed home alongside **Uncle Luigi**, **Mario** takes up blade, Green Koopa Shell shield, Bill Blaster, and Black Bob-ombs — venturing across smiling overworld hills, Toad Town's Magikoopa shop, haunted castles, Bowser-guarded temples, and the Dark World Mushroom Pyramid to defeat every Koopaling and confront **Giant King Bowser** in the final chamber.
+Waking in his mushroom-roofed home alongside **Uncle Luigi**, **Mario** takes up blade, Emerald Green Koopa Shell shield, Bill Blaster, and Jet-Black Bob-ombs — venturing across smiling overworld hills, Toad Town's Magikoopa shop, Eastern Palace's squad of Chargin' Chucks, haunted castles, Bowser-guarded temples, and the Dark World Mushroom Pyramid to rescue the 7 Yoshis and confront **Giant King Bowser** in the final chamber.
 
 ---
 
@@ -165,7 +167,7 @@ Both original ROMs below are verified locally against **No-Intro** SNES catalog 
 | **Base ROM** | *The Legend of Zelda: A Link to the Past* (`Legend of Zelda, The - A Link to the Past (France).sfc`) | France (PAL), Rev 1.0 | `1,048,576` B (1 MiB) | `29a0d5812ccbb4b11bdb55d8f751a2a797b4110bf402ca8ba15eb2bf85db7b39` |
 | **Donor ROM** | *Super Mario World* (`Super Mario World (Europe).sfc`) | Europe (PAL), Rev 1.0 | `524,288` B (512 KiB) | `b5be1dba3012b6811a5660fbf2981cb23cdd1e48f845a42df00f0f55b19f0392` |
 
-> Full verification details (SHA-1, CRC32, OS checksum commands, expected output SHA-256 `32540c4629c6b797f6933c7966a419fd959a3f711f36347f4348ceb2fa85b99c`, and why exact revisions are strictly enforced) are documented in [`docs/ROM_REQUIREMENTS.md`](docs/ROM_REQUIREMENTS.md).
+> Full verification details (SHA-1, CRC32, OS checksum commands, expected `v0.2.0` output SHA-256 `c700d1d2b60f50e789e2214fa8528c0c3af132ebc8af35a2f7ced5aa16735edb`, and why exact revisions are strictly enforced) are documented in [`docs/ROM_REQUIREMENTS.md`](docs/ROM_REQUIREMENTS.md).
 
 ---
 
@@ -176,28 +178,39 @@ Both original ROMs below are verified locally against **No-Intro** SNES catalog 
                            ├──► SHA-256 Verifier ──► Planar Tile & Palette Transcoder
   [Super Mario World (EU)] ┘        (rom.rs)          + LC_LZ2 Compressor (46 sheets)
                                                       + 65c816 3D Intro & OAM Patches
-                                                      + Native SPC700 N-SPC Compiler
+                                                      + Live FR Dictionary & Script Engine
+                                                      + Native SPC700 N-SPC Compiler (13 tracks)
                                                                    │
                                                                    ▼
                                                       LoROM 2 MiB Allocator ($00..$3F)
                                                       + Hardware Integrity Audit
-                                                      + SNES Checksum (0x464D / 0xB9B2)
+                                                      + SNES Checksum (0xEE72 / 0x118D)
                                                                    │
                                                                    ▼
                                                    [build/legend_of_peach.sfc] (Local)
 ```
 
-Read the full technical deep-dive — including the 2 MiB LoROM bank map, reserved `$20..$22` 3D DMA intro buffers, protected world-map zones, and post-build audit checks — in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+Read the full technical deep-dive — including the 2 MiB LoROM bank map, reserved `$20..$22` 3D DMA intro buffers, Bank `$0C` live dictionary architecture, and post-build audit checks — in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ---
 
-## More Screenshots — Dungeons & Bosses
+## More Screenshots — Castles, Dungeons & Bosses
 
 <table>
   <tr>
     <td align="center" width="50%">
+      <img src="docs/media/screenshots/13_boss_agahnim_bowser.png" alt="Castle Tower King Bowser Boss Fight with upgraded golden-snout side profile" width="100%" /><br />
+      <sub><strong>Castle Tower Boss — King Bowser</strong> — Upgraded front and golden-snout side profile casting energy spheres across the royal tower.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/media/screenshots/04_bowser_castle.png" alt="Bowser's Final Castle with SMW bricks and carved Stone King Bowser Statues" width="100%" /><br />
+      <sub><strong>Bowser's Castle Architecture</strong> — Dungeon brick walls and carved Stone King Bowser Statues replacing Hyrule stonework.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
       <img src="docs/media/screenshots/05_dark_world_pyramid.png" alt="Dark World Mushroom Pyramid with green carved Stone King Bowser Statues" width="100%" /><br />
-      <sub><strong>Dark World Mushroom Pyramid</strong> — Mario standing between carved emerald Stone Bowser Statues.</sub>
+      <sub><strong>Dark World Mushroom Pyramid</strong> — Descending between carved emerald Stone Bowser Statues to the new <em>SMW Valley of Bowser</em> N-SPC theme.</sub>
     </td>
     <td align="center" width="50%">
       <img src="docs/media/screenshots/06_boss_morton_koopa.png" alt="Koopaling #1 Morton Koopa Jr. boss battle" width="100%" /><br />
@@ -206,12 +219,21 @@ Read the full technical deep-dive — including the 2 MiB LoROM bank map, reserv
   </tr>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/media/screenshots/08_boss_wiggler.png" alt="Giant Wiggler boss battle in Tower of Hera" width="100%" /><br />
-      <sub><strong>Tower of Hera — Giant Wiggler</strong> — Multi-segmented SMW Wiggler charging across the tower summit.</sub>
+      <img src="docs/media/screenshots/07_boss_lemmy_circus.png" alt="Koopaling #5 Lemmy Koopa boss fight in the Ice Palace" width="100%" /><br />
+      <sub><strong>Koopaling #5 — Lemmy Koopa</strong> — Rainbow Mohawk and bouncing circus ball encased in the Ice Palace crystal chamber.</sub>
     </td>
     <td align="center" width="50%">
       <img src="docs/media/screenshots/10_boss_ludwig_trinity.png" alt="Koopaling #7 Ludwig von Koopa with Dino Torch and Frost Koopa" width="100%" /><br />
       <sub><strong>Koopaling #7 — Ludwig von Koopa</strong> — Turtle Rock trinity with Dino Torch (fire) and Frost Koopa (ice) heads.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/media/screenshots/08_boss_wiggler.png" alt="Giant Wiggler boss battle in Tower of Hera" width="100%" /><br />
+      <sub><strong>Tower of Hera — Giant Wiggler</strong> — Multi-segmented SMW Wiggler charging across the tower summit.</sub>
+    </td>
+    <td align="center" width="50%">
+      <sub><strong>All 12 Bosses Transformed:</strong> Eastern Palace (6 Chargin' Chucks), Desert Palace (3 Giant Pokeys), Tower of Hera (Giant Wiggler), Castle Tower (King Bowser), Palace of Darkness (Morton Jr.), Swamp Palace (Wendy), Skull Woods (Iggy), Thieves' Town (Roy), Ice Palace (Lemmy), Misery Mire (Larry), Turtle Rock (Ludwig), and Pyramid Final Boss (Giant King Bowser).</sub>
     </td>
   </tr>
 </table>
@@ -222,21 +244,21 @@ Read the full technical deep-dive — including the 2 MiB LoROM bank map, reserv
 
 | Target | Status | Notes |
 | :--- | :--- | :--- |
-| **Mednafen (`snes_faust`)** | **Verified** | Live-tested across title screen, overworld, shops, Dark World, castles, all 7 Koopalings, Pokeys, Wiggler, and Giant King Bowser. |
-| **Mednafen (`snes` / bsnes-accuracy)** | **Verified** | Cycle-accurate PPU/DMA verification of the 3D intro, title logo, and gameplay. |
+| **Mednafen (`snes_faust`)** | **Verified** | Live-tested across title screen, Start menu, overworld, Kamek's Shop, Dark World, castles, Eastern Palace Chargin' Chucks, Castle Tower Bowser, all 7 Koopalings, Pokeys, Wiggler, and Giant King Bowser (with verified stereo SPC700 audio RMS). |
+| **Mednafen (`snes` / bsnes-accuracy)** | **Verified** | Cycle-accurate PPU/DMA/SPC700 verification of the 3D intro, title logo, Final Boss Giant King Bowser combat, dialogue, and Final Bowser N-SPC soundtrack. |
 | **bsnes / Ares / RetroArch (`bsnes`, `snes9x`)** | **Expected Compatible** | Standard 2 MiB LoROM (`0x20`, PAL 50 Hz, no enhancement chips, no MSU-1). |
-| **Real SNES / Super Famicom / FXPAK Pro** | **Architecturally Compliant (Untested on Physical Hardware)** | Strictly respects LoROM 32 KiB single-bank boundaries, valid checksum/complement (`0x464D` / `0xB9B2`), OAM/VRAM/CGRAM/SPC700 limits, and clean DMA timing. Community physical-hardware test reports are very welcome! |
+| **Real SNES / Super Famicom / FXPAK Pro** | **Architecturally Compliant (Untested on Physical Hardware)** | Strictly respects LoROM 32 KiB single-bank boundaries, valid checksum/complement (`0xEE72` / `0x118D`), OAM/VRAM/CGRAM/SPC700 limits, and clean DMA timing. Community physical-hardware test reports are very welcome! |
 
 ---
 
 ## Roadmap
 
-Items below are **planned future milestones** (not yet implemented in `v0.1.0`):
+Items below are **planned future milestones** (not yet implemented in `v0.2.0`):
 
 - [ ] **Multi-Region Support:** Add verified offset tables for *The Legend of Zelda: A Link to the Past (USA)* (NTSC 60 Hz, English dialogue) and *Super Mario World (USA)*.
-- [ ] **Overworld Map & Additional Worlds:** Expand overworld world-map graphics, additional interior shops/houses, and Dark World palettes.
+- [ ] **Overworld World Map & Title Landscape:** Replace remaining overworld world-map graphics and Title Screen background mountains with Yoshi's Island hills.
 - [ ] **Physical Hardware Verification:** Test and document behavior on original SNES/Super Famicom consoles via FXPAK Pro / SD2SNES.
-- [ ] **Expanded N-SPC Soundtrack:** Add additional native SPC700 Super Mario World arrangements for remaining dungeon and sanctuary themes.
+- [ ] **Ending & File Select Audio:** Expand native SPC700 arrangements for remaining resident fanfare slots.
 
 ---
 

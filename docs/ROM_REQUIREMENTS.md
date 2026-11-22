@@ -94,14 +94,16 @@ Applying these patches to an unverified revision would corrupt code or graphics,
 
 ## Expected Reproducible Output ROM Signature
 
-When built with this release (`v0.1.0`) from the two verified ROMs above, the locally generated output ROM is **100% deterministic (bit-for-bit identical)** across machines and operating systems:
+When built with release **`v0.2.0`** from the two verified ROMs above, the locally generated output ROM is **100% deterministic (bit-for-bit identical)** across machines and operating systems:
 
-| Field | Deterministic Output Value |
+| Field | Deterministic Output Value (`v0.2.0`) |
 | :--- | :--- |
 | **Output Size** | `2,097,152` bytes (`2 MiB`, LoROM expanded from `1 MiB`) |
 | **Internal Header Title** | `THE LEGEND OF PEACH` |
-| **SNES Checksum / Complement** | `0x464D` / `0xB9B2` (Valid) |
-| **CRC32** | `214FFBF3` |
-| **SHA-256** | `32540c4629c6b797f6933c7966a419fd959a3f711f36347f4348ceb2fa85b99c` |
+| **SNES Checksum / Complement** | `0xEE72` / `0x118D` (Valid) |
+| **CRC32** | `DA56A034` |
+| **SHA-256** | `c700d1d2b60f50e789e2214fa8528c0c3af132ebc8af35a2f7ced5aa16735edb` |
+
+*(Previous release `v0.1.0` SHA-256: `32540c4629c6b797f6933c7966a419fd959a3f711f36347f4348ceb2fa85b99c`, Checksum `0x464D` / `0xB9B2`.)*
 
 > **Never commit, upload, or share the generated ROM file.** Both `roms/` and `build/` as well as all `.sfc`/`.smc` files are ignored by `.gitignore`.

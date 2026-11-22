@@ -19,11 +19,11 @@ The-Legend-of-Peach/
 │       ├── disasm_dma.rs          # Nintendo LC_LZ2 compressor/decompressor, DMA scanner, 65c816 helpers
 │       ├── swapper.rs             # Byte-accurate patch session tracking & rollback-safe patch log
 │       ├── mixer.rs               # 18-rule canonical fusion orchestrator, bank allocator & post-build hardware audit
-│       ├── mario_intro.rs         # 32-frame 3D Mario Trio intro renderer, giant PEACH logo, 65c816 DMA/OAM hooks & story text
-│       ├── mario_ui.rs            # Mario HUD (coins, Bob-ombs, Bullet Bills, Mushroom hearts), inventory, blocks, NPCs & items
+│       ├── mario_intro.rs         # 32-frame 3D Mario Trio intro, giant PEACH logo, 65c816 DMA/OAM hooks, Bank $0C FR dictionary & Bank $1C script engine
+│       ├── mario_ui.rs            # Mario HUD (Bullet Bill, Bob-ombs, coins, Mushroom hearts), Start menu (7 Yoshi Eggs), 6 Chargin' Chucks, Agahnim Bowser & items
 │       ├── mario_world.rs         # Toad Town NPCs, 16 SMW bestiary sheets, 9 worldwide BG tilesets (Bowser Statues, bricks, roofs)
 │       ├── mario_bosses.rs        # All 7 Koopalings, Final Boss Giant King Bowser (4 sheets + 2 palettes), Giant Pokeys, Giant Wiggler
-│       ├── mario_music.rs         # Native ALTTP N-SPC ($D000) music compiler (10 Mario themes in SPC700 hardware format)
+│       ├── mario_music.rs         # Native ALTTP N-SPC ($D000) music compiler (13 Mario themes in SPC700 hardware format)
 │       ├── universal.rs           # Generic cross-ROM catalog & experimental omni-mixer utilities
 │       ├── deconstruct.rs         # Full ROM deconstruct / round-trip reconstruct pipeline
 │       ├── export.rs              # Asset inspection & PNG/WAV export utilities
@@ -69,11 +69,13 @@ During the build, `snes-core` expands the cartridge to a **2 MiB LoROM** image (
 3. **Custom 65c816 Assembly & OAM Fixes (`mario_intro.rs`, `mario_ui.rs`)**
    - Hooks the ALTTP intro/title sequence to stream 32 frames of rotating 3D Mushroom, Fire Flower, and Super Star relics over DMA during VBlank, alongside the rebuilt giant `THE LEGEND OF PEACH` metallic title logo and story crawl.
    - Adjusts OAM carry-height offsets and Uncle/Luigi multi-tile assembly based on verified ALTTP disassembly structures so carried blocks sit cleanly above Mario's cap and Luigi renders cleanly with Mario's proportions in green.
-4. **Native SPC700 N-SPC Soundtrack (`mario_music.rs`)**
-   - Compiles 10 Super Mario melodies directly into ALTTP's native **N-SPC** sequence bytecode format (using ALTTP's existing `$D000` SPC700 sound driver and instrument bank — no external MSU-1 hardware required!).
-   - Themes include Title / Overworld, SMW Athletic, Ghost House, Underground / Caves, Koopalings & Bowser Boss battles, and Victory Fanfares.
-5. **SNES Header Checksum & Post-Build Hardware Audit (`rom.rs`, `mixer.rs`)**
-   - Updates the 21-byte internal SNES title (`THE LEGEND OF PEACH`), sets LoROM 2 MiB size byte (`0x0B`), and recalculates the 16-bit SNES checksum (`0x464D`) and XOR complement (`0xB9B2`).
+4. **Live French Compression Dictionary & Script Engine (`mario_intro.rs`)**
+   - Patches ALTTP's 112-entry French compression dictionary in Bank `$0C` (`0x065A33..0x065CAB`) in-place (net `-3` bytes, exact SNES pointer table recalculated) so `Ganon` → `Bowser`, `rubis` → `pièces`, `Sahasrahla` → `Papy Toad`, and `Perle de Lune` → `Lune 3-UP` across every message globally, paired with exact-length Bank `$1C` script rewriting (`Zelda` → `Peach`, `Hyrule` → `Champi`, `Cocorico` → `ToadTown`, `Excalibur` → `Épée Star`, `Sages` → `Toads`, `jeunes filles` → `jeunes Yoshi`).
+5. **Native SPC700 N-SPC Soundtrack (`mario_music.rs`)**
+   - Compiles 13 Super Mario melodies directly into ALTTP's native **N-SPC** sequence bytecode format (using ALTTP's existing `$D000` SPC700 sound driver and instrument bank — no external MSU-1 hardware required!).
+   - Themes include Title / Overworld, SMW Athletic, Ghost House, Valley of Bowser (Dark World), Bonus Room / Yoshi's House (Shops), Underground / Caves, Castles, Koopalings Bosses, Final King Bowser Showdown, Peach Sanctuary, Starman Action, and Course Clear Fanfare.
+6. **SNES Header Checksum & Post-Build Hardware Audit (`rom.rs`, `mixer.rs`)**
+   - Updates the 21-byte internal SNES title (`THE LEGEND OF PEACH`), sets LoROM 2 MiB size byte (`0x0B`), and recalculates the 16-bit SNES checksum (`0xEE72`) and XOR complement (`0x118D`).
    - Runs `audit_legend_of_peach_output` on every build to guarantee zero patch overlaps, valid bank alignment, lossless LC_LZ2 round-trip across all 46 modified sheets, untouched safety regions, and deterministic output SHA-256.
 
 ---
