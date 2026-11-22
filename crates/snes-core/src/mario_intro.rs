@@ -908,12 +908,59 @@ const FR_DICT: &[(u8, &str)] = &[
     (0xE6, "u "),
 ];
 
+pub(crate) fn encode_fr_char(ch: char) -> u8 {
+    match ch {
+        'A'..='Z' => (ch as u8) - b'A',
+        'a'..='z' => 0x1A + ((ch as u8) - b'a'),
+        '0'..='9' => 0x34 + ((ch as u8) - b'0'),
+        '!' => 0x3E,
+        '?' => 0x3F,
+        '-' => 0x40,
+        '.' => 0x41,
+        ',' => 0x42,
+        '\'' => 0x51,
+        ' ' => 0x59,
+        'ô' => 0x60,
+        'è' => 0x66,
+        'é' => 0x67,
+        'ê' => 0x68,
+        'à' => 0x69,
+        'ù' => 0x6A,
+        'ç' => 0x6B,
+        'â' => 0x6C,
+        'û' => 0x6D,
+        'î' => 0x6E,
+        _ => 0x59,
+    }
+}
+
 pub(crate) fn encode_fr_text(s: &str) -> Vec<u8> {
     let mut out = Vec::with_capacity(s.len());
     let mut rest = s;
     while !rest.is_empty() {
         let mut matched = false;
+        // First match our 3 live-patched Mario dictionary tokens in Bank $0C (0x065A33..0x065CAB):
+        //   0xEE = "Lune 3-UP", 0xEA = "Bowser", 0xD4 = "pièces"!
+        for &(tok, pat) in &[
+            (0xEEu8, "Lune 3-UP"),
+            (0xEAu8, "Bowser"),
+            (0xD4u8, "pièces"),
+        ] {
+            if rest.starts_with(pat) {
+                out.push(tok);
+                rest = &rest[pat.len()..];
+                matched = true;
+                break;
+            }
+        }
+        if matched {
+            continue;
+        }
         for &(tok, pat) in FR_DICT {
+            // Skip vanilla dictionary entries whose live Bank $0C strings were upgraded to Mario terms!
+            if matches!(tok, 0xD4 | 0xEA | 0xEE) {
+                continue;
+            }
             if rest.starts_with(pat) {
                 out.push(tok);
                 rest = &rest[pat.len()..];
@@ -926,32 +973,94 @@ pub(crate) fn encode_fr_text(s: &str) -> Vec<u8> {
         }
         let ch = rest.chars().next().unwrap();
         rest = &rest[ch.len_utf8()..];
-        let b = match ch {
-            'A'..='Z' => (ch as u8) - b'A',
-            'a'..='z' => 0x1A + ((ch as u8) - b'a'),
-            '0'..='9' => 0x34 + ((ch as u8) - b'0'),
-            '!' => 0x3E,
-            '?' => 0x3F,
-            '-' => 0x40,
-            '.' => 0x41,
-            ',' => 0x42,
-            '\'' => 0x51,
-            ' ' => 0x59,
-            'ô' => 0x60,
-            'è' => 0x66,
-            'é' => 0x67,
-            'ê' => 0x68,
-            'à' => 0x69,
-            'ù' => 0x6A,
-            'ç' => 0x6B,
-            'â' => 0x6C,
-            'û' => 0x6D,
-            'î' => 0x6E,
-            _ => 0x59,
-        };
-        out.push(b);
+        out.push(encode_fr_char(ch));
     }
     out
+}
+
+/// Patch the live French ALTTP Compression Dictionary in Bank `$0C` (`0x065A33..0x065CAB`) IN-PLACE:
+///   - `0x99`: `", c'est moi, Sahasrahla"` -> `", c'est moi, Papy Toad"` (-1B)
+///   - `0xD4`: `"rubis"`                   -> `"pièces"`                 (+1B)
+///   - `0xEA`: `"Ganon"`                   -> `"Bowser"`                 (+1B)
+///   - `0xEE`: `"Perle de Lune"`           -> `"Lune 3-UP"`              (-4B)
+/// Net delta = -3 bytes (403 <= 406 bytes): zero expansion, exact SNES pointer table recalculated!
+fn patch_french_dictionary_bank0c(
+    rom_zelda: &mut SnesRom,
+    session: &mut SwapSession,
+) -> Result<usize, RomError> {
+    const TBL_PC: usize = 0x065A33;
+    const DATA_START_PC: usize = 0x065B15;
+    const DATA_END_PC: usize = 0x065CAB;
+    const NUM_TOKS: usize = 112; // 0x90..=0xFF (113 pointers including end sentinel)
+
+    if DATA_END_PC > rom_zelda.data.len() {
+        return Ok(0);
+    }
+    let p_first = u16::from_le_bytes([rom_zelda.data[TBL_PC], rom_zelda.data[TBL_PC + 1]]);
+    let p_end = u16::from_le_bytes([
+        rom_zelda.data[TBL_PC + NUM_TOKS * 2],
+        rom_zelda.data[TBL_PC + NUM_TOKS * 2 + 1],
+    ]);
+    if p_first != 0xDB15 || p_end != 0xDCAB {
+        return Ok(0);
+    }
+
+    let encode_raw_chars = |text: &str| -> Vec<u8> { text.chars().map(encode_fr_char).collect() };
+    let mut new_ptrs = Vec::with_capacity((NUM_TOKS + 1) * 2);
+    let mut new_data = Vec::with_capacity(DATA_END_PC - DATA_START_PC);
+
+    for idx in 0..NUM_TOKS {
+        let tok = 0x90usize + idx;
+        let p0 = u16::from_le_bytes([
+            rom_zelda.data[TBL_PC + idx * 2],
+            rom_zelda.data[TBL_PC + idx * 2 + 1],
+        ]);
+        let p1 = u16::from_le_bytes([
+            rom_zelda.data[TBL_PC + (idx + 1) * 2],
+            rom_zelda.data[TBL_PC + (idx + 1) * 2 + 1],
+        ]);
+        let pc0 = 0x060000 + ((p0 as usize) - 0x8000);
+        let pc1 = 0x060000 + ((p1 as usize) - 0x8000);
+        let cur_snes = 0xDB15u16 + (new_data.len() as u16);
+        new_ptrs.extend_from_slice(&cur_snes.to_le_bytes());
+
+        let entry_bytes: Vec<u8> = match tok {
+            0x99 => encode_raw_chars(", c'est moi, Papy Toad"),
+            0xD4 => encode_raw_chars("pièces"),
+            0xEA => encode_raw_chars("Bowser"),
+            0xEE => encode_raw_chars("Lune 3-UP"),
+            _ => rom_zelda.data[pc0..pc1].to_vec(),
+        };
+        new_data.extend_from_slice(&entry_bytes);
+    }
+
+    let max_len = DATA_END_PC - DATA_START_PC;
+    if new_data.len() > max_len {
+        return Ok(0);
+    }
+    let final_snes = 0xDB15u16 + (new_data.len() as u16);
+    new_ptrs.extend_from_slice(&final_snes.to_le_bytes());
+    while new_data.len() < max_len {
+        new_data.push(0x59);
+    }
+
+    let mut full_block = Vec::with_capacity(DATA_END_PC - TBL_PC);
+    full_block.extend_from_slice(&new_ptrs);
+    // Preserve exact bytes between end of pointer table and DATA_START_PC (empty if adjacent: 0x65A33 + 226 = 0x65B15!)
+    debug_assert_eq!(TBL_PC + new_ptrs.len(), DATA_START_PC);
+    full_block.extend_from_slice(&new_data);
+
+    session.swap_custom_bytes(
+        rom_zelda,
+        TBL_PC,
+        TBL_PC,
+        full_block,
+        "Dictionnaire FR Bank $0C (0x065A33) : Ganon→Bowser, rubis→pièces, Sahasrahla→Papy Toad, Perle de Lune→Lune 3-UP".into(),
+        SwapKind::CodePatch {
+            byte_count: DATA_END_PC - TBL_PC,
+        },
+    )?;
+    Ok(1)
 }
 
 enum Seg<'a> {
@@ -1086,6 +1195,8 @@ fn rewrite_fr_dialog_in_place(raw_msg: &[u8]) -> Option<Vec<u8>> {
                 .replace("du sorcier Bowser", "de Bowser")
                 .replace("au sorcier Bowser", "à Bowser")
                 .replace("sorcier Bowser", "Bowser")
+                .replace("Bowser le sombre", "Bowser, le roi")
+                .replace("sorcier !", "Koopa !")
                 .replace("les 7 jeunes filles", "les 7 jeunes Yoshi")
                 .replace("jeunes filles enlevées", "jeunes Yoshi enlevés")
                 .replace("jeunes filles disparues", "jeunes Yoshi disparus")
@@ -1099,9 +1210,24 @@ fn rewrite_fr_dialog_in_place(raw_msg: &[u8]) -> Option<Vec<u8>> {
                 .replace("Pendentif", "Relique")
                 .replace("de la Triforce", "des Reliques")
                 .replace("à la Triforce", "aux Reliques")
+                .replace("la Triforce a créé", "la Relique a créé")
+                .replace("La Triforce a créé", "La Relique a créé")
                 .replace("la Triforce", "les Reliques")
                 .replace("La Triforce", "Les Reliques")
-                .replace("Triforce", "Reliques");
+                .replace("Triforce", "Reliques")
+                .replace("d'Hyrule", "Champi")
+                .replace("Hyrule", "Champi")
+                .replace("de Cocorico", "ToadTown")
+                .replace("Cocorico", "ToadTown")
+                .replace("Sahasrahla", "Papy Toad")
+                .replace("Excalibur", "Épée Star")
+                .replace("7 Sages", "7 Toads")
+                .replace("Sages", "Toads")
+                .replace("sages", "Toads")
+                .replace("Perle de Lune", "Lune 3-UP")
+                .replace("rubis", "pièces")
+                .replace("Rubis", "Pièces")
+                .replace("Ganon", "Bowser");
             if next.ends_with("les jeunes")
                 || next.ends_with("des jeunes")
                 || next.ends_with("Les jeunes")
@@ -1133,6 +1259,13 @@ fn rewrite_fr_dialog_in_place(raw_msg: &[u8]) -> Option<Vec<u8>> {
                     .replace("le sorcier", "Bowser")
                     .replace("Bowser le sombre", "mon clone Koopa")
                     .replace("sorcier !", "Roi Koopa !")
+                    .replace("l'Arc", "le Blaster")
+                    .replace("des flèches", "des Bills")
+                    .replace("flèches", "Bills")
+                    .replace("flèche", "Bill")
+                    .replace("un coeur", "un champi")
+                    .replace("de coeur", "de champi")
+                    .replace("coeur", "champi")
                     .replace("Ganon", "Bowser");
                 if let Some(Part::Txt(next_line)) = p.get_mut(idx + 2) {
                     if next_line.starts_with("sorcier") {
@@ -2111,6 +2244,12 @@ pub fn inject_legend_of_peach_intro(
             }
         }
     }
+
+    // -------------------------------------------------------------------------
+    // E2. LIVE FRENCH COMPRESSION DICTIONARY PATCH (Bank $0C 0x065A33..0x065CAB)
+    //     Upgrades Ganon->Bowser, rubis->pièces, Sahasrahla->Papy Toad, Perle de Lune->Lune 3-UP globally!
+    // -------------------------------------------------------------------------
+    ops += patch_french_dictionary_bank0c(rom_zelda, session)?;
 
     // -------------------------------------------------------------------------
     // F. GLOBAL BANK $1C FRENCH SCRIPT REWRITE:

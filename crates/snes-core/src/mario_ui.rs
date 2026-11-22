@@ -314,24 +314,40 @@ pub fn patch_mario_hud_and_start_menu(
         "KKKKKKKKKKKKKKKK",
     ]);
 
-    // 3. Menu Bullet Bill Bow (0xBA, 0xBB, 0xCA, 0xCB; Pal 2: 1=GOLD, 2=WHITE, 3=BLACK BG!)
+    // 3. Menu Bullet Bill Bow (0xBA, 0xBB, 0xCA, 0xCB; Pal 2: 3='K' JET-BLACK body & BG, 2='W' crisp WHITE highlight/eye/glove, 1='Y' blazing GOLD rocket thruster!)
+    //    Matches the crisp black/white/gold style of menu_bobomb & hud_bullet — instantly unmistakable SMW Bullet Bill!
     let menu_bullet = parse_ascii_16x16([
         "KKKKKKKKKKKKKKKK",
         "KKKKKKKKKKKKKKKK",
-        "KKKKYYYYYYYYYKKK",
-        "KKYYWWWWWWYYYYKK",
-        "KYYWWYYYYYYYYYYK",
-        "KYWWKWWYYYYKKYYK",
-        "KYWWKWWYYYYYWWYK",
-        "KYWWKWWYYYYYWWYK",
-        "KYYYYYYYYYYKKYYK",
-        "KYYYYYYYYYYYYYYK",
-        "KKYYYYYYYYYYYYKK",
-        "KKKKYYYYYYYYYKKK",
+        "KKKKWWWWWWWWKKKK",
+        "KKWWKKKKKKKKWWKK",
+        "KWKKKWWKKKKKKWYK",
+        "KWKKWWKWKKKKWWYK",
+        "KWKKWWWWKKKKWYYK",
+        "KWKKKKKKKKKKWYYK",
+        "KWKKKKKWWWWKWYYK",
+        "KWKKKKWKKWKKWWYK",
+        "KWKKKKWWWWKKKWYK",
+        "KKWWKKKKKKKKWWKK",
+        "KKKKWWWWWWWWKKKK",
         "KKKKKKKKKKKKKKKK",
         "KKKKKKKKKKKKKKKK",
         "KKKKKKKKKKKKKKKK",
-        "KKKKKKKKKKKKKKKK",
+    ]);
+
+    // 3b. Menu 3-UP Moon for Moon Pearl slot (0xD6 TL/H-flipped TR, 0xE6 BL, 0xE7 BR; Pal 2: 1='Y' GOLD, 2='W' WHITE, 3='K' BLACK!)
+    //     Symmetrical gleaming Golden SMW Power Moon Emblem with cute vertical eyes!
+    let menu_moon_tl = parse_ascii_8x8([
+        "KKKKKKKK", "KKKKKWWW", "KKKWWYYY", "KKWYYYYY", "KWYYWWYY", "KWYYWKYY", "KWYYWKYY",
+        "KWYYWWYY",
+    ]);
+    let menu_moon_bl = parse_ascii_8x8([
+        "KWYYYYYY", "KWYYYYYY", "KKWYYYYW", "KKKWYYYK", "KKKKWWYY", "KKKKKKWW", "KKKKKKKK",
+        "KKKKKKKK",
+    ]);
+    let menu_moon_br = parse_ascii_8x8([
+        "YYYYYYWK", "YYYYYYWK", "WYYYYWKK", "KYYYWKKK", "YYWWKKKK", "WWKKKKKK", "KKKKKKKK",
+        "KKKKKKKK",
     ]);
 
     // 4. Menu SMW Hammer (0xB6, 0xB7, 0xC6, 0xC7; Pal 0: 1=Orange/Brown, 2=Silver/White, 3=Black BG!)
@@ -543,6 +559,11 @@ pub fn patch_mario_hud_and_start_menu(
             write_2bpp_8x8(raw, 0x7E, &menu_shell_bl);
             write_2bpp_8x8(raw, 0x7F, &menu_shell_tl);
             write_2bpp_8x8(raw, 0x1F, &menu_shell_bl);
+
+            // Start Menu Moon Pearl -> Golden SMW 3-UP Moon Emblem (0xD6, 0xE6, 0xE7 -> local 0x56, 0x66, 0x67)
+            write_2bpp_8x8(raw, 0x56, &menu_moon_tl);
+            write_2bpp_8x8(raw, 0x66, &menu_moon_bl);
+            write_2bpp_8x8(raw, 0x67, &menu_moon_br);
         },
     )? {
         ops += 1;
@@ -743,18 +764,40 @@ pub fn patch_mario_hud_and_start_menu(
         ops += 1;
     }
 
-    // Also replace World Map / Dungeon Plan Pendant necklace tiles in Sheet 0xDA (0x2B..0x2E & 0x3B..0x3E) with Super Star!
+    // Also replace World Map / Dungeon Plan Pendant necklace tiles (0x2B..0x2E & 0x3B..0x3E) with Super Star
+    // AND the 7 Start Menu Crystal slots (0x44/0x45 collected, 0x46/0x47 empty outline) with 8x16 Spotted SMW Yoshi Eggs!
+    // Pal 3 (0x2C): 3='K' Black outline, 2='W' Pure White egg shell, 1='B' Vibrant Blue/Cyan Yoshi Egg spots!
+    let yoshi_egg_top = parse_ascii_8x8([
+        "KKKKKKKK", "KKWWWWKK", "KWWBBWWK", "KWBBBBWK", "KWWBBWWK", "KWWWWWWK", "KWWWWWBB",
+        "KWBBBBBB",
+    ]);
+    let yoshi_egg_bot = parse_ascii_8x8([
+        "KWWBBBWW", "KWWWWWWK", "KBBWWWWK", "KBBWWBBK", "KWWWWWBB", "KKWWWWKK", "KKKWWKKK",
+        "KKKKKKKK",
+    ]);
+    let yoshi_egg_empty_top = parse_ascii_8x8([
+        "KKKKKKKK", "KKWWWWKK", "KWKKKKWK", "KWKKKKWK", "KWKKKKWK", "KWKKKKWK", "KWKKKKWK",
+        "KWKKKKWK",
+    ]);
+    let yoshi_egg_empty_bot = parse_ascii_8x8([
+        "KWKKKKWK", "KWKKKKWK", "KWKKKKWK", "KWKKKKWK", "KWKKKKWK", "KKWWWWKK", "KKKKKKKK",
+        "KKKKKKKK",
+    ]);
     if patch_alttp_2bpp_sheet(
         rom_zelda,
         session,
         0xDA,
         &[],
-        "Carte & Plan 2bpp (Sheet 0xDA) : Pendentifs -> Étoile Super Mario",
+        "Carte & Menu 2bpp (Sheet 0xDA) : Pendentifs -> Étoile Super Mario & 7 Cristaux -> 7 Œufs Yoshi SMW",
         free_cursor,
         free_end,
         &|raw| {
             write_2bpp_16x16_quad(raw, 0x2B, 0x2C, 0x2D, 0x2E, &pend_star_full);
             write_2bpp_16x16_quad(raw, 0x3B, 0x3C, 0x3D, 0x3E, &pend_star_empty);
+            write_2bpp_8x8(raw, 0x44, &yoshi_egg_top);
+            write_2bpp_8x8(raw, 0x45, &yoshi_egg_bot);
+            write_2bpp_8x8(raw, 0x46, &yoshi_egg_empty_top);
+            write_2bpp_8x8(raw, 0x47, &yoshi_egg_empty_bot);
         },
     )? {
         ops += 1;
@@ -890,7 +933,13 @@ pub fn patch_mario_hud_and_start_menu(
             let mut v = Vec::with_capacity(16);
             for ch in text.bytes().take(8) {
                 match ch {
-                    b'A'..=b'Z' => {
+                    // Verified French ALTTP Sheet 0xDA menu font: A..W = 0x50..0x66, Y = 0x67!
+                    // (0x68 is French ligature "CI", so 'Y' MUST map to 0x67!)
+                    b'Y' => {
+                        v.push(0x67);
+                        v.push(0x25);
+                    }
+                    b'A'..=b'W' => {
                         v.push(0x50 + (ch - b'A'));
                         v.push(0x25);
                     }
@@ -921,6 +970,42 @@ pub fn patch_mario_hud_and_start_menu(
         )?;
         ops += 1;
 
+        // 4b. Start Menu "CRISTAUX" Header (0x06E852..0x06E862, 8 tiles) -> " YOSHIS " matching the 7 Spotted SMW Yoshi Eggs!
+        if 0x06E862 <= rom_zelda.data.len()
+            && rom_zelda.data[0x06E852] == 0x2F
+            && rom_zelda.data[0x06E853] == 0x25
+        {
+            let yoshis = encode_menu_line(" YOSHIS ");
+            session.swap_custom_bytes(
+                rom_zelda,
+                0x06E852,
+                0x06E852,
+                yoshis,
+                "Menu Start En-tête (0x06E852) : 'CRISTAUX' -> ' YOSHIS ' (7 Œufs Yoshi SMW)"
+                    .into(),
+                SwapKind::CodePatch { byte_count: 16 },
+            )?;
+            ops += 1;
+        }
+
+        // 4c. Start Menu Equipped Lv1 Shield (0x06F791..0x06F799): Blue Pal 3 (0x2C/0x6C) -> Emerald Green Pal 7 (0x3C/0x7C)
+        //     so Mario's Equipped Koopa Shell matches his live Emerald Green Koopa Shell Shield!
+        if 0x06F799 <= rom_zelda.data.len()
+            && rom_zelda.data[0x06F791] == 0xFD
+            && rom_zelda.data[0x06F792] == 0x2C
+        {
+            session.swap_custom_bytes(
+                rom_zelda,
+                0x06F791,
+                0x06F791,
+                vec![0xFD, 0x3C, 0xFD, 0x7C, 0xFE, 0x3C, 0xFE, 0x7C],
+                "Menu Équipement Bouclier Lv1 (0x06F791) : Carapace Koopa Verte Émeraude (Pal 7)"
+                    .into(),
+                SwapKind::CodePatch { byte_count: 8 },
+            )?;
+            ops += 1;
+        }
+
         // 5. Start Menu Item Names (exact 0x20-byte paired entries starting at 0x06F0F1..0x06F551!) -> 100% SMW Names!
         if 0x06F551 <= rom_zelda.data.len() && rom_zelda.data[0x06F241] == 0x5B {
             let mut names = rom_zelda.data[0x06F0F1..0x06F551].to_vec();
@@ -943,8 +1028,8 @@ pub fn patch_mario_hud_and_start_menu(
             put_item(0x06F2B1, " GUIDE  ", " MARIO  "); // Item 14: Book of Mudora
             put_item(0x06F331, " PLUME  ", "DE CAPE "); // Item 18: Magic Cape
             put_item(0x06F4F1, "  BILL  ", " BLASTER"); // Item 32: Bow + Arrows
-            put_item(0x06F511, " BANZAI ", "  BILL  "); // Item 33: Silver Bow
-            put_item(0x06F531, " BANZAI ", "  BILL  "); // Item 34: Silver Arrows
+            put_item(0x06F511, "  MEGA  ", "  BILL  "); // Item 33: Silver Bow
+            put_item(0x06F531, "  MEGA  ", "  BILL  "); // Item 34: Silver Arrows
             session.swap_custom_bytes(
                 rom_zelda,
                 0x06F0F1,
@@ -1407,6 +1492,36 @@ pub fn patch_red_coin_and_carry_height(
         ops += 1;
     }
 
+    // 1c. ReceiveItem_Props Bomb Entries (`0x0484C3` = 1 Bomb, `0x0484C4` = 3 Bombs, `0x0484CD` = 10 Bombs Shop Pack):
+    //     Switch from Blue (`0x02`) -> `0x01` (OBJ Pal 1: Jet-Black #101010 body, Pure White eyes, Warm Gold key & boots!)
+    //     so ALL chest, drop, and Kamek Shop bombs render as Jet-Black SMW Bob-ombs (zero blue bombs anywhere!).
+    if 0x0484CE <= rom_zelda.data.len()
+        && rom_zelda.data[0x0484C3] == 0x02
+        && rom_zelda.data[0x0484C4] == 0x02
+        && rom_zelda.data[0x0484CD] == 0x02
+    {
+        session.swap_custom_bytes(
+            rom_zelda,
+            0x0484C3,
+            0x0484C3,
+            vec![0x01, 0x01],
+            "ReceiveItem Palettes Bombes 1/3 (0x0484C3) : Bob-omb Noir SMW (0x01, zéro bombe bleue)"
+                .into(),
+            SwapKind::CodePatch { byte_count: 2 },
+        )?;
+        ops += 1;
+        session.swap_custom_bytes(
+            rom_zelda,
+            0x0484CD,
+            0x0484CD,
+            vec![0x01],
+            "ReceiveItem Palette Pack 10 Bombes Boutique (0x0484CD) : Bob-omb Noir SMW (0x01)"
+                .into(),
+            SwapKind::CodePatch { byte_count: 1 },
+        )?;
+        ops += 1;
+    }
+
     // 2a. Enrich OBJ Palette 1 (`0x0DD228..0x0DD236`, verified ReceiveItem `pal = 0x01` Red Item Palette!)
     //     Colors 2 & 3 -> Vivid Nintendo Mario Ruby Red (`#F83020` = 0x10DF) & Deep Crimson (`#B81010` = 0x0857)
     //     so House Chest Red Coins, Super Mushrooms, and Fire Flowers blaze in unmistakable Mario Red!
@@ -1522,26 +1637,28 @@ pub fn patch_red_coin_and_carry_height(
     Ok(ops)
 }
 
-/// Build `S 0xCD (6,2)`: Left 8x8 = Red Mini Super Mushroom (Small Heart pickup!),
-/// Right 8x8 = Yoshi Berry / Magic Mini-Pickup (Small Magic Jar)!
+/// Build `S 0xCD (6,2)`:
+/// - Top-Left 8x8 `(6,2)` (rows 0..7, cols 0..7): Complete unclipped 8x8 Red SMW Mini Super Mushroom (Small Heart drop & Shop Heart!)
+/// - Top-Right 8x8 `(7,2)` (rows 0..7, cols 8..15): Complete unclipped 8x8 SMW Yoshi Berry (Small Magic drop!)
+/// - Bottom-Left/Right 8x8 `(6,3)/(7,3)` (rows 8..15): Clean mirror copies for any 8x8 sprite slot referencing row 3!
 pub fn build_small_heart_magic_pair() -> [[u8; 16]; 16] {
     let rows = [
-        "................",
-        "................",
-        "................",
-        "................",
         "..5555....5555..",
         ".522225..566665.",
         "5212212556166665",
         "5222222556666675",
         ".511115..566675.",
-        "..5151....5775..",
-        "..5111.....55...",
-        "...55...........",
-        "................",
-        "................",
-        "................",
-        "................",
+        ".515151...5775..",
+        "..51115....55...",
+        "...555..........",
+        "..5555....5555..",
+        ".522225..566665.",
+        "5212212556166665",
+        "5222222556666675",
+        ".511115..566675.",
+        ".515151...5775..",
+        "..51115....55...",
+        "...555..........",
     ];
     let mut px = [[0u8; 16]; 16];
     for (y, r) in rows.iter().enumerate() {
@@ -2311,24 +2428,24 @@ pub fn build_king_bowser_for_agahnim() -> KingBowserParts {
     back_cast_tl[6][4] = 5;
     let back_cast_bl = back_idle_bl;
 
-    // Side Profile King Bowser (Full 32x32 facing LEFT: TL + TR / BL + BR — authentic SMW profile!)
+    // Side Profile King Bowser (Full 32x32 facing LEFT: TL + TR / BL + BR — crisp golden snout, blazing fiery mane, fierce eye & fangs!)
     let side_tl = parse_3bpp_ascii([
-        ".........555....",
-        "........51115.55",
-        ".......511155222",
-        "......5666522222",
-        ".....56622252222",
-        "....566511256666",
-        "...5666551566766",
+        ".........555.55.",
+        "........51115225",
+        ".......511152222",
+        "......5662222222",
+        ".....56622222222",
+        "....566511522266",
+        "...5665151556676",
         "..54444666666666",
-        ".544544444446676",
-        "5444444444446666",
-        "5444511555444666",
-        ".555511522545515",
-        ".....55522555555",
-        "......5444555155",
-        ".......555555555",
-        "......5444444666",
+        ".544444444446676",
+        "5444544444446666",
+        "5444444444444666",
+        ".555155515445515",
+        "....522222555555",
+        ".....52212555155",
+        "......5444555555",
+        ".....54444444666",
     ]);
     let side_tr = parse_3bpp_ascii([
         "................",
@@ -4279,65 +4396,57 @@ pub fn patch_smw_thwomp_sheet_8e(raw: &mut [u8]) {
         }
     };
 
-    let thwomp_top = parse_3bpp_ascii([
-        "....5..55..5....",
-        "...5155115515...",
-        "..517557755715..",
-        ".55777777777755.",
-        "5177777777777615",
-        ".57777777777665.",
-        ".57755577555665.",
-        "5177755555576615",
-        ".57751155115665.",
-        ".57751455415665.",
-        "5177511551156615",
-        ".57775555557665.",
-        ".57777777776665.",
-        "5177777777766615",
-        ".57755555555665.",
-        ".57515155151565.",
+    // Verified live in Mednafen (Room 0xC8 Eastern Palace Boss):
+    // Each of the 6 Armos Knights is a 32x32 sprite assembled side-by-side WITHOUT H-flip:
+    //   - Cols 0..1, rows 0..3 = LEFT 16x32 half
+    //   - Cols 2..3, rows 0..3 = RIGHT 16x32 half (= exact horizontal mirror of left half!)
+    // Calibrated to Eastern Palace Armos palettes:
+    //   5 = Black outline/visor/cleats, 1 = Pure White helmet stripe/eyes/shoulder trim/jersey stripe,
+    //   6 = Vibrant Team Blue (turns Blazing Red on the final enraged Chargin' Chuck!),
+    //   7 = Deep Shadow Shade, 4 = Bright Gold snout/fists/belt, 3 = Warm Shade!
+    let chuck_left_top = parse_3bpp_ascii([
+        "...........55555",
+        ".........5566111",
+        "........56666111",
+        ".......576666611",
+        "......5766666611",
+        "......5766666661",
+        ".....57766666666",
+        ".....57755555555",
+        ".....57544455115",
+        "....577544511515",
+        "....575444511115",
+        "...5555444444444",
+        "..56665445111111",
+        ".566116535555555",
+        "5766116653344444",
+        "5766666665555555",
     ]);
-    let thwomp_bot = parse_3bpp_ascii([
-        ".57515155151565.",
-        "5175555555555615",
-        ".57515155151565.",
-        ".57755555555665.",
-        "5177777777766615",
-        ".57777777776665.",
-        ".56677777766665.",
-        "5166666666666615",
-        ".55666666666655.",
-        "..516556655615..",
-        "...5155115515...",
-        "....5..55..5....",
-        "................",
-        "................",
-        "................",
-        "................",
+    let chuck_left_bot = parse_3bpp_ascii([
+        "5776666666666666",
+        "5776666111111666",
+        "5776661111111166",
+        ".576666111111666",
+        ".555666666666666",
+        "5445576666666666",
+        "5441557777777777",
+        "5344555555555555",
+        ".555..5444444444",
+        "......5776666675",
+        "......577666675.",
+        ".....577666675..",
+        "....555555555...",
+        "...5114444415...",
+        "...5555555555...",
+        "....5.5...5.5...",
     ]);
-    let thwomp_top_angry = parse_3bpp_ascii([
-        "....5..55..5....",
-        "...5155115515...",
-        "..517557755715..",
-        ".55777777777755.",
-        "5177777777777615",
-        ".57755777755665.",
-        ".57775577557665.",
-        "5177514554156615",
-        ".57754455445665.",
-        ".57751455415665.",
-        "5177755555576615",
-        ".57777777776665.",
-        ".57755555555665.",
-        "5175151551515615",
-        ".57555555555565.",
-        ".57515155151565.",
-    ]);
+    let chuck_right_top = flip_h_16(&chuck_left_top);
+    let chuck_right_bot = flip_h_16(&chuck_left_bot);
 
-    write_16(raw, 0, 0, &thwomp_top);
-    write_16(raw, 0, 2, &thwomp_bot);
-    write_16(raw, 2, 0, &thwomp_top_angry);
-    write_16(raw, 2, 2, &thwomp_bot);
+    write_16(raw, 0, 0, &chuck_left_top);
+    write_16(raw, 0, 2, &chuck_left_bot);
+    write_16(raw, 2, 0, &chuck_right_top);
+    write_16(raw, 2, 2, &chuck_right_bot);
 }
 
 /// Museum-grade **SMW DRY BONES (Skelerex)** for Dungeon Stalfos (`Sheet 0x90`)!

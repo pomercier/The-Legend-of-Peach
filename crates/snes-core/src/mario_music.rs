@@ -2048,6 +2048,374 @@ fn compose_smw_koopaling_boss() -> SongSpec {
     }
 }
 
+/// 11. NEW Phase 2 — Super Mario World: Valley of Bowser / Dark Adventure (Dark World Overworld `#9`)!
+/// Driving minor-key SMW bassline, heroic brass theme, eerie string harmony, and tight marching percussion.
+fn compose_smw_valley_of_bowser() -> SongSpec {
+    let lead = vec![
+        // Bar 1-2 (Dm): brooding Bowser Valley motif
+        (E, D4),
+        (E, F4),
+        (Q, A4),
+        (E, G4),
+        (E, F4),
+        (Q, E4),
+        (E, D4),
+        (E, E4),
+        (E, F4),
+        (E, G4),
+        (Q, A4),
+        (Q, D5),
+        // Bar 3-4 (Bb -> A7): soaring tension phrase
+        (DE, AS4),
+        (S, A4),
+        (E, G4),
+        (E, F4),
+        (Q, G4),
+        (Q, E4),
+        (E, F4),
+        (E, E4),
+        (E, D4),
+        (E, CS4),
+        (H, A4),
+        // Bar 5-6 (Gm -> Dm): heroic Mario answer
+        (E, G4),
+        (E, AS4),
+        (Q, D5),
+        (E, C5),
+        (E, AS4),
+        (Q, A4),
+        (E, F4),
+        (E, A4),
+        (Q, D5),
+        (E, C5),
+        (E, A4),
+        (Q, F4),
+        // Bar 7-8 (E7 -> A7 -> Dm turnaround)
+        (E, E4),
+        (E, G4),
+        (E, AS4),
+        (E, A4),
+        (E, G4),
+        (E, F4),
+        (Q, E4),
+        (E, A4),
+        (E, G4),
+        (E, F4),
+        (E, E4),
+        (H, D4),
+    ];
+    let harmony = vec![
+        (H, F3),
+        (H, A3),
+        (H, A3),
+        (H, F4),
+        (H, D4),
+        (H, C4),
+        (H, A3),
+        (H, CS4),
+        (H, AS3),
+        (H, D4),
+        (H, A3),
+        (H, D4),
+        (H, G3),
+        (H, CS4),
+        (H, E4),
+        (H, F3),
+    ];
+    let mut bass = Vec::new();
+    for root in [D2, D2, AS2, A2, G2, D2, E2, A2] {
+        let fifth = root + 7;
+        bass.extend_from_slice(&[
+            (E, root),
+            (E, root),
+            (E, fifth),
+            (E, root),
+            (E, root + 12),
+            (E, fifth),
+            (E, root),
+            (E, R),
+        ]);
+    }
+    let mut drums = Vec::new();
+    for _ in 0..8 {
+        drums.extend_from_slice(&[
+            (E, C3),
+            (E, R),
+            (E, G3),
+            (E, C3),
+            (E, C3),
+            (E, G3),
+            (E, C3),
+            (E, G3),
+        ]);
+    }
+    SongSpec {
+        tempo: 0x36,
+        master_vol: 0xC4,
+        loops: true,
+        tracks: vec![
+            TrackSpec {
+                inst: INST_BRASS,
+                vol: 0xB8,
+                pan: 0x09,
+                qv: 0x6F,
+                notes: lead,
+            },
+            TrackSpec {
+                inst: INST_STRINGS,
+                vol: 0x7A,
+                pan: 0x0B,
+                qv: 0x7D,
+                notes: harmony,
+            },
+            TrackSpec {
+                inst: INST_BASS,
+                vol: 0xA8,
+                pan: 0x0A,
+                qv: 0x6F,
+                notes: bass,
+            },
+            TrackSpec {
+                inst: INST_SNARE,
+                vol: 0x7E,
+                pan: 0x0A,
+                qv: 0x5E,
+                notes: drums,
+            },
+        ],
+    }
+}
+
+/// 12. NEW Phase 2 — Super Mario World: Bonus Room / Yoshi's House Ragtime (Toad / Kamek Shop `#23`)!
+/// Cheerful, bouncy SMW shop groove with sparkling flute, playful harp chords, and walking bass.
+fn compose_smw_yoshi_bonus() -> SongSpec {
+    let lead = vec![
+        // Classic bouncing C major / F major / G7 SMW Bonus Room feel
+        (E, E5),
+        (E, G5),
+        (E, C5),
+        (E, E5),
+        (E, D5),
+        (E, F5),
+        (E, B4),
+        (E, D5),
+        (E, C5),
+        (E, E5),
+        (E, G5),
+        (E, A5),
+        (Q, G5),
+        (Q, R),
+        (E, A5),
+        (E, G5),
+        (E, F5),
+        (E, E5),
+        (E, D5),
+        (E, E5),
+        (E, F5),
+        (E, G5),
+        (E, E5),
+        (E, C5),
+        (E, D5),
+        (E, B4),
+        (Q, C5),
+        (Q, R),
+    ];
+    let harp = vec![
+        (Q, C4),
+        (Q, G4),
+        (Q, B3),
+        (Q, G4),
+        (Q, C4),
+        (Q, E4),
+        (Q, G4),
+        (Q, E4),
+        (Q, F4),
+        (Q, C4),
+        (Q, G4),
+        (Q, D4),
+        (Q, E4),
+        (Q, G4),
+        (Q, C4),
+        (Q, R),
+    ];
+    let bass = vec![
+        (Q, C3),
+        (Q, G2),
+        (Q, G2),
+        (Q, B2),
+        (Q, C3),
+        (Q, E3),
+        (Q, G3),
+        (Q, G2),
+        (Q, F2),
+        (Q, A2),
+        (Q, G2),
+        (Q, B2),
+        (Q, C3),
+        (Q, G2),
+        (Q, C3),
+        (Q, R),
+    ];
+    SongSpec {
+        tempo: 0x42,
+        master_vol: 0xC0,
+        loops: true,
+        tracks: vec![
+            TrackSpec {
+                inst: INST_FLUTE,
+                vol: 0xB6,
+                pan: 0x09,
+                qv: 0x6F,
+                notes: lead,
+            },
+            TrackSpec {
+                inst: INST_HARP,
+                vol: 0x90,
+                pan: 0x0B,
+                qv: 0x6E,
+                notes: harp,
+            },
+            TrackSpec {
+                inst: INST_BASS,
+                vol: 0x9E,
+                pan: 0x0A,
+                qv: 0x6E,
+                notes: bass,
+            },
+        ],
+    }
+}
+
+/// 13. NEW Phase 2 — Super Mario World: Final King Bowser Showdown (Final Boss `#28`)!
+/// Thunderous, epic final battle anthem distinct from the 7 Koopalings (`#21`):
+/// pounding timpani, blazing Bowser brass fanfare, dramatic minor arpeggios, and soaring counter-melody!
+fn compose_smw_final_bowser_battle() -> SongSpec {
+    let lead = vec![
+        // Bar 1-2: Iconic heavy Bowser dramatic fanfare in C minor!
+        (DE, C5),
+        (S, C5),
+        (E, C5),
+        (E, DS5),
+        (Q, G5),
+        (Q, FS5),
+        (DE, F5),
+        (S, DS5),
+        (E, D5),
+        (E, C5),
+        (H, G4),
+        // Bar 3-4: Menacing chromatic ascent
+        (E, GS4),
+        (E, C5),
+        (E, DS5),
+        (E, G5),
+        (Q, F5),
+        (Q, DS5),
+        (E, D5),
+        (E, F5),
+        (E, G5),
+        (E, B5),
+        (H, C6),
+        // Bar 5-6: Rapid heroic Mario counterattack
+        (E, G5),
+        (E, FS5),
+        (E, G5),
+        (E, DS5),
+        (E, F5),
+        (E, E5),
+        (E, F5),
+        (E, D5),
+        (E, DS5),
+        (E, D5),
+        (E, DS5),
+        (E, C5),
+        (Q, B4),
+        (Q, G4),
+        // Bar 7-8: Dramatic final cadence back to loop
+        (E, GS4),
+        (E, G4),
+        (E, F4),
+        (E, DS4),
+        (E, D4),
+        (E, F4),
+        (E, G4),
+        (E, B4),
+        (Q, C5),
+        (E, G4),
+        (E, B4),
+        (H, C5),
+    ];
+    let strings = vec![
+        (H, DS4),
+        (H, C4),
+        (H, B3),
+        (H, D4),
+        (H, GS3),
+        (H, DS4),
+        (H, G3),
+        (H, G4),
+        (H, DS4),
+        (H, D4),
+        (H, C4),
+        (H, B3),
+        (H, GS3),
+        (H, G3),
+        (H, DS4),
+        (H, C4),
+    ];
+    let mut bass = Vec::new();
+    for root in [C2, G2, GS2, G2, C2, F2, GS2, G2] {
+        bass.extend_from_slice(&[
+            (E, root),
+            (E, root + 12),
+            (E, root),
+            (E, root + 7),
+            (E, root),
+            (E, root + 12),
+            (E, root + 7),
+            (E, root),
+        ]);
+    }
+    let mut timp = Vec::new();
+    for _ in 0..8 {
+        timp.extend_from_slice(&[(E, C2), (E, C2), (Q, G2), (E, C2), (E, G2), (Q, C3)]);
+    }
+    SongSpec {
+        tempo: 0x44,
+        master_vol: 0xCA,
+        loops: true,
+        tracks: vec![
+            TrackSpec {
+                inst: INST_BRASS,
+                vol: 0xC4,
+                pan: 0x09,
+                qv: 0x7F,
+                notes: lead,
+            },
+            TrackSpec {
+                inst: INST_STRINGS,
+                vol: 0x8C,
+                pan: 0x0B,
+                qv: 0x7D,
+                notes: strings,
+            },
+            TrackSpec {
+                inst: INST_BASS,
+                vol: 0xB2,
+                pan: 0x0A,
+                qv: 0x7F,
+                notes: bass,
+            },
+            TrackSpec {
+                inst: INST_TIMPANI,
+                vol: 0xA8,
+                pan: 0x0A,
+                qv: 0x6F,
+                notes: timp,
+            },
+        ],
+    }
+}
+
 /// Inject all 100% native ALTTP N-SPC Mario soundtracks into both the Overworld Bank (`0x0D1EF5`)
 /// and the Dungeon / Indoor Bank (`0x0D8000`) while verifying headers and keeping exact SPC block sizes!
 pub fn inject_mario_nspc_soundtrack(
@@ -2071,13 +2439,14 @@ pub fn inject_mario_nspc_soundtrack(
         ]);
         if len_le == ALTTP_SPC_OVERWORLD_LEN && dst_le == SPC_BASE_ADDR {
             let ow_songs = vec![
-                compose_smw_overworld(),       // 0: SMW Overworld Main Theme
-                compose_smb_overworld(),       // 1: SMB 1-1 Main Theme (Title / Intro / Rain)
-                compose_smw_peach_sanctuary(), // 2: SMW Peach / Fairy Theme
-                compose_mario_starman_boss(),  // 3: Mario Starman Action (Soldiers & Dark World)
-                compose_smw_victory_fanfare(), // 4: SMW Course Clear (Master Sword Pull)
-                compose_smw_athletic(), // 5: NEW v13 — SMW Athletic Ragtime (Toad Town & Lost Woods!)
-                compose_smw_ghost_house(), // 6: NEW v13 — SMW Ghost House Waltz (Mystery / Bunny!)
+                compose_smw_overworld(),        // 0: SMW Overworld Main Theme
+                compose_smb_overworld(),        // 1: SMB 1-1 Main Theme (Title / Intro / Rain)
+                compose_smw_peach_sanctuary(),  // 2: SMW Peach / Fairy Theme
+                compose_mario_starman_boss(),   // 3: Mario Starman Action (Soldiers Alert)
+                compose_smw_victory_fanfare(),  // 4: SMW Course Clear (Master Sword Pull)
+                compose_smw_athletic(),         // 5: SMW Athletic Ragtime (Toad Town & Lost Woods!)
+                compose_smw_ghost_house(),      // 6: SMW Ghost House Waltz (Mystery / Bunny!)
+                compose_smw_valley_of_bowser(), // 7: NEW Phase 2 — SMW Valley of Bowser (Dark World Overworld!)
             ];
             let ow_map = [
                 (1usize, 1usize), // #1 Title Screen -> SMB 1-1 Theme
@@ -2087,7 +2456,7 @@ pub fn inject_mario_nspc_soundtrack(
                 (5, 5),           // #5 Lost Woods -> SMW Athletic Theme!
                 (6, 1),           // #6 Legend / Story -> SMB 1-1 Theme
                 (7, 5),           // #7 Toad Town (Kakariko) -> SMW Athletic Ragtime Theme!
-                (9, 3),           // #9 Dark World Overworld -> Mario Starman Action!
+                (9, 7),           // #9 Dark World Overworld -> NEW SMW Valley of Bowser Theme!
                 (10, 4),          // #10 Master Sword -> SMW Course Clear!
                 (12, 3),          // #12 Hyrule Soldiers Alert -> Mario Starman!
                 (15, 2),          // #15 Fairy / Ending -> SMW Peach Theme
@@ -2103,7 +2472,7 @@ pub fn inject_mario_nspc_soundtrack(
                     ow_data_pc,
                     ow_data_pc,
                     new_ow,
-                    "Musiques N-SPC Overworld (0x0D1EF9 -> SPC $D000) : 7 thèmes SMW (Overworld, SMB 1-1, Athletic Toad Town, Ghost House, Peach, Starman, Course Clear)".into(),
+                    "Musiques N-SPC Overworld (0x0D1EF9 -> SPC $D000) : 8 thèmes SMW (Overworld, SMB 1-1, Athletic, Ghost House, Valley of Bowser, Peach, Starman, Course Clear)".into(),
                     SwapKind::CodePatch { byte_count: ALTTP_SPC_OVERWORLD_LEN },
                 )?;
                 ops += 1;
@@ -2125,10 +2494,12 @@ pub fn inject_mario_nspc_soundtrack(
                 compose_smw_castle(), // 0: SMW Castle / Fortress (Hyrule Castle & Bowser's Tower!)
                 compose_smb_underground(), // 1: SMB 1-2 Underground (Light Dungeons & Caves!)
                 compose_smb_overworld(), // 2: SMB 1-1 Cheerful Theme (Mario's House!)
-                compose_smw_peach_sanctuary(), // 3: SMW Princess Peach Theme (Sanctuary & Shop!)
-                compose_smw_koopaling_boss(), // 4: NEW v13 — SMW Koopalings & King Bowser Boss Theme!
+                compose_smw_peach_sanctuary(), // 3: SMW Princess Peach Theme (Sanctuary & Rescues!)
+                compose_smw_koopaling_boss(), // 4: SMW Koopalings Boss Theme (All 7 Koopalings & Chargin' Chucks!)
                 compose_smw_victory_fanfare(), // 5: SMW Course Clear (Boss Victory!)
-                compose_smw_ghost_house(), // 6: NEW v13 — SMW Ghost House (Dark World Haunted Dungeons!)
+                compose_smw_ghost_house(),    // 6: SMW Ghost House (Dark World Haunted Dungeons!)
+                compose_smw_yoshi_bonus(), // 7: NEW Phase 2 — SMW Bonus Room / Yoshi's House (Toad & Kamek Shops!)
+                compose_smw_final_bowser_battle(), // 8: NEW Phase 2 — SMW Final King Bowser Showdown!
             ];
             let dn_map = [
                 (16usize, 0usize), // #16 Hyrule Castle -> SMW Castle Theme!
@@ -2136,14 +2507,14 @@ pub fn inject_mario_nspc_soundtrack(
                 (18, 2),           // #18 Mario's House -> SMB 1-1 Main Theme!
                 (19, 5),           // #19 Boss Victory -> SMW Course Clear Fanfare!
                 (20, 3),           // #20 Sanctuary (Princess Peach) -> SMW Peach Gentle Theme!
-                (21, 4),           // #21 Koopaling Boss Fight -> NEW SMW Koopalings Boss Theme!
-                (22, 6),           // #22 Dark World Dungeon -> NEW SMW Ghost House Theme!
-                (23, 3),           // #23 Toad Shop / Fortune -> SMW Peach / Yoshi House!
-                (24, 1),           // #24 Cave / Secret -> SMB Underground Theme!
-                (25, 3),           // #25 Peach Rescued -> SMW Peach Theme!
-                (26, 3),           // #26 Crystal Maiden -> SMW Peach Theme!
-                (27, 0),           // #27 Bowser's Castle Tower -> SMW Castle Theme!
-                (28, 4), // #28 Final Boss King Bowser -> NEW SMW Koopalings / Bowser Boss Theme!
+                (21, 4),           // #21 Koopaling / Dungeon Boss -> SMW Koopalings Boss Theme!
+                (22, 6),           // #22 Dark World Dungeon -> SMW Ghost House Theme!
+                (23, 7), // #23 Toad / Kamek Shop -> NEW SMW Bonus Room / Yoshi's House Theme!
+                (24, 1), // #24 Cave / Secret -> SMB Underground Theme!
+                (25, 3), // #25 Peach Rescued -> SMW Peach Theme!
+                (26, 3), // #26 Crystal Maiden -> SMW Peach Theme!
+                (27, 0), // #27 Bowser's Castle Tower -> SMW Castle Theme!
+                (28, 8), // #28 Final Boss King Bowser -> NEW SMW Final Bowser Showdown Theme!
             ];
             if let Ok(new_dn) = build_alttp_nspc_bank(
                 &rom_zelda.data[dn_data_pc..dn_data_pc + ALTTP_SPC_DUNGEON_LEN],
@@ -2156,7 +2527,7 @@ pub fn inject_mario_nspc_soundtrack(
                     dn_data_pc,
                     dn_data_pc,
                     new_dn,
-                    "Musiques N-SPC Donjons/Boss/Château (0x0D8004 -> SPC $D000) : 7 thèmes SMW (Castle, Underground, Ghost House, Koopalings/Bowser Boss, SMB 1-1, Peach, Course Clear)".into(),
+                    "Musiques N-SPC Donjons/Boss/Château (0x0D8004 -> SPC $D000) : 9 thèmes SMW (Castle, Underground, Ghost House, Bonus Shop, Koopalings, Final King Bowser, SMB 1-1, Peach, Course Clear)".into(),
                     SwapKind::CodePatch { byte_count: ALTTP_SPC_DUNGEON_LEN },
                 )?;
                 ops += 1;

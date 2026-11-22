@@ -2565,7 +2565,8 @@ fn apply_rule_to_zelda(
                     ops += 1;
                 }
             }
-            // 3. Poules Cuccos (S 0x86) -> Bébés Yoshis SMW alignés OAM, Sorcière Syrup (S 0xBC) -> Magikoopa, Forgerons (S 0xD7) -> Koopas!
+            // 3. Poules Cuccos (S 0x86) -> Bébés Yoshis SMW, Marchand Kamek (S 0xBC / raw 0xBE cols 0..1 rows 0..2 ONLY,
+            //    preserving Shop Price Digits '0' & '1' at row 3 cols 0..1 intact!), Forgerons (S 0xD7) -> Koopas!
             if patch_alttp_comp_sheet_helper(
                 rom_zelda,
                 session,
@@ -2588,14 +2589,26 @@ fn apply_rule_to_zelda(
                     session,
                     0xBC,
                     &format!(
-                        "Sorcière Syrup (Sheet 0xBC) ← {}:Magikoopa SMW",
+                        "Marchand Kamek Boutique (Sheet 0xBC, chiffres '0'/'1' préservés!) ← {}:Magikoopa SMW",
                         rule.donor_alias
                     ),
                     free_cursor,
                     free_end,
                     &|raw| {
+                        // Head in rows 0..1 (16x16)
                         write_3bpp_16x16(raw, 0, 0, &mk1);
-                        write_3bpp_16x16(raw, 0, 2, &mk2);
+                        // Upper robe ONLY in row 2 (two 8x8 tiles: (0,2) and (1,2))!
+                        // Row 3 cols (0,3) & (1,3) hold Shop Price Digits '0' and '1' -> NEVER overwrite!
+                        let mut robe_l = [[0u8; 8]; 8];
+                        let mut robe_r = [[0u8; 8]; 8];
+                        for y in 0..8 {
+                            for x in 0..8 {
+                                robe_l[y][x] = mk2[y][x];
+                                robe_r[y][x] = mk2[y][x + 8];
+                            }
+                        }
+                        write_3bpp_8x8_pub(raw, 0, 2, &robe_l);
+                        write_3bpp_8x8_pub(raw, 1, 2, &robe_r);
                     },
                 )? {
                     ops += 1;
@@ -2690,7 +2703,8 @@ fn apply_rule_to_zelda(
                 free_cursor,
                 free_end,
                 &|raw| {
-                    // Verified AttractAgahnimOAM .char_step1 ($C4=TL, $C2=TR, $E4=BL, $E6=BR) + .step2 ($C0/$C2/$E0/$E2):
+                    // Verified AttractAgahnimOAM .char_step1 ($C4=TL, $C2=TR, $E4=BL, $E6=BR) + .step2 ($C0/$C2/$E0/$E2)
+                    // + Agahnim teleport/cast silhouette at cols 8..11 (zero vanilla Agahnim cape tiles left!):
                     write_3bpp_16x16(raw, 0, 0, &bow.side_tl);
                     write_3bpp_16x16(raw, 2, 0, &bow.side_tr);
                     write_3bpp_16x16(raw, 0, 2, &bow.side_bl);
@@ -2699,6 +2713,10 @@ fn apply_rule_to_zelda(
                     write_3bpp_16x16(raw, 6, 0, &bow.side_tr);
                     write_3bpp_16x16(raw, 4, 2, &bow.side_bl);
                     write_3bpp_16x16(raw, 6, 2, &bow.side_br);
+                    write_3bpp_16x16(raw, 8, 0, &bow.side_tl);
+                    write_3bpp_16x16(raw, 10, 0, &bow.side_tr);
+                    write_3bpp_16x16(raw, 8, 2, &bow.side_bl);
+                    write_3bpp_16x16(raw, 10, 2, &bow.side_br);
                 },
             )? {
                 ops += 1;
@@ -3031,21 +3049,22 @@ fn apply_rule_to_zelda(
                         .unwrap_or((coin, coin));
                     let (egg, _) = extract_donor_16x16_for_zelda(donor, "yoshi_egg", false)
                         .unwrap_or((mush, mush));
-                    let (berry, _) = extract_donor_16x16_for_zelda(donor, "berry", false)
+                    let (_berry, _) = extract_donor_16x16_for_zelda(donor, "berry", false)
                         .unwrap_or((mush, mush));
 
                     // Fix #2 & #6: Double 8x16 complete SMW Red/Gold Coins + Crisp High-Contrast 16x16 Super Mushroom
                     //              + 8x8 Red Mini-Mushroom & Berry pair in S 0xCD (6,2)!
                     let crisp_mush = crate::mario_ui::build_crisp_smw_mushroom_16x16();
                     let crisp_bill = crate::mario_ui::build_smw_bullet_bill_drop_16x16();
-                    let _ = (mush, bill);
+                    let black_bob = crate::mario_ui::build_jet_black_smw_bobomb_16x16();
+                    let _ = (mush, bill, bob);
                     let double_coins = crate::mario_ui::build_double_8x16_smw_coins();
                     let small_heart_magic = crate::mario_ui::build_small_heart_magic_pair();
                     if patch_alttp_comp_sheet_helper(
                         rom_zelda,
                         session,
                         0xCD,
-                        &format!("Collectibles Zelda (Sheet 0xCD) ← {}:Pièces 8x16 complètes, Champignons Rouges, Carapace, Bill Balle Noir, Œuf", rule.donor_alias),
+                        &format!("Collectibles Zelda (Sheet 0xCD) ← {}:Pièces 8x16, Champignons Rouges, Bob-ombs Noirs Boutique/Coffre, Bill Balle, Œuf", rule.donor_alias),
                         free_cursor,
                         free_end,
                         &|raw| {
@@ -3053,31 +3072,46 @@ fn apply_rule_to_zelda(
                             write_3bpp_16x16(raw, 2, 0, &double_coins);      // Rubis 8x16 -> Double Coin SMW complet!
                             write_3bpp_16x16(raw, 5, 0, &egg);               // VRAI Cristal (gfx 0x28) -> Œuf Yoshi!
                             write_3bpp_16x16(raw, 8, 0, &crisp_bill);        // Arc -> Bill Balle Noir contour blanc!
+                            write_3bpp_16x16(raw, 11, 0, &black_bob);        // Bombes 1/3 (B..C, 0..1) -> 100% JET-BLACK SMW Bob-omb!
+                            write_3bpp_16x16(raw, 13, 0, &black_bob);        // Pack 10 Bombes Boutique (D..E, 0..1) -> 100% JET-BLACK SMW Bob-omb!
                             write_3bpp_16x16(raw, 0, 2, &crisp_mush);        // Réceptacle Cœur -> Super Champignon ROUGE net!
                             write_3bpp_16x16(raw, 2, 2, &shell);             // Boomerang -> Carapace
                             write_3bpp_16x16(raw, 4, 2, &shell);             // Bouclier -> Carapace
-                            write_3bpp_16x16(raw, 6, 2, &small_heart_magic); // Petit Cœur 8x8 -> Mini-Champignon Rouge + Baie!
+                            write_3bpp_16x16(raw, 6, 2, &small_heart_magic); // Petit Cœur 8x8 (6,2) -> Mini-Champignon Rouge + Baie!
                             write_3bpp_16x16(raw, 8, 2, &crisp_bill);        // Flèche -> Bill Balle Noir contour blanc!
                         },
                     )? {
                         ops += 1;
                     }
-                    let black_bob = crate::mario_ui::build_jet_black_smw_bobomb_16x16();
-                    let _ = bob;
+                    // Build Jet-Black SMW Bob-omb with crisp white '10' badge in bottom-right corner
+                    // for Kamek's Shop 10-Bomb pack (Sheet 0xCB / raw 0xCD cols 8..9 rows 2..3)!
+                    // Uses ONLY index 5 (Jet-Black), 1 (Pure White), and 4/3 (Gold key/boots) -> ZERO blue pixels!
+                    let mut shop_bob_10 = black_bob;
+                    let badge_10: [&str; 6] = [
+                        ".55.5555", "51551115", ".5551515", ".5551515", "51551115", ".55.5555",
+                    ];
+                    for (by, row_s) in badge_10.iter().enumerate() {
+                        for (bx, ch) in row_s.bytes().enumerate() {
+                            if ch != b'.' {
+                                shop_bob_10[10 + by][8 + bx] = ch - b'0';
+                            }
+                        }
+                    }
                     if patch_alttp_comp_sheet_helper(
                         rom_zelda,
                         session,
                         0xCB,
-                        &format!("Objets & Boutique (Sheet 0xCB) ← {}:Champignon Rouge, Fleur Feu, Baie, Bob-omb Noir, Clé", rule.donor_alias),
+                        &format!("Objets & Boutique (Sheet 0xCB) ← {}:Super Champignon, Fleur Feu, Pack 10 Bob-ombs Noirs, Clé", rule.donor_alias),
                         free_cursor,
                         free_end,
                         &|raw| {
-                            write_3bpp_16x16(raw, 2, 0, &berry);      // Potions -> Baies Yoshi
-                            write_3bpp_16x16(raw, 6, 0, &crisp_mush); // Cœur / Réserve -> Super Champignon Rouge net!
-                            write_3bpp_16x16(raw, 8, 0, &ff);         // Lanterne -> Fleur de Feu
-                            write_3bpp_16x16(raw, 14, 0, &shell);     // Bouclier -> Carapace
-                            write_3bpp_16x16(raw, 10, 2, &black_bob); // Bombes -> 100% JET-BLACK SMW Bob-omb!
-                            write_3bpp_16x16(raw, 14, 2, &key);       // Clé -> Clé SMW
+                            write_3bpp_16x16(raw, 2, 0, &crisp_mush);  // Potion Rouge Boutique (150 pièces) -> Super Champignon Rouge SMW!
+                            write_3bpp_16x16(raw, 6, 0, &crisp_mush);  // Cœur / Réserve -> Super Champignon Rouge net!
+                            write_3bpp_16x16(raw, 8, 0, &ff);          // Lanterne -> Fleur de Feu
+                            write_3bpp_16x16(raw, 14, 0, &shell);      // Bouclier -> Carapace
+                            write_3bpp_16x16(raw, 8, 2, &shop_bob_10); // Pack 10 Bombes Boutique (50 pièces) -> 100% JET-BLACK SMW Bob-omb '10'!
+                            write_3bpp_16x16(raw, 10, 2, &black_bob);  // Bombes -> 100% JET-BLACK SMW Bob-omb!
+                            write_3bpp_16x16(raw, 14, 2, &key);        // Clé -> Clé SMW
                         },
                     )? {
                         ops += 1;
