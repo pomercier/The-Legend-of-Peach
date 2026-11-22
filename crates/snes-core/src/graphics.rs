@@ -146,7 +146,11 @@ impl SnesPalette {
             if rom.len() >= 0x0032C8 + 20 {
                 let first_word = u16::from_le_bytes([rom[0x0032C8], rom[0x0032C9]]);
                 // Only overlay if non-standard or swapped (such as Link green mail)
-                if first_word != 0x1F00 && first_word != 0x0000 && first_word != 0x0019 && first_word != 0x108C {
+                if first_word != 0x1F00
+                    && first_word != 0x0000
+                    && first_word != 0x0019
+                    && first_word != 0x108C
+                {
                     for i in 0..10 {
                         let bpos = 0x0032C8 + i * 2;
                         let raw = u16::from_le_bytes([rom[bpos], rom[bpos + 1]]);
@@ -157,11 +161,19 @@ impl SnesPalette {
             }
         }
 
-        Self::expand_16_to_256("Palette Joueur Mario — Rouge & Bleu Authentique (Vibrant)", &base_16)
+        Self::expand_16_to_256(
+            "Palette Joueur Mario — Rouge & Bleu Authentique (Vibrant)",
+            &base_16,
+        )
     }
 
     /// Construct an authentic Link 16-color tunic palette directly from Zelda ALTTP ROM
-    pub fn zelda_link_full_16(rom_data: &[u8], tunic_offset: usize, name: &str, is_ai_blonde: bool) -> Self {
+    pub fn zelda_link_full_16(
+        rom_data: &[u8],
+        tunic_offset: usize,
+        name: &str,
+        is_ai_blonde: bool,
+    ) -> Self {
         let mut base_16: [[u8; 4]; 16] = [
             [18, 22, 32, 255],    // 0: Transparent
             [248, 248, 96, 255],  // 1: Yellow belt
@@ -191,7 +203,7 @@ impl SnesPalette {
 
         if is_ai_blonde {
             base_16[7] = [180, 156, 48, 255]; // Blond noble IA
-            base_16[2] = [120, 90, 32, 255];  // Ombre dorée
+            base_16[2] = [120, 90, 32, 255]; // Ombre dorée
         }
 
         let mut pal = Self::expand_16_to_256(name, &base_16);
@@ -522,7 +534,11 @@ pub fn encode_rgba_sheet_to_tiles(
     let rows = height / 8;
     let max_colors = format.color_count().min(palette.colors_rgba.len());
     let mut out = Vec::with_capacity(cols * rows * format.bytes_per_tile());
-    let bg_col = palette.colors_rgba.first().copied().unwrap_or([0, 0, 0, 255]);
+    let bg_col = palette
+        .colors_rgba
+        .first()
+        .copied()
+        .unwrap_or([0, 0, 0, 255]);
 
     for ty in 0..rows {
         for tx in 0..cols {
@@ -616,12 +632,18 @@ pub fn render_mario_assembled_sheet(
     let mut rgba = vec![0u8; width_px * height_px * 4];
 
     // Background color
-    let bg = palette.colors_rgba.first().copied().unwrap_or([18, 22, 32, 255]);
+    let bg = palette
+        .colors_rgba
+        .first()
+        .copied()
+        .unwrap_or([18, 22, 32, 255]);
     for p in rgba.as_chunks_mut::<4>().0 {
         p.copy_from_slice(&bg);
     }
 
-    let g32 = if let Some((dec, _)) = crate::disasm_dma::decompress_nintendo_lz2(rom_data, 0x040000, 32768) {
+    let g32 = if let Some((dec, _)) =
+        crate::disasm_dma::decompress_nintendo_lz2(rom_data, 0x040000, 32768)
+    {
         dec
     } else {
         return (width_px, height_px, rgba);
@@ -671,7 +693,11 @@ pub fn render_mario_assembled_sheet(
             for x in 0..16 {
                 let c_idx = frame[y][x] as usize;
                 if c_idx != 0 {
-                    let col = palette.colors_rgba.get(c_idx).copied().unwrap_or([0, 0, 0, 255]);
+                    let col = palette
+                        .colors_rgba
+                        .get(c_idx)
+                        .copied()
+                        .unwrap_or([0, 0, 0, 255]);
                     let offset = (y * width_px + col_i * 16 + x) * 4;
                     rgba[offset..offset + 4].copy_from_slice(&col);
                 }
@@ -687,7 +713,11 @@ pub fn render_mario_assembled_sheet(
             for x in 0..16 {
                 let c_idx = top[y][x] as usize;
                 if c_idx != 0 {
-                    let col = palette.colors_rgba.get(c_idx).copied().unwrap_or([0, 0, 0, 255]);
+                    let col = palette
+                        .colors_rgba
+                        .get(c_idx)
+                        .copied()
+                        .unwrap_or([0, 0, 0, 255]);
                     let offset = ((16 + y) * width_px + col_i * 16 + x) * 4;
                     rgba[offset..offset + 4].copy_from_slice(&col);
                 }
@@ -697,7 +727,11 @@ pub fn render_mario_assembled_sheet(
             for x in 0..16 {
                 let c_idx = bot[y][x] as usize;
                 if c_idx != 0 {
-                    let col = palette.colors_rgba.get(c_idx).copied().unwrap_or([0, 0, 0, 255]);
+                    let col = palette
+                        .colors_rgba
+                        .get(c_idx)
+                        .copied()
+                        .unwrap_or([0, 0, 0, 255]);
                     let offset = ((32 + y) * width_px + col_i * 16 + x) * 4;
                     rgba[offset..offset + 4].copy_from_slice(&col);
                 }
@@ -711,7 +745,10 @@ pub fn render_mario_assembled_sheet(
 /// Renders a single recognizable, assembled SNES character or object sprite (e.g. UN Mario, UN Link, UNE Pièce, UN Bloc de brique, UN Koopa, etc.)
 /// with authentic vibrant pixel colors, centered and formatted for high-definition display.
 /// Returns Some((width_px, height_px, rgba_bytes)) or None if the asset cannot be assembled.
-pub fn render_single_asset_sprite(rom_data: &[u8], asset_id: &str) -> Option<(usize, usize, Vec<u8>)> {
+pub fn render_single_asset_sprite(
+    rom_data: &[u8],
+    asset_id: &str,
+) -> Option<(usize, usize, Vec<u8>)> {
     match asset_id {
         // =========================================================================
         // SUPER MARIO WORLD: ICONIC SINGLE ASSETS
@@ -989,7 +1026,13 @@ pub fn render_single_asset_sprite(rom_data: &[u8], asset_id: &str) -> Option<(us
             for y in 0..16 {
                 for x in 0..16 {
                     write_px(&mut rgba, 16, x, y, pal_yoshi[(head[y][x] & 7) as usize]);
-                    write_px(&mut rgba, 16, x, y + 16, pal_yoshi[(body[y][x] & 7) as usize]);
+                    write_px(
+                        &mut rgba,
+                        16,
+                        x,
+                        y + 16,
+                        pal_yoshi[(body[y][x] & 7) as usize],
+                    );
                 }
             }
             Some((16, 32, rgba))
@@ -1034,7 +1077,7 @@ pub fn render_single_asset_sprite(rom_data: &[u8], asset_id: &str) -> Option<(us
                     pal_link[i] = bgr555_to_rgba(raw, false, false);
                 }
                 pal_link[8] = [180, 156, 48, 255]; // Chevelure blonde noble IA
-                pal_link[3] = [120, 90, 32, 255];  // Ombre blonde
+                pal_link[3] = [120, 90, 32, 255]; // Ombre blonde
             }
 
             let w = 16;
@@ -1081,7 +1124,13 @@ pub fn render_single_asset_sprite(rom_data: &[u8], asset_id: &str) -> Option<(us
                 [248, 216, 32, 255],  // Golden Hilt
                 [112, 64, 16, 255],
                 [200, 40, 40, 255],
-                [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
             ];
             let w = 16;
             let h = 24;
@@ -1106,7 +1155,10 @@ pub fn render_single_asset_sprite(rom_data: &[u8], asset_id: &str) -> Option<(us
             let mut pal = [[0u8; 4]; 8];
             if rom_data.len() >= 0x0DD272 + 14 {
                 for i in 0..7 {
-                    let w = u16::from_le_bytes([rom_data[0x0DD272 + i * 2], rom_data[0x0DD272 + i * 2 + 1]]);
+                    let w = u16::from_le_bytes([
+                        rom_data[0x0DD272 + i * 2],
+                        rom_data[0x0DD272 + i * 2 + 1],
+                    ]);
                     pal[i + 1] = bgr555_to_rgba(w, false, false);
                 }
             }
@@ -1137,7 +1189,10 @@ pub fn render_single_asset_sprite(rom_data: &[u8], asset_id: &str) -> Option<(us
             let mut pal = [[0u8; 4]; 8];
             if rom_data.len() >= 0x0DD4FC + 14 {
                 for i in 0..7 {
-                    let w = u16::from_le_bytes([rom_data[0x0DD4FC + i * 2], rom_data[0x0DD4FC + i * 2 + 1]]);
+                    let w = u16::from_le_bytes([
+                        rom_data[0x0DD4FC + i * 2],
+                        rom_data[0x0DD4FC + i * 2 + 1],
+                    ]);
                     pal[i + 1] = bgr555_to_rgba(w, false, false);
                 }
             }
@@ -1157,7 +1212,10 @@ pub fn render_single_asset_sprite(rom_data: &[u8], asset_id: &str) -> Option<(us
             let mut pal = [[0u8; 4]; 8];
             if rom_data.len() >= 0x0DD4FC + 14 {
                 for i in 0..7 {
-                    let w = u16::from_le_bytes([rom_data[0x0DD4FC + i * 2], rom_data[0x0DD4FC + i * 2 + 1]]);
+                    let w = u16::from_le_bytes([
+                        rom_data[0x0DD4FC + i * 2],
+                        rom_data[0x0DD4FC + i * 2 + 1],
+                    ]);
                     pal[i + 1] = bgr555_to_rgba(w, false, false);
                 }
             }
@@ -1206,7 +1264,10 @@ pub fn render_single_asset_sprite(rom_data: &[u8], asset_id: &str) -> Option<(us
             let mut pal = [[0u8; 4]; 8];
             if rom_data.len() >= 0x0DD3D6 + 14 {
                 for i in 0..7 {
-                    let w = u16::from_le_bytes([rom_data[0x0DD3D6 + i * 2], rom_data[0x0DD3D6 + i * 2 + 1]]);
+                    let w = u16::from_le_bytes([
+                        rom_data[0x0DD3D6 + i * 2],
+                        rom_data[0x0DD3D6 + i * 2 + 1],
+                    ]);
                     pal[i + 1] = bgr555_to_rgba(w, false, false);
                 }
             }
@@ -1226,7 +1287,10 @@ pub fn render_single_asset_sprite(rom_data: &[u8], asset_id: &str) -> Option<(us
             let mut pal = [[0u8; 4]; 8];
             if rom_data.len() >= 0x0DD3E4 + 14 {
                 for i in 0..7 {
-                    let w = u16::from_le_bytes([rom_data[0x0DD3E4 + i * 2], rom_data[0x0DD3E4 + i * 2 + 1]]);
+                    let w = u16::from_le_bytes([
+                        rom_data[0x0DD3E4 + i * 2],
+                        rom_data[0x0DD3E4 + i * 2 + 1],
+                    ]);
                     pal[i + 1] = bgr555_to_rgba(w, false, false);
                 }
             }
@@ -1264,7 +1328,8 @@ fn decode_3bpp_tile_slice(raw: &[u8], tile_idx: usize) -> [u8; 64] {
             let b2 = t[16 + y];
             for x in 0..8 {
                 let sh = 7 - x;
-                px[y * 8 + x] = ((b0 >> sh) & 1) | (((b1 >> sh) & 1) << 1) | (((b2 >> sh) & 1) << 2);
+                px[y * 8 + x] =
+                    ((b0 >> sh) & 1) | (((b1 >> sh) & 1) << 1) | (((b2 >> sh) & 1) << 2);
             }
         }
     }
@@ -1337,7 +1402,8 @@ pub fn render_tile_sheet_rgba(
             crate::disasm_dma::decompress_nintendo_lz2(rom_data, start_offset, 32768)
         {
             if consumed >= 128 && dec.len() >= 1024 && dec.len() > consumed {
-                let is_known_3bpp = ((0x043000..0x050000).contains(&start_offset) && start_offset != 0x040000)
+                let is_known_3bpp = ((0x043000..0x050000).contains(&start_offset)
+                    && start_offset != 0x040000)
                     || start_offset == 0x04EF1E
                     || (dec.len() % 32 != 0 && dec.len() % 24 == 0);
                 if format == TileFormat::Bpp4 && is_known_3bpp {
@@ -1489,7 +1555,11 @@ pub fn scan_candidate_palettes(rom_data: &[u8], max_results: usize) -> Vec<SnesP
         return Vec::new();
     }
 
-    let step = if rom_data.len() > 2 * 1024 * 1024 { 4 } else { 2 };
+    let step = if rom_data.len() > 2 * 1024 * 1024 {
+        4
+    } else {
+        2
+    };
     let mut scored: Vec<(i32, usize)> = Vec::new();
 
     let mut offset = 0usize;

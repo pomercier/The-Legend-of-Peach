@@ -188,7 +188,8 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 name: "Pomme / Baie de Yoshi (Berry)".to_string(),
                 category: AssetCategory::Collectible,
                 family_name: "🪙 Pack Collectibles & Récolte",
-                family_pack_desc: "Pack Baies & Fruits : remplace les fruits consommables par Yoshi.",
+                family_pack_desc:
+                    "Pack Baies & Fruits : remplace les fruits consommables par Yoshi.",
                 icon: "🍎",
                 sheet_name: "GFX00 (0x0459F9)".to_string(),
                 rom_offset: 0x0459F9,
@@ -196,7 +197,9 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 format: TileFormat::Bpp4,
                 compressed: true,
                 palette_offset: Some(0x003280),
-                description: "Baies rouges, roses et vertes des buissons comestibles par Yoshi (Tuile $80)".to_string(),
+                description:
+                    "Baies rouges, roses et vertes des buissons comestibles par Yoshi (Tuile $80)"
+                        .to_string(),
                 partner_asset_id: None,
             });
 
@@ -290,7 +293,8 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 name: "Logo Titre 'SUPER MARIO WORLD'".to_string(),
                 category: AssetCategory::UiTitle,
                 family_name: "🏷️ Pack Interface & Logos",
-                family_pack_desc: "Pack Typographie : remplace le titre principal de l'écran d'accueil.",
+                family_pack_desc:
+                    "Pack Typographie : remplace le titre principal de l'écran d'accueil.",
                 icon: "🏷️",
                 sheet_name: "GFX29 (0x05C6A3)".to_string(),
                 rom_offset: 0x05C6A3,
@@ -298,7 +302,9 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 format: TileFormat::Bpp2,
                 compressed: true,
                 palette_offset: Some(0x003100),
-                description: "Lettres en relief 3D de l'écran d'accueil avec stripe images vectorielles".to_string(),
+                description:
+                    "Lettres en relief 3D de l'écran d'accueil avec stripe images vectorielles"
+                        .to_string(),
                 partner_asset_id: Some("zelda_title".to_string()),
             });
         }
@@ -360,7 +366,8 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 name: "Sage Sahasrahla & Oncle de Link".to_string(),
                 category: AssetCategory::Player,
                 family_name: "👑 Pack Royauté & Alliés (Princesse Zelda)",
-                family_pack_desc: "Pack Alliés d'Hyrule : le vénérable Sage Sahasrahla et l'Oncle de Link.",
+                family_pack_desc:
+                    "Pack Alliés d'Hyrule : le vénérable Sage Sahasrahla et l'Oncle de Link.",
                 icon: "🧙‍♂️",
                 sheet_name: "Sheet 0x06 (0x086000)".to_string(),
                 rom_offset: 0x086000,
@@ -411,7 +418,8 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 name: "Flacon Magique & Potions d'Hyrule".to_string(),
                 category: AssetCategory::PowerUp,
                 family_name: "🍄 Pack Objets & Magie Sacrée",
-                family_pack_desc: "Pack Potions Sacrées : Flacons de magie rouge, verte et bleue de la sorcière.",
+                family_pack_desc:
+                    "Pack Potions Sacrées : Flacons de magie rouge, verte et bleue de la sorcière.",
                 icon: "🧪",
                 sheet_name: "Sheet 0x02 (0x082000)".to_string(),
                 rom_offset: 0x082000,
@@ -428,7 +436,8 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 name: "Rubis d'Hyrule (Vert, Bleu, Rouge)".to_string(),
                 category: AssetCategory::Collectible,
                 family_name: "💎 Pack Trésors & Blocs d'Hyrule",
-                family_pack_desc: "Pack Monnaies Légendaires : Rubis vert, bleu et rouge scintillants d'Hyrule.",
+                family_pack_desc:
+                    "Pack Monnaies Légendaires : Rubis vert, bleu et rouge scintillants d'Hyrule.",
                 icon: "💎",
                 sheet_name: "Sheet 0x08 (0x082000)".to_string(),
                 rom_offset: 0x082000,
@@ -436,7 +445,8 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 format: TileFormat::Bpp4,
                 compressed: false,
                 palette_offset: Some(0x0DD308),
-                description: "Monnaie légendaire d'Hyrule scintillante (1, 5, 20 rubis)".to_string(),
+                description: "Monnaie légendaire d'Hyrule scintillante (1, 5, 20 rubis)"
+                    .to_string(),
                 partner_asset_id: Some("smw_coin".to_string()),
             });
 
@@ -445,7 +455,8 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 name: "Coffre au Trésor d'Hyrule".to_string(),
                 category: AssetCategory::InteractiveBlock,
                 family_name: "💎 Pack Trésors & Blocs d'Hyrule",
-                family_pack_desc: "Pack Trésors des Donjons : Coffre royal ouvrable contenant les objets sacrés.",
+                family_pack_desc:
+                    "Pack Trésors des Donjons : Coffre royal ouvrable contenant les objets sacrés.",
                 icon: "📦",
                 sheet_name: "Sheet 0x08 (0x082000)".to_string(),
                 rom_offset: 0x082000,
@@ -453,7 +464,8 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 format: TileFormat::Bpp4,
                 compressed: false,
                 palette_offset: Some(0x0DD308),
-                description: "Coffre en bois et or contenant des trésors dans les donjons".to_string(),
+                description: "Coffre en bois et or contenant des trésors dans les donjons"
+                    .to_string(),
                 partner_asset_id: Some("smw_question_block".to_string()),
             });
 
@@ -479,7 +491,8 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 name: "Soldat d'Hyrule (Garde Vert & Rouge)".to_string(),
                 category: AssetCategory::Enemy,
                 family_name: "⚔️ Pack Gardes & Soldats du Château",
-                family_pack_desc: "Pack Garnison du Château : Soldats royaux d'Hyrule à l'épée, lance et arc.",
+                family_pack_desc:
+                    "Pack Garnison du Château : Soldats royaux d'Hyrule à l'épée, lance et arc.",
                 icon: "🛡️",
                 sheet_name: "Sheet 0x08 (0x088000)".to_string(),
                 rom_offset: 0x088000,
@@ -487,7 +500,8 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 format: TileFormat::Bpp4,
                 compressed: false,
                 palette_offset: Some(0x0DD308),
-                description: "Gardes royaux armés d'épées et de boucliers patrouillant le château".to_string(),
+                description: "Gardes royaux armés d'épées et de boucliers patrouillant le château"
+                    .to_string(),
                 partner_asset_id: Some("smw_koopa".to_string()),
             });
 
@@ -530,7 +544,8 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 name: "Sorcier Agahnim (Prêtre Sombre)".to_string(),
                 category: AssetCategory::Boss,
                 family_name: "🔥 Pack Boss & Némésis (Ganon & Agahnim)",
-                family_pack_desc: "Pack Magie Sombre : Le grand prêtre Agahnim et ses sorts d'éclairs.",
+                family_pack_desc:
+                    "Pack Magie Sombre : Le grand prêtre Agahnim et ses sorts d'éclairs.",
                 icon: "🧙",
                 sheet_name: "Sheet 0x12 (0x092000)".to_string(),
                 rom_offset: 0x092000,
@@ -538,7 +553,8 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 format: TileFormat::Bpp4,
                 compressed: false,
                 palette_offset: Some(0x0DD308),
-                description: "Sorcier Agahnim projetant des orbes magiques et des éclairs".to_string(),
+                description: "Sorcier Agahnim projetant des orbes magiques et des éclairs"
+                    .to_string(),
                 partner_asset_id: Some("smw_bowser".to_string()),
             });
 
@@ -555,7 +571,8 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 format: TileFormat::Bpp2,
                 compressed: true,
                 palette_offset: Some(0x0DD308),
-                description: "Triforce dorée flottante de l'écran d'accueil d'A Link to the Past".to_string(),
+                description: "Triforce dorée flottante de l'écran d'accueil d'A Link to the Past"
+                    .to_string(),
                 partner_asset_id: Some("smw_title".to_string()),
             });
         }
@@ -617,10 +634,7 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
 }
 
 /// Generate default, customizable swap decisions when pairing two ROMs.
-pub fn get_default_swap_decisions(
-    rom_a: &SnesRom,
-    rom_b: &SnesRom,
-) -> Vec<UserSwapDecision> {
+pub fn get_default_swap_decisions(rom_a: &SnesRom, rom_b: &SnesRom) -> Vec<UserSwapDecision> {
     let mut decisions = Vec::new();
     let game_a = rom_a.identify_game();
     let game_b = rom_b.identify_game();
@@ -644,11 +658,14 @@ pub fn get_default_swap_decisions(
             label: "Pack Écran Titre : SUPER MARIO ➡️ SUPER LINK WORLD".to_string(),
             category: AssetCategory::UiTitle,
             family_name: "🏷️ Pack Interface & Titre",
-            pack_summary: "Remplace le logo d'accueil avec les lettres 3D d'Hyrule et le bandeau officiel.",
+            pack_summary:
+                "Remplace le logo d'accueil avec les lettres 3D d'Hyrule et le bandeau officiel.",
             icon: "🏷️",
             target_rom_asset: "Logo Titre Super Mario World [GFX29]".to_string(),
             donor_rom_asset: "Lettres 3D 'SUPER LINK WORLD' [AI Synth]".to_string(),
-            description: "Remplace 'MARIO' par 'LINK' dans le logo d'accueil avec stripe images vectorielles".to_string(),
+            description:
+                "Remplace 'MARIO' par 'LINK' dans le logo d'accueil avec stripe images vectorielles"
+                    .to_string(),
             enabled: true,
         });
 
@@ -670,11 +687,14 @@ pub fn get_default_swap_decisions(
             label: "Pack Collectible : Pièce d'or ➡️ Rubis d'Hyrule".to_string(),
             category: AssetCategory::Collectible,
             family_name: "💎 Pack Trésors & Monnaies",
-            pack_summary: "Remplace 100% des pièces d'or animées par les Rubis scintillants d'Hyrule.",
+            pack_summary:
+                "Remplace 100% des pièces d'or animées par les Rubis scintillants d'Hyrule.",
             icon: "💎",
             target_rom_asset: "Pièce dorée rotative [GFX33]".to_string(),
             donor_rom_asset: "Rubis vert/doré scintillant [Zelda Sheet 0x08]".to_string(),
-            description: "Toutes les pièces de Super Mario World deviennent des rubis dorés d'Hyrule".to_string(),
+            description:
+                "Toutes les pièces de Super Mario World deviennent des rubis dorés d'Hyrule"
+                    .to_string(),
             enabled: true,
         });
 
@@ -683,11 +703,14 @@ pub fn get_default_swap_decisions(
             label: "Pack Décor : Bloc '?' ➡️ Coffre au Trésor Zelda".to_string(),
             category: AssetCategory::InteractiveBlock,
             family_name: "🧱 Pack Blocs & Donjons",
-            pack_summary: "Remplace l'ensemble des blocs '?' par des coffres au trésor dorés d'Hyrule.",
+            pack_summary:
+                "Remplace l'ensemble des blocs '?' par des coffres au trésor dorés d'Hyrule.",
             icon: "📦",
             target_rom_asset: "Bloc Mystère '?' [GFX00]".to_string(),
             donor_rom_asset: "Coffre au Trésor des donjons [Zelda Sheet 0x08]".to_string(),
-            description: "Les blocs '?' flottants deviennent des coffres dorés contenant des objets".to_string(),
+            description:
+                "Les blocs '?' flottants deviennent des coffres dorés contenant des objets"
+                    .to_string(),
             enabled: true,
         });
 
@@ -709,11 +732,13 @@ pub fn get_default_swap_decisions(
             label: "Pack Ennemis : Koopa Troopa ➡️ Garde d'Hyrule".to_string(),
             category: AssetCategory::Enemy,
             family_name: "⚔️ Pack Gardes & Monstres",
-            pack_summary: "Remplace les patrouilles d'ennemis au sol par les soldats en armure d'Hyrule.",
+            pack_summary:
+                "Remplace les patrouilles d'ennemis au sol par les soldats en armure d'Hyrule.",
             icon: "🛡️",
             target_rom_asset: "Koopa Troopa (Vert & Rouge) [GFX01]".to_string(),
             donor_rom_asset: "Garde Royal d'Hyrule [Zelda Sheet 0x08]".to_string(),
-            description: "Les troupes de tortues au sol deviennent des soldats royaux d'Hyrule".to_string(),
+            description: "Les troupes de tortues au sol deviennent des soldats royaux d'Hyrule"
+                .to_string(),
             enabled: false,
         });
 
@@ -722,11 +747,13 @@ pub fn get_default_swap_decisions(
             label: "Pack Boss : Bowser Clown Car ➡️ Ganon d'Hyrule".to_string(),
             category: AssetCategory::Boss,
             family_name: "🔥 Pack Boss & Némésis",
-            pack_summary: "Remplace le boss final volant par le Seigneur des Ténèbres Ganon au trident.",
+            pack_summary:
+                "Remplace le boss final volant par le Seigneur des Ténèbres Ganon au trident.",
             icon: "👑",
             target_rom_asset: "Bowser & Clown Car (Boss Final) [GFX31]".to_string(),
             donor_rom_asset: "Ganon au Trident [Zelda Sheet 0x09]".to_string(),
-            description: "Le boss final volant est remplacé par le Seigneur des Ténèbres Ganon".to_string(),
+            description: "Le boss final volant est remplacé par le Seigneur des Ténèbres Ganon"
+                .to_string(),
             enabled: false,
         });
     } else {
@@ -801,9 +828,9 @@ pub fn apply_custom_swaps(
     let mut ops_count = 0usize;
 
     // 0. Universal Cross-ROM Swaps (works for 100% of ALL SNES ROMs: LoROM, HiROM, ExHiROM, Unknown!)
-    let u_gfx = decisions
-        .iter()
-        .any(|d| (d.id == "swap_universal_gfx_sprites" || d.id == "swap_player_generic") && d.enabled);
+    let u_gfx = decisions.iter().any(|d| {
+        (d.id == "swap_universal_gfx_sprites" || d.id == "swap_player_generic") && d.enabled
+    });
     let u_pal = decisions
         .iter()
         .any(|d| d.id == "swap_universal_palettes" && d.enabled);
@@ -835,7 +862,9 @@ pub fn apply_custom_swaps(
     }
 
     // 1. Link into SMW
-    let link_enabled = decisions.iter().any(|d| d.id == "swap_mario_link" && d.enabled);
+    let link_enabled = decisions
+        .iter()
+        .any(|d| d.id == "swap_mario_link" && d.enabled);
     if link_enabled {
         if let Some(zelda) = donor_rom {
             ops_count += crate::demo::apply_link_into_smw_swap(rom_target, zelda, session)?;
@@ -843,7 +872,9 @@ pub fn apply_custom_swaps(
     }
 
     // 2. Title Screen Logo: "SUPER LINK WORLD"
-    let title_enabled = decisions.iter().any(|d| d.id == "swap_title_screen" && d.enabled);
+    let title_enabled = decisions
+        .iter()
+        .any(|d| d.id == "swap_title_screen" && d.enabled);
     if title_enabled {
         if let Ok(t_ops) = crate::demo::apply_link_world_title_screen(rom_target, session) {
             ops_count += t_ops;
@@ -851,10 +882,18 @@ pub fn apply_custom_swaps(
     }
 
     // 4. Items & Interactive Blocks (GFX00 & GFX33 custom swaps)
-    let mushroom_heart = decisions.iter().any(|d| d.id == "swap_mushroom_heart" && d.enabled);
-    let coin_rupee = decisions.iter().any(|d| d.id == "swap_coin_rupee" && d.enabled);
-    let qblock_chest = decisions.iter().any(|d| d.id == "swap_qblock_chest" && d.enabled);
-    let brick_pot = decisions.iter().any(|d| d.id == "swap_brick_pot" && d.enabled);
+    let mushroom_heart = decisions
+        .iter()
+        .any(|d| d.id == "swap_mushroom_heart" && d.enabled);
+    let coin_rupee = decisions
+        .iter()
+        .any(|d| d.id == "swap_coin_rupee" && d.enabled);
+    let qblock_chest = decisions
+        .iter()
+        .any(|d| d.id == "swap_qblock_chest" && d.enabled);
+    let brick_pot = decisions
+        .iter()
+        .any(|d| d.id == "swap_brick_pot" && d.enabled);
 
     if mushroom_heart || qblock_chest || brick_pot {
         if let Some((mut g00, _)) = crate::disasm_dma::decompress_nintendo_lz2_with_endian(
@@ -1013,7 +1052,12 @@ pub fn apply_custom_swaps(
                 let tr = extract_quad(8, 0);
                 let bl = extract_quad(0, 8);
                 let br = extract_quad(8, 8);
-                for &(t_idx, tile) in &[(row_base, &tl), (row_base + 1, &tr), (row_base + 2, &bl), (row_base + 3, &br)] {
+                for &(t_idx, tile) in &[
+                    (row_base, &tl),
+                    (row_base + 1, &tr),
+                    (row_base + 2, &bl),
+                    (row_base + 3, &br),
+                ] {
                     if (t_idx + 1) * 24 <= g33.len() {
                         g33[t_idx * 24..(t_idx + 1) * 24].copy_from_slice(tile);
                     }
@@ -1114,7 +1158,10 @@ mod tests {
 
             // 1. Scan assets for ROM A
             let assets_a = scan_assets_for_rom(&rom_a);
-            assert!(assets_a.len() >= 10, "Should detect at least 10 assets in SMW");
+            assert!(
+                assets_a.len() >= 10,
+                "Should detect at least 10 assets in SMW"
+            );
             let has_mushroom = assets_a.iter().any(|a| a.id == "smw_mushroom");
             let has_coin = assets_a.iter().any(|a| a.id == "smw_coin");
             let has_turn_block = assets_a.iter().any(|a| a.id == "smw_turn_block");
@@ -1126,9 +1173,18 @@ mod tests {
 
             // 2. Scan assets for ROM B
             let assets_b = scan_assets_for_rom(&rom_b);
-            assert!(assets_b.len() >= 8, "Should detect at least 8 assets in Zelda");
-            assert!(assets_b.iter().any(|a| a.id == "zelda_link"), "Must detect Link");
-            assert!(assets_b.iter().any(|a| a.id == "zelda_heart"), "Must detect Cœur");
+            assert!(
+                assets_b.len() >= 8,
+                "Should detect at least 8 assets in Zelda"
+            );
+            assert!(
+                assets_b.iter().any(|a| a.id == "zelda_link"),
+                "Must detect Link"
+            );
+            assert!(
+                assets_b.iter().any(|a| a.id == "zelda_heart"),
+                "Must detect Cœur"
+            );
 
             // 3. Get user swap decisions
             let decisions = get_default_swap_decisions(&rom_a, &rom_b);
@@ -1136,9 +1192,13 @@ mod tests {
 
             // 4. Test applying custom swaps with all enabled
             let mut session = SwapSession::new();
-            let ops = apply_custom_swaps(&mut rom_a, Some(&rom_b), &decisions, &mut session).unwrap();
+            let ops =
+                apply_custom_swaps(&mut rom_a, Some(&rom_b), &decisions, &mut session).unwrap();
             assert!(ops >= 4, "Should apply custom swaps successfully");
-            assert!(rom_a.header.is_checksum_valid(), "Checksum must be 100% valid after custom swaps!");
+            assert!(
+                rom_a.header.is_checksum_valid(),
+                "Checksum must be 100% valid after custom swaps!"
+            );
 
             // 5. Update Knowledge Base
             let mut kb = crate::memory::RomKnowledgeBase::load_or_init();

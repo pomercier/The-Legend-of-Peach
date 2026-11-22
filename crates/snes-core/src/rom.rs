@@ -304,9 +304,7 @@ impl SnesRom {
                 if bank == 0x7E || bank == 0x7F {
                     return None;
                 }
-                if bank >= 0xC0 || (0x40..=0x7D).contains(&bank) {
-                    ((bank & 0x3F) as usize) * 0x10000 + (addr as usize)
-                } else if addr >= 0x8000 {
+                if bank >= 0xC0 || (0x40..=0x7D).contains(&bank) || addr >= 0x8000 {
                     ((bank & 0x3F) as usize) * 0x10000 + (addr as usize)
                 } else {
                     return None;
@@ -427,7 +425,14 @@ fn score_header_candidate(data: &[u8], mapping: RomMapping) -> i32 {
         };
         if reset_pc < data.len() {
             let op = data[reset_pc];
-            if op == 0x78 || op == 0x18 || op == 0xC2 || op == 0xE2 || op == 0x4C || op == 0x5C || op == 0x9C {
+            if op == 0x78
+                || op == 0x18
+                || op == 0xC2
+                || op == 0xE2
+                || op == 0x4C
+                || op == 0x5C
+                || op == 0x9C
+            {
                 // Classic 65c816 reset entry opcodes: SEI, CLC, REP, SEP, JMP, JML, STZ
                 score += 4;
             } else if op == 0x00 || op == 0xFF {
@@ -597,9 +602,8 @@ pub fn compute_snes_checksum(data: &[u8]) -> u16 {
     let mut sum: u32 = data[..highest_pow2].iter().map(|&b| b as u32).sum();
 
     let remainder = len - highest_pow2;
-    if remainder > 0 {
+    if let Some(full_repeats) = highest_pow2.checked_div(remainder) {
         let rem_slice = &data[highest_pow2..];
-        let full_repeats = highest_pow2 / remainder;
         let rem_tail = highest_pow2 % remainder;
         let rem_sum: u32 = rem_slice.iter().map(|&b| b as u32).sum();
         sum = sum.wrapping_add(rem_sum.wrapping_mul(full_repeats as u32));
@@ -626,4 +630,148 @@ pub fn compute_crc32(data: &[u8]) -> u32 {
         }
     }
     !crc
+}
+
+/// Verified unheadered No-Intro SHA-256 of `Legend of Zelda, The - A Link to the Past (France).sfc` (PAL, Rev 1.0, 1 MiB)
+pub const VERIFIED_ZELDA_FR_PAL_SHA256: &str =
+    "29a0d5812ccbb4b11bdb55d8f751a2a797b4110bf402ca8ba15eb2bf85db7b39";
+pub const VERIFIED_ZELDA_FR_PAL_SIZE: usize = 1_048_576;
+
+/// Verified unheadered No-Intro SHA-256 of `Super Mario World (Europe).sfc` (PAL, Rev 1.0, 512 KiB)
+pub const VERIFIED_SMW_EU_PAL_SHA256: &str =
+    "b5be1dba3012b6811a5660fbf2981cb23cdd1e48f845a42df00f0f55b19f0392";
+pub const VERIFIED_SMW_EU_PAL_SIZE: usize = 524_288;
+
+/// Standard zero-dependency FIPS 180-4 SHA-256 digest.
+pub fn compute_sha256(data: &[u8]) -> [u8; 32] {
+    const K: [u32; 64] = [
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4,
+        0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe,
+        0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f,
+        0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+        0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc,
+        0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b,
+        0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116,
+        0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7,
+        0xc67178f2,
+    ];
+
+    let mut h: [u32; 8] = [
+        0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
+        0x5be0cd19,
+    ];
+
+    let bit_len = (data.len() as u64).wrapping_mul(8);
+    let mut padded = Vec::with_capacity((data.len() + 9 + 63) & !63);
+    padded.extend_from_slice(data);
+    padded.push(0x80);
+    while (padded.len() % 64) != 56 {
+        padded.push(0);
+    }
+    padded.extend_from_slice(&bit_len.to_be_bytes());
+
+    let mut w = [0u32; 64];
+    for chunk in padded.as_chunks::<64>().0 {
+        for (i, word) in w.iter_mut().take(16).enumerate() {
+            let o = i * 4;
+            *word = u32::from_be_bytes([chunk[o], chunk[o + 1], chunk[o + 2], chunk[o + 3]]);
+        }
+        for i in 16..64 {
+            let s0 = w[i - 15].rotate_right(7) ^ w[i - 15].rotate_right(18) ^ (w[i - 15] >> 3);
+            let s1 = w[i - 2].rotate_right(17) ^ w[i - 2].rotate_right(19) ^ (w[i - 2] >> 10);
+            w[i] = w[i - 16]
+                .wrapping_add(s0)
+                .wrapping_add(w[i - 7])
+                .wrapping_add(s1);
+        }
+
+        let [mut a, mut b, mut c, mut d, mut e, mut f, mut g, mut hh] = h;
+        for i in 0..64 {
+            let s1 = e.rotate_right(6) ^ e.rotate_right(11) ^ e.rotate_right(25);
+            let ch = (e & f) ^ ((!e) & g);
+            let temp1 = hh
+                .wrapping_add(s1)
+                .wrapping_add(ch)
+                .wrapping_add(K[i])
+                .wrapping_add(w[i]);
+            let s0 = a.rotate_right(2) ^ a.rotate_right(13) ^ a.rotate_right(22);
+            let maj = (a & b) ^ (a & c) ^ (b & c);
+            let temp2 = s0.wrapping_add(maj);
+
+            hh = g;
+            g = f;
+            f = e;
+            e = d.wrapping_add(temp1);
+            d = c;
+            c = b;
+            b = a;
+            a = temp1.wrapping_add(temp2);
+        }
+
+        h[0] = h[0].wrapping_add(a);
+        h[1] = h[1].wrapping_add(b);
+        h[2] = h[2].wrapping_add(c);
+        h[3] = h[3].wrapping_add(d);
+        h[4] = h[4].wrapping_add(e);
+        h[5] = h[5].wrapping_add(f);
+        h[6] = h[6].wrapping_add(g);
+        h[7] = h[7].wrapping_add(hh);
+    }
+
+    let mut out = [0u8; 32];
+    for (i, word) in h.iter().enumerate() {
+        out[i * 4..i * 4 + 4].copy_from_slice(&word.to_be_bytes());
+    }
+    out
+}
+
+/// Lowercase 64-character hexadecimal SHA-256 digest.
+pub fn compute_sha256_hex(data: &[u8]) -> String {
+    let digest = compute_sha256(data);
+    let mut s = String::with_capacity(64);
+    for b in digest {
+        use std::fmt::Write;
+        let _ = write!(&mut s, "{b:02x}");
+    }
+    s
+}
+
+/// Strictly verify that the supplied base Zelda ALTTP and donor Super Mario World ROMs match
+/// the verified unheadered No-Intro hashes required by The Legend of Peach.
+pub fn verify_legend_of_peach_inputs(
+    zelda: &SnesRom,
+    smw: &SnesRom,
+    allow_unverified: bool,
+) -> Result<(String, String), String> {
+    let z_sha = compute_sha256_hex(&zelda.data);
+    let m_sha = compute_sha256_hex(&smw.data);
+
+    let z_ok =
+        zelda.data.len() == VERIFIED_ZELDA_FR_PAL_SIZE && z_sha == VERIFIED_ZELDA_FR_PAL_SHA256;
+    let m_ok = smw.data.len() == VERIFIED_SMW_EU_PAL_SIZE && m_sha == VERIFIED_SMW_EU_PAL_SHA256;
+
+    if !z_ok && !allow_unverified {
+        return Err(format!(
+            "Unsupported base ROM for The Legend of Zelda: A Link to the Past.\n\
+             Expected: Legend of Zelda, The - A Link to the Past (France).sfc (PAL, Rev 1.0, unheadered 1,048,576 bytes)\n\
+             Expected SHA-256: {VERIFIED_ZELDA_FR_PAL_SHA256}\n\
+             Actual   SHA-256: {z_sha} ({} bytes)\n\
+             See docs/ROM_REQUIREMENTS.md for verification instructions.",
+            zelda.data.len()
+        ));
+    }
+
+    if !m_ok && !allow_unverified {
+        return Err(format!(
+            "Unsupported donor ROM for Super Mario World.\n\
+             Expected: Super Mario World (Europe).sfc (PAL, Rev 1.0, unheadered 524,288 bytes)\n\
+             Expected SHA-256: {VERIFIED_SMW_EU_PAL_SHA256}\n\
+             Actual   SHA-256: {m_sha} ({} bytes)\n\
+             See docs/ROM_REQUIREMENTS.md for verification instructions.",
+            smw.data.len()
+        ));
+    }
+
+    Ok((z_sha, m_sha))
 }

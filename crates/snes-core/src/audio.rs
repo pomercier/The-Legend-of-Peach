@@ -126,7 +126,10 @@ pub fn scan_brr_samples(rom_data: &[u8], min_blocks: usize) -> Vec<BrrSampleInfo
 
         // Fast skip if the first block's 8 data bytes are mostly 0x00 or 0xFF (padding/sparse bitplanes)
         let first_data = &rom_data[pos + 1..pos + 9];
-        let first_nz = first_data.iter().filter(|&&b| b != 0x00 && b != 0xFF).count();
+        let first_nz = first_data
+            .iter()
+            .filter(|&&b| b != 0x00 && b != 0xFF)
+            .count();
         if first_nz < 4 {
             pos += 1;
             continue;
@@ -229,7 +232,8 @@ pub fn scan_nspc_directory_samples(rom_data: &[u8]) -> Vec<BrrSampleInfo> {
     let mut results = Vec::new();
     // N-SPC audio banks are aligned on 0x8000 (LoROM bank) boundaries
     for bank_start in (0x008000..rom_data.len().saturating_sub(0x1000)).step_by(0x8000) {
-        let dir_size = u16::from_le_bytes([rom_data[bank_start], rom_data[bank_start + 1]]) as usize;
+        let dir_size =
+            u16::from_le_bytes([rom_data[bank_start], rom_data[bank_start + 1]]) as usize;
         let dir_spc = u16::from_le_bytes([rom_data[bank_start + 2], rom_data[bank_start + 3]]);
 
         // Standard N-SPC DIR block is a multiple of 4 bytes (16..512 bytes) uploaded to page-aligned SPC RAM ($xx00)
@@ -334,11 +338,7 @@ pub fn scan_nspc_directory_samples(rom_data: &[u8]) -> Vec<BrrSampleInfo> {
 }
 
 /// Adapt a donor BRR sample from ROM B so that it fits safely into a target BRR sample slot in ROM A
-pub fn adapt_brr_for_swap(
-    donor_brr: &[u8],
-    target_byte_len: usize,
-    target_loops: bool,
-) -> Vec<u8> {
+pub fn adapt_brr_for_swap(donor_brr: &[u8], target_byte_len: usize, target_loops: bool) -> Vec<u8> {
     let target_blocks = (target_byte_len / 9).max(1);
     let donor_blocks = (donor_brr.len() / 9).max(1);
     let mut out = vec![0u8; target_blocks * 9];
@@ -471,7 +471,8 @@ pub fn resample_and_encode_brr_for_swap(
     }
 
     let mut resampled = Vec::with_capacity(target_pcm_len);
-    let scale = (donor_pcm.len().saturating_sub(1) as f32) / (target_pcm_len.saturating_sub(1).max(1) as f32);
+    let scale = (donor_pcm.len().saturating_sub(1) as f32)
+        / (target_pcm_len.saturating_sub(1).max(1) as f32);
 
     for i in 0..target_pcm_len {
         let src_pos = (i as f32) * scale;
@@ -605,7 +606,8 @@ pub fn encode_pcm16_to_brr_fit_budget(
     }
 
     let mut resampled = Vec::with_capacity(target_pcm_len);
-    let scale = (pcm.len().saturating_sub(1) as f32) / (target_pcm_len.saturating_sub(1).max(1) as f32);
+    let scale =
+        (pcm.len().saturating_sub(1) as f32) / (target_pcm_len.saturating_sub(1).max(1) as f32);
     for i in 0..target_pcm_len {
         let src_pos = (i as f32) * scale;
         let idx0 = (src_pos.floor() as usize).min(pcm.len() - 1);

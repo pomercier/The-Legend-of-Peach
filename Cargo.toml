@@ -8,4 +8,6 @@ members = [
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-authors = ["SNES ROM Swapper Contributors"]
+authors = ["pomercier"]
+repository = "https://github.com/pomercier/The-Legend-of-Peach"
+description = "The Legend of Peach: A Mario to the Mushroom Kingdom — reproducible Rust SNES ROM crossover builder."

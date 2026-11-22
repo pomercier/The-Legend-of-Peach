@@ -1,3 +1,11 @@
+#![allow(
+    clippy::needless_range_loop,
+    clippy::type_complexity,
+    clippy::too_many_arguments,
+    clippy::doc_overindented_list_items,
+    clippy::doc_lazy_continuation
+)]
+
 pub mod ai_sprites;
 pub mod assets;
 pub mod audio;
@@ -195,19 +203,40 @@ mod tests {
             let rom_b = SnesRom::from_bytes("zelda", &bytes_b).unwrap();
             let mut session = SwapSession::new();
 
-            let orig_g32 = super::disasm_dma::decompress_nintendo_lz2_with_endian(&rom_a.data, 0x040000, 32768, true).unwrap().0;
-            let ops = super::demo::apply_full_fusion(&mut rom_a, Some(&rom_b), &mut session).unwrap();
+            let orig_g32 = super::disasm_dma::decompress_nintendo_lz2_with_endian(
+                &rom_a.data,
+                0x040000,
+                32768,
+                true,
+            )
+            .unwrap()
+            .0;
+            let ops =
+                super::demo::apply_full_fusion(&mut rom_a, Some(&rom_b), &mut session).unwrap();
             println!("Full fusion ops applied: {}", ops);
             assert!(ops >= 6, "Should apply at least 6 operations");
 
             // 1. Verify Checksum
-            assert!(rom_a.header.is_checksum_valid(), "Checksum must be 100% valid!");
+            assert!(
+                rom_a.header.is_checksum_valid(),
+                "Checksum must be 100% valid!"
+            );
             let comp = u16::from_le_bytes([rom_a.data[0x7FDC], rom_a.data[0x7FDD]]);
             let sum = u16::from_le_bytes([rom_a.data[0x7FDE], rom_a.data[0x7FDF]]);
-            assert_eq!(comp ^ sum, 0xFFFF, "Checksum and complement must sum to 0xFFFF");
+            assert_eq!(
+                comp ^ sum,
+                0xFFFF,
+                "Checksum and complement must sum to 0xFFFF"
+            );
 
             // 2. Verify Berry tiles in GFX32
-            let (new_g32, _) = super::disasm_dma::decompress_nintendo_lz2_with_endian(&rom_a.data, 0x040000, 32768, true).unwrap();
+            let (new_g32, _) = super::disasm_dma::decompress_nintendo_lz2_with_endian(
+                &rom_a.data,
+                0x040000,
+                32768,
+                true,
+            )
+            .unwrap();
             let off7 = (7usize & 0xF7) << 6;
             let t7 = &orig_g32[off7..off7 + 32];
             println!("Tile 7 (off {}):", off7);
@@ -219,20 +248,43 @@ mod tests {
                 let mut line = String::new();
                 for x in 0..8 {
                     let sh = 7 - x;
-                    let c = ((b0 >> sh) & 1) | (((b1 >> sh) & 1) << 1) | (((b2 >> sh) & 1) << 2) | (((b3 >> sh) & 1) << 3);
+                    let c = ((b0 >> sh) & 1)
+                        | (((b1 >> sh) & 1) << 1)
+                        | (((b2 >> sh) & 1) << 2)
+                        | (((b3 >> sh) & 1) << 3);
                     line.push(if c == 0 { '.' } else { '#' });
                 }
                 println!("{}", line);
             }
-            assert_eq!(&new_g32[5120..5120 + 32], &orig_g32[5120..5120 + 32], "Tile 80 (berry top) must match vanilla!");
-            assert_eq!(&new_g32[21632..21632 + 32], &orig_g32[21632..21632 + 32], "Tile 90 (berry bottom) must match vanilla!");
+            assert_eq!(
+                &new_g32[5120..5120 + 32],
+                &orig_g32[5120..5120 + 32],
+                "Tile 80 (berry top) must match vanilla!"
+            );
+            assert_eq!(
+                &new_g32[21632..21632 + 32],
+                &orig_g32[21632..21632 + 32],
+                "Tile 90 (berry bottom) must match vanilla!"
+            );
 
             // 3. Verify GFX33 decompresses and fits
-            let (g33, _) = super::disasm_dma::decompress_nintendo_lz2_with_endian(&rom_a.data, 0x043FC0, 16384, true).unwrap();
+            let (g33, _) = super::disasm_dma::decompress_nintendo_lz2_with_endian(
+                &rom_a.data,
+                0x043FC0,
+                16384,
+                true,
+            )
+            .unwrap();
             assert!(!g33.is_empty());
 
             // 4. Verify Title screen GFX29 decompresses and fits
-            let (g29, _) = super::disasm_dma::decompress_nintendo_lz2_with_endian(&rom_a.data, 0x05C6A3, 8192, true).unwrap();
+            let (g29, _) = super::disasm_dma::decompress_nintendo_lz2_with_endian(
+                &rom_a.data,
+                0x05C6A3,
+                8192,
+                true,
+            )
+            .unwrap();
             assert!(!g29.is_empty());
 
             println!("ALL FUSION CHECKS PASSED: 100% SNES COMPLIANT, NO BERRY GLITCH, NO ANIMATION GLITCH!");
@@ -244,12 +296,24 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         if let Ok(bytes) = std::fs::read(root.join("roms/super_mario_world.sfc")) {
             let rom = SnesRom::from_bytes("smw", &bytes).unwrap();
-            let (orig_g33, _) = super::disasm_dma::decompress_nintendo_lz2_with_endian(&rom.data, 0x043FC0, 16384, true).unwrap();
+            let (orig_g33, _) = super::disasm_dma::decompress_nintendo_lz2_with_endian(
+                &rom.data, 0x043FC0, 16384, true,
+            )
+            .unwrap();
             assert!(!orig_g33.is_empty());
-            let (orig_g32, _) = super::disasm_dma::decompress_nintendo_lz2_with_endian(&rom.data, 0x040000, 32768, true).unwrap();
+            let (orig_g32, _) = super::disasm_dma::decompress_nintendo_lz2_with_endian(
+                &rom.data, 0x040000, 32768, true,
+            )
+            .unwrap();
             assert!(!orig_g32.is_empty());
-            assert!(super::disasm_dma::decompress_nintendo_lz2_with_endian(&rom.data, 0x0459F9, 8192, true).is_some());
-            assert!(super::disasm_dma::decompress_nintendo_lz2_with_endian(&rom.data, 0x050910, 8192, true).is_some());
+            assert!(super::disasm_dma::decompress_nintendo_lz2_with_endian(
+                &rom.data, 0x0459F9, 8192, true
+            )
+            .is_some());
+            assert!(super::disasm_dma::decompress_nintendo_lz2_with_endian(
+                &rom.data, 0x050910, 8192, true
+            )
+            .is_some());
         }
     }
 
@@ -258,10 +322,14 @@ mod tests {
         let (rom_a, _) = generate_demo_rom_pair();
         let tmp_dir = std::env::temp_dir().join("snes_test_export");
         let _ = std::fs::remove_dir_all(&tmp_dir);
-        let res = super::export::export_all_rom_assets(&rom_a, &tmp_dir).expect("Export must succeed");
+        let res =
+            super::export::export_all_rom_assets(&rom_a, &tmp_dir).expect("Export must succeed");
         assert!(res.sheets_png_count > 0, "Must export at least 1 sheet PNG");
         assert!(res.palettes_count > 0, "Must export palettes");
-        assert!(tmp_dir.join("manifest.json").exists(), "manifest.json must exist");
+        assert!(
+            tmp_dir.join("manifest.json").exists(),
+            "manifest.json must exist"
+        );
         let _ = std::fs::remove_dir_all(&tmp_dir);
     }
 
@@ -271,12 +339,19 @@ mod tests {
         let tmp_dir = std::env::temp_dir().join("snes_test_deconstruct");
         let _ = std::fs::remove_dir_all(&tmp_dir);
         let cfg = super::deconstruct::DeconstructConfig::default();
-        let res = super::deconstruct::deconstruct_rom(&rom_a, &tmp_dir, &cfg).expect("Deconstruction must succeed");
+        let res = super::deconstruct::deconstruct_rom(&rom_a, &tmp_dir, &cfg)
+            .expect("Deconstruction must succeed");
         assert!(res.sheets_count > 0, "Must export sheets");
         assert!(res.palettes_count > 0, "Must export palettes");
-        assert!(tmp_dir.join("manifest.json").exists(), "manifest.json must exist");
+        assert!(
+            tmp_dir.join("manifest.json").exists(),
+            "manifest.json must exist"
+        );
         assert!(tmp_dir.join("INDEX.md").exists(), "INDEX.md must exist");
-        assert!(tmp_dir.join("disassembly").join("header.asm").exists(), "header.asm must exist");
+        assert!(
+            tmp_dir.join("disassembly").join("header.asm").exists(),
+            "header.asm must exist"
+        );
         let _ = std::fs::remove_dir_all(&tmp_dir);
     }
 
@@ -327,7 +402,7 @@ mod tests {
         rom_6mb[eh + 0x3C] = 0x00;
         rom_6mb[eh + 0x3D] = 0x80;
         rom_6mb[0x008000] = 0x78; // SEI at reset vector
-        // Precompute valid checksum so ExHiROM wins mapping detection
+                                  // Precompute valid checksum so ExHiROM wins mapping detection
         let mut ex_rom = SnesRom::from_bytes("exhirom_6mb.sfc", &rom_6mb).unwrap();
         // Force header checksum write at ExHiROM offset and re-parse
         ex_rom.header.mapping = RomMapping::ExHiROM;
@@ -355,23 +430,45 @@ mod tests {
         let _ = std::fs::remove_dir_all(&proj_dir);
         let cfg = super::deconstruct::DeconstructConfig::default();
         super::deconstruct::deconstruct_rom(&rom_a, &proj_dir, &cfg).expect("Deconstruct failed");
-        assert!(proj_dir.join("project.json").exists(), "project.json must exist");
+        assert!(
+            proj_dir.join("project.json").exists(),
+            "project.json must exist"
+        );
 
         let catalog = super::universal::discover_universal_catalog(&rom_a);
-        assert!(!catalog.graphics.is_empty(), "Must discover graphics universally");
-        assert!(!catalog.palettes.is_empty(), "Must discover palettes universally");
-        assert!(!catalog.audio_samples.is_empty(), "Must discover BRR samples universally");
-        assert!(!catalog.texts.is_empty(), "Must discover text strings universally");
+        assert!(
+            !catalog.graphics.is_empty(),
+            "Must discover graphics universally"
+        );
+        assert!(
+            !catalog.palettes.is_empty(),
+            "Must discover palettes universally"
+        );
+        assert!(
+            !catalog.audio_samples.is_empty(),
+            "Must discover BRR samples universally"
+        );
+        assert!(
+            !catalog.texts.is_empty(),
+            "Must discover text strings universally"
+        );
 
         // 1. Edit first palette JSON (change color index 1 to bright magenta #FF00FF)
         let pal0_path = proj_dir.join(&catalog.palettes[0].json_file);
         let pal0_txt = std::fs::read_to_string(&pal0_path).unwrap();
-        let edited_pal = pal0_txt.replacen("\"index\": 1, \"hex\": \"#", "\"index\": 1, \"hex\": \"#FF00FF\" /*", 1);
+        let edited_pal = pal0_txt.replacen(
+            "\"index\": 1, \"hex\": \"#",
+            "\"index\": 1, \"hex\": \"#FF00FF\" /*",
+            1,
+        );
         // Cleanly replace first occurrence of index 1 hex
         let mut new_pal_lines = Vec::new();
         for line in pal0_txt.lines() {
             if line.contains("\"index\": 1,") {
-                new_pal_lines.push("    { \"index\": 1, \"hex\": \"#F800F8\", \"bgr555\": \"0x7C1F\" },".to_string());
+                new_pal_lines.push(
+                    "    { \"index\": 1, \"hex\": \"#F800F8\", \"bgr555\": \"0x7C1F\" },"
+                        .to_string(),
+                );
             } else {
                 new_pal_lines.push(line.to_string());
             }
@@ -417,18 +514,30 @@ mod tests {
         )
         .expect("Reconstruction must succeed");
 
-        assert!(rep.palettes_patched_count >= 1, "Must patch modified palette");
+        assert!(
+            rep.palettes_patched_count >= 1,
+            "Must patch modified palette"
+        );
         assert!(rep.gfx_patched_count >= 1, "Must patch modified PNG GFX");
-        assert!(rep.audio_patched_count >= 1, "Must patch modified WAV audio");
+        assert!(
+            rep.audio_patched_count >= 1,
+            "Must patch modified WAV audio"
+        );
         assert!(rep.text_patched_count >= 1, "Must patch modified text");
-        assert!(rep.checksum_valid, "Reconstructed ROM checksum must be 100% valid");
+        assert!(
+            rep.checksum_valid,
+            "Reconstructed ROM checksum must be 100% valid"
+        );
         assert!(rep.total_bytes_changed > 0);
 
         // Verify rebuilt ROM & IPS integrity
         let rebuilt_bytes = std::fs::read(&out_rom).unwrap();
         let rebuilt_rom = SnesRom::from_bytes("rebuilt.sfc", &rebuilt_bytes).unwrap();
         assert!(rebuilt_rom.header.is_checksum_valid());
-        assert_eq!(&rebuilt_rom.data[text_off..text_off + 20], b"HELLO UNIVERSAL SNES");
+        assert_eq!(
+            &rebuilt_rom.data[text_off..text_off + 20],
+            b"HELLO UNIVERSAL SNES"
+        );
 
         let ips_bytes = std::fs::read(&out_ips).unwrap();
         assert_eq!(&ips_bytes[..5], b"PATCH");
@@ -456,15 +565,27 @@ mod tests {
         )
         .expect("Universal cross-ROM swap must succeed");
 
-        assert!(ops >= 3, "Must swap graphics, palettes, and audio between arbitrary unknown ROMs");
-        assert!(rom_a.header.is_checksum_valid(), "Swapped ROM must have valid SNES checksum");
-        assert_ne!(rom_a.data, orig_bytes, "Swapped ROM must differ from original");
+        assert!(
+            ops >= 3,
+            "Must swap graphics, palettes, and audio between arbitrary unknown ROMs"
+        );
+        assert!(
+            rom_a.header.is_checksum_valid(),
+            "Swapped ROM must have valid SNES checksum"
+        );
+        assert_ne!(
+            rom_a.data, orig_bytes,
+            "Swapped ROM must differ from original"
+        );
 
         // Verify Undo restores bit-for-bit original ROM
         while let Some(last) = session.operations.last().cloned() {
             session.undo_operation(&mut rom_a, last.id).unwrap();
         }
-        assert_eq!(rom_a.data, orig_bytes, "Full undo must restore bit-identical original ROM");
+        assert_eq!(
+            rom_a.data, orig_bytes,
+            "Full undo must restore bit-identical original ROM"
+        );
     }
 
     #[test]
@@ -473,9 +594,7 @@ mod tests {
             name: "Super Mario Hyrule".into(),
             custom_title: Some("SUPER MARIO HYRULE".into()),
             base_rom: "roms/zelda_alttp.sfc".into(),
-            donors: vec![
-                ("smw".into(), "roms/super_mario_world.sfc".into()),
-            ],
+            donors: vec![("smw".into(), "roms/super_mario_world.sfc".into())],
             rules: vec![
                 super::mixer::MixRule {
                     target_slot: "hero".into(),
@@ -505,7 +624,10 @@ mod tests {
         let prof_c = super::mixer::inspect_rom_for_mixing(&rom_c, "d2", "c.sfc");
 
         let chaos = super::mixer::generate_chaos_recipe(&prof_a, &[prof_b, prof_c], 777);
-        assert!(!chaos.rules.is_empty(), "Chaos recipe must generate universal rules on unknown ROMs");
+        assert!(
+            !chaos.rules.is_empty(),
+            "Chaos recipe must generate universal rules on unknown ROMs"
+        );
 
         let mut donors = std::collections::HashMap::new();
         donors.insert("d1".to_string(), rom_b);
@@ -516,7 +638,10 @@ mod tests {
             .expect("Omni-Mixer chaos execution on unknown ROMs must succeed");
 
         assert!(rep.operations_applied >= 2);
-        assert!(rep.checksum_valid, "Mixed unknown ROM must have valid SNES checksum");
+        assert!(
+            rep.checksum_valid,
+            "Mixed unknown ROM must have valid SNES checksum"
+        );
         assert_ne!(rom_a.data, orig_a);
     }
 
@@ -524,9 +649,7 @@ mod tests {
     fn test_omni_mixer_real_multi_game_matrix() {
         let z_path = "../../roms/zelda_alttp.sfc";
         let m_path = "../../roms/super_mario_world.sfc";
-        if !std::path::Path::new(z_path).exists()
-            || !std::path::Path::new(m_path).exists()
-        {
+        if !std::path::Path::new(z_path).exists() || !std::path::Path::new(m_path).exists() {
             return;
         }
         let zelda = SnesRom::from_bytes("zelda.sfc", &std::fs::read(z_path).unwrap()).unwrap();
@@ -537,8 +660,11 @@ mod tests {
 
         // 1. Base = Zelda + Donor = SMW (Super Mario Hyrule!)
         {
-            let presets = super::mixer::suggest_presets(&p_z, &[p_m.clone()]);
-            let mario_hyrule = presets.iter().find(|p| p.id == "mario_hyrule_complete").expect("Mario Hyrule preset");
+            let presets = super::mixer::suggest_presets(&p_z, std::slice::from_ref(&p_m));
+            let mario_hyrule = presets
+                .iter()
+                .find(|p| p.id == "mario_hyrule_complete")
+                .expect("Mario Hyrule preset");
             let recipe = super::mixer::MixRecipe {
                 name: mario_hyrule.name.clone(),
                 custom_title: Some(mario_hyrule.custom_title.clone()),
@@ -550,16 +676,24 @@ mod tests {
             let mut donors = std::collections::HashMap::new();
             donors.insert("smw".into(), smw.clone());
             let mut sess = SwapSession::new();
-            let rep = super::mixer::execute_mix_recipe(&mut target, &donors, &recipe, &mut sess).unwrap();
+            let rep =
+                super::mixer::execute_mix_recipe(&mut target, &donors, &recipe, &mut sess).unwrap();
             assert!(rep.checksum_valid);
-            assert!(rep.operations_applied >= 7, "Expected >=7 ops, got {}", rep.operations_applied);
+            assert!(
+                rep.operations_applied >= 7,
+                "Expected >=7 ops, got {}",
+                rep.operations_applied
+            );
             assert_eq!(rep.output_title, "SUPER MARIO HYRULE");
         }
 
         // 2. Base = SMW + Donor = Zelda (Link in SMW!)
         {
-            let presets = super::mixer::suggest_presets(&p_m, &[p_z.clone()]);
-            let link_smw = presets.iter().find(|p| p.id == "super_link_world").expect("Super Link World preset");
+            let presets = super::mixer::suggest_presets(&p_m, std::slice::from_ref(&p_z));
+            let link_smw = presets
+                .iter()
+                .find(|p| p.id == "super_link_world")
+                .expect("Super Link World preset");
             let recipe = super::mixer::MixRecipe {
                 name: link_smw.name.clone(),
                 custom_title: Some(link_smw.custom_title.clone()),
@@ -571,7 +705,8 @@ mod tests {
             let mut donors = std::collections::HashMap::new();
             donors.insert("zelda".into(), zelda.clone());
             let mut sess = SwapSession::new();
-            let rep = super::mixer::execute_mix_recipe(&mut target, &donors, &recipe, &mut sess).unwrap();
+            let rep =
+                super::mixer::execute_mix_recipe(&mut target, &donors, &recipe, &mut sess).unwrap();
             assert!(rep.checksum_valid);
             assert!(rep.operations_applied >= 2);
             assert_eq!(rep.output_title, "SUPER LINK WORLD");
@@ -597,36 +732,117 @@ mod tests {
                 base_rom: "roms/zelda_alttp.sfc".into(),
                 donors: vec![("smw".into(), "roms/super_mario_world.sfc".into())],
                 rules: vec![
-                    super::mixer::MixRule { target_slot: "intro_title".into(), donor_alias: "smw".into(), donor_source: "peach_kingdom_intro".into() },
-                    super::mixer::MixRule { target_slot: "hero".into(), donor_alias: "smw".into(), donor_source: "mario".into() },
-                    super::mixer::MixRule { target_slot: "princess".into(), donor_alias: "smw".into(), donor_source: "peach".into() },
-                    super::mixer::MixRule { target_slot: "uncle_allies".into(), donor_alias: "smw".into(), donor_source: "luigi_yoshi_pack".into() },
-                    super::mixer::MixRule { target_slot: "bosses".into(), donor_alias: "smw".into(), donor_source: "bosses_pack".into() },
-                    super::mixer::MixRule { target_slot: "soldiers".into(), donor_alias: "smw".into(), donor_source: "koopa".into() },
-                    super::mixer::MixRule { target_slot: "castle_guards".into(), donor_alias: "smw".into(), donor_source: "goomba".into() },
-                    super::mixer::MixRule { target_slot: "elite_knights".into(), donor_alias: "smw".into(), donor_source: "spiny".into() },
-                    super::mixer::MixRule { target_slot: "sewer_enemies".into(), donor_alias: "smw".into(), donor_source: "sewer_pack".into() },
-                    super::mixer::MixRule { target_slot: "overworld_enemies".into(), donor_alias: "smw".into(), donor_source: "overworld_pack".into() },
-                    super::mixer::MixRule { target_slot: "zoras_water".into(), donor_alias: "smw".into(), donor_source: "water_pack".into() },
-                    super::mixer::MixRule { target_slot: "dungeon_enemies".into(), donor_alias: "smw".into(), donor_source: "dungeon_pack".into() },
-                    super::mixer::MixRule { target_slot: "dungeon_extra".into(), donor_alias: "smw".into(), donor_source: "dungeon_extra_pack".into() },
-                    super::mixer::MixRule { target_slot: "items".into(), donor_alias: "smw".into(), donor_source: "items_pack".into() },
-                    super::mixer::MixRule { target_slot: "chests_pots".into(), donor_alias: "smw".into(), donor_source: "blocks_pack".into() },
-                    super::mixer::MixRule { target_slot: "rocks".into(), donor_alias: "smw".into(), donor_source: "qblock".into() },
-                    super::mixer::MixRule { target_slot: "audio_percussion".into(), donor_alias: "smw".into(), donor_source: "percussion".into() },
-                    super::mixer::MixRule { target_slot: "mario_music".into(), donor_alias: "smw".into(), donor_source: "nspc_soundtrack".into() },
+                    super::mixer::MixRule {
+                        target_slot: "intro_title".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "peach_kingdom_intro".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "hero".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "mario".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "princess".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "peach".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "uncle_allies".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "luigi_yoshi_pack".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "bosses".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "bosses_pack".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "soldiers".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "koopa".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "castle_guards".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "goomba".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "elite_knights".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "spiny".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "sewer_enemies".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "sewer_pack".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "overworld_enemies".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "overworld_pack".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "zoras_water".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "water_pack".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "dungeon_enemies".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "dungeon_pack".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "dungeon_extra".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "dungeon_extra_pack".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "items".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "items_pack".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "chests_pots".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "blocks_pack".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "rocks".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "qblock".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "audio_percussion".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "percussion".into(),
+                    },
+                    super::mixer::MixRule {
+                        target_slot: "mario_music".into(),
+                        donor_alias: "smw".into(),
+                        donor_source: "nspc_soundtrack".into(),
+                    },
                 ],
             };
 
             let mut session = SwapSession::new();
-            let rep = super::mixer::execute_mix_recipe(&mut target, &donors, &recipe, &mut session).unwrap();
+            let rep = super::mixer::execute_mix_recipe(&mut target, &donors, &recipe, &mut session)
+                .unwrap();
 
             // 1. Hardware Checksum & Complement Verification
             assert!(rep.checksum_valid, "SNES Checksum must be 100% valid!");
             let comp = u16::from_le_bytes([target.data[0x7FDC], target.data[0x7FDD]]);
             let sum = u16::from_le_bytes([target.data[0x7FDE], target.data[0x7FDF]]);
-            assert_eq!(comp ^ sum, 0xFFFF, "Checksum and complement must sum to 0xFFFF");
-            assert!(rep.operations_applied >= 50, "Must apply all 50+ hardware fusions, got {}", rep.operations_applied);
+            assert_eq!(
+                comp ^ sum,
+                0xFFFF,
+                "Checksum and complement must sum to 0xFFFF"
+            );
+            assert!(
+                rep.operations_applied >= 50,
+                "Must apply all 50+ hardware fusions, got {}",
+                rep.operations_applied
+            );
 
             // 2. Hardware LoROM Mapping & Vector Verification (1MB or standard 2MB LoROM!)
             assert_eq!(target.header.mapping, crate::rom::RomMapping::LoROM);
@@ -641,103 +857,296 @@ mod tests {
             for i in 0..303usize {
                 let y = target.data[0x068000 + i * 3] as i8;
                 let x = target.data[0x068000 + i * 3 + 1] as i8;
-                assert!(y >= -64 && y <= 64, "OAM Y coordinate out of safe PPU range at {}: {}", i, y);
-                assert!(x >= -64 && x <= 64, "OAM X coordinate out of safe PPU range at {}: {}", i, x);
+                assert!(
+                    (-64..=64).contains(&y),
+                    "OAM Y coordinate out of safe PPU range at {}: {}",
+                    i,
+                    y
+                );
+                assert!(
+                    (-64..=64).contains(&x),
+                    "OAM X coordinate out of safe PPU range at {}: {}",
+                    i,
+                    x
+                );
             }
 
             // 4. Hardware 3bpp LZ2 Decompression Integrity Check across ALL patched 3bpp sheets (including 0x3E/0x3F Title Logo & 0x0C Jars!)
             for &sheet_id in &[
-                0x06usize, 0x07, 0x08, 0x0C, 0x0D, 0x3C, 0x3E, 0x3F,
-                0x7F, 0x82, 0x85, 0x86, 0x8C, 0x8D, 0x8E, 0x8F, 0x90,
-                0xA5, 0xA6, 0xAA, 0xAC, 0xB3, 0xB4, 0xB7, 0xBA, 0xBC,
-                0xC2, 0xC6, 0xC9, 0xCB, 0xCC, 0xCD, 0xCE, 0xD5, 0xD6, 0xD7,
+                0x06usize, 0x07, 0x08, 0x0C, 0x0D, 0x3C, 0x3E, 0x3F, 0x7F, 0x82, 0x85, 0x86, 0x8C,
+                0x8D, 0x8E, 0x8F, 0x90, 0xA5, 0xA6, 0xAA, 0xAC, 0xB3, 0xB4, 0xB7, 0xBA, 0xBC, 0xC2,
+                0xC6, 0xC9, 0xCB, 0xCC, 0xCD, 0xCE, 0xD5, 0xD6, 0xD7,
             ] {
                 let sheet = super::mixer::load_alttp_3bpp_sheet(&target.data, sheet_id);
-                assert!(sheet.is_some(), "Sheet 0x{:02X} must decompress cleanly", sheet_id);
+                assert!(
+                    sheet.is_some(),
+                    "Sheet 0x{:02X} must decompress cleanly",
+                    sheet_id
+                );
                 let (raw, _, _) = sheet.unwrap();
-                assert_eq!(raw.len(), 0x600, "Sheet 0x{:02X} must have exact 64 3bpp tiles (1536 bytes)", sheet_id);
+                assert_eq!(
+                    raw.len(),
+                    0x600,
+                    "Sheet 0x{:02X} must have exact 64 3bpp tiles (1536 bytes)",
+                    sheet_id
+                );
             }
 
             // 4b. Verify "The Legend of Peach: A Mario to the Mushroom Kingdom" Intro, 3D Relics, Copyleft & FR Script!
             assert_eq!(target.header.title, "THE LEGEND OF PEACH");
-            assert_eq!(target.data.len(), 2048 * 1024, "Expanded to standard 2MB (16Mbit) LoROM for 3D Relics");
-            assert_eq!(target.data[0x007FD7], 0x0B, "SNES ROM size header byte must be 0x0B (2MB)");
-            assert_eq!(target.data[0x071C68], 0x10, "Title BG1 Row 7 VRAM high byte");
-            assert_eq!(target.data[0x071C69], 0xEA, "Title BG1 Row 7 Col 10 unified 'THE LEGEND OF' VRAM low byte");
-            assert_eq!(target.data[0x07070B], 27, "Copyright OAM must draw 27 sprites (Nintendo + copyleft 2026 pomercier)");
-            assert_eq!(target.data[0x04F7DE], 0x08, "Polyhedral_InitializeThread IRQ coroutine ($09:F7DE) must stay intact");
-            assert_eq!(&target.data[0x0012F7..0x0012FC], &[0x22, 0x00, 0x80, 0x22, 0x60], "NMI 3D DMA hook at $00:92F7");
-            assert_eq!(&target.data[0x07027C..0x070281], &[0x22, 0x80, 0x80, 0x22, 0xEA], "Title Screen 3D Step hook at $0E:827C");
-            assert_eq!(&target.data[0x070906..0x07090B], &[0x22, 0x80, 0x80, 0x22, 0xEA], "Intro Scroll 3D Step hook at $0E:8906");
-            assert_eq!(target.data[0x073ABB], 0x4F, "Sepia Hills Screen 1 top-right tile must be 0x4F (Golden Mario Trio)");
-            assert_eq!(target.data[0x073AE9], 0x6F, "Sepia Hills Screen 1 bot-right tile must be 0x6F (Golden Mario Trio)");
-            assert_ne!(&target.data[0x0E5564..0x0E56E1], &zelda.data[0x0E5564..0x0E56E1], "Intro Screen 0 must be rewritten");
-            assert_ne!(&target.data[0x0E56E1..0x0E5738], &zelda.data[0x0E56E1..0x0E5738], "Intro Screen 1 must be rewritten");
-            assert_ne!(&target.data[0x0E5738..0x0E577A], &zelda.data[0x0E5738..0x0E577A], "Intro Screen 2 must be rewritten");
-            assert_ne!(&target.data[0x0E577A..0x0E57AF], &zelda.data[0x0E577A..0x0E57AF], "Intro Screen 3 must be rewritten");
-            assert_eq!(target.data[0x0E56E0], 0x7F, "Intro Legend Screen 0 must preserve exact 381B terminator");
-            assert_eq!(target.data[0x0E5737], 0x7F, "Intro Legend Screen 1 must preserve exact 87B terminator");
-            assert_eq!(target.data[0x0E5779], 0x7F, "Intro Legend Screen 2 must preserve exact 66B terminator");
-            assert_eq!(target.data[0x0E57AE], 0x7F, "Intro Legend Screen 3 must preserve exact 53B terminator");
+            assert_eq!(
+                target.data.len(),
+                2048 * 1024,
+                "Expanded to standard 2MB (16Mbit) LoROM for 3D Relics"
+            );
+            assert_eq!(
+                target.data[0x007FD7], 0x0B,
+                "SNES ROM size header byte must be 0x0B (2MB)"
+            );
+            assert_eq!(
+                target.data[0x071C68], 0x10,
+                "Title BG1 Row 7 VRAM high byte"
+            );
+            assert_eq!(
+                target.data[0x071C69], 0xEA,
+                "Title BG1 Row 7 Col 10 unified 'THE LEGEND OF' VRAM low byte"
+            );
+            assert_eq!(
+                target.data[0x07070B], 27,
+                "Copyright OAM must draw 27 sprites (Nintendo + copyleft 2026 pomercier)"
+            );
+            assert_eq!(
+                target.data[0x04F7DE], 0x08,
+                "Polyhedral_InitializeThread IRQ coroutine ($09:F7DE) must stay intact"
+            );
+            assert_eq!(
+                &target.data[0x0012F7..0x0012FC],
+                &[0x22, 0x00, 0x80, 0x22, 0x60],
+                "NMI 3D DMA hook at $00:92F7"
+            );
+            assert_eq!(
+                &target.data[0x07027C..0x070281],
+                &[0x22, 0x80, 0x80, 0x22, 0xEA],
+                "Title Screen 3D Step hook at $0E:827C"
+            );
+            assert_eq!(
+                &target.data[0x070906..0x07090B],
+                &[0x22, 0x80, 0x80, 0x22, 0xEA],
+                "Intro Scroll 3D Step hook at $0E:8906"
+            );
+            assert_eq!(
+                target.data[0x073ABB], 0x4F,
+                "Sepia Hills Screen 1 top-right tile must be 0x4F (Golden Mario Trio)"
+            );
+            assert_eq!(
+                target.data[0x073AE9], 0x6F,
+                "Sepia Hills Screen 1 bot-right tile must be 0x6F (Golden Mario Trio)"
+            );
+            assert_ne!(
+                &target.data[0x0E5564..0x0E56E1],
+                &zelda.data[0x0E5564..0x0E56E1],
+                "Intro Screen 0 must be rewritten"
+            );
+            assert_ne!(
+                &target.data[0x0E56E1..0x0E5738],
+                &zelda.data[0x0E56E1..0x0E5738],
+                "Intro Screen 1 must be rewritten"
+            );
+            assert_ne!(
+                &target.data[0x0E5738..0x0E577A],
+                &zelda.data[0x0E5738..0x0E577A],
+                "Intro Screen 2 must be rewritten"
+            );
+            assert_ne!(
+                &target.data[0x0E577A..0x0E57AF],
+                &zelda.data[0x0E577A..0x0E57AF],
+                "Intro Screen 3 must be rewritten"
+            );
+            assert_eq!(
+                target.data[0x0E56E0], 0x7F,
+                "Intro Legend Screen 0 must preserve exact 381B terminator"
+            );
+            assert_eq!(
+                target.data[0x0E5737], 0x7F,
+                "Intro Legend Screen 1 must preserve exact 87B terminator"
+            );
+            assert_eq!(
+                target.data[0x0E5779], 0x7F,
+                "Intro Legend Screen 2 must preserve exact 66B terminator"
+            );
+            assert_eq!(
+                target.data[0x0E57AE], 0x7F,
+                "Intro Legend Screen 3 must preserve exact 53B terminator"
+            );
 
             // 4c. Verify ALL hardware patches (Zero Frame-0 3D corruption, Bowser Palettes, Koopa Swords, Black Bob-omb, HUD Bullet Bill, Luigi Green, Carry Z=23)
             let expected_3d = super::mario_intro::build_all_32_trio_3d_frames();
             assert_eq!(&target.data[0x100000..0x110000], expected_3d.as_slice(), "ALL 32 3D Intro frames (0x100000..0x110000) MUST remain 100% uncorrupted bit-for-bit!");
-            assert_eq!(target.data[0x0484D1], 0x01, "House Chest 5-Rupee coin (item 0x35) must use SP2 Red Coin palette 0x01");
-            assert_eq!(&target.data[0x04843B..0x04843E], &[0x23, 0x14, 0x1E], "Boss 3 Pendants must use Mushroom, Fire Flower, Star GFX");
-            assert_eq!(target.data[0x041A50], 0x18, "Carried Ancilla Altitude Z ($029E) must be 0x18 (+7px above Mario cap)");
+            assert_eq!(
+                target.data[0x0484D1], 0x01,
+                "House Chest 5-Rupee coin (item 0x35) must use SP2 Red Coin palette 0x01"
+            );
+            assert_eq!(
+                &target.data[0x04843B..0x04843E],
+                &[0x23, 0x14, 0x1E],
+                "Boss 3 Pendants must use Mushroom, Fire Flower, Star GFX"
+            );
+            assert_eq!(
+                target.data[0x041A50], 0x18,
+                "Carried Ancilla Altitude Z ($029E) must be 0x18 (+7px above Mario cap)"
+            );
             assert_eq!(target.data[0x035E68 + 3], 22, "SpriteModule_Carried.offset_z Stage 3 must be 22 (rests directly in Mario's wide white SMW gloves)");
-            assert_eq!(target.data[0x06E79E], 0x61, "Start Menu header must start with 'R' ('RELIQUES', not 'PENDENTIF(S)')");
-            assert_eq!(target.data[0x06F111], 0x52, "Start Menu Boomerang must start cleanly with 'C' ('CARAPACE SMW', zero bleed)");
-            assert_eq!(&target.data[0x0DD64C..0x0DD64E], &0x1B87u16.to_le_bytes(), "Lv1 Shield must be vibrant SMW Emerald Green Koopa Shell");
-            assert_eq!(&target.data[0x0DE876..0x0DE878], &0x18BEu16.to_le_bytes(), "Mario's House Roof must be vibrant Super Mario Red");
+            assert_eq!(
+                target.data[0x06E79E], 0x61,
+                "Start Menu header must start with 'R' ('RELIQUES', not 'PENDENTIF(S)')"
+            );
+            assert_eq!(
+                target.data[0x06F111], 0x52,
+                "Start Menu Boomerang must start cleanly with 'C' ('CARAPACE SMW', zero bleed)"
+            );
+            assert_eq!(
+                &target.data[0x0DD64C..0x0DD64E],
+                &0x1B87u16.to_le_bytes(),
+                "Lv1 Shield must be vibrant SMW Emerald Green Koopa Shell"
+            );
+            assert_eq!(
+                &target.data[0x0DE876..0x0DE878],
+                &0x18BEu16.to_le_bytes(),
+                "Mario's House Roof must be vibrant Super Mario Red"
+            );
             assert_eq!(&target.data[0x08A000..0x08A300], &zelda.data[0x08A000..0x08A300], "Sheet 0x7B rows 0-1 (0x08A000..0x08A2FF) must remain untouched vanilla to prevent Bow/Bill Blaster WRAM corruption!");
-            assert_eq!(target.data[0x06D163 + 5], 0x0C, "Uncle Luigi head must use Pal 6 Green Mario/Luigi (0x0C)");
-            assert_eq!(target.data[0x06D163 + 8 + 5], 0x0C, "Uncle Luigi body must use Pal 6 Green Mario/Luigi clothes (0x0C)");
-            assert_eq!(target.data[0x02C6A4], 12, "Koopa Guard head Y-sub must be 12px above body");
-            assert_eq!(target.data[0x02CAEA + 16], 2, "Koopa Left/Right sword Y must be raised from 8 -> 2 (in Koopa's hand!)");
-            assert_eq!(target.data[0x02B16E], 12, "Ball & Chain Trooper head Y-sub must be 12px above body");
-            assert_eq!(&target.data[0x0DD5A6..0x0DD5A8], &0x0CBDu16.to_le_bytes(), "Intro Bowser hair palette must be fiery SMW red");
-            assert_eq!(&target.data[0x0DD51A..0x0DD51C], &0x0CBDu16.to_le_bytes(), "Boss Bowser hair palette must be fiery SMW red");
-            assert_eq!(target.data[0x06F5AA], 0x28, "Start Menu & Y-box Bob-omb must use Pal 2 Black/White/Gold (ZERO blue bomb!)");
-            assert_eq!(target.data[0x06FDBD], 0x86, "HUD Arrow counter must display SMW Bullet Bill tile 0x86");
+            assert_eq!(
+                target.data[0x06D163 + 5],
+                0x0C,
+                "Uncle Luigi head must use Pal 6 Green Mario/Luigi (0x0C)"
+            );
+            assert_eq!(
+                target.data[0x06D163 + 8 + 5],
+                0x0C,
+                "Uncle Luigi body must use Pal 6 Green Mario/Luigi clothes (0x0C)"
+            );
+            assert_eq!(
+                target.data[0x02C6A4], 12,
+                "Koopa Guard head Y-sub must be 12px above body"
+            );
+            assert_eq!(
+                target.data[0x02CAEA + 16],
+                2,
+                "Koopa Left/Right sword Y must be raised from 8 -> 2 (in Koopa's hand!)"
+            );
+            assert_eq!(
+                target.data[0x02B16E], 12,
+                "Ball & Chain Trooper head Y-sub must be 12px above body"
+            );
+            assert_eq!(
+                &target.data[0x0DD5A6..0x0DD5A8],
+                &0x0CBDu16.to_le_bytes(),
+                "Intro Bowser hair palette must be fiery SMW red"
+            );
+            assert_eq!(
+                &target.data[0x0DD51A..0x0DD51C],
+                &0x0CBDu16.to_le_bytes(),
+                "Boss Bowser hair palette must be fiery SMW red"
+            );
+            assert_eq!(
+                target.data[0x06F5AA], 0x28,
+                "Start Menu & Y-box Bob-omb must use Pal 2 Black/White/Gold (ZERO blue bomb!)"
+            );
+            assert_eq!(
+                target.data[0x06FDBD], 0x86,
+                "HUD Arrow counter must display SMW Bullet Bill tile 0x86"
+            );
 
             // 5. Hardware 2bpp HUD/Menu paired sheets (0x6F == 0xDB & 0x70 == 0xDC) must decompress to 2048B cleanly!
             for &(s1, s2) in &[(0x6Fusize, 0xDBusize), (0x70, 0xDC)] {
-                let (d1, p1, _) = super::mixer::load_alttp_3bpp_sheet(&target.data, s1).expect("2bpp sheet s1");
-                let (d2, p2, _) = super::mixer::load_alttp_3bpp_sheet(&target.data, s2).expect("2bpp sheet s2");
-                assert_eq!(d1.len(), 0x800, "2bpp sheet 0x{:02X} must be 2048 bytes", s1);
-                assert_eq!(p1, p2, "Paired 2bpp pointers 0x{:02X} & 0x{:02X} must stay synchronized", s1, s2);
+                let (d1, p1, _) =
+                    super::mixer::load_alttp_3bpp_sheet(&target.data, s1).expect("2bpp sheet s1");
+                let (d2, p2, _) =
+                    super::mixer::load_alttp_3bpp_sheet(&target.data, s2).expect("2bpp sheet s2");
+                assert_eq!(
+                    d1.len(),
+                    0x800,
+                    "2bpp sheet 0x{:02X} must be 2048 bytes",
+                    s1
+                );
+                assert_eq!(
+                    p1, p2,
+                    "Paired 2bpp pointers 0x{:02X} & 0x{:02X} must stay synchronized",
+                    s1, s2
+                );
                 assert_eq!(d1, d2);
             }
 
             // 6. Verify Fix #3 (Gloves white, zero green flicker), #8 (Yellow Coin HUD), #10 (French Mushroom Dialog), #13 (N-SPC Mario Music)!
-            assert_eq!(&target.data[0x0DEDF5..0x0DEDF9], &[0xFF, 0x7F, 0xFF, 0x7F], "Glove palettes must be white 0x7FFF");
-            assert_eq!(target.data[0x06FDB2], 0x28, "HUD Rupee must use Pal 2 Bright Yellow Coin");
-            assert_eq!(target.data[0x06FDB8], 0x28, "HUD Bomb must use Pal 2 SMW Bob-omb");
-            assert_eq!(target.data[0x0E74CD + 72], 0x7F, "Heart Container dialog 1 must preserve exact 73B terminator");
-            assert_eq!(target.data[0x0E7516 + 71], 0x7F, "Heart Container dialog 2 must preserve exact 72B terminator");
+            assert_eq!(
+                &target.data[0x0DEDF5..0x0DEDF9],
+                &[0xFF, 0x7F, 0xFF, 0x7F],
+                "Glove palettes must be white 0x7FFF"
+            );
+            assert_eq!(
+                target.data[0x06FDB2], 0x28,
+                "HUD Rupee must use Pal 2 Bright Yellow Coin"
+            );
+            assert_eq!(
+                target.data[0x06FDB8], 0x28,
+                "HUD Bomb must use Pal 2 SMW Bob-omb"
+            );
+            assert_eq!(
+                target.data[0x0E74CD + 72],
+                0x7F,
+                "Heart Container dialog 1 must preserve exact 73B terminator"
+            );
+            assert_eq!(
+                target.data[0x0E7516 + 71],
+                0x7F,
+                "Heart Container dialog 2 must preserve exact 72B terminator"
+            );
             // Verify N-SPC block upload headers & valid SPC $D000 song pointers
-            assert_eq!(u16::from_le_bytes([target.data[0x0D1EF5], target.data[0x0D1EF6]]), 0x2DAE);
-            assert_eq!(u16::from_le_bytes([target.data[0x0D1EF7], target.data[0x0D1EF8]]), 0xD000);
-            let ow_song2_ptr = u16::from_le_bytes([target.data[0x0D1EF9 + 2], target.data[0x0D1EF9 + 3]]);
-            assert!((0xD036..0xFDAE).contains(&ow_song2_ptr), "OW Song #2 ptr ${:04X} must be in valid $D000..$FDAE", ow_song2_ptr);
-            let dn_song18_ptr = u16::from_le_bytes([target.data[0x0D8004 + 17 * 2], target.data[0x0D8004 + 17 * 2 + 1]]);
-            assert!((0xD046..0xFCBF).contains(&dn_song18_ptr), "Dungeon Song #18 ptr ${:04X} must be in valid $D000..$FCBF", dn_song18_ptr);
+            assert_eq!(
+                u16::from_le_bytes([target.data[0x0D1EF5], target.data[0x0D1EF6]]),
+                0x2DAE
+            );
+            assert_eq!(
+                u16::from_le_bytes([target.data[0x0D1EF7], target.data[0x0D1EF8]]),
+                0xD000
+            );
+            let ow_song2_ptr =
+                u16::from_le_bytes([target.data[0x0D1EF9 + 2], target.data[0x0D1EF9 + 3]]);
+            assert!(
+                (0xD036..0xFDAE).contains(&ow_song2_ptr),
+                "OW Song #2 ptr ${:04X} must be in valid $D000..$FDAE",
+                ow_song2_ptr
+            );
+            let dn_song18_ptr = u16::from_le_bytes([
+                target.data[0x0D8004 + 17 * 2],
+                target.data[0x0D8004 + 17 * 2 + 1],
+            ]);
+            assert!(
+                (0xD046..0xFCBF).contains(&dn_song18_ptr),
+                "Dungeon Song #18 ptr ${:04X} must be in valid $D000..$FCBF",
+                dn_song18_ptr
+            );
 
             // 7. Zero Donkey Kong contamination check
             let dkc_signature = b"DONKEY KONG";
-            assert!(!target.data.windows(dkc_signature.len()).any(|w| w == dkc_signature), "No DKC contamination in Zelda!");
+            assert!(
+                !target
+                    .data
+                    .windows(dkc_signature.len())
+                    .any(|w| w == dkc_signature),
+                "No DKC contamination in Zelda!"
+            );
 
             // 8. Verify v13 Total Conversion (7 Koopalings + Final King Bowser + Pokey + Wiggler + Toad Town + Bestiary + Worldwide BG + 3 New N-SPC Songs!)
-            let (raw_bk, raw_hi, raw_lo) = super::mixer::find_alttp_raw_gfx_table(&target.data).expect("raw ALTTP GFX table");
+            let (raw_bk, raw_hi, raw_lo) =
+                super::mixer::find_alttp_raw_gfx_table(&target.data).expect("raw ALTTP GFX table");
             let v13_raw_sheets: &[usize] = &[
                 // Bosses (Pokey, Wiggler, Morton, Wendy, Iggy, Roy, Lemmy, Larry, Ludwig, Final King Bowser x4)
-                0xA4, 0xA3, 0xAD, 0xB1, 0xAC, 0xAB, 0xAE, 0xAF, 0xB0, 0xB2, 0xB3, 0x94, 0xB4, 0xB8, 0xA6,
-                // Toad Town NPCs (6 sheets)
-                0xC2, 0xBD, 0xC0, 0xC1, 0xC3, 0xBF,
-                // SMW Bestiary Expansion (16 sheets)
-                0x83, 0x85, 0x86, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x93, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9A, 0x9D,
+                0xA4, 0xA3, 0xAD, 0xB1, 0xAC, 0xAB, 0xAE, 0xAF, 0xB0, 0xB2, 0xB3, 0x94, 0xB4, 0xB8,
+                0xA6, // Toad Town NPCs (6 sheets)
+                0xC2, 0xBD, 0xC0, 0xC1, 0xC3, 0xBF, // SMW Bestiary Expansion (16 sheets)
+                0x83, 0x85, 0x86, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x93, 0x95, 0x96, 0x97, 0x98, 0x99,
+                0x9A, 0x9D,
                 // Worldwide BG Tilesets (9 sheets: Dark World, Bowser's Castle, Dungeons, Bowser Statues, Toad Town Roofs)
                 0x3F, 0x0D, 0x0B, 0x0C, 0x06, 0x18, 0x19, 0x4D, 0x4C,
             ];
@@ -746,27 +1155,111 @@ mod tests {
                     | ((target.data[raw_hi + raw_idx] as usize & 0x7F) << 8)
                     | (target.data[raw_lo + raw_idx] as usize);
                 // Must NEVER intrude on reserved 3D Intro banks ($20..$22 = 0x100000..0x117FFF)!
-                assert!(!(0x100000..0x118000).contains(&pc), "Raw sheet 0x{:02X} intruded on 3D Intro @ 0x{:06X}", raw_idx, pc);
-                let (dec, clen) = super::disasm_dma::decompress_nintendo_lz2_with_endian(&target.data, pc, 4096, false)
-                    .unwrap_or_else(|| panic!("Raw sheet 0x{:02X} @ 0x{:06X} failed LZ2 decompress", raw_idx, pc));
-                assert_eq!(dec.len(), 0x600, "Raw sheet 0x{:02X} must decompress to exact 1536B (0x600)", raw_idx);
+                assert!(
+                    !(0x100000..0x118000).contains(&pc),
+                    "Raw sheet 0x{:02X} intruded on 3D Intro @ 0x{:06X}",
+                    raw_idx,
+                    pc
+                );
+                let (dec, clen) = super::disasm_dma::decompress_nintendo_lz2_with_endian(
+                    &target.data,
+                    pc,
+                    4096,
+                    false,
+                )
+                .unwrap_or_else(|| {
+                    panic!(
+                        "Raw sheet 0x{:02X} @ 0x{:06X} failed LZ2 decompress",
+                        raw_idx, pc
+                    )
+                });
+                assert_eq!(
+                    dec.len(),
+                    0x600,
+                    "Raw sheet 0x{:02X} must decompress to exact 1536B (0x600)",
+                    raw_idx
+                );
                 // Must NEVER straddle a 32 KB ($8000) LoROM bank boundary!
-                assert_eq!(pc / 0x8000, (pc + clen - 1) / 0x8000, "Raw sheet 0x{:02X} @ 0x{:06X} (len {}) crossed 32KB LoROM bank boundary!", raw_idx, pc, clen);
+                assert_eq!(
+                    pc / 0x8000,
+                    (pc + clen - 1) / 0x8000,
+                    "Raw sheet 0x{:02X} @ 0x{:06X} (len {}) crossed 32KB LoROM bank boundary!",
+                    raw_idx,
+                    pc,
+                    clen
+                );
             }
             // Exclusive Lemmy (0x0DD55E) & Final King Bowser (0x0DD596 / 0x0DD5EA) palettes patched
-            assert_ne!(&target.data[0x0DD55E..0x0DD55E + 14], &zelda.data[0x0DD55E..0x0DD55E + 14], "Lemmy exclusive palette must be patched");
-            assert_ne!(&target.data[0x0DD596..0x0DD596 + 14], &zelda.data[0x0DD596..0x0DD596 + 14], "Final Bowser Pal 6 must be patched");
-            assert_ne!(&target.data[0x0DD5EA..0x0DD5EA + 14], &zelda.data[0x0DD5EA..0x0DD5EA + 14], "Final Bowser Pal 5 must be patched");
+            assert_ne!(
+                &target.data[0x0DD55E..0x0DD55E + 14],
+                &zelda.data[0x0DD55E..0x0DD55E + 14],
+                "Lemmy exclusive palette must be patched"
+            );
+            assert_ne!(
+                &target.data[0x0DD596..0x0DD596 + 14],
+                &zelda.data[0x0DD596..0x0DD596 + 14],
+                "Final Bowser Pal 6 must be patched"
+            );
+            assert_ne!(
+                &target.data[0x0DD5EA..0x0DD5EA + 14],
+                &zelda.data[0x0DD5EA..0x0DD5EA + 14],
+                "Final Bowser Pal 5 must be patched"
+            );
             // Verify 3 NEW v13 N-SPC songs have distinct valid SPC $D000 pointers (Athletic #7 != OW #2, Ghost House #22 != Castle #16, Koopalings Boss #21 != Castle #16!)
-            let ow_song7_ptr = u16::from_le_bytes([target.data[0x0D1EF9 + 6 * 2], target.data[0x0D1EF9 + 6 * 2 + 1]]);
-            assert!((0xD036..0xFDAE).contains(&ow_song7_ptr) && ow_song7_ptr != ow_song2_ptr, "Toad Town #7 (SMW Athletic) must have distinct valid SPC pointer");
-            let dn_song16_ptr = u16::from_le_bytes([target.data[0x0D8004 + 15 * 2], target.data[0x0D8004 + 15 * 2 + 1]]);
-            let dn_song21_ptr = u16::from_le_bytes([target.data[0x0D8004 + 20 * 2], target.data[0x0D8004 + 20 * 2 + 1]]);
-            let dn_song22_ptr = u16::from_le_bytes([target.data[0x0D8004 + 21 * 2], target.data[0x0D8004 + 21 * 2 + 1]]);
-            assert!((0xD046..0xFCBF).contains(&dn_song21_ptr) && dn_song21_ptr != dn_song16_ptr, "Koopaling Boss #21 must have distinct valid SPC pointer");
-            assert!((0xD046..0xFCBF).contains(&dn_song22_ptr) && dn_song22_ptr != dn_song16_ptr && dn_song22_ptr != dn_song21_ptr, "Ghost House #22 must have distinct valid SPC pointer");
+            let ow_song7_ptr = u16::from_le_bytes([
+                target.data[0x0D1EF9 + 6 * 2],
+                target.data[0x0D1EF9 + 6 * 2 + 1],
+            ]);
+            assert!(
+                (0xD036..0xFDAE).contains(&ow_song7_ptr) && ow_song7_ptr != ow_song2_ptr,
+                "Toad Town #7 (SMW Athletic) must have distinct valid SPC pointer"
+            );
+            let dn_song16_ptr = u16::from_le_bytes([
+                target.data[0x0D8004 + 15 * 2],
+                target.data[0x0D8004 + 15 * 2 + 1],
+            ]);
+            let dn_song21_ptr = u16::from_le_bytes([
+                target.data[0x0D8004 + 20 * 2],
+                target.data[0x0D8004 + 20 * 2 + 1],
+            ]);
+            let dn_song22_ptr = u16::from_le_bytes([
+                target.data[0x0D8004 + 21 * 2],
+                target.data[0x0D8004 + 21 * 2 + 1],
+            ]);
+            assert!(
+                (0xD046..0xFCBF).contains(&dn_song21_ptr) && dn_song21_ptr != dn_song16_ptr,
+                "Koopaling Boss #21 must have distinct valid SPC pointer"
+            );
+            assert!(
+                (0xD046..0xFCBF).contains(&dn_song22_ptr)
+                    && dn_song22_ptr != dn_song16_ptr
+                    && dn_song22_ptr != dn_song21_ptr,
+                "Ghost House #22 must have distinct valid SPC pointer"
+            );
 
-            println!("HARDWARE AUDIT PASSED: 100% COMPLIANT WITH SNES AND SUPER FAMICOM (v13 TOTAL CONVERSION: 7 KOOPALINGS + KING BOWSER + TOAD TOWN + FULL BESTIARY + 10 N-SPC SMW SONGS)!");
+            let audit = super::mixer::audit_legend_of_peach_output(&zelda, &target, &session)
+                .expect("audit_legend_of_peach_output must pass");
+            assert_eq!(audit.output_size_bytes, 2_097_152);
+            assert_eq!(audit.verified_raw_sheets, 46);
+            println!(
+                "HARDWARE AUDIT PASSED: 100% COMPLIANT WITH SNES AND SUPER FAMICOM (SHA-256: {})!",
+                audit.output_sha256
+            );
         }
+    }
+
+    #[test]
+    fn test_sha256_nist_vectors_and_input_rom_enforcement() {
+        assert_eq!(
+            super::rom::compute_sha256_hex(b""),
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        );
+        assert_eq!(
+            super::rom::compute_sha256_hex(b"abc"),
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+        let (demo_a, demo_b) = generate_demo_rom_pair();
+        assert!(super::rom::verify_legend_of_peach_inputs(&demo_a, &demo_b, false).is_err());
+        assert!(super::rom::verify_legend_of_peach_inputs(&demo_a, &demo_b, true).is_ok());
     }
 }

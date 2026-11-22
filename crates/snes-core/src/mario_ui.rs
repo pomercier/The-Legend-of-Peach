@@ -230,103 +230,49 @@ pub fn patch_mario_hud_and_start_menu(
     // Fix #7 (v2): Plump, 100% symmetrical, rounded iconic 8x8 Super Mario Mushroom (ZERO awkward notch!)
     // Pal 1 (0x24): 1='R' BRIGHT RUBY RED, 2='W' PURE WHITE, 3='K' CRISP BLACK OUTLINE!
     let hud_mush_full_crisp = parse_ascii_8x8([
-        "..KKKK..",
-        ".KRRRRK.",
-        "KWRRRRWK",
-        "KRRWWRRK",
-        "KRRRRRRK",
-        ".KWWWWK.",
-        "..KWWK..",
+        "..KKKK..", ".KRRRRK.", "KWRRRRWK", "KRRWWRRK", "KRRRRRRK", ".KWWWWK.", "..KWWK..",
         "..KKKK..",
     ]);
     let hud_mush_half = parse_ascii_8x8([
-        "..KKKK..",
-        ".KRRWWK.",
-        "KWRRKKWK",
-        "KRRWKKWK",
-        "KRRRKKWK",
-        ".KWWKKK.",
-        "..KWWK..",
+        "..KKKK..", ".KRRWWK.", "KWRRKKWK", "KRRWKKWK", "KRRRKKWK", ".KWWKKK.", "..KWWK..",
         "..KKKK..",
     ]);
     let hud_mush_empty = parse_ascii_8x8([
-        "..WWWW..",
-        ".WKKKKW.",
-        "WKKKKKKW",
-        "WKKKKKKW",
-        "WKKKKKKW",
-        ".WKKKKW.",
-        "..WKKW..",
+        "..WWWW..", ".WKKKKW.", "WKKKKKKW", "WKKKKKKW", "WKKKKKKW", ".WKKKKW.", "..WKKW..",
         "..WWWW..",
     ]);
 
     // HUD Yellow SMW Coin (tile 0xA8 -> local 0x28, Pal 2: 1=BRIGHT GOLD, 2=WHITE, 3=BLACK!)
     // 100% symmetric classic SMW oval coin with gleaming vertical center highlight (zero notch!)
     let hud_coin = parse_ascii_8x8([
-        "..KKKK..",
-        ".KYYYYK.",
-        "KYWYYWYK",
-        "KYWYKYYK",
-        "KYWYKYYK",
-        "KYWYYWYK",
-        ".KYYYYK.",
+        "..KKKK..", ".KYYYYK.", "KYWYYWYK", "KYWYKYYK", "KYWYKYYK", "KYWYYWYK", ".KYYYYK.",
         "..KKKK..",
     ]);
 
     // HUD SMW Key (tile 0xA9 -> local 0x29, Pal 2: 1=GOLD, 2=WHITE, 3=BLACK!)
     let hud_key = parse_ascii_8x8([
-        "..KKKK..",
-        ".KYWWYK.",
-        ".KYKKYK.",
-        "..KYYK..",
-        "...KYK..",
-        "..KYYK..",
-        "..KYYK..",
+        "..KKKK..", ".KYWWYK.", ".KYKKYK.", "..KYYK..", "...KYK..", "..KYYK..", "..KYYK..",
         "...KK...",
     ]);
 
     // HUD SMW Bob-omb (tiles 0x88, 0x89 -> local 0x08, 0x09; Pal 2: 3=BLACK body, 2=WHITE eyes/spark, 1=GOLD key & fuse!)
     let hud_bobomb_l = parse_ascii_8x8([
-        "......KW",
-        "....KKKY",
-        "...KKKKK",
-        "..KKWKWK",
-        "..KKWKWK",
-        "..KKKKKK",
-        "...KKKKK",
+        "......KW", "....KKKY", "...KKKKK", "..KKWKWK", "..KKWKWK", "..KKKKKK", "...KKKKK",
         "...KYK.K",
     ]);
     let hud_bobomb_r = parse_ascii_8x8([
-        "Y.......",
-        "K.......",
-        "KK..KK..",
-        "KKKYYK..",
-        "KKKYYK..",
-        "KK..KK..",
-        "K.......",
+        "Y.......", "K.......", "KK..KK..", "KKKYYK..", "KKKYYK..", "KK..KK..", "K.......",
         "YK......",
     ]);
 
     // HUD Bullet Bill (tiles 0x86, 0x87 -> local 0x06, 0x07; Pal 2: 3=BLACK body, 2=WHITE eye/rim, 1=GOLD tail glow)
     // Crisp white upper/lower highlight rim so the iconic Bullet Bill pops cleanly on both dark & bright HUDs!
     let hud_bullet_l = parse_ascii_8x8([
-        "...WWWWW",
-        "..WKKKKK",
-        ".WKKWWKK",
-        ".WKWKWWK",
-        ".WKKKKKK",
-        ".WKKKKKK",
-        "..WKKKKK",
+        "...WWWWW", "..WKKKKK", ".WKKWWKK", ".WKWKWWK", ".WKKKKKK", ".WKKKKKK", "..WKKKKK",
         "...WWWWW",
     ]);
     let hud_bullet_r = parse_ascii_8x8([
-        "WWWWWW..",
-        "KKKKKKW.",
-        "WWWWKKYW",
-        "KKKKKKYW",
-        "KKKKKKYW",
-        "KKKKKKW.",
-        "KKKKKKW.",
+        "WWWWWW..", "KKKKKKW.", "WWWWKKYW", "KKKKKKYW", "KKKKKKYW", "KKKKKKW.", "KKKKKKW.",
         "WWWWWW..",
     ]);
 
@@ -335,34 +281,16 @@ pub fn patch_mario_hud_and_start_menu(
     //    3='K' JET-BLACK body & BG, 2='W' crisp white spherical rim & big SMW oval eyes, 1='Y' golden wind-up key, spark & boots!)
     //    100% concordance with HUD Counter Bob-omb & Live Ground Bob-omb — ZERO blue bombs anywhere!
     let menu_bobomb_tl = parse_ascii_8x8([
-        "KKKKKKYK",
-        "KKKKKYYK",
-        "KKKKKWWK",
-        "KKKWWWWW",
-        "KKWKKKKK",
-        "KWKKWKKW",
-        "KWKKWKKW",
+        "KKKKKKYK", "KKKKKYYK", "KKKKKWWK", "KKKWWWWW", "KKWKKKKK", "KWKKWKKW", "KWKKWKKW",
         "KWKKWKKW",
     ]);
     let menu_bobomb_tr = parse_ascii_8x8([
-        "YKKKKKKK",
-        "WYKKKKKK",
-        "WKKKKKKK",
-        "WWWKKKKK",
-        "KKKWKYYK",
-        "KKKKWYYK",
-        "KKKKWYKY",
+        "YKKKKKKK", "WYKKKKKK", "WKKKKKKK", "WWWKKKKK", "KKKWKYYK", "KKKKWYYK", "KKKKWYKY",
         "KKKKWYYK",
     ]);
     // Symmetric bottom half (0xC2 mirrored horizontally for right half!) -> Jet-black round body + white rim + gleaming GOLD boots!
     let menu_bobomb_bl = parse_ascii_8x8([
-        "KWKKKKKK",
-        "KWKKKKKK",
-        "KKWKKKKK",
-        "KKKWKKKK",
-        "KKKKWWWW",
-        "KKKYYKKK",
-        "KKYYYYKK",
+        "KWKKKKKK", "KWKKKKKK", "KKWKKKKK", "KKKWKKKK", "KKKKWWWW", "KKKYYKKK", "KKYYYYKK",
         "KKKKKKKK",
     ]);
 
@@ -489,97 +417,43 @@ pub fn patch_mario_hud_and_start_menu(
     // 8. Menu Equipment Big Heart Container -> 16x16 SUPER MUSHROOM RESERVE!
     //    Empty (0x84 TL, 0x85 BL, H-mirrored for TR/BR) & Filled (0xAD TL, 0xAE BL; Pal 1: 1=RED, 2=WHITE, 3=BLACK!)
     let menu_mush_empty_tl = parse_ascii_8x8([
-        "KKKKKWWW",
-        "KKKWWKKK",
-        "KKWKKKKK",
-        "KWKKKKKK",
-        "KWKKKKKK",
-        "KWKKKKKK",
-        "KWKKKKKK",
+        "KKKKKWWW", "KKKWWKKK", "KKWKKKKK", "KWKKKKKK", "KWKKKKKK", "KWKKKKKK", "KWKKKKKK",
         "KWKKKKKK",
     ]);
     let menu_mush_empty_bl = parse_ascii_8x8([
-        "KKWWWWWW",
-        "KKKWKKKK",
-        "KKKWKKKK",
-        "KKKWKKKK",
-        "KKKWKKKK",
-        "KKKKWKKK",
-        "KKKKKWWW",
+        "KKWWWWWW", "KKKWKKKK", "KKKWKKKK", "KKKWKKKK", "KKKWKKKK", "KKKKWKKK", "KKKKKWWW",
         "KKKKKKKK",
     ]);
     let menu_mush_full_tl = parse_ascii_8x8([
-        "KKKKKWWW",
-        "KKKWWRRR",
-        "KKWRRRRR",
-        "KWRRWWWR",
-        "KWRWWWRR",
-        "KWRWWWRR",
-        "KWRRRRRR",
+        "KKKKKWWW", "KKKWWRRR", "KKWRRRRR", "KWRRWWWR", "KWRWWWRR", "KWRWWWRR", "KWRRRRRR",
         "KWRRRRRR",
     ]);
     let menu_mush_full_bl = parse_ascii_8x8([
-        "KKWWWWWW",
-        "KKKWWWWW",
-        "KKKWWKWW",
-        "KKKWWKWW",
-        "KKKWWWWW",
-        "KKKKWWWW",
-        "KKKKKWWW",
+        "KKWWWWWW", "KKKWWWWW", "KKKWWKWW", "KKKWWKWW", "KKKWWWWW", "KKKKWWWW", "KKKKKWWW",
         "KKKKKKKK",
     ]);
 
     // 9. Menu Shield 1 (0xFD, 0xFE H-mirrored) & Shield 2 (0xFF, 0x9F H-mirrored) -> SMW KOOPA SHELL SHIELD!
     let menu_shell_tl = parse_ascii_8x8([
-        "KKKKKKKK",
-        "KKKKWWWW",
-        "KKWWBBBB",
-        "KWWBBWBB",
-        "KWBBWBBB",
-        "KWBWBBBB",
-        "KWBBBBBW",
+        "KKKKKKKK", "KKKKWWWW", "KKWWBBBB", "KWWBBWBB", "KWBBWBBB", "KWBWBBBB", "KWBBBBBW",
         "KWBBBBWW",
     ]);
     let menu_shell_bl = parse_ascii_8x8([
-        "KWWWWWWW",
-        "KWBBBBBB",
-        "KKWBBBBB",
-        "KKWWWWWW",
-        "KKKKWWWW",
-        "KKKKKKKK",
-        "KKKKKKKK",
+        "KWWWWWWW", "KWBBBBBB", "KKWBBBBB", "KKWWWWWW", "KKKKWWWW", "KKKKKKKK", "KKKKKKKK",
         "KKKKKKKK",
     ]);
 
     // 10. Menu Boomerang (0xB8, 0xB9, 0xC9; Pal 3 Blue / Pal 1 Red) -> SMW Spinning Koopa Shell!
     let menu_boom_tl = parse_ascii_8x8([
-        "KKKKKKKK",
-        "KKKKWWWW",
-        "KKWWBBBB",
-        "KWWBBWBB",
-        "KWBBWBBB",
-        "KWBBBBWW",
-        "KWWWWWWW",
+        "KKKKKKKK", "KKKKWWWW", "KKWWBBBB", "KWWBBWBB", "KWBBWBBB", "KWBBBBWW", "KWWWWWWW",
         "KKWWWWWW",
     ]);
     let menu_boom_tr = parse_ascii_8x8([
-        "KKKKKKKK",
-        "WWWWKKKK",
-        "BBBBWWKK",
-        "BBWBBWWK",
-        "BBBWBBWK",
-        "WWBBBBWK",
-        "WWWWWWWK",
+        "KKKKKKKK", "WWWWKKKK", "BBBBWWKK", "BBWBBWWK", "BBBWBBWK", "WWBBBBWK", "WWWWWWWK",
         "WWWWWWKK",
     ]);
     let menu_boom_br = parse_ascii_8x8([
-        "BBBBBWWK",
-        "BBBBWWKK",
-        "WWWWKKKK",
-        "KKKKKKKK",
-        "KKKKKKKK",
-        "KKKKKKKK",
-        "KKKKKKKK",
+        "BBBBBWWK", "BBBBWWKK", "WWWWKKKK", "KKKKKKKK", "KKKKKKKK", "KKKKKKKK", "KKKKKKKK",
         "KKKKKKKK",
     ]);
 
@@ -677,23 +551,11 @@ pub fn patch_mario_hud_and_start_menu(
     // --- Start Menu Equipment Icons in Sheet 0x6F (+ alias 0xDB, VRAM tiles 0x00..0x7F) ---
     // 1. Mario Cap Tunic (0x68 TL, 0x78 BL, H-mirrored -> full iconic Mario Cap with 'M' emblem!)
     let menu_cap_tl = parse_ascii_8x8([
-        "KKKKKKKK",
-        "KKKKRRRR",
-        "KKRRRRRR",
-        "KRRRRWWW",
-        "KRRRWWRW",
-        "KRRRWWRR",
-        "KRRRRWWW",
+        "KKKKKKKK", "KKKKRRRR", "KKRRRRRR", "KRRRRWWW", "KRRRWWRW", "KRRRWWRR", "KRRRRWWW",
         "KRRRRRRR",
     ]);
     let menu_cap_bl = parse_ascii_8x8([
-        "KRRRRRRR",
-        "KWWWWWWW",
-        "KRRRRRRR",
-        "KKRRRRRR",
-        "KKKKKKKK",
-        "KKKKKKKK",
-        "KKKKKKKK",
+        "KRRRRRRR", "KWWWWWWW", "KRRRRRRR", "KKRRRRRR", "KKKKKKKK", "KKKKKKKK", "KKKKKKKK",
         "KKKKKKKK",
     ]);
 
@@ -907,25 +769,26 @@ pub fn patch_mario_hud_and_start_menu(
         let mut pend_tbl = Vec::with_capacity(48);
         // 0x06F7F9 (Bottom-Right / Wisdom) -> SUPER STAR (Grey silhouette 0x24..0x27 Pal 4 `0x30`, Collected Gold 0x20..0x23 Pal 2 `0x28`!)
         pend_tbl.extend_from_slice(&[
-            0x24, 0x30, 0x25, 0x30, 0x26, 0x30, 0x27, 0x30,
-            0x20, 0x28, 0x21, 0x28, 0x22, 0x28, 0x23, 0x28,
+            0x24, 0x30, 0x25, 0x30, 0x26, 0x30, 0x27, 0x30, 0x20, 0x28, 0x21, 0x28, 0x22, 0x28,
+            0x23, 0x28,
         ]);
         // 0x06F809 (Bottom-Left / Power) -> FIRE FLOWER (Grey silhouette 0x06,07,16,17 Pal 4 `0x30`, Collected Red/White 0x04,05,14,15 Pal 1 `0x24`!)
         pend_tbl.extend_from_slice(&[
-            0x06, 0x30, 0x07, 0x30, 0x16, 0x30, 0x17, 0x30,
-            0x04, 0x24, 0x05, 0x24, 0x14, 0x24, 0x15, 0x24,
+            0x06, 0x30, 0x07, 0x30, 0x16, 0x30, 0x17, 0x30, 0x04, 0x24, 0x05, 0x24, 0x14, 0x24,
+            0x15, 0x24,
         ]);
         // 0x06F819 (Top / Courage) -> SUPER MUSHROOM (Grey silhouette 0x02,03,12,13 Pal 4 `0x30`, Collected Red/White 0x00,01,10,11 Pal 1 `0x24`!)
         pend_tbl.extend_from_slice(&[
-            0x02, 0x30, 0x03, 0x30, 0x12, 0x30, 0x13, 0x30,
-            0x00, 0x24, 0x01, 0x24, 0x10, 0x24, 0x11, 0x24,
+            0x02, 0x30, 0x03, 0x30, 0x12, 0x30, 0x13, 0x30, 0x00, 0x24, 0x01, 0x24, 0x10, 0x24,
+            0x11, 0x24,
         ]);
         session.swap_custom_bytes(
             rom_zelda,
             0x06F7F9,
             0x06F7F9,
             pend_tbl,
-            "Menu Start Pendentifs (0x06F7F9..0x06F829) -> Champignon, Fleur de Feu & Étoile SMW".into(),
+            "Menu Start Pendentifs (0x06F7F9..0x06F829) -> Champignon, Fleur de Feu & Étoile SMW"
+                .into(),
             SwapKind::CodePatch { byte_count: 48 },
         )?;
         ops += 1;
@@ -953,7 +816,8 @@ pub fn patch_mario_hud_and_start_menu(
             0x06FDB1,
             0x06FDB1,
             hud_bar,
-            "HUD Haut Tilemap (0x06FDB1) : Pièce Jaune SMW, Bob-omb Noir & Bill Balle (Pal 2)".into(),
+            "HUD Haut Tilemap (0x06FDB1) : Pièce Jaune SMW, Bob-omb Noir & Bill Balle (Pal 2)"
+                .into(),
             SwapKind::CodePatch { byte_count: 16 },
         )?;
         ops += 1;
@@ -971,7 +835,8 @@ pub fn patch_mario_hud_and_start_menu(
             0x06F5A9,
             0x06F5A9,
             black_bomb_tbl,
-            "Menu Start & Case Y Bob-omb (0x06F5A9) : Bob-omb Noir SMW (Pal 2, zéro bombe bleue)".into(),
+            "Menu Start & Case Y Bob-omb (0x06F5A9) : Bob-omb Noir SMW (Pal 2, zéro bombe bleue)"
+                .into(),
             SwapKind::CodePatch { byte_count: 8 },
         )?;
         ops += 1;
@@ -1009,7 +874,8 @@ pub fn patch_mario_hud_and_start_menu(
             0x06F7A9,
             0x06F7A9,
             tunic_tbl,
-            "Menu Équipement Casquette Mario (0x06F7A9) : Rouge Classique, Bleu Glace, Fire Mario".into(),
+            "Menu Équipement Casquette Mario (0x06F7A9) : Rouge Classique, Bleu Glace, Fire Mario"
+                .into(),
             SwapKind::CodePatch { byte_count: 24 },
         )?;
         ops += 1;
@@ -1131,7 +997,8 @@ pub fn patch_mario_hud_and_start_menu(
             0x0DE874,
             0x0DE874,
             roof,
-            "Toit Maison de Mario & Village (0x0DE874) : Rouge Champignon Super Mario & Blanc".into(),
+            "Toit Maison de Mario & Village (0x0DE874) : Rouge Champignon Super Mario & Blanc"
+                .into(),
             SwapKind::PaletteBgr555 { color_count: 3 },
         )?;
         ops += 1;
@@ -1142,7 +1009,10 @@ pub fn patch_mario_hud_and_start_menu(
         (0x0DE6D0usize, "Herbe Overworld Principale SMW (0x0DE6D0)"),
         (0x0DE6FAusize, "Herbe & Buissons Overworld SMW (0x0DE6FA)"),
         (0x0DE708usize, "Herbe & Chemins Overworld SMW (0x0DE708)"),
-        (0x0DD49Eusize, "Palette Buisson Souriant Porté Vert SMW (0x0DD49E)"),
+        (
+            0x0DD49Eusize,
+            "Palette Buisson Souriant Porté Vert SMW (0x0DD49E)",
+        ),
     ] {
         if pc + 4 <= rom_zelda.data.len() {
             let mut gpal = Vec::with_capacity(4);
@@ -1264,9 +1134,9 @@ pub fn patch_dialog_mushroom_and_french_text(
             p
         };
 
-        let q1 = make_partial(true, false, false, false);  // [52][53] 1/4 Mushroom
-        let q2 = make_partial(true, true, false, false);   // [54][53] 1/2 Mushroom
-        let q3 = make_partial(true, true, true, false);    // [55][56] 3/4 Mushroom
+        let q1 = make_partial(true, false, false, false); // [52][53] 1/4 Mushroom
+        let q2 = make_partial(true, true, false, false); // [54][53] 1/2 Mushroom
+        let q3 = make_partial(true, true, true, false); // [55][56] 3/4 Mushroom
 
         // Write a left (x=0..7) or right (x=8..15) 8x16 glyph into font rows 10 (top) & 11 (bot)
         let write_glyph_col = |f: &mut [u8], col: usize, src: &[[u8; 16]; 16], right_half: bool| {
@@ -1283,13 +1153,13 @@ pub fn patch_dialog_mushroom_and_french_text(
             write_2bpp_8x8(f, 11 * 16 + col, &bot);
         };
 
-        write_glyph_col(&mut font, 2, &q1, false);   // [52] 1/4 left
-        write_glyph_col(&mut font, 3, &q1, true);    // [53] empty right
-        write_glyph_col(&mut font, 4, &q2, false);   // [54] 1/2 left
-        write_glyph_col(&mut font, 5, &q3, false);   // [55] 3/4 left
-        write_glyph_col(&mut font, 6, &q3, true);    // [56] 3/4 right
+        write_glyph_col(&mut font, 2, &q1, false); // [52] 1/4 left
+        write_glyph_col(&mut font, 3, &q1, true); // [53] empty right
+        write_glyph_col(&mut font, 4, &q2, false); // [54] 1/2 left
+        write_glyph_col(&mut font, 5, &q3, false); // [55] 3/4 left
+        write_glyph_col(&mut font, 6, &q3, true); // [56] 3/4 right
         write_glyph_col(&mut font, 7, &full, false); // [57] FULL MUSHROOM LEFT!
-        write_glyph_col(&mut font, 8, &full, true);  // [58] FULL MUSHROOM RIGHT!
+        write_glyph_col(&mut font, 8, &full, true); // [58] FULL MUSHROOM RIGHT!
 
         session.swap_custom_bytes(
             rom_zelda,
@@ -1315,9 +1185,12 @@ pub fn patch_dialog_mushroom_and_french_text(
             0x0E7461,
             36,
             vec![
-                0xEF, 0xE4, 0x59, 0x1F, 0xD6, 0x20, 0xC1, 0x95, 0x1E, 0x75, // "Tu as trouvé un fragment de\n" (10B)
-                0xA2, 0x1A, 0x26, 0x29, 0x22, 0x20, 0x27, 0xCB, 0x59, 0x3E, 0x76, // "champignon !\n" (11B)
-                0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, // 12 spaces (12B)
+                0xEF, 0xE4, 0x59, 0x1F, 0xD6, 0x20, 0xC1, 0x95, 0x1E,
+                0x75, // "Tu as trouvé un fragment de\n" (10B)
+                0xA2, 0x1A, 0x26, 0x29, 0x22, 0x20, 0x27, 0xCB, 0x59, 0x3E,
+                0x76, // "champignon !\n" (11B)
+                0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59,
+                0x59, // 12 spaces (12B)
                 0x52, 0x53, 0x7F, // [52][53]<END> (3B) => Total = 36B!
             ],
             "Dialogue FR Fragment de Champignon 1/4 (0x0E7461)",
@@ -1327,10 +1200,9 @@ pub fn patch_dialog_mushroom_and_french_text(
             0x0E7485,
             36,
             vec![
-                0xEF, 0xE4, 0x59, 0x1F, 0xD6, 0x20, 0xC1, 0x95, 0x1E, 0x75,
-                0xA2, 0x1A, 0x26, 0x29, 0x22, 0x20, 0x27, 0xCB, 0x59, 0x3E, 0x76,
-                0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59,
-                0x54, 0x53, 0x7F,
+                0xEF, 0xE4, 0x59, 0x1F, 0xD6, 0x20, 0xC1, 0x95, 0x1E, 0x75, 0xA2, 0x1A, 0x26, 0x29,
+                0x22, 0x20, 0x27, 0xCB, 0x59, 0x3E, 0x76, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59,
+                0x59, 0x59, 0x59, 0x59, 0x59, 0x54, 0x53, 0x7F,
             ],
             "Dialogue FR Fragment de Champignon 2/4 (0x0E7485)",
         ),
@@ -1339,10 +1211,9 @@ pub fn patch_dialog_mushroom_and_french_text(
             0x0E74A9,
             36,
             vec![
-                0xEF, 0xE4, 0x59, 0x1F, 0xD6, 0x20, 0xC1, 0x95, 0x1E, 0x75,
-                0xA2, 0x1A, 0x26, 0x29, 0x22, 0x20, 0x27, 0xCB, 0x59, 0x3E, 0x76,
-                0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59,
-                0x55, 0x56, 0x7F,
+                0xEF, 0xE4, 0x59, 0x1F, 0xD6, 0x20, 0xC1, 0x95, 0x1E, 0x75, 0xA2, 0x1A, 0x26, 0x29,
+                0x22, 0x20, 0x27, 0xCB, 0x59, 0x3E, 0x76, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59,
+                0x59, 0x59, 0x59, 0x59, 0x59, 0x55, 0x56, 0x7F,
             ],
             "Dialogue FR Fragment de Champignon 3/4 (0x0E74A9)",
         ),
@@ -1351,13 +1222,18 @@ pub fn patch_dialog_mushroom_and_french_text(
             0x0E74CD,
             73,
             vec![
-                0xEF, 0xE4, 0x1E, 0x59, 0x2B, 0x67, 0x2C, 0x1E, 0x2B, 0x2F, 0x1E, 0x59, 0xA6, // "Tu as trouvé une réserve de" (13B)
-                0x75, 0xA2, 0x1A, 0x26, 0x29, 0x22, 0x20, 0x27, 0xCB, 0x59, 0x3E, // "<L2>champignon !" (11B)
-                0x76, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, // "<L3>" + 8 spaces (9B)
+                0xEF, 0xE4, 0x1E, 0x59, 0x2B, 0x67, 0x2C, 0x1E, 0x2B, 0x2F, 0x1E, 0x59,
+                0xA6, // "Tu as trouvé une réserve de" (13B)
+                0x75, 0xA2, 0x1A, 0x26, 0x29, 0x22, 0x20, 0x27, 0xCB, 0x59,
+                0x3E, // "<L2>champignon !" (11B)
+                0x76, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59,
+                0x59, // "<L3>" + 8 spaces (9B)
                 0x57, 0x58, 0x7E, 0x73, // [57][58]<WAIT><SCR> (4B)
-                0x13, 0xCB, 0x59, 0x67, 0x27, 0x1E, 0x2B, 0x20, 0xB5, 0x59, 0x2F, 0x22, 0x2D, 0x1A, 0xBC, 0x1A, // "Ton énergie vitale a" (16B)
+                0x13, 0xCB, 0x59, 0x67, 0x27, 0x1E, 0x2B, 0x20, 0xB5, 0x59, 0x2F, 0x22, 0x2D, 0x1A,
+                0xBC, 0x1A, // "Ton énergie vitale a" (16B)
                 0x73, // <SCR> (1B)
-                0x1A, 0x2E, 0x20, 0xC1, 0x67, 0x95, 0x51, 0xE4, 0x59, 0xA2, 0x1A, 0x26, 0x29, 0x22, 0x20, 0x27, 0xCB, 0x41, // "augmenté d'un champignon." (18B)
+                0x1A, 0x2E, 0x20, 0xC1, 0x67, 0x95, 0x51, 0xE4, 0x59, 0xA2, 0x1A, 0x26, 0x29, 0x22,
+                0x20, 0x27, 0xCB, 0x41, // "augmenté d'un champignon." (18B)
                 0x7F, // <END> (1B) => 13+11+9+4+16+1+18+1 = 73B!
             ],
             "Dialogue FR Réserve de Champignon 1 (0x0E74CD)",
@@ -1367,13 +1243,16 @@ pub fn patch_dialog_mushroom_and_french_text(
             0x0E7516,
             72,
             vec![
-                0xEF, 0xE4, 0x1E, 0x59, 0x2B, 0x67, 0x2C, 0x1E, 0x2B, 0x2F, 0x1E, 0x59, 0xA6, // 13B
+                0xEF, 0xE4, 0x1E, 0x59, 0x2B, 0x67, 0x2C, 0x1E, 0x2B, 0x2F, 0x1E, 0x59,
+                0xA6, // 13B
                 0x75, 0xA2, 0x1A, 0x26, 0x29, 0x22, 0x20, 0x27, 0xCB, 0x59, 0x3E, // 11B
                 0x76, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, // "<L3>" + 7 spaces (8B)
                 0x57, 0x58, 0x7E, 0x73, // 4B
-                0x13, 0xCB, 0x59, 0x67, 0x27, 0x1E, 0x2B, 0x20, 0xB5, 0x59, 0x2F, 0x22, 0x2D, 0x1A, 0xBC, 0x1A, // 16B
+                0x13, 0xCB, 0x59, 0x67, 0x27, 0x1E, 0x2B, 0x20, 0xB5, 0x59, 0x2F, 0x22, 0x2D, 0x1A,
+                0xBC, 0x1A, // 16B
                 0x73, // 1B
-                0x1A, 0x2E, 0x20, 0xC1, 0x67, 0x95, 0x51, 0xE4, 0x59, 0xA2, 0x1A, 0x26, 0x29, 0x22, 0x20, 0x27, 0xCB, 0x3E, // "augmenté d'un champignon!" (18B)
+                0x1A, 0x2E, 0x20, 0xC1, 0x67, 0x95, 0x51, 0xE4, 0x59, 0xA2, 0x1A, 0x26, 0x29, 0x22,
+                0x20, 0x27, 0xCB, 0x3E, // "augmenté d'un champignon!" (18B)
                 0x7F, // 1B => 13+11+8+4+16+1+18+1 = 72B!
             ],
             "Dialogue FR Réserve de Champignon Sanctuaire (0x0E7516)",
@@ -1392,7 +1271,9 @@ pub fn patch_dialog_mushroom_and_french_text(
                 *pc,
                 bytes.clone(),
                 label.to_string(),
-                SwapKind::CodePatch { byte_count: *expected_len },
+                SwapKind::CodePatch {
+                    byte_count: *expected_len,
+                },
             )?;
             ops += 1;
         }
@@ -1417,7 +1298,10 @@ pub fn patch_dialog_mushroom_and_french_text(
                 0x0E0000,
                 0x0E0000,
                 bank,
-                format!("Dialogues FR Bank $1C : {} occurrences 'Zelda' -> 'Peach'", hits),
+                format!(
+                    "Dialogues FR Bank $1C : {} occurrences 'Zelda' -> 'Peach'",
+                    hits
+                ),
                 SwapKind::CodePatch { byte_count: 0x8000 },
             )?;
             ops += 1;
@@ -1494,7 +1378,8 @@ pub fn patch_red_coin_and_carry_height(
             0x04843B,
             0x04843B,
             vec![0x23, 0x14, 0x1E],
-            "ReceiveItem GFX 3 Pendentifs Boss (0x04843B) : Champignon, Fleur de Feu & Étoile SMW".into(),
+            "ReceiveItem GFX 3 Pendentifs Boss (0x04843B) : Champignon, Fleur de Feu & Étoile SMW"
+                .into(),
             SwapKind::CodePatch { byte_count: 3 },
         )?;
         ops += 1;
@@ -1552,7 +1437,8 @@ pub fn patch_red_coin_and_carry_height(
             0x0DD254,
             0x0DD254,
             sp2,
-            "Palette SP2 Rouge (0x0DD254) : Rouge Rubis Super Mario (Coin Rouge & Koopa Rouge)".into(),
+            "Palette SP2 Rouge (0x0DD254) : Rouge Rubis Super Mario (Coin Rouge & Koopa Rouge)"
+                .into(),
             SwapKind::PaletteBgr555 { color_count: 7 },
         )?;
         ops += 1;
@@ -1596,7 +1482,8 @@ pub fn patch_red_coin_and_carry_height(
             0x04191B,
             0x04191B,
             lift_y,
-            "Hauteur Blocs Transportés Soulèvement (0x04191B) : +7px sans écraser la tête de Mario".into(),
+            "Hauteur Blocs Transportés Soulèvement (0x04191B) : +7px sans écraser la tête de Mario"
+                .into(),
             SwapKind::CodePatch { byte_count: 16 },
         )?;
         ops += 1;
@@ -1612,10 +1499,14 @@ pub fn patch_red_coin_and_carry_height(
         && rom_zelda.data[0x035E77] == 16
     {
         let carried_z: Vec<u8> = vec![
-            13, 17, 20, 22, // Up    (Stages 0..3 -> Carried Z=22: rests directly IN Mario's wide white SMW gloves!)
-             0, 12, 21, 22, // Down  (Stages 0..3 -> Carried Z=22: zero cap crush, zero gap, zero "cat ears"!)
-             8, 14, 19, 22, // Left  (Stages 0..3 -> Carried Z=22: rests right in Mario's front white SMW glove!)
-             8, 14, 19, 22, // Right (Stages 0..3 -> Carried Z=22: rests right in Mario's front white SMW glove!)
+            13, 17, 20,
+            22, // Up    (Stages 0..3 -> Carried Z=22: rests directly IN Mario's wide white SMW gloves!)
+            0, 12, 21,
+            22, // Down  (Stages 0..3 -> Carried Z=22: zero cap crush, zero gap, zero "cat ears"!)
+            8, 14, 19,
+            22, // Left  (Stages 0..3 -> Carried Z=22: rests right in Mario's front white SMW glove!)
+            8, 14, 19,
+            22, // Right (Stages 0..3 -> Carried Z=22: rests right in Mario's front white SMW glove!)
         ];
         session.swap_custom_bytes(
             rom_zelda,
@@ -1671,7 +1562,12 @@ pub fn build_small_heart_magic_pair() -> [[u8; 16]; 16] {
 /// 6=Bright Peach Pink Gown, 7=Sapphire Blue Eyes/Brooch)!
 /// Complete closed charcoal outline (`5`) on BOTH left AND right sides so H-flipping in Sanctuary
 /// NEVER produces a flat vertical cut!
-pub fn build_unclipped_smw_peach() -> ([[u8; 16]; 16], [[u8; 16]; 16], [[u8; 16]; 16], [[u8; 16]; 16]) {
+pub fn build_unclipped_smw_peach() -> (
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
+) {
     let parse_3 = |rows: [&str; 16]| -> [[u8; 16]; 16] {
         let mut out = [[0u8; 16]; 16];
         for (y, r) in rows.iter().enumerate() {
@@ -2096,11 +1992,31 @@ pub fn patch_koopa_guard_oam_tables(
             }
         }
         let patches: &[(usize, Vec<u8>, &str)] = &[
-            (0x02C727, x_bytes, "OAM Soldats Koopa X ($05:C727) : Corps centré unique"),
-            (0x02C7F7, y_bytes, "OAM Soldats Koopa Y ($05:C7F7) : Marche fluide 3 étapes"),
-            (0x02C8C7, t_bytes, "OAM Soldats Koopa Tuiles ($05:C8C7) : Sans carapace doublée"),
-            (0x02C92F, f_bytes, "OAM Soldats Koopa Flags ($05:C92F) : Symétrie miroir propre"),
-            (0x02C997, s_bytes, "OAM Soldats Koopa Tailles ($05:C997) : 16x16 unique + 3 vides"),
+            (
+                0x02C727,
+                x_bytes,
+                "OAM Soldats Koopa X ($05:C727) : Corps centré unique",
+            ),
+            (
+                0x02C7F7,
+                y_bytes,
+                "OAM Soldats Koopa Y ($05:C7F7) : Marche fluide 3 étapes",
+            ),
+            (
+                0x02C8C7,
+                t_bytes,
+                "OAM Soldats Koopa Tuiles ($05:C8C7) : Sans carapace doublée",
+            ),
+            (
+                0x02C92F,
+                f_bytes,
+                "OAM Soldats Koopa Flags ($05:C92F) : Symétrie miroir propre",
+            ),
+            (
+                0x02C997,
+                s_bytes,
+                "OAM Soldats Koopa Tailles ($05:C997) : 16x16 unique + 3 vides",
+            ),
         ];
         for (pc, data, label) in patches {
             let n = data.len();
@@ -2130,19 +2046,45 @@ pub fn patch_koopa_guard_oam_tables(
         //   F07..F10 (Up):    hand at x=12..14, y=4..7 -> X=(10,10), Y=(-6,2) [lunge Y=(-10,-2)]
         //   F11..F13 (Right): hand at x=11..14, y=3..6 -> X=(18,10), Y=(2,2) [stride Y=(1,1)] — FIRMLY IN HAND!
         let wx: [(i16, i16); 14] = [
-            (-2, -2), (-2, -2), (-2, -2), (-2, -2),   // F00..F03 Down
-            (-10, -2), (-10, -2), (-12, -4),           // F04..F06 Left
-            (10, 10), (10, 10), (10, 10), (10, 10),   // F07..F10 Up
-            (18, 10), (18, 10), (20, 12),              // F11..F13 Right
+            (-2, -2),
+            (-2, -2),
+            (-2, -2),
+            (-2, -2), // F00..F03 Down
+            (-10, -2),
+            (-10, -2),
+            (-12, -4), // F04..F06 Left
+            (10, 10),
+            (10, 10),
+            (10, 10),
+            (10, 10), // F07..F10 Up
+            (18, 10),
+            (18, 10),
+            (20, 12), // F11..F13 Right
         ];
         let wy: [(i16, i16); 14] = [
-            (6, 14), (6, 14), (5, 13), (8, 16),       // F00..F03 Down
-            (2, 2),  (2, 2),  (1, 1),                 // F04..F06 Left (raised from y=8 -> y=2!)
-            (-6, 2), (-5, 3), (-5, 3), (-10, -2),     // F07..F10 Up
-            (2, 2),  (2, 2),  (1, 1),                 // F11..F13 Right (raised from y=8 -> y=2!)
+            (6, 14),
+            (6, 14),
+            (5, 13),
+            (8, 16), // F00..F03 Down
+            (2, 2),
+            (2, 2),
+            (1, 1), // F04..F06 Left (raised from y=8 -> y=2!)
+            (-6, 2),
+            (-5, 3),
+            (-5, 3),
+            (-10, -2), // F07..F10 Up
+            (2, 2),
+            (2, 2),
+            (1, 1), // F11..F13 Right (raised from y=8 -> y=2!)
         ];
-        let wx_b: Vec<u8> = wx.iter().flat_map(|&(a, b)| [a.to_le_bytes(), b.to_le_bytes()].concat()).collect();
-        let wy_b: Vec<u8> = wy.iter().flat_map(|&(a, b)| [a.to_le_bytes(), b.to_le_bytes()].concat()).collect();
+        let wx_b: Vec<u8> = wx
+            .iter()
+            .flat_map(|&(a, b)| [a.to_le_bytes(), b.to_le_bytes()].concat())
+            .collect();
+        let wy_b: Vec<u8> = wy
+            .iter()
+            .flat_map(|&(a, b)| [a.to_le_bytes(), b.to_le_bytes()].concat())
+            .collect();
         session.swap_custom_bytes(
             rom_zelda,
             0x02CAB2,
@@ -2209,8 +2151,14 @@ pub fn patch_bowser_authentic_palettes(
     let pal_bytes: Vec<u8> = bowser_bgr555.iter().flat_map(|w| w.to_le_bytes()).collect();
     let mut ops = 0usize;
     for &(pc, label) in &[
-        (0x0DD5A4usize, "Palette Intro Roi Bowser SMW (0x0DD5A4) : Crinière Rouge, Carapace Verte & Ventre Or"),
-        (0x0DD518usize, "Palette Boss Roi Bowser SMW (0x0DD518) : Couleurs Authentiques SMW GFX21"),
+        (
+            0x0DD5A4usize,
+            "Palette Intro Roi Bowser SMW (0x0DD5A4) : Crinière Rouge, Carapace Verte & Ventre Or",
+        ),
+        (
+            0x0DD518usize,
+            "Palette Boss Roi Bowser SMW (0x0DD518) : Couleurs Authentiques SMW GFX21",
+        ),
     ] {
         if pc + 14 <= rom_zelda.data.len() {
             session.swap_custom_bytes(
@@ -2349,9 +2297,18 @@ pub fn build_king_bowser_for_agahnim() -> KingBowserParts {
 
     // Back Cast (Muscular clawed arms raised beside spiky green shell!)
     let mut back_cast_tl = back_idle_tl;
-    back_cast_tl[4][0] = 5; back_cast_tl[4][1] = 1; back_cast_tl[4][2] = 4;
-    back_cast_tl[5][0] = 5; back_cast_tl[5][1] = 4; back_cast_tl[5][2] = 4; back_cast_tl[5][3] = 4;
-    back_cast_tl[6][0] = 5; back_cast_tl[6][1] = 4; back_cast_tl[6][2] = 5; back_cast_tl[6][3] = 1; back_cast_tl[6][4] = 5;
+    back_cast_tl[4][0] = 5;
+    back_cast_tl[4][1] = 1;
+    back_cast_tl[4][2] = 4;
+    back_cast_tl[5][0] = 5;
+    back_cast_tl[5][1] = 4;
+    back_cast_tl[5][2] = 4;
+    back_cast_tl[5][3] = 4;
+    back_cast_tl[6][0] = 5;
+    back_cast_tl[6][1] = 4;
+    back_cast_tl[6][2] = 5;
+    back_cast_tl[6][3] = 1;
+    back_cast_tl[6][4] = 5;
     let back_cast_bl = back_idle_bl;
 
     // Side Profile King Bowser (Full 32x32 facing LEFT: TL + TR / BL + BR — authentic SMW profile!)
@@ -2674,9 +2631,9 @@ pub fn build_mario_green_uncle_luigi_from_bank(mario_bank_4bpp: &[u8]) -> Normal
     };
 
     let head_front = read_mario_4bpp_cell(1, 0, false); // Exact Mario Front Head in Luigi Green!
-    let head_side = read_mario_4bpp_cell(0, 0, true);   // Exact Mario Side Head (flipped LEFT for Sheet 0xC2!)
-    let head_hurt = read_mario_4bpp_cell(4, 9, false);  // Exact Mario Sleeping/Resting Head in Luigi Green!
-    let body_sit = read_mario_4bpp_cell(3, 1, false);   // Exact Mario Standing Front Body in Green Clothes!
+    let head_side = read_mario_4bpp_cell(0, 0, true); // Exact Mario Side Head (flipped LEFT for Sheet 0xC2!)
+    let head_hurt = read_mario_4bpp_cell(4, 9, false); // Exact Mario Sleeping/Resting Head in Luigi Green!
+    let body_sit = read_mario_4bpp_cell(3, 1, false); // Exact Mario Standing Front Body in Green Clothes!
     let body_walk_down = read_mario_4bpp_cell(4, 1, false); // Exact Mario Walk Down Body in Green Clothes!
     let body_walk_side_1 = read_mario_4bpp_cell(1, 1, true); // Exact Mario Side Walk 1 (flipped LEFT!)
     let body_walk_side_2 = read_mario_4bpp_cell(2, 1, true); // Exact Mario Side Walk 2 (flipped LEFT!)
@@ -2755,7 +2712,8 @@ pub fn patch_uncle_luigi_oam_palettes(
         UNCLE_OAM_PC,
         UNCLE_OAM_PC,
         tbl,
-        "OAM Oncle Luigi ($0D:D163) : Sprite exact Mario en vêtements verts (Pal 6) + Corps unique".into(),
+        "OAM Oncle Luigi ($0D:D163) : Sprite exact Mario en vêtements verts (Pal 6) + Corps unique"
+            .into(),
         SwapKind::CodePatch { byte_count: 384 },
     )?;
     Ok(1)
@@ -3051,7 +3009,8 @@ pub fn patch_ball_and_chain_oam_tables(
             0x02B16E,
             0x02B16E,
             vec![0x0C],
-            "Hauteur Tête Boss Geôlier / Gardes Élite ($05:B16E) : -12px au-dessus des épaules".into(),
+            "Hauteur Tête Boss Geôlier / Gardes Élite ($05:B16E) : -12px au-dessus des épaules"
+                .into(),
             SwapKind::CodePatch { byte_count: 1 },
         )?;
         ops += 1;
@@ -3110,11 +3069,31 @@ pub fn patch_ball_and_chain_oam_tables(
             }
         }
         let patches: &[(usize, Vec<u8>, &str)] = &[
-            (0x02B19D, x_b, "OAM Boss Geôlier X ($05:B19D) : Corps centré unique"),
-            (0x02B22D, y_b, "OAM Boss Geôlier Y ($05:B22D) : Démarche lourde propre"),
-            (0x02B2BD, t_b, "OAM Boss Geôlier Tuiles ($05:B2BD) : Sheet 0xB7 pur sans fuite 0xBA"),
-            (0x02B305, f_b, "OAM Boss Geôlier Flags ($05:B305) : Symétrie 4 directions"),
-            (0x02B34D, s_b, "OAM Boss Geôlier Tailles ($05:B34D) : 16x16 unique + 2 vides"),
+            (
+                0x02B19D,
+                x_b,
+                "OAM Boss Geôlier X ($05:B19D) : Corps centré unique",
+            ),
+            (
+                0x02B22D,
+                y_b,
+                "OAM Boss Geôlier Y ($05:B22D) : Démarche lourde propre",
+            ),
+            (
+                0x02B2BD,
+                t_b,
+                "OAM Boss Geôlier Tuiles ($05:B2BD) : Sheet 0xB7 pur sans fuite 0xBA",
+            ),
+            (
+                0x02B305,
+                f_b,
+                "OAM Boss Geôlier Flags ($05:B305) : Symétrie 4 directions",
+            ),
+            (
+                0x02B34D,
+                s_b,
+                "OAM Boss Geôlier Tailles ($05:B34D) : 16x16 unique + 2 vides",
+            ),
         ];
         for (pc, data, label) in patches {
             let n = data.len();
@@ -3132,7 +3111,6 @@ pub fn patch_ball_and_chain_oam_tables(
 
     Ok(ops)
 }
-
 
 // =============================================================================
 // 11. MAXIMUM MARIO WORLD SURPRISES — ALTAR YOSHI, MESSAGE BLOCKS, SMW BUSHES,
@@ -3180,23 +3158,11 @@ pub fn build_captured_yoshi_altar_24x16() -> [[u8; 24]; 16] {
 /// `3`=Warm bevel highlight, `2`=Mid shadow, `5`=Dark wood stand!
 pub fn build_smw_message_block_half_8x16() -> ([[u8; 8]; 8], [[u8; 8]; 8]) {
     let top_rows: [&str; 8] = [
-        ".1111111",
-        "14444444",
-        "14133333",
-        "14333313",
-        "14333313",
-        "14333313",
-        "14333313",
+        ".1111111", "14444444", "14133333", "14333313", "14333313", "14333313", "14333313",
         "14333333",
     ];
     let bot_rows: [&str; 8] = [
-        "14333333",
-        "14313333",
-        "14331111",
-        "14122222",
-        "12222222",
-        ".1111111",
-        ".....152",
+        "14333333", "14313333", "14331111", "14122222", "12222222", ".1111111", ".....152",
         "....1522",
     ];
     let parse8 = |rs: [&str; 8]| -> [[u8; 8]; 8] {
@@ -3219,23 +3185,11 @@ pub fn build_smw_message_block_half_8x16() -> ([[u8; 8]; 8], [[u8; 8]; 8]) {
 /// `4`=Glossy top highlight, `3`=Light lime highlight, `6`=Vibrant lush SMW green, `2`=Mid green, `5`=Deep forest shade!
 pub fn build_smw_smiling_bush_half_8x16() -> ([[u8; 8]; 8], [[u8; 8]; 8]) {
     let top_rows: [&str; 8] = [
-        "....1111",
-        "..113336",
-        ".1343666",
-        ".1366666",
-        "13666166",
-        "16661416",
-        "16661116",
+        "....1111", "..113336", ".1343666", ".1366666", "13666166", "16661416", "16661116",
         "16666166",
     ];
     let bot_rows: [&str; 8] = [
-        "16666666",
-        "16666666",
-        "16626666",
-        ".1222666",
-        ".1522222",
-        "..115555",
-        "...11111",
+        "16666666", "16666666", "16626666", ".1222666", ".1522222", "..115555", "...11111",
         "........",
     ];
     let parse8 = |rs: [&str; 8]| -> [[u8; 8]; 8] {
@@ -3280,13 +3234,7 @@ pub fn build_smw_smiling_bush_16x16() -> [[u8; 16]; 16] {
 /// Uses `Aux 0` colors: `5`=deep crimson roof shade, `6`=vibrant Super Mario red roof, `7`=pure snow-white mushroom spot!
 pub fn build_smw_mushroom_roof_spot_8x8() -> [[u8; 8]; 8] {
     parse_3bpp_ascii_8x8([
-        "55555555",
-        "55777755",
-        "57777775",
-        "57777775",
-        "57777775",
-        "57777775",
-        "55777755",
+        "55555555", "55777755", "57777775", "57777775", "57777775", "57777775", "55777755",
         "55555555",
     ])
 }
@@ -3435,13 +3383,7 @@ pub fn build_smw_world_map_mario_head_16x16() -> [[u8; 16]; 16] {
 /// Crisp 8x8 **Mini Mario Cap Face** for the Dungeon Mini-Map player marker (`Sheet 0xD2 (1,3)`).
 pub fn build_smw_dungeon_map_mario_8x8() -> [[u8; 8]; 8] {
     parse_3bpp_ascii_8x8([
-        ".555555.",
-        "56711765",
-        "56666665",
-        "55111155",
-        "51511515",
-        "51555515",
-        ".511115.",
+        ".555555.", "56711765", "56666665", "55111155", "51511515", "51555515", ".511115.",
         "..5555..",
     ])
 }
@@ -3645,84 +3587,36 @@ pub fn patch_smw_live_weapons_087000(buf: &mut [u8]) {
 
     // 1. FLYING VERTICAL BULLET BILL: (A,2)=Tail + Flame, (B,2)=Sleek Black Nose + White Angry Eye!
     let bb_vert_tail = parse_3bpp_ascii_8x8([
-        "...3....",
-        "..373...",
-        ".37173..",
-        ".56665..",
-        ".55155..",
-        ".55555..",
-        ".55155..",
+        "...3....", "..373...", ".37173..", ".56665..", ".55155..", ".55555..", ".55155..",
         ".55555..",
     ]);
     let bb_vert_tip = parse_3bpp_ascii_8x8([
-        ".55555..",
-        ".55115..",
-        ".55515..",
-        ".55555..",
-        ".51555..",
-        "..515...",
-        "..555...",
+        ".55555..", ".55115..", ".55515..", ".55555..", ".51555..", "..515...", "..555...",
         "...5....",
     ]);
     // 2. FLYING HORIZONTAL BULLET BILL: (A,3)=Tail + Flame + SMW arm outline, (D,3)=Sleek Black Nose + Slanted White Eye!
     let bb_horiz_tail = parse_3bpp_ascii_8x8([
-        "........",
-        "...55555",
-        ".3651155",
-        "37155555",
-        "37151155",
-        ".3651555",
-        "...55555",
+        "........", "...55555", ".3651155", "37155555", "37151155", ".3651555", "...55555",
         "........",
     ]);
     let bb_horiz_tip = parse_3bpp_ascii_8x8([
-        "........",
-        "55555...",
-        "511155..",
-        "5511555.",
-        "5555555.",
-        "555555..",
-        "55555...",
+        "........", "55555...", "511155..", "5511555.", "5555555.", "555555..", "55555...",
         "........",
     ]);
     let bb_horiz_mid = parse_3bpp_ascii_8x8([
-        "........",
-        "........",
-        "........",
-        "....5555",
-        "..375155",
-        "..365555",
-        "....5555",
+        "........", "........", "........", "....5555", "..375155", "..365555", "....5555",
         "........",
     ]);
     let bb_stuck_v1 = parse_3bpp_ascii_8x8([
-        "........",
-        "...37...",
-        "..3713..",
-        "..5665..",
-        "..5155..",
-        "..5555..",
-        "..5555..",
+        "........", "...37...", "..3713..", "..5665..", "..5155..", "..5555..", "..5555..",
         "...55...",
     ]);
     let bb_stuck_v2 = parse_3bpp_ascii_8x8([
-        "..5555..",
-        "..5555..",
-        "..5155..",
-        "..5555..",
-        "..5555..",
-        "...55...",
-        "........",
+        "..5555..", "..5555..", "..5155..", "..5555..", "..5555..", "...55...", "........",
         "........",
     ]);
     let bb_stuck_h = parse_3bpp_ascii_8x8([
-        "........",
-        "...555..",
-        "..35155.",
-        ".375555.",
-        "..35555.",
-        "...555..",
-        "........",
+        "........", "...555..", "..35155.", ".375555.", "..35555.", "...555..", "........",
         "........",
     ]);
     write_8(buf, 0xA, 2, &bb_vert_tail);
@@ -3758,24 +3652,12 @@ pub fn patch_smw_live_weapons_087000(buf: &mut [u8]) {
     ]);
     // Compact 10px-tall sleek iron Bill Blaster barrel (A,0, V-mirrored by ALTTP around y=7: x=0 muzzle, x=7 breech!)
     let blaster_v = parse_3bpp_ascii_8x8([
-        "........",
-        "........",
-        "........",
-        "555.....",
-        "5665553.",
-        "56177523",
-        "56755523",
+        "........", "........", "........", "555.....", "5665553.", "56177523", "56755523",
         "5555553.",
     ]);
     // Compact 10px-wide sleek iron Bill Blaster barrel (A,1, H-mirrored by ALTTP around x=7: y=7 muzzle, y=0 breech!)
     let blaster_h = parse_3bpp_ascii_8x8([
-        "....3223",
-        "....3223",
-        "....5555",
-        "....5175",
-        "....5175",
-        "...55755",
-        "...56665",
+        "....3223", "....3223", "....5555", "....5175", "....5175", "...55755", "...56665",
         "...55555",
     ]);
     write_16(buf, 8, 0, &blaster_diag);
@@ -4027,7 +3909,9 @@ pub fn patch_smw_overworld_enemies_sheet_82(raw: &mut [u8]) {
         for ty in 0..2 {
             for tx in 0..2 {
                 let base = ((row + ty) * 16 + (col + tx)) * 24;
-                if base + 24 > buf.len() { continue; }
+                if base + 24 > buf.len() {
+                    continue;
+                }
                 for y in 0..8 {
                     let (mut p0, mut p1, mut p2) = (0u8, 0u8, 0u8);
                     for x in 0..8 {
@@ -4046,7 +3930,9 @@ pub fn patch_smw_overworld_enemies_sheet_82(raw: &mut [u8]) {
     };
     let write_8 = |buf: &mut [u8], col: usize, row: usize, px: &[[u8; 8]; 8]| {
         let base = (row * 16 + col) * 24;
-        if base + 24 > buf.len() { return; }
+        if base + 24 > buf.len() {
+            return;
+        }
         for y in 0..8 {
             let (mut p0, mut p1, mut p2) = (0u8, 0u8, 0u8);
             for x in 0..8 {
@@ -4203,13 +4089,7 @@ pub fn patch_smw_overworld_enemies_sheet_82(raw: &mut [u8]) {
 
     // SMW Fireball 8x8 projectile
     let fireball = parse_3bpp_ascii_8x8([
-        "..555...",
-        ".57375..",
-        "5731135.",
-        "5311175.",
-        "5731375.",
-        ".57375..",
-        "..555...",
+        "..555...", ".57375..", "5731135.", "5311175.", "5731375.", ".57375..", "..555...",
         "........",
     ]);
 
@@ -4239,7 +4119,9 @@ pub fn patch_smw_sewers_sheet_8d(raw: &mut [u8]) {
         for ty in 0..2 {
             for tx in 0..2 {
                 let base = ((row + ty) * 16 + (col + tx)) * 24;
-                if base + 24 > buf.len() { continue; }
+                if base + 24 > buf.len() {
+                    continue;
+                }
                 for y in 0..8 {
                     let (mut p0, mut p1, mut p2) = (0u8, 0u8, 0u8);
                     for x in 0..8 {
@@ -4377,7 +4259,9 @@ pub fn patch_smw_thwomp_sheet_8e(raw: &mut [u8]) {
         for ty in 0..2 {
             for tx in 0..2 {
                 let base = ((row + ty) * 16 + (col + tx)) * 24;
-                if base + 24 > buf.len() { continue; }
+                if base + 24 > buf.len() {
+                    continue;
+                }
                 for y in 0..8 {
                     let (mut p0, mut p1, mut p2) = (0u8, 0u8, 0u8);
                     for x in 0..8 {
@@ -4462,7 +4346,9 @@ pub fn patch_smw_dry_bones_sheet_90(raw: &mut [u8]) {
         for ty in 0..2 {
             for tx in 0..2 {
                 let base = ((row + ty) * 16 + (col + tx)) * 24;
-                if base + 24 > buf.len() { continue; }
+                if base + 24 > buf.len() {
+                    continue;
+                }
                 for y in 0..8 {
                     let (mut p0, mut p1, mut p2) = (0u8, 0u8, 0u8);
                     for x in 0..8 {
@@ -4570,7 +4456,9 @@ pub fn patch_smw_baby_yoshi_sheet_86(raw: &mut [u8]) {
         for ty in 0..2 {
             for tx in 0..2 {
                 let base = ((row + ty) * 16 + (col + tx)) * 24;
-                if base + 24 > buf.len() { continue; }
+                if base + 24 > buf.len() {
+                    continue;
+                }
                 for y in 0..8 {
                     let (mut p0, mut p1, mut p2) = (0u8, 0u8, 0u8);
                     for x in 0..8 {
@@ -4635,23 +4523,11 @@ pub fn patch_smw_baby_yoshi_sheet_86(raw: &mut [u8]) {
 /// Verified `Sheet 0x3C` indices: `1`=dark mortar/outline, `2`=dark brick shade, `3`=mid brick, `4`=bright brick highlight, `5`=drop shadow, `6`=grass.
 pub fn build_smw_ow_brick_block_half_8x16() -> ([[u8; 8]; 8], [[u8; 8]; 8]) {
     let top = parse_3bpp_ascii_8x8([
-        "61111111",
-        "14444444",
-        "14333331",
-        "14333321",
-        "11111111",
-        "14414444",
-        "14214333",
+        "61111111", "14444444", "14333331", "14333321", "11111111", "14414444", "14214333",
         "12214332",
     ]);
     let bot = parse_3bpp_ascii_8x8([
-        "11111111",
-        "14444441",
-        "14333321",
-        "12222221",
-        "11111111",
-        "14414444",
-        "12212222",
+        "11111111", "14444441", "14333321", "12222221", "11111111", "14414444", "12212222",
         "51111111",
     ]);
     (top, bot)
@@ -4661,23 +4537,11 @@ pub fn build_smw_ow_brick_block_half_8x16() -> ([[u8; 8]; 8], [[u8; 8]; 8]) {
 /// Verified `Sheet 0x3C (1,2)/(1,3)` indices: `1`=grass background, `3`=bright white/gold petals, `4`=leaf green/stem!
 pub fn build_smw_ow_smiling_flowers_8x16() -> ([[u8; 8]; 8], [[u8; 8]; 8]) {
     let f0 = parse_3bpp_ascii_8x8([
-        "11111111",
-        "11333111",
-        "13343311",
-        "11333111",
-        "11141111",
-        "11444111",
-        "11141111",
+        "11111111", "11333111", "13343311", "11333111", "11141111", "11444111", "11141111",
         "11111111",
     ]);
     let f1 = parse_3bpp_ascii_8x8([
-        "11111111",
-        "11133311",
-        "11334331",
-        "11133311",
-        "11114111",
-        "11144411",
-        "11114111",
+        "11111111", "11133311", "11334331", "11133311", "11114111", "11144411", "11114111",
         "11111111",
     ]);
     (f0, f1)
@@ -4709,23 +4573,11 @@ pub fn build_smw_dungeon_qblock_16x16() -> [[u8; 16]; 16] {
 /// Museum-grade **SMW `P`-SWITCH** for Dungeon Floor Pressure Switches (`Sheet 0x0C (B,0)/(B,1)`, H-mirrored + `(A,0)/(A,1)` raised edge)!
 pub fn build_smw_dungeon_pswitch_half_8x16() -> ([[u8; 8]; 8], [[u8; 8]; 8]) {
     let top = parse_3bpp_ascii_8x8([
-        "11111111",
-        "13333333",
-        "13111111",
-        "13177777",
-        "13175555",
-        "13175111",
-        "13175177",
+        "11111111", "13333333", "13111111", "13177777", "13175555", "13175111", "13175177",
         "13175111",
     ]);
     let bot = parse_3bpp_ascii_8x8([
-        "13175177",
-        "13175555",
-        "13176666",
-        "13166666",
-        "13111111",
-        "13333333",
-        "13322222",
+        "13175177", "13175555", "13176666", "13166666", "13111111", "13333333", "13322222",
         "11111111",
     ]);
     (top, bot)

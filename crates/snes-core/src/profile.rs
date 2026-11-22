@@ -34,16 +34,20 @@ impl GameProfile {
             return true;
         }
         let recognized = rom.identify_game();
-        if self.profile_name.contains("Zelda") && recognized == crate::rom::RecognizedGame::ZeldaAlttp {
+        if self.profile_name.contains("Zelda")
+            && recognized == crate::rom::RecognizedGame::ZeldaAlttp
+        {
             return true;
         }
-        if self.profile_name.contains("Super Mario World") && recognized == crate::rom::RecognizedGame::SuperMarioWorld {
+        if self.profile_name.contains("Super Mario World")
+            && recognized == crate::rom::RecognizedGame::SuperMarioWorld
+        {
             return true;
         }
         let upper_title = rom.header.title.to_uppercase();
-        self.match_titles
-            .iter()
-            .any(|t| upper_title.contains(&t.to_uppercase()) || t.to_uppercase().contains(&upper_title))
+        self.match_titles.iter().any(|t| {
+            upper_title.contains(&t.to_uppercase()) || t.to_uppercase().contains(&upper_title)
+        })
     }
 
     pub fn builtin_profiles() -> Vec<Self> {

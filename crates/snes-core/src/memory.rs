@@ -193,7 +193,12 @@ impl RomKnowledgeBase {
             for s in &r.sprite_regions {
                 md.push_str(&format!(
                     "  - **`0x{:06X}` — {}** (`{}`, `{}`, budget max `{}` octets) : {}\n",
-                    s.pc_offset, s.name, s.format, s.compression, s.max_budget_bytes, s.hardware_notes
+                    s.pc_offset,
+                    s.name,
+                    s.format,
+                    s.compression,
+                    s.max_budget_bytes,
+                    s.hardware_notes
                 ));
             }
             if !r.palette_regions.is_empty() {
@@ -246,8 +251,18 @@ impl RomKnowledgeBase {
         }
         out.push_str("  ],\n  \"verified_recipes\": [\n");
         for (i, rec) in self.verified_recipes.iter().enumerate() {
-            let donors_json = rec.donor_rom_titles.iter().map(|d| format!("\"{}\"", esc(d))).collect::<Vec<_>>().join(", ");
-            let steps_json = rec.steps.iter().map(|s| format!("\"{}\"", esc(s))).collect::<Vec<_>>().join(", ");
+            let donors_json = rec
+                .donor_rom_titles
+                .iter()
+                .map(|d| format!("\"{}\"", esc(d)))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let steps_json = rec
+                .steps
+                .iter()
+                .map(|s| format!("\"{}\"", esc(s)))
+                .collect::<Vec<_>>()
+                .join(", ");
             out.push_str(&format!(
                 "    {{\n      \"recipe_id\": \"{}\",\n      \"target_rom_title\": \"{}\",\n      \"donor_rom_titles\": [{}],\n      \"description\": \"{}\",\n      \"verified_functional_rom\": {},\n      \"steps\": [{}]\n    }}{}\n",
                 esc(&rec.recipe_id),
@@ -413,7 +428,6 @@ impl RomKnowledgeBase {
                     audio_engine_notes: "N-SPC upload at PC 0x0C8000; 26 BRR samples starting at 0x0C8078.".to_string(),
                     oam_assembly_notes: "Link Head (16x16) overlaps Link Body (16x16) by 7-8 pixels vertically for a 23-24px composite character.".to_string(),
                 },
-                
             ],
             verified_recipes: vec![
                 SwapRecipeMemory {
@@ -421,8 +435,8 @@ impl RomKnowledgeBase {
                     target_rom_title: "SUPER MARIOWORLD".to_string(),
                     donor_rom_titles: vec![
                         "THE LEGEND OF ZELDA".to_string(),
-                                            ],
-                    description: "Remplace Mario/Luigi par Link dans Super Mario World avec titre 'SUPER LINK WORLD', poing d'attaque gorille, dos quadrupède horizontal et 100% fonctionnel sur matériel.".to_string(),
+                    ],
+                    description: "Replaces Mario with Link in Super Mario World with 'SUPER LINK WORLD' title screen and full hardware compatibility.".to_string(),
                     verified_functional_rom: true,
                     steps: vec![
                         "GFX32 (0x040000): Injection de Link 4bpp (Petit 16x16 & Super/Feu/Cape 16x32) selon les tables matérielles $00:E00C / $00:E0CC. Découplage absolu : $00:E00C forcé à 197 (transparent) sur toutes les poses de Petit Link (élimination totale des casquettes résiduelles), jambes de victoire ($7E) et d'escalade ($7F) séparées, glisse réassignée à la tuile 5.".to_string(),

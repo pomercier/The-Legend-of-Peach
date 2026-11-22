@@ -142,7 +142,10 @@ pub fn scan_hardware_dma_transfers(rom: &SnesRom) -> Vec<DmaTransferDiscovery> {
             let mut size_opt: Option<u16> = None;
 
             // 1) If writing to $43x0 (16-bit mode+B-bus write): look at the immediate load right before `i`
-            if reg_low == 0x00 && i >= 3 && (data[i - 3] == 0xA9 || data[i - 3] == 0xA2 || data[i - 3] == 0xA0) {
+            if reg_low == 0x00
+                && i >= 3
+                && (data[i - 3] == 0xA9 || data[i - 3] == 0xA2 || data[i - 3] == 0xA0)
+            {
                 let b_reg = data[i - 1];
                 let mode_byte = data[i - 2];
                 if mode_byte <= 0x0F {
@@ -157,7 +160,10 @@ pub fn scan_hardware_dma_transfers(rom: &SnesRom) -> Vec<DmaTransferDiscovery> {
             }
 
             // 2) If writing to $43x1 (8-bit B-bus write): look at the immediate load right before `i`
-            if reg_low == 0x01 && i >= 2 && (data[i - 2] == 0xA9 || data[i - 2] == 0xA2 || data[i - 2] == 0xA0) {
+            if reg_low == 0x01
+                && i >= 2
+                && (data[i - 2] == 0xA9 || data[i - 2] == 0xA2 || data[i - 2] == 0xA0)
+            {
                 match data[i - 1] {
                     0x18 | 0x19 => target_opt = Some(DmaTarget::VramGraphics),
                     0x22 => target_opt = Some(DmaTarget::CgramPalette),
@@ -168,7 +174,6 @@ pub fn scan_hardware_dma_transfers(rom: &SnesRom) -> Vec<DmaTransferDiscovery> {
             }
 
             for k in 0..win.len().saturating_sub(4) {
-
                 // 3) 16-bit immediate load followed by STA/STX/STY $43x2 (source addr) or $43x5 (size)
                 if k + 5 < win.len()
                     && (win[k] == 0xA9 || win[k] == 0xA2 || win[k] == 0xA0)
@@ -264,7 +269,9 @@ pub fn classify_rom_chunks(rom_data: &[u8]) -> Vec<RomChunkClassification> {
                 valid_brr_blocks += 1;
             }
         }
-        if total_brr_blocks > 10 && valid_brr_blocks > (total_brr_blocks * 88) / 100 && entropy > 4.5
+        if total_brr_blocks > 10
+            && valid_brr_blocks > (total_brr_blocks * 88) / 100
+            && entropy > 4.5
         {
             out.push(RomChunkClassification {
                 offset,
@@ -508,7 +515,10 @@ pub fn compress_nintendo_lz2_with_endian(raw: &[u8], big_endian_backref: bool) -
             let max_l = (n - i).min(1024);
             if max_l >= 4 {
                 for cand in 0..i {
-                    if raw[cand] == raw[i] && cand + 3 < n && raw[cand + 1..cand + 4] == raw[i + 1..i + 4] {
+                    if raw[cand] == raw[i]
+                        && cand + 3 < n
+                        && raw[cand + 1..cand + 4] == raw[i + 1..i + 4]
+                    {
                         let mut m = 4usize;
                         while m < max_l && raw[cand + m] == raw[i + m] {
                             m += 1;

@@ -1,12 +1,13 @@
-use std::fs;
-use std::path::Path;
-use image::{ImageBuffer, Rgba};
 use crate::assets::scan_assets_for_rom;
 use crate::audio::{decode_brr_to_pcm16, encode_pcm16_to_wav, scan_brr_samples};
 use crate::graphics::{
-    render_single_asset_sprite, render_tile_sheet_rgba, scan_candidate_palettes, scan_graphics_regions, SnesPalette,
+    render_single_asset_sprite, render_tile_sheet_rgba, scan_candidate_palettes,
+    scan_graphics_regions, SnesPalette,
 };
 use crate::rom::SnesRom;
+use image::{ImageBuffer, Rgba};
+use std::fs;
+use std::path::Path;
 
 /// Summary of all assets exported from a SNES ROM
 #[derive(Debug, Clone)]
@@ -35,7 +36,10 @@ pub fn export_all_rom_assets(rom: &SnesRom, out_dir: &Path) -> std::io::Result<R
     if palettes.is_empty() {
         palettes.push(SnesPalette::preset_grayscale());
     }
-    let default_pal = palettes.first().cloned().unwrap_or_else(SnesPalette::preset_grayscale);
+    let default_pal = palettes
+        .first()
+        .cloned()
+        .unwrap_or_else(SnesPalette::preset_grayscale);
 
     let mut palettes_count = 0;
     for (idx, pal) in palettes.iter().enumerate() {
@@ -45,12 +49,23 @@ pub fn export_all_rom_assets(rom: &SnesRom, out_dir: &Path) -> std::io::Result<R
         json.push_str("\",\n  \"colors\": [\n");
         for (c_idx, c) in pal.colors_rgba.iter().enumerate() {
             let hex = format!("#{:02X}{:02X}{:02X}", c[0], c[1], c[2]);
-            json.push_str(&format!("    \"{}\"{}", hex, if c_idx + 1 < pal.colors_rgba.len() { "," } else { "" }));
+            json.push_str(&format!(
+                "    \"{}\"{}",
+                hex,
+                if c_idx + 1 < pal.colors_rgba.len() {
+                    ","
+                } else {
+                    ""
+                }
+            ));
             json.push('\n');
         }
         json.push_str("  ]\n}\n");
         let safe_name = pal.name.replace(|c: char| !c.is_alphanumeric(), "_");
-        fs::write(pal_dir.join(format!("palette_{:02}_{}.json", idx + 1, safe_name)), json)?;
+        fs::write(
+            pal_dir.join(format!("palette_{:02}_{}.json", idx + 1, safe_name)),
+            json,
+        )?;
 
         // B. PNG Palette Swatch (16 colors x 16x16 block = 256x16 image)
         let swatch_w = (pal.colors_rgba.len() * 16) as u32;
@@ -70,7 +85,10 @@ pub fn export_all_rom_assets(rom: &SnesRom, out_dir: &Path) -> std::io::Result<R
         // C. Binary BGR555 if offset known
         if let Some(off) = pal.source_offset {
             if off + 32 <= rom.data.len() {
-                fs::write(pal_dir.join(format!("palette_{:02}_{}.pal", idx + 1, safe_name)), &rom.data[off..off + 32])?;
+                fs::write(
+                    pal_dir.join(format!("palette_{:02}_{}.pal", idx + 1, safe_name)),
+                    &rom.data[off..off + 32],
+                )?;
             }
         }
         palettes_count += 1;
@@ -82,7 +100,7 @@ pub fn export_all_rom_assets(rom: &SnesRom, out_dir: &Path) -> std::io::Result<R
     for (idx, reg) in gfx_regions.iter().enumerate() {
         let cols = 16;
         let total_tiles = reg.length / reg.suggested_format.bytes_per_tile();
-        let rows = (total_tiles / cols).max(1).min(32);
+        let rows = (total_tiles / cols).clamp(1, 32);
         let (w, h, rgba) = render_tile_sheet_rgba(
             &rom.data,
             reg.offset,
@@ -108,31 +126,36 @@ pub fn export_all_rom_assets(rom: &SnesRom, out_dir: &Path) -> std::io::Result<R
     let mut sprites_png_count = 0;
     for asset in &scanned_assets {
         let pal = if let Some(poff) = asset.palette_offset {
-            palettes.iter().find(|p| p.source_offset == Some(poff)).unwrap_or(&default_pal)
+            palettes
+                .iter()
+                .find(|p| p.source_offset == Some(poff))
+                .unwrap_or(&default_pal)
         } else {
             &default_pal
         };
 
         // Render asset as single isolated authentic sprite if supported, or fallback to 2x2 tiles
-        let (w, h, rgba) = if let Some((aw, ah, argba)) = render_single_asset_sprite(&rom.data, &asset.id) {
-            (aw, ah, argba)
-        } else {
-            let tiles_x = 2;
-            let tiles_y = 2;
-            render_tile_sheet_rgba(
-                &rom.data,
-                asset.rom_offset,
-                tiles_x,
-                tiles_y,
-                asset.format,
-                pal,
-            )
-        };
+        let (w, h, rgba) =
+            if let Some((aw, ah, argba)) = render_single_asset_sprite(&rom.data, &asset.id) {
+                (aw, ah, argba)
+            } else {
+                let tiles_x = 2;
+                let tiles_y = 2;
+                render_tile_sheet_rgba(
+                    &rom.data,
+                    asset.rom_offset,
+                    tiles_x,
+                    tiles_y,
+                    asset.format,
+                    pal,
+                )
+            };
 
         if let Some(img) = ImageBuffer::<Rgba<u8>, Vec<u8>>::from_raw(w as u32, h as u32, rgba) {
             // Upscale 3x with crisp nearest-neighbor for high visibility
             let scale = 3u32;
-            let mut upscaled: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::new((w as u32) * scale, (h as u32) * scale);
+            let mut upscaled: ImageBuffer<Rgba<u8>, Vec<u8>> =
+                ImageBuffer::new((w as u32) * scale, (h as u32) * scale);
             for y in 0..(h as u32) {
                 for x in 0..(w as u32) {
                     let pixel = img.get_pixel(x, y);
@@ -144,9 +167,15 @@ pub fn export_all_rom_assets(rom: &SnesRom, out_dir: &Path) -> std::io::Result<R
                 }
             }
 
-            let cat_label = asset.category.label_fr().replace(|c: char| !c.is_alphanumeric(), "_");
+            let cat_label = asset
+                .category
+                .label_fr()
+                .replace(|c: char| !c.is_alphanumeric(), "_");
             let safe_asset_name = asset.name.replace(|c: char| !c.is_alphanumeric(), "_");
-            let file_name = format!("{}_{}_0x{:06X}.png", cat_label, safe_asset_name, asset.rom_offset);
+            let file_name = format!(
+                "{}_{}_0x{:06X}.png",
+                cat_label, safe_asset_name, asset.rom_offset
+            );
             let _ = upscaled.save(sprites_dir.join(file_name));
             sprites_png_count += 1;
         }
@@ -160,21 +189,36 @@ pub fn export_all_rom_assets(rom: &SnesRom, out_dir: &Path) -> std::io::Result<R
         let brr_slice = &rom.data[sample.offset..end];
         let safe_label = sample.label.replace(|c: char| !c.is_alphanumeric(), "_");
 
-        let brr_file = audio_dir.join(format!("sample_{:02}_0x{:06X}_{}.brr", sample.index, sample.offset, safe_label));
+        let brr_file = audio_dir.join(format!(
+            "sample_{:02}_0x{:06X}_{}.brr",
+            sample.index, sample.offset, safe_label
+        ));
         fs::write(brr_file, brr_slice)?;
 
         let pcm = decode_brr_to_pcm16(brr_slice);
         let wav_bytes = encode_pcm16_to_wav(&pcm, 16000);
-        let wav_file = audio_dir.join(format!("sample_{:02}_0x{:06X}_{}.wav", sample.index, sample.offset, safe_label));
+        let wav_file = audio_dir.join(format!(
+            "sample_{:02}_0x{:06X}_{}.wav",
+            sample.index, sample.offset, safe_label
+        ));
         fs::write(wav_file, wav_bytes)?;
         audio_wav_count += 1;
     }
 
     // 5. Generate Comprehensive Manifest JSON
     let mut manifest = String::from("{\n");
-    manifest.push_str(&format!("  \"rom_title\": \"{}\",\n", rom.canonical_title()));
-    manifest.push_str(&format!("  \"mapping\": \"{}\",\n", rom.header.mapping.as_str()));
-    manifest.push_str(&format!("  \"checksum\": \"0x{:04X}\",\n", rom.header.checksum));
+    manifest.push_str(&format!(
+        "  \"rom_title\": \"{}\",\n",
+        rom.canonical_title()
+    ));
+    manifest.push_str(&format!(
+        "  \"mapping\": \"{}\",\n",
+        rom.header.mapping.as_str()
+    ));
+    manifest.push_str(&format!(
+        "  \"checksum\": \"0x{:04X}\",\n",
+        rom.header.checksum
+    ));
     manifest.push_str(&format!("  \"sprites_count\": {},\n", sprites_png_count));
     manifest.push_str(&format!("  \"sheets_count\": {},\n", sheets_png_count));
     manifest.push_str(&format!("  \"audio_wav_count\": {},\n", audio_wav_count));

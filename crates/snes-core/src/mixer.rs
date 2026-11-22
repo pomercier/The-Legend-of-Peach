@@ -13,16 +13,13 @@ use std::time::Instant;
 
 use crate::audio::{resample_and_encode_brr_for_swap, scan_brr_samples};
 use crate::demo::{
-    apply_link_into_smw_swap, apply_link_world_title_screen,
-    apply_mario_into_zelda_alttp_swap,
+    apply_link_into_smw_swap, apply_link_world_title_screen, apply_mario_into_zelda_alttp_swap,
 };
 use crate::disasm_dma::{compress_nintendo_lz2_with_endian, decompress_nintendo_lz2_with_endian};
 use crate::graphics::{remap_and_transcode_tiles, SnesPalette, TileFormat};
 use crate::rom::{RecognizedGame, RomError, SnesRom};
 use crate::swapper::{SwapKind, SwapSession};
-use crate::universal::{
-    discover_universal_catalog, UniversalGfxCompression, UniversalRomCatalog,
-};
+use crate::universal::{discover_universal_catalog, UniversalGfxCompression, UniversalRomCatalog};
 
 // =============================================================================
 // DATA MODEL: SLOTS, DONOR SOURCES, RECIPES & REPORTS
@@ -294,8 +291,8 @@ impl MixRecipe {
 
         let name = extract_str(input, "name").unwrap_or_else(|| "Custom Mix".to_string());
         let custom_title = extract_str(input, "custom_title");
-        let base_rom =
-            extract_str(input, "base_rom").ok_or_else(|| "Champ 'base_rom' manquant".to_string())?;
+        let base_rom = extract_str(input, "base_rom")
+            .ok_or_else(|| "Champ 'base_rom' manquant".to_string())?;
 
         let mut donors = Vec::new();
         for obj in extract_array_objs(input, "donors") {
@@ -337,10 +334,7 @@ impl MixRecipe {
 
 fn find_smw_gfx_table(smw: &[u8]) -> Option<(usize, usize, usize)> {
     for i in 0x003000..0x004400usize {
-        if i + 0x64 < smw.len()
-            && smw[i] == 0x1E
-            && smw[i + 0x32] == 0xEF
-            && smw[i + 0x64] == 0x09
+        if i + 0x64 < smw.len() && smw[i] == 0x1E && smw[i + 0x32] == 0xEF && smw[i + 0x64] == 0x09
         {
             let lo = i - 0x10;
             return Some((lo, lo + 0x32, lo + 0x64));
@@ -427,9 +421,8 @@ pub(crate) fn read_3bpp_16x16(buf: &[u8], tx: usize, ty: usize) -> [[u8; 16]; 16
                 let b2 = buf[off + 16 + y];
                 for x in 0..8usize {
                     let sh = 7 - x;
-                    px[dy * 8 + y][dx * 8 + x] = ((b0 >> sh) & 1)
-                        | (((b1 >> sh) & 1) << 1)
-                        | (((b2 >> sh) & 1) << 2);
+                    px[dy * 8 + y][dx * 8 + x] =
+                        ((b0 >> sh) & 1) | (((b1 >> sh) & 1) << 1) | (((b2 >> sh) & 1) << 2);
                 }
             }
         }
@@ -615,16 +608,16 @@ fn extract_donor_16x16_for_zelda(
     const LUT_KOOPA_TRUE: [u8; 8] = [0, 1, 5, 7, 6, 6, 3, 4]; // Universal Green/Blue/Red Koopa shell + warm yellow-tan snout (ZERO pink!)
     const LUT_GOOMBA_SOL: [u8; 8] = [0, 1, 5, 7, 6, 4, 4, 3];
     const LUT_GOOMBA_BRN: [u8; 8] = [0, 1, 5, 7, 6, 1, 7, 2]; // RTX-3080 CIELAB optimal for PAL_ALTTP_BRN (S 0x8D)
-    const LUT_MUSHROOM: [u8; 8] = [0, 1, 5, 3, 2, 2, 2, 3];   // Verified ALTTP 0x0DD228 Red Sprite Pal: 2/3=Vibrant Ruby Red cap, 1=White spots/stem, 5=Outline!
-    const LUT_GOLD: [u8; 8] = [0, 1, 5, 2, 6, 6, 7, 2];       // RTX-3080 CIELAB optimal for PAL_ALTTP_GLD (pure gold, zero violet!)
+    const LUT_MUSHROOM: [u8; 8] = [0, 1, 5, 3, 2, 2, 2, 3]; // Verified ALTTP 0x0DD228 Red Sprite Pal: 2/3=Vibrant Ruby Red cap, 1=White spots/stem, 5=Outline!
+    const LUT_GOLD: [u8; 8] = [0, 1, 5, 2, 6, 6, 7, 2]; // RTX-3080 CIELAB optimal for PAL_ALTTP_GLD (pure gold, zero violet!)
     const LUT_BOBOMB: [u8; 8] = [0, 1, 5, 6, 2, 1, 5, 5];
     const LUT_QBLOCK_SPR: [u8; 8] = [0, 1, 5, 2, 6, 6, 7, 2]; // RTX-3080 CIELAB optimal (91.6% sim!)
-    const LUT_MAGIK_AGA: [u8; 8] = [0, 1, 5, 7, 6, 1, 2, 3];  // RTX-3080 CIELAB optimal for PAL_ALTTP_AGA (blue/purple robe + gold hat!)
-    const LUT_DRYBONES: [u8; 8] = [0, 1, 5, 7, 2, 1, 6, 7];   // RTX-3080 CIELAB optimal for PAL_ALTTP_CRM (96.5% sim, crisp white/silver bones!)
-    const LUT_THWOMP: [u8; 8] = [0, 1, 5, 7, 6, 1, 6, 7];     // RTX-3080 CIELAB optimal for PAL_ALTTP_CRM (95.3% SSIM!)
-    const LUT_BOO: [u8; 8] = [0, 1, 5, 7, 3, 1, 1, 6];        // RTX-3080 CIELAB optimal for PAL_ALTTP_CRM (90.4% sim, white + red tongue!)
-    const LUT_YOSHI_EGG: [u8; 8] = [0, 1, 5, 7, 6, 1, 2, 3];  // RTX-3080 CIELAB optimal for PAL_ALTTP_GRN (91.4% sim, white + green spots!)
-    const LUT_FIRE_FLW: [u8; 8] = [0, 1, 5, 3, 1, 4, 3, 2];   // Verified ALTTP 0x0DD228 Red Lantern Pal: 2/3=Fiery Red petals, 1/4=White/Cream stem, 5=Outline!
+    const LUT_MAGIK_AGA: [u8; 8] = [0, 1, 5, 7, 6, 1, 2, 3]; // RTX-3080 CIELAB optimal for PAL_ALTTP_AGA (blue/purple robe + gold hat!)
+    const LUT_DRYBONES: [u8; 8] = [0, 1, 5, 7, 2, 1, 6, 7]; // RTX-3080 CIELAB optimal for PAL_ALTTP_CRM (96.5% sim, crisp white/silver bones!)
+    const LUT_THWOMP: [u8; 8] = [0, 1, 5, 7, 6, 1, 6, 7]; // RTX-3080 CIELAB optimal for PAL_ALTTP_CRM (95.3% SSIM!)
+    const LUT_BOO: [u8; 8] = [0, 1, 5, 7, 3, 1, 1, 6]; // RTX-3080 CIELAB optimal for PAL_ALTTP_CRM (90.4% sim, white + red tongue!)
+    const LUT_YOSHI_EGG: [u8; 8] = [0, 1, 5, 7, 6, 1, 2, 3]; // RTX-3080 CIELAB optimal for PAL_ALTTP_GRN (91.4% sim, white + green spots!)
+    const LUT_FIRE_FLW: [u8; 8] = [0, 1, 5, 3, 1, 4, 3, 2]; // Verified ALTTP 0x0DD228 Red Lantern Pal: 2/3=Fiery Red petals, 1/4=White/Cream stem, 5=Outline!
 
     let composite_koopa = |g01: &[u8], hx: usize, bx: usize| -> [[u8; 16]; 16] {
         let h = remap_16x16(&read_3bpp_16x16(g01, hx, 0), &LUT_KOOPA_TRUE);
@@ -679,7 +672,11 @@ fn extract_donor_16x16_for_zelda(
         }
         "goomba" => {
             let (g01, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x01)?;
-            let lut = if for_soldier { &LUT_GOOMBA_SOL } else { &LUT_GOOMBA_BRN };
+            let lut = if for_soldier {
+                &LUT_GOOMBA_SOL
+            } else {
+                &LUT_GOOMBA_BRN
+            };
             Some((
                 remap_16x16(&read_3bpp_16x16(&g01, 8, 2), lut),
                 remap_16x16(&read_3bpp_16x16(&g01, 10, 2), lut),
@@ -946,13 +943,16 @@ pub fn inspect_rom_for_mixing(
                     id: "hero".into(),
                     label: "Héros jouable (Link -> 16x32 complet + épée 4 dir)".into(),
                     category: MixSlotCategory::Hero,
-                    description: "Remplace Link (0x080000..0x087000 + Bank $0D OAM Y=-8 + palettes)".into(),
+                    description:
+                        "Remplace Link (0x080000..0x087000 + Bank $0D OAM Y=-8 + palettes)".into(),
                 },
                 MixTargetSlot {
                     id: "soldiers".into(),
                     label: "Soldats Épée & Lance d'Hyrule (Sheet 0xBA)".into(),
                     category: MixSlotCategory::Soldiers,
-                    description: "Tous les soldats verts/bleus/rouges d'Hyrule et du château (mono-OAM)".into(),
+                    description:
+                        "Tous les soldats verts/bleus/rouges d'Hyrule et du château (mono-OAM)"
+                            .into(),
                 },
                 MixTargetSlot {
                     id: "elite_knights".into(),
@@ -1005,7 +1005,8 @@ pub fn inspect_rom_for_mixing(
             ]);
 
             // Zelda as Donor!
-            let z_pal = SnesPalette::zelda_link_full_16(&rom.data, 0x0DD308, "Link", false).colors_rgba;
+            let z_pal =
+                SnesPalette::zelda_link_full_16(&rom.data, 0x0DD308, "Link", false).colors_rgba;
             let link_head = read_4bpp_alttp_cell(&rom.data, 1, 0);
             let link_body = read_4bpp_alttp_cell(&rom.data, 3, 1);
             donor_sources.push(MixDonorSource {
@@ -1013,7 +1014,8 @@ pub fn inspect_rom_for_mixing(
                 label: "Link (Zelda ALTTP — 16x32 complet)".into(),
                 category: MixSlotCategory::Hero,
                 compatible_targets: vec![MixSlotCategory::Hero],
-                description: "Vrais sprites 4bpp de Link + palettes Tunique Verte/Bleue/Rouge".into(),
+                description: "Vrais sprites 4bpp de Link + palettes Tunique Verte/Bleue/Rouge"
+                    .into(),
                 preview_rgba: render_16x32_preview(&link_head, &link_body, &z_pal),
                 preview_w: 16,
                 preview_h: 32,
@@ -1079,7 +1081,8 @@ pub fn inspect_rom_for_mixing(
                 label: "Thème Narratif Hyrule (Titre, HUD, Overworld)".into(),
                 category: MixSlotCategory::WorldTiles,
                 compatible_targets: vec![MixSlotCategory::WorldTiles],
-                description: "Titre SUPER LINK WORLD, sélection LINK A/B/C et histoire d'Hyrule".into(),
+                description: "Titre SUPER LINK WORLD, sélection LINK A/B/C et histoire d'Hyrule"
+                    .into(),
                 preview_rgba: solid_rgba(40, 140, 60, 16, 16),
                 preview_w: 16,
                 preview_h: 16,
@@ -1101,7 +1104,8 @@ pub fn inspect_rom_for_mixing(
                     id: "hero".into(),
                     label: "Héros jouable (Mario GFX32 + Overworld GFX10 + Palette)".into(),
                     category: MixSlotCategory::Hero,
-                    description: "Remplace Mario dans tous les niveaux et sur la carte du monde".into(),
+                    description: "Remplace Mario dans tous les niveaux et sur la carte du monde"
+                        .into(),
                 },
                 MixTargetSlot {
                     id: "mount".into(),
@@ -1113,7 +1117,8 @@ pub fn inspect_rom_for_mixing(
                     id: "enemies".into(),
                     label: "Ennemis SMW (Goombas & Koopas GFX01)".into(),
                     category: MixSlotCategory::Enemies,
-                    description: "Remplace les ennemis principaux de GFX01 dans les niveaux SMW".into(),
+                    description: "Remplace les ennemis principaux de GFX01 dans les niveaux SMW"
+                        .into(),
                 },
                 MixTargetSlot {
                     id: "items".into(),
@@ -1143,7 +1148,9 @@ pub fn inspect_rom_for_mixing(
                 label: "Super Mario (SMW GFX32 — 16x32 authentique)".into(),
                 category: MixSlotCategory::Hero,
                 compatible_targets: vec![MixSlotCategory::Hero],
-                description: "Vrais sprites Super Mario World non écrasés + vraies couleurs Rouge/Bleu".into(),
+                description:
+                    "Vrais sprites Super Mario World non écrasés + vraies couleurs Rouge/Bleu"
+                        .into(),
                 preview_rgba: mario_preview,
                 preview_w: 16,
                 preview_h: 32,
@@ -1263,7 +1270,8 @@ pub fn inspect_rom_for_mixing(
                 label: "Pack Égouts SMW (Boos + Spiny + Goombas)".into(),
                 category: MixSlotCategory::Enemies,
                 compatible_targets: vec![MixSlotCategory::Enemies],
-                description: "Combo Boos (chauves-souris), Spiny (rats) et Goombas (serpents)".into(),
+                description: "Combo Boos (chauves-souris), Spiny (rats) et Goombas (serpents)"
+                    .into(),
                 preview_rgba: boo_prev,
                 preview_w: 16,
                 preview_h: 16,
@@ -1337,7 +1345,10 @@ pub fn inspect_rom_for_mixing(
     for (idx, p) in universal_catalog.palettes.iter().take(12).enumerate() {
         target_slots.push(MixTargetSlot {
             id: format!("pal:{}", idx),
-            label: format!("Palette #{} — {} ({} coul.)", idx, p.snes_addr, p.color_count),
+            label: format!(
+                "Palette #{} — {} ({} coul.)",
+                idx, p.snes_addr, p.color_count
+            ),
             category: MixSlotCategory::RawPalette,
             description: p.name.clone(),
         });
@@ -1352,7 +1363,10 @@ pub fn inspect_rom_for_mixing(
         }
         donor_sources.push(MixDonorSource {
             id: format!("pal:{}", idx),
-            label: format!("Palette #{} ({} coul. @ {})", idx, p.color_count, p.snes_addr),
+            label: format!(
+                "Palette #{} ({} coul. @ {})",
+                idx, p.color_count, p.snes_addr
+            ),
             category: MixSlotCategory::RawPalette,
             compatible_targets: vec![MixSlotCategory::RawPalette, MixSlotCategory::Palette],
             description: p.name.clone(),
@@ -1374,7 +1388,10 @@ pub fn inspect_rom_for_mixing(
         });
         donor_sources.push(MixDonorSource {
             id: format!("audio:{}", idx),
-            label: format!("BRR #{} ({} ms, Loop:{})", idx, a.duration_ms_16khz, a.loops),
+            label: format!(
+                "BRR #{} ({} ms, Loop:{})",
+                idx, a.duration_ms_16khz, a.loops
+            ),
             category: MixSlotCategory::RawAudio,
             compatible_targets: vec![MixSlotCategory::RawAudio],
             description: format!("Sample BRR @ {}", a.snes_addr),
@@ -1486,15 +1503,51 @@ pub fn suggest_presets(base: &GameMixProfile, donors: &[GameMixProfile]) -> Vec<
         RecognizedGame::ZeldaAlttp => {
             if let Some(smw) = find_donor(RecognizedGame::SuperMarioWorld) {
                 let mut rules = vec![
-                    MixRule { target_slot: "hero".into(), donor_alias: smw.alias.clone(), donor_source: "mario".into() },
-                    MixRule { target_slot: "soldiers".into(), donor_alias: smw.alias.clone(), donor_source: "goomba".into() },
-                    MixRule { target_slot: "elite_knights".into(), donor_alias: smw.alias.clone(), donor_source: "spiny".into() },
-                    MixRule { target_slot: "castle_guards".into(), donor_alias: smw.alias.clone(), donor_source: "goomba".into() },
-                    MixRule { target_slot: "sewer_enemies".into(), donor_alias: smw.alias.clone(), donor_source: "sewer_pack".into() },
-                    MixRule { target_slot: "overworld_enemies".into(), donor_alias: smw.alias.clone(), donor_source: "overworld_pack".into() },
-                    MixRule { target_slot: "dungeon_enemies".into(), donor_alias: smw.alias.clone(), donor_source: "dungeon_pack".into() },
-                    MixRule { target_slot: "items".into(), donor_alias: smw.alias.clone(), donor_source: "items_pack".into() },
-                    MixRule { target_slot: "world_rocks".into(), donor_alias: smw.alias.clone(), donor_source: "qblock".into() },
+                    MixRule {
+                        target_slot: "hero".into(),
+                        donor_alias: smw.alias.clone(),
+                        donor_source: "mario".into(),
+                    },
+                    MixRule {
+                        target_slot: "soldiers".into(),
+                        donor_alias: smw.alias.clone(),
+                        donor_source: "goomba".into(),
+                    },
+                    MixRule {
+                        target_slot: "elite_knights".into(),
+                        donor_alias: smw.alias.clone(),
+                        donor_source: "spiny".into(),
+                    },
+                    MixRule {
+                        target_slot: "castle_guards".into(),
+                        donor_alias: smw.alias.clone(),
+                        donor_source: "goomba".into(),
+                    },
+                    MixRule {
+                        target_slot: "sewer_enemies".into(),
+                        donor_alias: smw.alias.clone(),
+                        donor_source: "sewer_pack".into(),
+                    },
+                    MixRule {
+                        target_slot: "overworld_enemies".into(),
+                        donor_alias: smw.alias.clone(),
+                        donor_source: "overworld_pack".into(),
+                    },
+                    MixRule {
+                        target_slot: "dungeon_enemies".into(),
+                        donor_alias: smw.alias.clone(),
+                        donor_source: "dungeon_pack".into(),
+                    },
+                    MixRule {
+                        target_slot: "items".into(),
+                        donor_alias: smw.alias.clone(),
+                        donor_source: "items_pack".into(),
+                    },
+                    MixRule {
+                        target_slot: "world_rocks".into(),
+                        donor_alias: smw.alias.clone(),
+                        donor_source: "qblock".into(),
+                    },
                 ];
                 rules.push(MixRule {
                     target_slot: "audio_percussion".into(),
@@ -1515,22 +1568,45 @@ pub fn suggest_presets(base: &GameMixProfile, donors: &[GameMixProfile]) -> Vec<
                 presets.push(MixPreset {
                     id: "super_link_world".into(),
                     name: "Super Link World (Link dans SMW)".into(),
-                    description: "Héros Link (Zelda) + Titre Super Link World dans Super Mario World !".into(),
+                    description:
+                        "Héros Link (Zelda) + Titre Super Link World dans Super Mario World !"
+                            .into(),
                     custom_title: "SUPER LINK WORLD".into(),
                     rules: vec![
-                        MixRule { target_slot: "hero".into(), donor_alias: zelda.alias.clone(), donor_source: "link".into() },
-                        MixRule { target_slot: "title_story".into(), donor_alias: zelda.alias.clone(), donor_source: "hyrule_theme".into() },
+                        MixRule {
+                            target_slot: "hero".into(),
+                            donor_alias: zelda.alias.clone(),
+                            donor_source: "link".into(),
+                        },
+                        MixRule {
+                            target_slot: "title_story".into(),
+                            donor_alias: zelda.alias.clone(),
+                            donor_source: "hyrule_theme".into(),
+                        },
                     ],
                 });
                 presets.push(MixPreset {
                     id: "hyrule_mario_world".into(),
                     name: "Crossover Hyrule Mario World".into(),
-                    description: "Link + Ennemis Soldats d'Hyrule + Rubis & Cœurs dans SMW !".into(),
+                    description: "Link + Ennemis Soldats d'Hyrule + Rubis & Cœurs dans SMW !"
+                        .into(),
                     custom_title: "HYRULE MARIO WORLD".into(),
                     rules: vec![
-                        MixRule { target_slot: "hero".into(), donor_alias: zelda.alias.clone(), donor_source: "link".into() },
-                        MixRule { target_slot: "enemies".into(), donor_alias: zelda.alias.clone(), donor_source: "zelda_soldier".into() },
-                        MixRule { target_slot: "items".into(), donor_alias: zelda.alias.clone(), donor_source: "zelda_items_pack".into() },
+                        MixRule {
+                            target_slot: "hero".into(),
+                            donor_alias: zelda.alias.clone(),
+                            donor_source: "link".into(),
+                        },
+                        MixRule {
+                            target_slot: "enemies".into(),
+                            donor_alias: zelda.alias.clone(),
+                            donor_source: "zelda_soldier".into(),
+                        },
+                        MixRule {
+                            target_slot: "items".into(),
+                            donor_alias: zelda.alias.clone(),
+                            donor_source: "zelda_items_pack".into(),
+                        },
                     ],
                 });
             }
@@ -1550,7 +1626,9 @@ pub fn suggest_presets(base: &GameMixProfile, donors: &[GameMixProfile]) -> Vec<
                     donors.len(),
                     base.title
                 ),
-                custom_title: chaos.custom_title.unwrap_or_else(|| "OMNI MIXER SNES".into()),
+                custom_title: chaos
+                    .custom_title
+                    .unwrap_or_else(|| "OMNI MIXER SNES".into()),
                 rules: chaos.rules,
             });
         }
@@ -1563,7 +1641,11 @@ pub fn suggest_presets(base: &GameMixProfile, donors: &[GameMixProfile]) -> Vec<
 struct SimpleRng(u64);
 impl SimpleRng {
     fn new(seed: u64) -> Self {
-        Self(if seed == 0 { 0x9E37_79B9_7F4A_7C15 } else { seed })
+        Self(if seed == 0 {
+            0x9E37_79B9_7F4A_7C15
+        } else {
+            seed
+        })
     }
     fn next_u64(&mut self) -> u64 {
         let mut x = self.0;
@@ -1669,6 +1751,224 @@ pub fn generate_chaos_recipe(
 // =============================================================================
 // EXECUTION ENGINE: APPLY ANY N-ROM MIX RECIPE TO ANY BASE ROM!
 // =============================================================================
+
+/// Canonical 18-rule recipe for **The Legend of Peach: A Mario to the Mushroom Kingdom**.
+pub fn legend_of_peach_canonical_recipe(base_path: &str, smw_path: &str) -> MixRecipe {
+    MixRecipe {
+        name: "The Legend of Peach: A Mario to the Mushroom Kingdom".into(),
+        custom_title: Some("THE LEGEND OF PEACH".into()),
+        base_rom: base_path.into(),
+        donors: vec![("smw".into(), smw_path.into())],
+        rules: vec![
+            MixRule {
+                target_slot: "intro_title".into(),
+                donor_alias: "smw".into(),
+                donor_source: "peach_kingdom_intro".into(),
+            },
+            MixRule {
+                target_slot: "hero".into(),
+                donor_alias: "smw".into(),
+                donor_source: "mario".into(),
+            },
+            MixRule {
+                target_slot: "princess".into(),
+                donor_alias: "smw".into(),
+                donor_source: "peach".into(),
+            },
+            MixRule {
+                target_slot: "uncle_allies".into(),
+                donor_alias: "smw".into(),
+                donor_source: "luigi_yoshi_pack".into(),
+            },
+            MixRule {
+                target_slot: "bosses".into(),
+                donor_alias: "smw".into(),
+                donor_source: "bosses_pack".into(),
+            },
+            MixRule {
+                target_slot: "soldiers".into(),
+                donor_alias: "smw".into(),
+                donor_source: "koopa".into(),
+            },
+            MixRule {
+                target_slot: "castle_guards".into(),
+                donor_alias: "smw".into(),
+                donor_source: "goomba".into(),
+            },
+            MixRule {
+                target_slot: "elite_knights".into(),
+                donor_alias: "smw".into(),
+                donor_source: "spiny".into(),
+            },
+            MixRule {
+                target_slot: "sewer_enemies".into(),
+                donor_alias: "smw".into(),
+                donor_source: "sewer_pack".into(),
+            },
+            MixRule {
+                target_slot: "overworld_enemies".into(),
+                donor_alias: "smw".into(),
+                donor_source: "overworld_pack".into(),
+            },
+            MixRule {
+                target_slot: "zoras_water".into(),
+                donor_alias: "smw".into(),
+                donor_source: "water_pack".into(),
+            },
+            MixRule {
+                target_slot: "dungeon_enemies".into(),
+                donor_alias: "smw".into(),
+                donor_source: "dungeon_pack".into(),
+            },
+            MixRule {
+                target_slot: "dungeon_extra".into(),
+                donor_alias: "smw".into(),
+                donor_source: "dungeon_extra_pack".into(),
+            },
+            MixRule {
+                target_slot: "items".into(),
+                donor_alias: "smw".into(),
+                donor_source: "items_pack".into(),
+            },
+            MixRule {
+                target_slot: "chests_pots".into(),
+                donor_alias: "smw".into(),
+                donor_source: "blocks_pack".into(),
+            },
+            MixRule {
+                target_slot: "rocks".into(),
+                donor_alias: "smw".into(),
+                donor_source: "qblock".into(),
+            },
+            MixRule {
+                target_slot: "audio_percussion".into(),
+                donor_alias: "smw".into(),
+                donor_source: "percussion".into(),
+            },
+            MixRule {
+                target_slot: "mario_music".into(),
+                donor_alias: "smw".into(),
+                donor_source: "nspc_soundtrack".into(),
+            },
+        ],
+    }
+}
+
+/// Hardware integrity & patch-overlap audit report for a built Legend of Peach ROM.
+#[derive(Debug, Clone)]
+pub struct PeachBuildAudit {
+    pub output_size_bytes: usize,
+    pub output_sha256: String,
+    pub checksum: u16,
+    pub complement: u16,
+    pub relocated_sheet_count: usize,
+    pub verified_raw_sheets: usize,
+}
+
+/// Verify SNES LoROM compliance, reserved memory invariants, non-overlapping relocated expansion
+/// banks (`$23..$3F`), and lossless LZ2 integrity of a built Legend of Peach ROM.
+pub fn audit_legend_of_peach_output(
+    orig_zelda: &SnesRom,
+    built: &SnesRom,
+    session: &SwapSession,
+) -> Result<PeachBuildAudit, String> {
+    if built.data.len() != 2_097_152 {
+        return Err(format!(
+            "Expected 2,097,152-byte 2 MiB LoROM, got {} bytes",
+            built.data.len()
+        ));
+    }
+    if built.data[0x007FD7] != 0x0B {
+        return Err(format!(
+            "Expected SNES ROM size byte 0x0B (2 MiB), got 0x{:02X}",
+            built.data[0x007FD7]
+        ));
+    }
+    if !built.header.is_checksum_valid() {
+        return Err(format!(
+            "Invalid SNES checksum: 0x{:04X} / complement 0x{:04X}",
+            built.header.checksum, built.header.checksum_complement
+        ));
+    }
+    if built.data[0x08A000..0x08A300] != orig_zelda.data[0x08A000..0x08A300] {
+        return Err("Reserved Bow/Bill Blaster WRAM safety region 0x08A000..0x08A2FF was unexpectedly modified".into());
+    }
+    let expected_3d = crate::mario_intro::build_all_32_trio_3d_frames();
+    if built.data[0x100000..0x110000] != expected_3d[..] {
+        return Err(
+            "3D Intro frame banks 0x100000..0x110000 failed bit-for-bit integrity check".into(),
+        );
+    }
+
+    // Check relocated writes in expansion banks ($23..$3F = 0x118000..0x200000) for overlapping patches!
+    let mut relocated_ranges: Vec<(usize, usize, String)> = Vec::new();
+    for op in &session.operations {
+        let start = op.target_offset_a;
+        let end = start + op.replacement_bytes.len();
+        if start >= 0x118000 && !op.replacement_bytes.is_empty() {
+            if start / 0x8000 != (end - 1) / 0x8000 {
+                return Err(format!(
+                    "Relocated patch '{}' (0x{:06X}..0x{:06X}) crosses a 32 KiB LoROM bank boundary",
+                    op.description, start, end
+                ));
+            }
+            relocated_ranges.push((start, end, op.description.clone()));
+        }
+    }
+    relocated_ranges.sort_by_key(|r| r.0);
+    for pair in relocated_ranges.windows(2) {
+        if pair[0].1 > pair[1].0 {
+            return Err(format!(
+                "Overlapping binary patches in expansion space: '{}' (0x{:06X}..0x{:06X}) overlaps '{}' (0x{:06X}..0x{:06X})",
+                pair[0].2, pair[0].0, pair[0].1, pair[1].2, pair[1].0, pair[1].1
+            ));
+        }
+    }
+
+    // Verify all 46 v13 raw sheets decompress cleanly inside a single 32 KiB LoROM bank
+    let (raw_bk, raw_hi, raw_lo) =
+        find_alttp_raw_gfx_table(&built.data).ok_or("Could not locate ALTTP raw GFX table")?;
+    let v13_raw_sheets: &[usize] = &[
+        0xA4, 0xA3, 0xAD, 0xB1, 0xAC, 0xAB, 0xAE, 0xAF, 0xB0, 0xB2, 0xB3, 0x94, 0xB4, 0xB8, 0xA6,
+        0xC2, 0xBD, 0xC0, 0xC1, 0xC3, 0xBF, 0x83, 0x85, 0x86, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x93,
+        0x95, 0x96, 0x97, 0x98, 0x99, 0x9A, 0x9D, 0x3F, 0x0D, 0x0B, 0x0C, 0x06, 0x18, 0x19, 0x4D,
+        0x4C,
+    ];
+    for &raw_idx in v13_raw_sheets {
+        let pc = ((built.data[raw_bk + raw_idx] as usize & 0x7F) << 15)
+            | ((built.data[raw_hi + raw_idx] as usize & 0x7F) << 8)
+            | (built.data[raw_lo + raw_idx] as usize);
+        if (0x100000..0x118000).contains(&pc) {
+            return Err(format!(
+                "Raw sheet 0x{raw_idx:02X} intrudes on reserved 3D Intro banks at 0x{pc:06X}"
+            ));
+        }
+        let (dec, clen) = decompress_nintendo_lz2_with_endian(&built.data, pc, 4096, false)
+            .ok_or_else(|| {
+                format!("Raw sheet 0x{raw_idx:02X} at 0x{pc:06X} failed LC_LZ2 decompression")
+            })?;
+        if dec.len() != 0x600 {
+            return Err(format!(
+                "Raw sheet 0x{raw_idx:02X} decompressed to {} bytes instead of 1536",
+                dec.len()
+            ));
+        }
+        if pc / 0x8000 != (pc + clen - 1) / 0x8000 {
+            return Err(format!(
+                "Raw sheet 0x{raw_idx:02X} at 0x{pc:06X} crosses a 32 KiB LoROM bank boundary"
+            ));
+        }
+    }
+
+    Ok(PeachBuildAudit {
+        output_size_bytes: built.data.len(),
+        output_sha256: crate::rom::compute_sha256_hex(&built.data),
+        checksum: built.header.checksum,
+        complement: built.header.checksum_complement,
+        relocated_sheet_count: relocated_ranges.len(),
+        verified_raw_sheets: v13_raw_sheets.len(),
+    })
+}
 
 /// Execute a complete multi-game `MixRecipe` on `base_rom` using any number of loaded `donor_roms`.
 pub fn execute_mix_recipe(
@@ -1833,12 +2133,15 @@ fn apply_rule_to_zelda(
 
     match rule.target_slot.as_str() {
         "hero" => {
-            if rule.donor_source == "mario" && donor.identify_game() == RecognizedGame::SuperMarioWorld {
+            if rule.donor_source == "mario"
+                && donor.identify_game() == RecognizedGame::SuperMarioWorld
+            {
                 // Inject Mario hero + Bank $0D OAM + Palettes (without overwriting other sheets yet;
                 // use dedicated hero-only injector so user rules control soldiers/items independently!)
                 ops += inject_smw_mario_hero_into_zelda(rom_zelda, donor, session)?;
-
-            } else if rule.donor_source == "link" && donor.identify_game() == RecognizedGame::ZeldaAlttp {
+            } else if rule.donor_source == "link"
+                && donor.identify_game() == RecognizedGame::ZeldaAlttp
+            {
                 // Restore vanilla Link from donor Zelda ROM
                 let bank = donor.data[0x080000..0x087000].to_vec();
                 session.swap_custom_bytes(
@@ -1902,14 +2205,19 @@ fn apply_rule_to_zelda(
                     }
                     ops += crate::mario_ui::patch_koopa_guard_oam_tables(rom_zelda, session)?;
                 }
-            } else if let Some((sp1, sp2)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, true) {
+            } else if let Some((sp1, sp2)) =
+                extract_donor_16x16_for_zelda(donor, &rule.donor_source, true)
+            {
                 let sp1_r = flip_h_16x16(&sp1);
                 let blank16 = [[0u8; 16]; 16];
                 if patch_alttp_comp_sheet_helper(
                     rom_zelda,
                     session,
                     0xBA,
-                    &format!("Soldats d'Hyrule (Sheet 0xBA) ← {}:{}", rule.donor_alias, rule.donor_source),
+                    &format!(
+                        "Soldats d'Hyrule (Sheet 0xBA) ← {}:{}",
+                        rule.donor_alias, rule.donor_source
+                    ),
                     free_cursor,
                     free_end,
                     &|raw| {
@@ -1917,7 +2225,19 @@ fn apply_rule_to_zelda(
                         write_3bpp_16x16(raw, 0, 0, &sp1);
                         write_3bpp_16x16(raw, 2, 0, &sp2);
                         write_3bpp_16x16(raw, 4, 0, &sp1_r);
-                        for &(tx, ty) in &[(6, 0), (8, 0), (10, 0), (12, 0), (14, 0), (0, 2), (2, 2), (4, 2), (6, 2), (8, 2), (10, 2)] {
+                        for &(tx, ty) in &[
+                            (6, 0),
+                            (8, 0),
+                            (10, 0),
+                            (12, 0),
+                            (14, 0),
+                            (0, 2),
+                            (2, 2),
+                            (4, 2),
+                            (6, 2),
+                            (8, 2),
+                            (10, 2),
+                        ] {
                             write_3bpp_16x16(raw, tx, ty, &blank16);
                         }
                     },
@@ -1966,7 +2286,8 @@ fn apply_rule_to_zelda(
             ops += crate::mario_ui::patch_ball_and_chain_oam_tables(rom_zelda, session)?;
         }
         "castle_guards" => {
-            if let Some((sp1, sp2)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, true) {
+            if let Some((sp1, sp2)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, true)
+            {
                 let sp1_r = flip_h_16x16(&sp1);
                 let sp2_r = flip_h_16x16(&sp2);
                 let blank16 = [[0u8; 16]; 16];
@@ -1974,7 +2295,10 @@ fn apply_rule_to_zelda(
                     rom_zelda,
                     session,
                     0x8C,
-                    &format!("Gardes du Château (Sheet 0x8C) ← {}:{}", rule.donor_alias, rule.donor_source),
+                    &format!(
+                        "Gardes du Château (Sheet 0x8C) ← {}:{}",
+                        rule.donor_alias, rule.donor_source
+                    ),
                     free_cursor,
                     free_end,
                     &|raw| {
@@ -1997,7 +2321,8 @@ fn apply_rule_to_zelda(
         }
         "princess" => {
             // Fix #9: 100% Centered, Symmetric, Unclipped SMW Princess Peach (ZERO flat vertical cut!)
-            let (peach_h, peach_d, peach_h_back, peach_h_side) = crate::mario_ui::build_unclipped_smw_peach();
+            let (peach_h, peach_d, peach_h_back, peach_h_side) =
+                crate::mario_ui::build_unclipped_smw_peach();
             let _ = build_smw_peach_for_zelda;
             {
                 let peach_d_alt = flip_h_16x16(&peach_d);
@@ -2005,16 +2330,19 @@ fn apply_rule_to_zelda(
                     rom_zelda,
                     session,
                     0xD5,
-                    &format!("Princesse Zelda (Sheet 0xD5) ← {}:Princesse Peach 16x32 centrée complète", rule.donor_alias),
+                    &format!(
+                        "Princesse Zelda (Sheet 0xD5) ← {}:Princesse Peach 16x32 centrée complète",
+                        rule.donor_alias
+                    ),
                     free_cursor,
                     free_end,
                     &|raw| {
-                        write_3bpp_16x16(raw, 0, 0, &peach_h);      // Front Head
+                        write_3bpp_16x16(raw, 0, 0, &peach_h); // Front Head
                         write_3bpp_16x16(raw, 2, 0, &peach_h_back); // Back Head
                         write_3bpp_16x16(raw, 4, 0, &peach_h_side); // Side Head
-                        write_3bpp_16x16(raw, 6, 0, &peach_d);      // Walk/Stand Dress 1
-                        write_3bpp_16x16(raw, 8, 0, &peach_d_alt);  // Walk/Stand Dress 2
-                        write_3bpp_16x16(raw, 10, 0, &peach_d);     // Front Dress (Sanctuary!)
+                        write_3bpp_16x16(raw, 6, 0, &peach_d); // Walk/Stand Dress 1
+                        write_3bpp_16x16(raw, 8, 0, &peach_d_alt); // Walk/Stand Dress 2
+                        write_3bpp_16x16(raw, 10, 0, &peach_d); // Front Dress (Sanctuary!)
                         write_3bpp_16x16(raw, 12, 0, &peach_d_alt); // Front Dress Alt
                     },
                 )? {
@@ -2056,7 +2384,10 @@ fn apply_rule_to_zelda(
                     rom_zelda,
                     session,
                     0xD6,
-                    &format!("Demoiselles & Zelda (Sheet 0xD6) ← {}:Princesse Peach 16x32 complète", rule.donor_alias),
+                    &format!(
+                        "Demoiselles & Zelda (Sheet 0xD6) ← {}:Princesse Peach 16x32 complète",
+                        rule.donor_alias
+                    ),
                     free_cursor,
                     free_end,
                     &|raw| {
@@ -2087,10 +2418,11 @@ fn apply_rule_to_zelda(
                 //   6=Vibrant SMW Sky Blue (0x7E48) -- Blue Koopa Shell!
                 //   7=Deep SMW Royal Blue (0x5520)  -- Blue Koopa Dark Shell & Peach Sapphire Eyes/Brooch!
                 // Gives BOTH a Bright Pink Princess Peach AND Authentic Vibrant Blue Koopa Warriors!
-                let sp3_pal_14: Vec<u8> = [0x7FFFu16, 0x5A3F, 0x21FA, 0x435F, 0x18C6, 0x7E48, 0x5520]
-                    .iter()
-                    .flat_map(|w| w.to_le_bytes())
-                    .collect();
+                let sp3_pal_14: Vec<u8> =
+                    [0x7FFFu16, 0x5A3F, 0x21FA, 0x435F, 0x18C6, 0x7E48, 0x5520]
+                        .iter()
+                        .flat_map(|w| w.to_le_bytes())
+                        .collect();
                 for &pal_pc in &[0x0DD272usize, 0x0DD2EA] {
                     if pal_pc + 14 <= rom_zelda.data.len() {
                         session.swap_custom_bytes(
@@ -2111,7 +2443,9 @@ fn apply_rule_to_zelda(
             //    (`0x080000..0x087000`) remapped into Luigi's iconic GREEN clothes (Pal 6 `0x0C` on Head & Body!)
             let _ = build_smw_luigi_3bpp;
             let luigi = if 0x087000 <= rom_zelda.data.len() {
-                crate::mario_ui::build_mario_green_uncle_luigi_from_bank(&rom_zelda.data[0x080000..0x087000])
+                crate::mario_ui::build_mario_green_uncle_luigi_from_bank(
+                    &rom_zelda.data[0x080000..0x087000],
+                )
             } else {
                 crate::mario_ui::build_normal_uncle_luigi()
             };
@@ -2121,7 +2455,10 @@ fn apply_rule_to_zelda(
                 rom_zelda,
                 session,
                 0x7F,
-                &format!("Oncle de Link & Poules (Sheet 0x7F) ← {}:Luigi normal & Bébé Yoshi", rule.donor_alias),
+                &format!(
+                    "Oncle de Link & Poules (Sheet 0x7F) ← {}:Luigi normal & Bébé Yoshi",
+                    rule.donor_alias
+                ),
                 free_cursor,
                 free_end,
                 &|raw| {
@@ -2165,7 +2502,10 @@ fn apply_rule_to_zelda(
                     rom_zelda,
                     session,
                     0xA5,
-                    &format!("Sahasrahla (Sheet 0xA5) ← {}:Yoshi Vert (GFX26)", rule.donor_alias),
+                    &format!(
+                        "Sahasrahla (Sheet 0xA5) ← {}:Yoshi Vert (GFX26)",
+                        rule.donor_alias
+                    ),
                     free_cursor,
                     free_end,
                     &|raw| {
@@ -2184,7 +2524,10 @@ fn apply_rule_to_zelda(
                     rom_zelda,
                     session,
                     0xA6,
-                    &format!("Sage Sanctuaire (Sheet 0xA6) ← {}:Toad (Kinoppio) complet 16x32", rule.donor_alias),
+                    &format!(
+                        "Sage Sanctuaire (Sheet 0xA6) ← {}:Toad (Kinoppio) complet 16x32",
+                        rule.donor_alias
+                    ),
                     free_cursor,
                     free_end,
                     &|raw| {
@@ -2204,7 +2547,10 @@ fn apply_rule_to_zelda(
                     rom_zelda,
                     session,
                     0xAA,
-                    &format!("Grande Fée (Sheet 0xAA) ← {}:Yoshi Ailé (GFX26)", rule.donor_alias),
+                    &format!(
+                        "Grande Fée (Sheet 0xAA) ← {}:Yoshi Ailé (GFX26)",
+                        rule.donor_alias
+                    ),
                     free_cursor,
                     free_end,
                     &|raw| {
@@ -2224,7 +2570,10 @@ fn apply_rule_to_zelda(
                 rom_zelda,
                 session,
                 0x86,
-                &format!("Poules Cuccos Cocorico (Sheet 0x86) ← {}:Bébés Yoshis SMW complets", rule.donor_alias),
+                &format!(
+                    "Poules Cuccos Cocorico (Sheet 0x86) ← {}:Bébés Yoshis SMW complets",
+                    rule.donor_alias
+                ),
                 free_cursor,
                 free_end,
                 &|raw| {
@@ -2238,7 +2587,10 @@ fn apply_rule_to_zelda(
                     rom_zelda,
                     session,
                     0xBC,
-                    &format!("Sorcière Syrup (Sheet 0xBC) ← {}:Magikoopa SMW", rule.donor_alias),
+                    &format!(
+                        "Sorcière Syrup (Sheet 0xBC) ← {}:Magikoopa SMW",
+                        rule.donor_alias
+                    ),
                     free_cursor,
                     free_end,
                     &|raw| {
@@ -2254,7 +2606,10 @@ fn apply_rule_to_zelda(
                     rom_zelda,
                     session,
                     0xD7,
-                    &format!("Forgerons Nains (Sheet 0xD7) ← {}:Deux Koopas SMW", rule.donor_alias),
+                    &format!(
+                        "Forgerons Nains (Sheet 0xD7) ← {}:Deux Koopas SMW",
+                        rule.donor_alias
+                    ),
                     free_cursor,
                     free_end,
                     &|raw| {
@@ -2292,7 +2647,10 @@ fn apply_rule_to_zelda(
                 rom_zelda,
                 session,
                 0xB3,
-                &format!("Boss Gardien de Peach (Sheet 0xB3) ← {}:Roi Bowser 32x32 symétrique", rule.donor_alias),
+                &format!(
+                    "Boss Gardien de Peach (Sheet 0xB3) ← {}:Roi Bowser 32x32 symétrique",
+                    rule.donor_alias
+                ),
                 free_cursor,
                 free_end,
                 &|raw| {
@@ -2325,7 +2683,10 @@ fn apply_rule_to_zelda(
                 rom_zelda,
                 session,
                 0xB4,
-                &format!("Boss Gardien de Peach Attaque (Sheet 0xB4) ← {}:Roi Bowser 32x32", rule.donor_alias),
+                &format!(
+                    "Boss Gardien de Peach Attaque (Sheet 0xB4) ← {}:Roi Bowser 32x32",
+                    rule.donor_alias
+                ),
                 free_cursor,
                 free_end,
                 &|raw| {
@@ -2355,18 +2716,21 @@ fn apply_rule_to_zelda(
                     rom_zelda,
                     session,
                     0xC9,
-                    &format!("Coffres, Fées & Super Bombe (Sheet 0xC9) ← {}:Blocs ?, Starman & Bob-omb", rule.donor_alias),
+                    &format!(
+                        "Coffres, Fées & Super Bombe (Sheet 0xC9) ← {}:Blocs ?, Starman & Bob-omb",
+                        rule.donor_alias
+                    ),
                     free_cursor,
                     free_end,
                     &|raw| {
-                        write_3bpp_16x16(raw, 0, 0, &star);     // Petite Fée 1 -> Starman
-                        write_3bpp_16x16(raw, 2, 0, &star);     // Petite Fée 2 -> Starman
-                        write_3bpp_16x16(raw, 4, 0, &star);     // Petite Fée 3 -> Starman
-                        write_3bpp_16x16(raw, 6, 0, &qb_spr);   // Coffre fermé 1 -> Bloc '?'
-                        write_3bpp_16x16(raw, 8, 0, &qb_spr);   // Coffre fermé 2 -> Bloc '?'
-                        write_3bpp_16x16(raw, 10, 0, &used_spr);// Coffre ouvert 1 -> Bloc vidé SMW
-                        write_3bpp_16x16(raw, 12, 0, &used_spr);// Coffre ouvert 2 -> Bloc vidé SMW
-                        write_3bpp_16x16(raw, 6, 2, &bob);      // Super Bombe -> Bob-omb
+                        write_3bpp_16x16(raw, 0, 0, &star); // Petite Fée 1 -> Starman
+                        write_3bpp_16x16(raw, 2, 0, &star); // Petite Fée 2 -> Starman
+                        write_3bpp_16x16(raw, 4, 0, &star); // Petite Fée 3 -> Starman
+                        write_3bpp_16x16(raw, 6, 0, &qb_spr); // Coffre fermé 1 -> Bloc '?'
+                        write_3bpp_16x16(raw, 8, 0, &qb_spr); // Coffre fermé 2 -> Bloc '?'
+                        write_3bpp_16x16(raw, 10, 0, &used_spr); // Coffre ouvert 1 -> Bloc vidé SMW
+                        write_3bpp_16x16(raw, 12, 0, &used_spr); // Coffre ouvert 2 -> Bloc vidé SMW
+                        write_3bpp_16x16(raw, 6, 2, &bob); // Super Bombe -> Bob-omb
                         write_3bpp_16x16(raw, 8, 2, &bob);
                         write_3bpp_16x16(raw, 10, 2, &bob);
                         write_3bpp_16x16(raw, 12, 2, &bob);
@@ -2374,7 +2738,8 @@ fn apply_rule_to_zelda(
                 )? {
                     ops += 1;
                 }
-                let (ff, _) = extract_donor_16x16_for_zelda(donor, "fire_flower", false).unwrap_or((star, star));
+                let (ff, _) = extract_donor_16x16_for_zelda(donor, "fire_flower", false)
+                    .unwrap_or((star, star));
                 let mush = crate::mario_ui::build_crisp_smw_mushroom_16x16();
                 if patch_alttp_comp_sheet_helper(
                     rom_zelda,
@@ -2453,22 +2818,35 @@ fn apply_rule_to_zelda(
                 // Fill inner face of closed prize block with gleaming SMW gold (6) and crisp white '!' (4) with dark shadow (1)
                 for y in 2..8 {
                     for x in 2..8 {
-                        if prize_top[y][x] == 2 { prize_top[y][x] = 6; }
+                        if prize_top[y][x] == 2 {
+                            prize_top[y][x] = 6;
+                        }
                     }
                 }
                 for y in 0..6 {
                     for x in 2..8 {
-                        if prize_bot[y][x] == 2 { prize_bot[y][x] = 6; }
+                        if prize_bot[y][x] == 2 {
+                            prize_bot[y][x] = 6;
+                        }
                     }
                 }
                 // Crisp symmetric '!' stem (rows y=3..7 top, y=0..1 bot) + dot (rows y=3..4 bot) at x=6..7 (mirrored -> 4px wide!)
-                for y in 3..8 { prize_top[y][6] = 1; prize_top[y][7] = 4; }
-                prize_top[2][6] = 1; prize_top[2][7] = 1;
-                prize_bot[0][6] = 1; prize_bot[0][7] = 4;
-                prize_bot[1][6] = 1; prize_bot[1][7] = 1;
-                prize_bot[3][6] = 1; prize_bot[3][7] = 4;
-                prize_bot[4][6] = 1; prize_bot[4][7] = 4;
-                prize_bot[5][6] = 1; prize_bot[5][7] = 1;
+                for y in 3..8 {
+                    prize_top[y][6] = 1;
+                    prize_top[y][7] = 4;
+                }
+                prize_top[2][6] = 1;
+                prize_top[2][7] = 1;
+                prize_bot[0][6] = 1;
+                prize_bot[0][7] = 4;
+                prize_bot[1][6] = 1;
+                prize_bot[1][7] = 1;
+                prize_bot[3][6] = 1;
+                prize_bot[3][7] = 4;
+                prize_bot[4][6] = 1;
+                prize_bot[4][7] = 4;
+                prize_bot[5][6] = 1;
+                prize_bot[5][7] = 1;
 
                 if patch_alttp_comp_sheet_helper(
                     rom_zelda,
@@ -2494,7 +2872,10 @@ fn apply_rule_to_zelda(
                     rom_zelda,
                     session,
                     0x85,
-                    &format!("Zoras & Roi Zora (Sheet 0x85) ← {}:Cheep Cheeps & Porcu-Puffer", rule.donor_alias),
+                    &format!(
+                        "Zoras & Roi Zora (Sheet 0x85) ← {}:Cheep Cheeps & Porcu-Puffer",
+                        rule.donor_alias
+                    ),
                     free_cursor,
                     free_end,
                     &|raw| {
@@ -2514,7 +2895,10 @@ fn apply_rule_to_zelda(
                 rom_zelda,
                 session,
                 0x8E,
-                &format!("Armos & Statues (Sheet 0x8E) ← {}:Thwomps SMW 16x32 complets", rule.donor_alias),
+                &format!(
+                    "Armos & Statues (Sheet 0x8E) ← {}:Thwomps SMW 16x32 complets",
+                    rule.donor_alias
+                ),
                 free_cursor,
                 free_end,
                 &|raw| {
@@ -2566,7 +2950,10 @@ fn apply_rule_to_zelda(
                     rom_zelda,
                     session,
                     0x7F,
-                    &format!("Overworld Octoroks Alt (Sheet 0x7F) ← {}:{}", rule.donor_alias, rule.donor_source),
+                    &format!(
+                        "Overworld Octoroks Alt (Sheet 0x7F) ← {}:{}",
+                        rule.donor_alias, rule.donor_source
+                    ),
                     free_cursor,
                     free_end,
                     &|raw| {
@@ -2604,7 +2991,10 @@ fn apply_rule_to_zelda(
                 rom_zelda,
                 session,
                 0x90,
-                &format!("Stalfos Donjons (Sheet 0x90) ← {}:Skelerex (Dry Bones) SMW complets", rule.donor_alias),
+                &format!(
+                    "Stalfos Donjons (Sheet 0x90) ← {}:Skelerex (Dry Bones) SMW complets",
+                    rule.donor_alias
+                ),
                 free_cursor,
                 free_end,
                 &|raw| {
@@ -2621,17 +3011,28 @@ fn apply_rule_to_zelda(
                     extract_donor_16x16_for_zelda(donor, "mushroom", false),
                     extract_donor_16x16_for_zelda(donor, "bobomb", false),
                 ) {
-                    let (g1, g2) = extract_donor_16x16_for_zelda(donor, "goomba", true).unwrap_or((bob, bob));
-                    let (key, _) = extract_donor_16x16_for_zelda(donor, "smw_key", false).unwrap_or((coin, coin));
-                    let (shell, _) = extract_donor_16x16_for_zelda(donor, "koopa_shell", false).unwrap_or((coin, coin));
-                    let (bill, _) = extract_donor_16x16_for_zelda(donor, "bullet_bill", false).unwrap_or((bob, bob));
-                    let (ff, _) = extract_donor_16x16_for_zelda(donor, "fire_flower", false).unwrap_or((mush, mush));
-                    let (star, _) = extract_donor_16x16_for_zelda(donor, "starman", false).unwrap_or((coin, coin));
-                    let (cf, _) = extract_donor_16x16_for_zelda(donor, "cape_feather", false).unwrap_or((coin, coin));
-                    let (ps, _) = extract_donor_16x16_for_zelda(donor, "p_switch", false).unwrap_or((coin, coin));
-                    let (moon, _) = extract_donor_16x16_for_zelda(donor, "moon_3up", false).unwrap_or((coin, coin));
-                    let (egg, _) = extract_donor_16x16_for_zelda(donor, "yoshi_egg", false).unwrap_or((mush, mush));
-                    let (berry, _) = extract_donor_16x16_for_zelda(donor, "berry", false).unwrap_or((mush, mush));
+                    let (g1, g2) =
+                        extract_donor_16x16_for_zelda(donor, "goomba", true).unwrap_or((bob, bob));
+                    let (key, _) = extract_donor_16x16_for_zelda(donor, "smw_key", false)
+                        .unwrap_or((coin, coin));
+                    let (shell, _) = extract_donor_16x16_for_zelda(donor, "koopa_shell", false)
+                        .unwrap_or((coin, coin));
+                    let (bill, _) = extract_donor_16x16_for_zelda(donor, "bullet_bill", false)
+                        .unwrap_or((bob, bob));
+                    let (ff, _) = extract_donor_16x16_for_zelda(donor, "fire_flower", false)
+                        .unwrap_or((mush, mush));
+                    let (star, _) = extract_donor_16x16_for_zelda(donor, "starman", false)
+                        .unwrap_or((coin, coin));
+                    let (cf, _) = extract_donor_16x16_for_zelda(donor, "cape_feather", false)
+                        .unwrap_or((coin, coin));
+                    let (ps, _) = extract_donor_16x16_for_zelda(donor, "p_switch", false)
+                        .unwrap_or((coin, coin));
+                    let (moon, _) = extract_donor_16x16_for_zelda(donor, "moon_3up", false)
+                        .unwrap_or((coin, coin));
+                    let (egg, _) = extract_donor_16x16_for_zelda(donor, "yoshi_egg", false)
+                        .unwrap_or((mush, mush));
+                    let (berry, _) = extract_donor_16x16_for_zelda(donor, "berry", false)
+                        .unwrap_or((mush, mush));
 
                     // Fix #2 & #6: Double 8x16 complete SMW Red/Gold Coins + Crisp High-Contrast 16x16 Super Mushroom
                     //              + 8x8 Red Mini-Mushroom & Berry pair in S 0xCD (6,2)!
@@ -2702,21 +3103,26 @@ fn apply_rule_to_zelda(
                     }
                     // Fix #5: Carried Overworld Rock (VERIFIED: S 0x72 & S 0x7C cell (4,0)!) & Carried Interior Jar (S 0x7B cell (6,0)!)
                     //         -> SMW Turn Block matching exact ground/shelf palettes so blocks KEEP Mario look in Mario's hands!
-                    let (carry_rock, carry_pot) = if let Some((g00, _, _)) = load_smw_3bpp_sheet(&donor.data, 0x00) {
-                        const LUT_CARRY_ROCK: [u8; 8] = [0, 6, 1, 2, 7, 6, 7, 2]; // Matches 0x0DD49A mint-green Turn Block!
-                        const LUT_CARRY_POT: [u8; 8] = [0, 6, 1, 2, 3, 4, 4, 3];  // Matches 0x0DD4D2 golden Turn Block!
-                        let raw_tb = read_3bpp_16x16(&g00, 0, 4);
-                        (
-                            Some(remap_16x16(&raw_tb, &LUT_CARRY_ROCK)),
-                            Some(remap_16x16(&raw_tb, &LUT_CARRY_POT)),
-                        )
-                    } else {
-                        (None, None)
-                    };
+                    let (carry_rock, carry_pot) =
+                        if let Some((g00, _, _)) = load_smw_3bpp_sheet(&donor.data, 0x00) {
+                            const LUT_CARRY_ROCK: [u8; 8] = [0, 6, 1, 2, 7, 6, 7, 2]; // Matches 0x0DD49A mint-green Turn Block!
+                            const LUT_CARRY_POT: [u8; 8] = [0, 6, 1, 2, 3, 4, 4, 3]; // Matches 0x0DD4D2 golden Turn Block!
+                            let raw_tb = read_3bpp_16x16(&g00, 0, 4);
+                            (
+                                Some(remap_16x16(&raw_tb, &LUT_CARRY_ROCK)),
+                                Some(remap_16x16(&raw_tb, &LUT_CARRY_POT)),
+                            )
+                        } else {
+                            (None, None)
+                        };
                     let carry_bush = crate::mario_ui::build_smw_smiling_bush_16x16();
                     let carry_msg = crate::mario_ui::build_smw_message_block_16x16();
                     let black_bob_spark = crate::mario_ui::build_jet_black_smw_bobomb_spark_16x16();
-                    for &(pc, is_interior) in &[(0x087600usize, false), (0x08AC00usize, true), (0x08B200usize, false)] {
+                    for &(pc, is_interior) in &[
+                        (0x087600usize, false),
+                        (0x08AC00usize, true),
+                        (0x08B200usize, false),
+                    ] {
                         let mut raw = rom_zelda.data[pc..pc + 0x600].to_vec();
                         write_3bpp_16x16(&mut raw, 4, 2, &g1);
                         write_3bpp_16x16(&mut raw, 6, 2, &g2);
@@ -2747,9 +3153,17 @@ fn apply_rule_to_zelda(
                         ops += 1;
                     }
                     // Complete 6-frame animated Jet-Black SMW Bob-omb spark on remaining water/rain sheets (0x087C00/0x088200/0x088800 (14,2))!
-                    for &(idx, pc) in &[(0usize, 0x087C00usize), (1, 0x088200usize), (2, 0x088800usize)] {
+                    for &(idx, pc) in &[
+                        (0usize, 0x087C00usize),
+                        (1, 0x088200usize),
+                        (2, 0x088800usize),
+                    ] {
                         let mut raw = rom_zelda.data[pc..pc + 0x600].to_vec();
-                        let frame = if idx % 2 == 0 { &black_bob_spark } else { &black_bob };
+                        let frame = if idx % 2 == 0 {
+                            &black_bob_spark
+                        } else {
+                            &black_bob
+                        };
                         write_3bpp_16x16(&mut raw, 14, 2, frame);
                         session.swap_custom_bytes(
                             rom_zelda,
@@ -2842,14 +3256,20 @@ fn apply_rule_to_zelda(
                     // Fixes #8, #9, #10: House Chest Red Coin, Boss-Drop 3 Relics & +8px Carried Block Height!
                     ops += crate::mario_ui::patch_red_coin_and_carry_height(rom_zelda, session)?;
                     // Fix #10: Dialog Box 16x16 Red & White Super Mushroom Icon + French "réserve de champignon" + "Peach"!
-                    ops += crate::mario_ui::patch_dialog_mushroom_and_french_text(rom_zelda, session)?;
+                    ops +=
+                        crate::mario_ui::patch_dialog_mushroom_and_french_text(rom_zelda, session)?;
                 }
-            } else if let Some((it, _)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, false) {
+            } else if let Some((it, _)) =
+                extract_donor_16x16_for_zelda(donor, &rule.donor_source, false)
+            {
                 if patch_alttp_comp_sheet_helper(
                     rom_zelda,
                     session,
                     0xCD,
-                    &format!("Collectibles Zelda (Sheet 0xCD) ← {}:{}", rule.donor_alias, rule.donor_source),
+                    &format!(
+                        "Collectibles Zelda (Sheet 0xCD) ← {}:{}",
+                        rule.donor_alias, rule.donor_source
+                    ),
                     free_cursor,
                     free_end,
                     &|raw| {
@@ -2863,13 +3283,17 @@ fn apply_rule_to_zelda(
             }
         }
         "world_rocks" | "rocks" => {
-            if let Some((tile, _)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, false) {
+            if let Some((tile, _)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, false)
+            {
                 for &ow_sheet in &[0x06usize, 0x07, 0x08] {
                     if patch_alttp_comp_sheet_helper(
                         rom_zelda,
                         session,
                         ow_sheet,
-                        &format!("Overworld Rochers (Sheet 0x{:02X}) ← {}:{}", ow_sheet, rule.donor_alias, rule.donor_source),
+                        &format!(
+                            "Overworld Rochers (Sheet 0x{:02X}) ← {}:{}",
+                            ow_sheet, rule.donor_alias, rule.donor_source
+                        ),
                         free_cursor,
                         free_end,
                         &|raw| {
@@ -2928,7 +3352,8 @@ fn apply_rule_to_zelda(
             }
         }
         "audio_percussion" => {
-            ops += inject_unpitched_brr_percussion(rom_zelda, donor, &rule.donor_alias, session, 3)?;
+            ops +=
+                inject_unpitched_brr_percussion(rom_zelda, donor, &rule.donor_alias, session, 3)?;
         }
         "mario_music" => {
             ops += crate::mario_music::inject_mario_nspc_soundtrack(rom_zelda, session)?;
@@ -2980,7 +3405,9 @@ fn inject_smw_mario_hero_into_zelda(
         0x068000,
         scratch.data[0x068000..0x06838D].to_vec(),
         "Patch OAM Bank $0D (Y=-8, X=0) pour Super Mario 16x32".into(),
-        SwapKind::CodePatch { byte_count: 303 * 3 },
+        SwapKind::CodePatch {
+            byte_count: 303 * 3,
+        },
     )?;
     ops += 1;
     if 0x069CF1 <= scratch.data.len() {
@@ -3030,7 +3457,12 @@ fn inject_smw_mario_hero_into_zelda(
 /// plus back-hair and side-facing head variants ready for ALTTP Sheet 0xD5 / 0xD6!
 fn build_smw_peach_for_zelda(
     rom_smw: &SnesRom,
-) -> Option<([[u8; 16]; 16], [[u8; 16]; 16], [[u8; 16]; 16], [[u8; 16]; 16])> {
+) -> Option<(
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
+)> {
     let (g26, _, _) = load_smw_3bpp_sheet(&rom_smw.data, 0x26)?;
     const LUT_PH: [u8; 8] = [0, 1, 5, 3, 4, 2, 4, 2];
     const LUT_PD: [u8; 8] = [0, 1, 5, 3, 4, 1, 6, 2];
@@ -3043,14 +3475,21 @@ fn build_smw_peach_for_zelda(
             head[y][x + 2] = raw_h[y][x];
         }
         if head[y][2] != 0 && head[y][2] != 5 {
-            head[y][1] = if y <= 3 || head[y][3] == 5 { 5 } else { head[y][2] };
+            head[y][1] = if y <= 3 || head[y][3] == 5 {
+                5
+            } else {
+                head[y][2]
+            };
             if head[y][1] != 5 && head[y][1] != 0 {
                 head[y][0] = 5;
             }
         }
     }
-    head[1][1] = 5; head[2][1] = 5; head[3][1] = 5;
-    head[4][1] = 3; head[4][0] = 5;
+    head[1][1] = 5;
+    head[2][1] = 5;
+    head[3][1] = 5;
+    head[4][1] = 3;
+    head[4][0] = 5;
     for y in 5..16 {
         if head[y][2] != 0 {
             head[y][1] = if y == 5 || y == 12 || y == 15 { 3 } else { 4 };
@@ -3065,7 +3504,11 @@ fn build_smw_peach_for_zelda(
         }
         if dress[y][2] != 0 {
             dress[y][1] = if y < 6 {
-                if y >= 2 { 6 } else { 3 }
+                if y >= 2 {
+                    6
+                } else {
+                    3
+                }
             } else if y < 11 {
                 1
             } else {
@@ -3098,9 +3541,12 @@ fn build_smw_peach_for_zelda(
 fn build_smw_luigi_3bpp(
     rom_smw: &SnesRom,
 ) -> Option<(
-    [[u8; 16]; 16], [[u8; 16]; 16],
-    [[u8; 16]; 16], [[u8; 16]; 16],
-    [[u8; 16]; 16], [[u8; 16]; 16],
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
 )> {
     let (g32, _) = decompress_nintendo_lz2_with_endian(&rom_smw.data, 0x040000, 32768, true)?;
     let (ptop, pbot) = crate::demo::find_smw_mario_pose_tables(&rom_smw.data);
@@ -3133,9 +3579,12 @@ fn build_smw_luigi_3bpp(
 fn build_smw_yoshi_for_zelda(
     rom_smw: &SnesRom,
 ) -> Option<(
-    [[u8; 16]; 16], [[u8; 16]; 16],
-    [[u8; 16]; 16], [[u8; 16]; 16],
-    [[u8; 16]; 16], [[u8; 16]; 16],
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
+    [[u8; 16]; 16],
 )> {
     let (g26, _, _) = load_smw_3bpp_sheet(&rom_smw.data, 0x26)?;
     const LUT_YOSHI: [u8; 8] = [0, 1, 5, 7, 6, 1, 6, 7];
@@ -3228,7 +3677,11 @@ pub(crate) fn patch_alttp_raw_sheet_pub(
         // Relocate safely into clean LoROM 2MB expansion space (Bank $23..$3F, PC 0x118000..0x1FFFFF),
         // keeping Banks $20..$22 (3D Intro) 100% untouched and never crossing a 32 KB ($8000) boundary!
         const EXPANDED_FREE_START: usize = 0x118000;
-        let mut cur_end = if *free_cursor < 0x100000 { free_end } else { rom_z.data.len() };
+        let mut cur_end = if *free_cursor < 0x100000 {
+            free_end
+        } else {
+            rom_z.data.len()
+        };
         if *free_cursor + comp.len() > cur_end {
             if rom_z.data.len() < 0x200000 {
                 rom_z.data.resize(0x200000, 0xFF);
@@ -3267,9 +3720,30 @@ pub(crate) fn patch_alttp_raw_sheet_pub(
                 smart_remapped: true,
             },
         )?;
-        sess.swap_custom_bytes(rom_z, z_bk + raw_idx, z_bk + raw_idx, vec![snes_bank], format!("Ptr Raw Bank 0x{:02X}", raw_idx), SwapKind::CodePatch { byte_count: 1 })?;
-        sess.swap_custom_bytes(rom_z, z_hi + raw_idx, z_hi + raw_idx, vec![(snes_addr >> 8) as u8], format!("Ptr Raw Hi 0x{:02X}", raw_idx), SwapKind::CodePatch { byte_count: 1 })?;
-        sess.swap_custom_bytes(rom_z, z_lo + raw_idx, z_lo + raw_idx, vec![(snes_addr & 0xFF) as u8], format!("Ptr Raw Lo 0x{:02X}", raw_idx), SwapKind::CodePatch { byte_count: 1 })?;
+        sess.swap_custom_bytes(
+            rom_z,
+            z_bk + raw_idx,
+            z_bk + raw_idx,
+            vec![snes_bank],
+            format!("Ptr Raw Bank 0x{:02X}", raw_idx),
+            SwapKind::CodePatch { byte_count: 1 },
+        )?;
+        sess.swap_custom_bytes(
+            rom_z,
+            z_hi + raw_idx,
+            z_hi + raw_idx,
+            vec![(snes_addr >> 8) as u8],
+            format!("Ptr Raw Hi 0x{:02X}", raw_idx),
+            SwapKind::CodePatch { byte_count: 1 },
+        )?;
+        sess.swap_custom_bytes(
+            rom_z,
+            z_lo + raw_idx,
+            z_lo + raw_idx,
+            vec![(snes_addr & 0xFF) as u8],
+            format!("Ptr Raw Lo 0x{:02X}", raw_idx),
+            SwapKind::CodePatch { byte_count: 1 },
+        )?;
         Ok(true)
     }
 }
@@ -3325,7 +3799,11 @@ fn patch_alttp_comp_sheet_helper(
         // CRITICAL: Banks $20..$22 (PC 0x100000..0x117FFF) are RESERVED for 32 3D Intro Frames + 65816 DMA Code!
         // Therefore compressed sheet overflow MUST start at Bank $23 (PC 0x118000..0x1FFFFF = 928 KB clean space)!
         const EXPANDED_FREE_START: usize = 0x118000;
-        let mut cur_end = if *free_cursor < 0x100000 { free_end } else { rom_z.data.len() };
+        let mut cur_end = if *free_cursor < 0x100000 {
+            free_end
+        } else {
+            rom_z.data.len()
+        };
         if *free_cursor + comp.len() > cur_end {
             if rom_z.data.len() < 0x200000 {
                 rom_z.data.resize(0x200000, 0xFF);
@@ -3365,9 +3843,30 @@ fn patch_alttp_comp_sheet_helper(
                 smart_remapped: true,
             },
         )?;
-        sess.swap_custom_bytes(rom_z, z_bk + sheet_id, z_bk + sheet_id, vec![snes_bank], format!("Ptr Bank 0x{:02X}", sheet_id), SwapKind::CodePatch { byte_count: 1 })?;
-        sess.swap_custom_bytes(rom_z, z_hi + sheet_id, z_hi + sheet_id, vec![(snes_addr >> 8) as u8], format!("Ptr Hi 0x{:02X}", sheet_id), SwapKind::CodePatch { byte_count: 1 })?;
-        sess.swap_custom_bytes(rom_z, z_lo + sheet_id, z_lo + sheet_id, vec![(snes_addr & 0xFF) as u8], format!("Ptr Lo 0x{:02X}", sheet_id), SwapKind::CodePatch { byte_count: 1 })?;
+        sess.swap_custom_bytes(
+            rom_z,
+            z_bk + sheet_id,
+            z_bk + sheet_id,
+            vec![snes_bank],
+            format!("Ptr Bank 0x{:02X}", sheet_id),
+            SwapKind::CodePatch { byte_count: 1 },
+        )?;
+        sess.swap_custom_bytes(
+            rom_z,
+            z_hi + sheet_id,
+            z_hi + sheet_id,
+            vec![(snes_addr >> 8) as u8],
+            format!("Ptr Hi 0x{:02X}", sheet_id),
+            SwapKind::CodePatch { byte_count: 1 },
+        )?;
+        sess.swap_custom_bytes(
+            rom_z,
+            z_lo + sheet_id,
+            z_lo + sheet_id,
+            vec![(snes_addr & 0xFF) as u8],
+            format!("Ptr Lo 0x{:02X}", sheet_id),
+            SwapKind::CodePatch { byte_count: 1 },
+        )?;
         Ok(true)
     }
 }
@@ -3389,8 +3888,7 @@ fn apply_rule_to_smw(
                 ops += apply_link_into_smw_swap(rom_smw, donor, session)?;
             }
         }
-        "mount" => {
-        }
+        "mount" => {}
         "enemies" => {
             if let Some((e1, e2)) = extract_donor_16x16_for_smw(donor, &rule.donor_source) {
                 if let Some((mut g01, pc, orig_len)) = load_smw_3bpp_sheet(&rom_smw.data, 0x01) {
@@ -3411,7 +3909,10 @@ fn apply_rule_to_smw(
                             pc,
                             pc,
                             padded,
-                            format!("Ennemis SMW (GFX01) ← {}:{}", rule.donor_alias, rule.donor_source),
+                            format!(
+                                "Ennemis SMW (GFX01) ← {}:{}",
+                                rule.donor_alias, rule.donor_source
+                            ),
                             SwapKind::GraphicsTiles {
                                 format: TileFormat::Bpp3,
                                 tile_count: 128,
@@ -3523,15 +4024,19 @@ fn inject_unpitched_brr_percussion(
 
     let mut t_perc: Vec<_> = target_samps
         .into_iter()
-        .filter(|s| is_hw_oneshot(&target_rom.data, s) && s.block_count >= 12 && s.block_count <= 320)
+        .filter(|s| {
+            is_hw_oneshot(&target_rom.data, s) && s.block_count >= 12 && s.block_count <= 320
+        })
         .collect();
     let mut d_perc: Vec<_> = donor_samps
         .into_iter()
-        .filter(|s| is_hw_oneshot(&donor_rom.data, s) && s.block_count >= 12 && s.block_count <= 450)
+        .filter(|s| {
+            is_hw_oneshot(&donor_rom.data, s) && s.block_count >= 12 && s.block_count <= 450
+        })
         .collect();
 
-    t_perc.sort_by(|a, b| b.block_count.cmp(&a.block_count));
-    d_perc.sort_by(|a, b| b.block_count.cmp(&a.block_count));
+    t_perc.sort_by_key(|a| std::cmp::Reverse(a.block_count));
+    d_perc.sort_by_key(|a| std::cmp::Reverse(a.block_count));
 
     let mut ops = 0usize;
     let count = t_perc.len().min(d_perc.len()).min(max_swaps);
@@ -3590,7 +4095,9 @@ fn apply_universal_single_rule(
         };
         let fallback_gray = || SnesPalette {
             name: "Grayscale".into(),
-            colors_rgba: (0..16u8).map(|i| [i * 17, i * 17, i * 17, if i == 0 { 0 } else { 255 }]).collect(),
+            colors_rgba: (0..16u8)
+                .map(|i| [i * 17, i * 17, i * 17, if i == 0 { 0 } else { 255 }])
+                .collect(),
             source_offset: None,
         };
         let pal_a = cat_a
@@ -3613,8 +4120,10 @@ fn apply_universal_single_rule(
             .unwrap_or_else(fallback_gray);
 
         let tiles_to_copy = ga.tile_count.min(gb.tile_count);
-        let transcoded = remap_and_transcode_tiles(&raw_b, tiles_to_copy, gb.format, &pal_b, ga.format, &pal_a);
-        let mut full_raw = decode_universal_gfx_bytes(rom_a, ga).unwrap_or_else(|| vec![0u8; ga.decompressed_len]);
+        let transcoded =
+            remap_and_transcode_tiles(&raw_b, tiles_to_copy, gb.format, &pal_b, ga.format, &pal_a);
+        let mut full_raw =
+            decode_universal_gfx_bytes(rom_a, ga).unwrap_or_else(|| vec![0u8; ga.decompressed_len]);
         let copy_len = transcoded.len().min(full_raw.len());
         full_raw[..copy_len].copy_from_slice(&transcoded[..copy_len]);
 
@@ -3699,7 +4208,8 @@ fn apply_universal_single_rule(
         let (Ok(ti), Ok(di)) = (ti_s.parse::<usize>(), di_s.parse::<usize>()) else {
             return Ok(0);
         };
-        let (Some(aa), Some(ab)) = (cat_a.audio_samples.get(ti), cat_b.audio_samples.get(di)) else {
+        let (Some(aa), Some(ab)) = (cat_a.audio_samples.get(ti), cat_b.audio_samples.get(di))
+        else {
             return Ok(0);
         };
         if aa.rom_offset + aa.byte_len <= rom_a.data.len()
@@ -3744,13 +4254,19 @@ fn decode_universal_gfx_bytes(
                 None
             }
         }
-        UniversalGfxCompression::NintendoLz2BigEndian => {
-            decompress_nintendo_lz2_with_endian(&rom.data, g.rom_offset, g.decompressed_len.max(4096), true)
-                .map(|(d, _)| d)
-        }
-        UniversalGfxCompression::NintendoLz2LittleEndian => {
-            decompress_nintendo_lz2_with_endian(&rom.data, g.rom_offset, g.decompressed_len.max(4096), false)
-                .map(|(d, _)| d)
-        }
+        UniversalGfxCompression::NintendoLz2BigEndian => decompress_nintendo_lz2_with_endian(
+            &rom.data,
+            g.rom_offset,
+            g.decompressed_len.max(4096),
+            true,
+        )
+        .map(|(d, _)| d),
+        UniversalGfxCompression::NintendoLz2LittleEndian => decompress_nintendo_lz2_with_endian(
+            &rom.data,
+            g.rom_offset,
+            g.decompressed_len.max(4096),
+            false,
+        )
+        .map(|(d, _)| d),
     }
 }

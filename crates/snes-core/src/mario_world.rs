@@ -25,7 +25,11 @@ struct Grid {
 
 impl Grid {
     fn new(w: usize, h: usize) -> Self {
-        Self { w, h, px: vec![0u8; w * h] }
+        Self {
+            w,
+            h,
+            px: vec![0u8; w * h],
+        }
     }
     #[inline]
     fn set(&mut self, x: isize, y: isize, c: u8) {
@@ -146,9 +150,9 @@ fn build_toad_head_16x16(style: ToadStyle) -> [[u8; 16]; 16] {
     let mut g = Grid::new(16, 16);
     let (cap_bg, spot_col) = match style {
         ToadStyle::ToadetteFront | ToadStyle::ToadetteSide => (6, 1), // Colored cap with white spots!
-        ToadStyle::ToadsworthFront => (4, 3),                         // Tan/gold spotted grandpa cap!
-        ToadStyle::ShopkeeperFront => (1, 2),                         // White cap with crimson/accent spots!
-        _ => (1, 6),                                                  // Classic white cap with bold colored spots!
+        ToadStyle::ToadsworthFront => (4, 3), // Tan/gold spotted grandpa cap!
+        ToadStyle::ShopkeeperFront => (1, 2), // White cap with crimson/accent spots!
+        _ => (1, 6),                          // Classic white cap with bold colored spots!
     };
 
     // Big iconic bulbous Toad mushroom cap (y=1..10)!
@@ -240,20 +244,20 @@ fn build_toad_body_16x16(vest_col: u8, stride: isize, dress: bool) -> [[u8; 16];
 fn build_kamek_magikoopa_16x16(frame: usize) -> ([[u8; 16]; 16], [[u8; 16]; 16]) {
     // Classic SMW Kamek / Magikoopa (pointed wizard hat, round white spectacles, magic wand!)
     let mut h = Grid::new(16, 16);
-    h.tri(8, 0, 2, 8, 14, 8, 6);    // pointed wizard hat!
-    h.rect(3, 7, 10, 2, 7);         // hat brim
+    h.tri(8, 0, 2, 8, 14, 8, 6); // pointed wizard hat!
+    h.rect(3, 7, 10, 2, 7); // hat brim
     h.ellipse_o(8.0, 12.0, 5.0, 3.8, 4, 5); // yellow Koopa face
     h.ellipse_o(5.5, 11.0, 2.2, 2.2, 1, 5); // round glasses L
-    h.ellipse_o(10.5, 11.0, 2.2, 2.2, 1, 5);// round glasses R
+    h.ellipse_o(10.5, 11.0, 2.2, 2.2, 1, 5); // round glasses R
     h.set(5, 11, 5);
     h.set(10, 11, 5);
     h.outline(5);
 
     let mut b = Grid::new(16, 16);
-    b.tri(8, 0, 2, 13, 14, 13, 6);  // wizard robe
-    b.rect(6, 2, 4, 11, 7);         // center robe pleat
-    b.rect(7, 4, 2, 2, 4);          // gold clasp
-    // Raised magic wand!
+    b.tri(8, 0, 2, 13, 14, 13, 6); // wizard robe
+    b.rect(6, 2, 4, 11, 7); // center robe pleat
+    b.rect(7, 4, 2, 2, 4); // gold clasp
+                           // Raised magic wand!
     let wy = if frame == 0 { 3 } else { 5 };
     b.rect(12, wy, 2, 8, 3);
     b.ellipse_o(13.0, wy as f32, 2.2, 2.2, if frame == 0 { 1 } else { 2 }, 5);
@@ -282,7 +286,7 @@ fn build_baby_yoshi_cute_16x16(hop: isize) -> [[u8; 16]; 16] {
     g.ellipse_o(8.0, (8 - hop) as f32, 5.5, 5.2, 6, 5);
     g.ellipse(10.5, (7 - hop) as f32, 3.5, 3.2, 6); // round cute snout
     g.ellipse(6.5, (10 - hop) as f32, 3.2, 2.8, 1); // white belly
-    // Big cute Yoshi eyes on top of head!
+                                                    // Big cute Yoshi eyes on top of head!
     g.rect(6, 2 - hop, 3, 4, 1);
     g.rect(7, 3 - hop, 2, 3, 5);
     g.set(7, 3 - hop, 1);
@@ -324,9 +328,12 @@ fn patch_toad_town_npcs(
 
     // 1. Kakariko Villagers Main (sp:4F -> raw 0xC2): ALL 8 Villagers -> Toads, Toadettes & Toadsworth!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0xC2,
+        rom_z,
+        sess,
+        0xC2,
         "Village Cocorico → TOAD TOWN 1/4 (sp:4F) : Toads, Toadettes & Papy Champi SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             let heads = [&th_f, &tt_f, &th_s, &tt_s, &th_b, &tw_f, &th_f, &tt_f];
             let bodies = [&tb_1, &td_1, &tb_2, &td_2, &tb_alt, &tb_1, &tb_2, &td_1];
@@ -335,13 +342,18 @@ fn patch_toad_town_npcs(
                 write_3bpp_16x16_pub(raw, i * 2, 2, bodies[i]);
             }
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 2. Kakariko Villagers 2 / Lumberjacks / Bottle Vendor (sp:4A -> raw 0xBD)
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0xBD,
+        rom_z,
+        sess,
+        0xBD,
         "Village Cocorico → TOAD TOWN 2/4 (sp:4A) : Toads Bûcherons & Marchands SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             let heads = [&th_f, &th_s, &tw_f, &th_b, &ts_f, &tt_f, &th_s];
             let bodies = [&tb_1, &tb_2, &tb_alt, &tb_1, &tb_2, &td_1, &tb_alt];
@@ -350,13 +362,18 @@ fn patch_toad_town_npcs(
                 write_3bpp_16x16_pub(raw, i * 2, 2, bodies[i]);
             }
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 3. Shopkeeper / Fortune Teller / Chest Game (sp:4D -> raw 0xC0) — keep sign at col 2..3 intact!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0xC0,
+        rom_z,
+        sess,
+        0xC0,
         "Boutiques & Maisons Toad (sp:4D) ← Toad Marchand & Magikoopa Voyant SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &ts_f);
             write_3bpp_16x16_pub(raw, 0, 2, &tb_alt);
@@ -373,13 +390,18 @@ fn patch_toad_town_npcs(
             write_3bpp_16x16_pub(raw, 14, 0, &th_s);
             write_3bpp_16x16_pub(raw, 14, 2, &tb_1);
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 4. Flute Boy & Woodland Animals (sp:4E -> raw 0xC1) -> Flute Toad & Baby Yoshis!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0xC1,
+        rom_z,
+        sess,
+        0xC1,
         "Bosquet Flûte & Animaux (sp:4E) ← Toad Musicien & Bébés Yoshis SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &th_f);
             write_3bpp_16x16_pub(raw, 0, 2, &tb_1);
@@ -398,28 +420,47 @@ fn patch_toad_town_npcs(
             write_3bpp_16x16_pub(raw, 12, 2, &sf0);
             write_3bpp_16x16_pub(raw, 14, 2, &sf1);
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 5. Running Boy & Town Scouts (sp:50 -> raw 0xC3) -> Toad Runners & Toadettes!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0xC3,
+        rom_z,
+        sess,
+        0xC3,
         "Village Cocorico → TOAD TOWN 3/4 (sp:50) : Toads Coureurs & Éclaireurs SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
-            let heads = [&th_f, &th_s, &flip_h_16x16_pub(&th_s), &tt_f, &tt_s, &th_b, &ts_f, &tw_f];
+            let heads = [
+                &th_f,
+                &th_s,
+                &flip_h_16x16_pub(&th_s),
+                &tt_f,
+                &tt_s,
+                &th_b,
+                &ts_f,
+                &tw_f,
+            ];
             let bodies = [&tb_2, &tb_1, &tb_2, &td_2, &td_1, &tb_alt, &tb_1, &tb_2];
             for i in 0..8 {
                 write_3bpp_16x16_pub(raw, i * 2, 0, heads[i]);
                 write_3bpp_16x16_pub(raw, i * 2, 2, bodies[i]);
             }
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 6. Witch & Great Fairy Assistants (sp:4C -> raw 0xBF) -> Magikoopa Alchemist & Super Star Fairy!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0xBF,
+        rom_z,
+        sess,
+        0xBF,
         "Alchimiste & Fée Étoile (sp:4C) ← Magikoopa Kamek & Fée Super Étoile SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &km_h0);
             write_3bpp_16x16_pub(raw, 0, 2, &km_b0);
@@ -428,7 +469,9 @@ fn patch_toad_town_npcs(
             write_3bpp_16x16_pub(raw, 12, 0, &sf0);
             write_3bpp_16x16_pub(raw, 12, 2, &sf1);
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     Ok(ops)
 }
@@ -472,7 +515,7 @@ fn build_bill_blaster_turret_16x16(angle: usize) -> [[u8; 16]; 16] {
     g.rect(2, 2, 12, 12, 5);
     g.rect(3, 3, 10, 10, 7);
     g.rect(4, 3, 2, 10, 1); // metallic sheen
-    // Round cannon muzzle pointing in direction `angle % 4`
+                            // Round cannon muzzle pointing in direction `angle % 4`
     let (mx, my) = match angle % 4 {
         0 => (8.0, 10.0),
         1 => (10.5, 8.0),
@@ -481,7 +524,7 @@ fn build_bill_blaster_turret_16x16(angle: usize) -> [[u8; 16]; 16] {
     };
     g.ellipse_o(mx, my, 3.6, 3.6, 5, 1);
     g.set(mx as isize, my as isize, 2); // glowing fuse core!
-    // Skull crest emblem on top
+                                        // Skull crest emblem on top
     g.rect(6, 2, 4, 2, 4);
     g.outline(5);
     g.to_16x16()
@@ -492,17 +535,20 @@ fn build_monty_mole_16x16(pop: bool) -> [[u8; 16]; 16] {
     if pop {
         g.ellipse_o(8.0, 9.0, 6.0, 5.8, 3, 5);
         g.ellipse(8.0, 11.0, 4.2, 3.5, 4); // tan belly & muzzle
-        g.rect(5, 6, 2, 3, 1); g.set(6, 7, 5);
-        g.rect(9, 6, 2, 3, 1); g.set(9, 7, 5);
+        g.rect(5, 6, 2, 3, 1);
+        g.set(6, 7, 5);
+        g.rect(9, 6, 2, 3, 1);
+        g.set(9, 7, 5);
         g.rect(7, 9, 2, 2, 2); // pink mole nose!
         g.rect(6, 12, 4, 1, 1); // buck teeth
-        g.rect(2, 9, 2, 3, 4);  // digging claws
+        g.rect(2, 9, 2, 3, 4); // digging claws
         g.rect(12, 9, 2, 3, 4);
     } else {
         // Peeking out of dirt mound!
         g.ellipse_o(8.0, 11.5, 6.2, 3.5, 3, 5);
         g.ellipse_o(8.0, 7.0, 4.0, 3.2, 4, 5);
-        g.set(6, 6, 5); g.set(10, 6, 5);
+        g.set(6, 6, 5);
+        g.set(10, 6, 5);
         g.set(8, 8, 2);
     }
     g.outline(5);
@@ -522,9 +568,12 @@ fn build_swooper_bat_16x16(flap: bool) -> [[u8; 16]; 16] {
     g.ellipse_o(8.0, 8.5, 4.0, 4.2, 6, 5);
     g.tri(5, 3, 4, 6, 7, 6, 6); // ears
     g.tri(11, 3, 9, 6, 12, 6, 6);
-    g.rect(6, 7, 2, 2, 1); g.set(6, 8, 5);
-    g.rect(9, 7, 2, 2, 1); g.set(10, 8, 5);
-    g.set(7, 10, 1); g.set(9, 10, 1); // fangs
+    g.rect(6, 7, 2, 2, 1);
+    g.set(6, 8, 5);
+    g.rect(9, 7, 2, 2, 1);
+    g.set(10, 8, 5);
+    g.set(7, 10, 1);
+    g.set(9, 10, 1); // fangs
     g.outline(5);
     g.to_16x16()
 }
@@ -535,12 +584,21 @@ fn build_sparky_firebar_16x16(frame: usize) -> [[u8; 16]; 16] {
     g.ellipse(8.0, 8.0, 3.8, 3.8, 4);
     // Electric/Flame spikes
     let off = if frame == 0 { 0isize } else { 2 };
-    for &(x, y) in &[(8, 1), (8, 14), (1, 8), (14, 8), (3 + off, 3), (13 - off, 13)] {
+    for &(x, y) in &[
+        (8, 1),
+        (8, 14),
+        (1, 8),
+        (14, 8),
+        (3 + off, 3),
+        (13 - off, 13),
+    ] {
         g.set(x, y, 1);
     }
     // Cute SMW Hothead / Sparky eyes!
-    g.rect(5, 6, 2, 3, 1); g.set(6, 7, 5);
-    g.rect(9, 6, 2, 3, 1); g.set(9, 7, 5);
+    g.rect(5, 6, 2, 3, 1);
+    g.set(6, 7, 5);
+    g.rect(9, 6, 2, 3, 1);
+    g.set(9, 7, 5);
     g.outline(5);
     g.to_16x16()
 }
@@ -564,10 +622,12 @@ fn build_ice_koopa_16x16(step: bool) -> [[u8; 16]; 16] {
     let mut g = Grid::new(16, 16);
     // Cool SMW Frost/Blue Koopa Troopa & Ice Thwomp look!
     g.ellipse_o(8.0, 5.5, 4.2, 3.8, 4, 5);
-    g.rect(5, 4, 2, 3, 1); g.set(6, 5, 5);
-    g.rect(9, 4, 2, 3, 1); g.set(9, 5, 5);
+    g.rect(5, 4, 2, 3, 1);
+    g.set(6, 5, 5);
+    g.rect(9, 4, 2, 3, 1);
+    g.set(9, 5, 5);
     g.ellipse_o(8.0, 10.5, 5.2, 3.8, 6, 5); // icy blue shell
-    g.ellipse(8.0, 10.5, 3.5, 2.2, 1);     // crystal rim
+    g.ellipse(8.0, 10.5, 3.5, 2.2, 1); // crystal rim
     let dx = if step { 1isize } else { 0 };
     g.ellipse_o((5 + dx) as f32, 14.0, 2.2, 1.6, 2, 5);
     g.ellipse_o((11 - dx) as f32, 14.0, 2.2, 1.6, 2, 5);
@@ -616,43 +676,139 @@ fn patch_smw_bestiary_expansion(
 
     // Extract 100% VISUALLY VERIFIED 16x16 SMW donor enemy frames from `smw_donors.png`
     // (ZERO `[X]` placeholder tiles — every single `(tx, ty)` coordinate verified pixel-by-pixel!)
-    let buzzy1 = g04.as_deref().map(|g| smw_tile(g, 0, 0, &LUT_SMW_STD)).unwrap_or(ice0);
-    let buzzy2 = g04.as_deref().map(|g| smw_tile(g, 2, 0, &LUT_SMW_STD)).unwrap_or(ice1);
-    let piranha1 = g04.as_deref().map(|g| smw_tile(g, 0, 6, &LUT_SMW_STD)).unwrap_or(chomp1);
-    let piranha2 = g04.as_deref().map(|g| smw_tile(g, 2, 6, &LUT_SMW_STD)).unwrap_or(chomp0);
-    let blargg1 = g24.as_deref().map(|g| smw_tile(g, 10, 4, &LUT_SMW_ALT)).unwrap_or(spark0);
-    let blargg2 = g24.as_deref().map(|g| smw_tile(g, 12, 4, &LUT_SMW_ALT)).unwrap_or(spark1);
-    let spiketop1 = g04.as_deref().map(|g| smw_tile(g, 12, 0, &LUT_SMW_STD)).unwrap_or(buzzy1);
-    let spiketop2 = g04.as_deref().map(|g| smw_tile(g, 14, 0, &LUT_SMW_STD)).unwrap_or(buzzy2);
-    let cheep1 = g06.as_deref().map(|g| smw_tile(g, 10, 4, &LUT_SMW_STD)).unwrap_or(ice0);
-    let cheep2 = g06.as_deref().map(|g| smw_tile(g, 12, 4, &LUT_SMW_STD)).unwrap_or(ice1);
-    let sumo1 = g09.as_deref().map(|g| smw_tile(g, 0, 0, &LUT_SMW_STD)).unwrap_or(mole0);
-    let sumo2 = g09.as_deref().map(|g| smw_tile(g, 2, 0, &LUT_SMW_STD)).unwrap_or(mole1);
-    let pokey_h = g09.as_deref().map(|g| smw_tile(g, 10, 0, &LUT_SMW_ALT)).unwrap_or(spark0);
-    let pokey_b = g09.as_deref().map(|g| smw_tile(g, 12, 0, &LUT_SMW_ALT)).unwrap_or(spark1);
-    let boo1 = g11.as_deref().map(|g| smw_tile(g, 8, 2, &LUT_SMW_STD)).unwrap_or(chomp0);
-    let boo2 = g11.as_deref().map(|g| smw_tile(g, 10, 2, &LUT_SMW_STD)).unwrap_or(chomp1);
-    let chuck_h = g13.as_deref().map(|g| smw_tile(g, 12, 0, &LUT_SMW_STD)).unwrap_or(ice0);
-    let chuck_b = g13.as_deref().map(|g| smw_tile(g, 12, 2, &LUT_SMW_STD)).unwrap_or(ice1);
-    let hbro_h = g13.as_deref().map(|g| smw_tile(g, 14, 0, &LUT_SMW_STD)).unwrap_or(km_h0);
-    let hbro_b = g13.as_deref().map(|g| smw_tile(g, 14, 2, &LUT_SMW_STD)).unwrap_or(km_b0);
-    let rex_h = g20.as_deref().map(|g| smw_tile(g, 10, 0, &LUT_SMW_STD)).unwrap_or(mole0);
-    let rex_b = g20.as_deref().map(|g| smw_tile(g, 10, 2, &LUT_SMW_STD)).unwrap_or(mole1);
-    let rex_sq = g20.as_deref().map(|g| smw_tile(g, 12, 2, &LUT_SMW_STD)).unwrap_or(mole0);
-    let dino_h = g23.as_deref().map(|g| smw_tile(g, 0, 4, &LUT_SMW_STD)).unwrap_or(rex_h);
-    let dino_b = g23.as_deref().map(|g| smw_tile(g, 2, 4, &LUT_SMW_STD)).unwrap_or(rex_b);
-    let torch1 = g23.as_deref().map(|g| smw_tile(g, 0, 2, &LUT_SMW_ALT)).unwrap_or(spark0);
-    let torch2 = g23.as_deref().map(|g| smw_tile(g, 2, 2, &LUT_SMW_ALT)).unwrap_or(spark1);
-    let mecha1 = g24.as_deref().map(|g| smw_tile(g, 0, 0, &LUT_SMW_STD)).unwrap_or(buzzy1);
-    let mecha2 = g24.as_deref().map(|g| smw_tile(g, 0, 4, &LUT_SMW_STD)).unwrap_or(buzzy2);
-    let thwomp1 = g03.as_deref().map(|g| smw_tile(g, 8, 4, &LUT_SMW_STD)).unwrap_or(turret0);
-    let thwomp2 = g03.as_deref().map(|g| smw_tile(g, 10, 4, &LUT_SMW_STD)).unwrap_or(turret1);
+    let buzzy1 = g04
+        .as_deref()
+        .map(|g| smw_tile(g, 0, 0, &LUT_SMW_STD))
+        .unwrap_or(ice0);
+    let buzzy2 = g04
+        .as_deref()
+        .map(|g| smw_tile(g, 2, 0, &LUT_SMW_STD))
+        .unwrap_or(ice1);
+    let piranha1 = g04
+        .as_deref()
+        .map(|g| smw_tile(g, 0, 6, &LUT_SMW_STD))
+        .unwrap_or(chomp1);
+    let piranha2 = g04
+        .as_deref()
+        .map(|g| smw_tile(g, 2, 6, &LUT_SMW_STD))
+        .unwrap_or(chomp0);
+    let blargg1 = g24
+        .as_deref()
+        .map(|g| smw_tile(g, 10, 4, &LUT_SMW_ALT))
+        .unwrap_or(spark0);
+    let blargg2 = g24
+        .as_deref()
+        .map(|g| smw_tile(g, 12, 4, &LUT_SMW_ALT))
+        .unwrap_or(spark1);
+    let spiketop1 = g04
+        .as_deref()
+        .map(|g| smw_tile(g, 12, 0, &LUT_SMW_STD))
+        .unwrap_or(buzzy1);
+    let spiketop2 = g04
+        .as_deref()
+        .map(|g| smw_tile(g, 14, 0, &LUT_SMW_STD))
+        .unwrap_or(buzzy2);
+    let cheep1 = g06
+        .as_deref()
+        .map(|g| smw_tile(g, 10, 4, &LUT_SMW_STD))
+        .unwrap_or(ice0);
+    let cheep2 = g06
+        .as_deref()
+        .map(|g| smw_tile(g, 12, 4, &LUT_SMW_STD))
+        .unwrap_or(ice1);
+    let sumo1 = g09
+        .as_deref()
+        .map(|g| smw_tile(g, 0, 0, &LUT_SMW_STD))
+        .unwrap_or(mole0);
+    let sumo2 = g09
+        .as_deref()
+        .map(|g| smw_tile(g, 2, 0, &LUT_SMW_STD))
+        .unwrap_or(mole1);
+    let pokey_h = g09
+        .as_deref()
+        .map(|g| smw_tile(g, 10, 0, &LUT_SMW_ALT))
+        .unwrap_or(spark0);
+    let pokey_b = g09
+        .as_deref()
+        .map(|g| smw_tile(g, 12, 0, &LUT_SMW_ALT))
+        .unwrap_or(spark1);
+    let boo1 = g11
+        .as_deref()
+        .map(|g| smw_tile(g, 8, 2, &LUT_SMW_STD))
+        .unwrap_or(chomp0);
+    let boo2 = g11
+        .as_deref()
+        .map(|g| smw_tile(g, 10, 2, &LUT_SMW_STD))
+        .unwrap_or(chomp1);
+    let chuck_h = g13
+        .as_deref()
+        .map(|g| smw_tile(g, 12, 0, &LUT_SMW_STD))
+        .unwrap_or(ice0);
+    let chuck_b = g13
+        .as_deref()
+        .map(|g| smw_tile(g, 12, 2, &LUT_SMW_STD))
+        .unwrap_or(ice1);
+    let hbro_h = g13
+        .as_deref()
+        .map(|g| smw_tile(g, 14, 0, &LUT_SMW_STD))
+        .unwrap_or(km_h0);
+    let hbro_b = g13
+        .as_deref()
+        .map(|g| smw_tile(g, 14, 2, &LUT_SMW_STD))
+        .unwrap_or(km_b0);
+    let rex_h = g20
+        .as_deref()
+        .map(|g| smw_tile(g, 10, 0, &LUT_SMW_STD))
+        .unwrap_or(mole0);
+    let rex_b = g20
+        .as_deref()
+        .map(|g| smw_tile(g, 10, 2, &LUT_SMW_STD))
+        .unwrap_or(mole1);
+    let rex_sq = g20
+        .as_deref()
+        .map(|g| smw_tile(g, 12, 2, &LUT_SMW_STD))
+        .unwrap_or(mole0);
+    let dino_h = g23
+        .as_deref()
+        .map(|g| smw_tile(g, 0, 4, &LUT_SMW_STD))
+        .unwrap_or(rex_h);
+    let dino_b = g23
+        .as_deref()
+        .map(|g| smw_tile(g, 2, 4, &LUT_SMW_STD))
+        .unwrap_or(rex_b);
+    let torch1 = g23
+        .as_deref()
+        .map(|g| smw_tile(g, 0, 2, &LUT_SMW_ALT))
+        .unwrap_or(spark0);
+    let torch2 = g23
+        .as_deref()
+        .map(|g| smw_tile(g, 2, 2, &LUT_SMW_ALT))
+        .unwrap_or(spark1);
+    let mecha1 = g24
+        .as_deref()
+        .map(|g| smw_tile(g, 0, 0, &LUT_SMW_STD))
+        .unwrap_or(buzzy1);
+    let mecha2 = g24
+        .as_deref()
+        .map(|g| smw_tile(g, 0, 4, &LUT_SMW_STD))
+        .unwrap_or(buzzy2);
+    let thwomp1 = g03
+        .as_deref()
+        .map(|g| smw_tile(g, 8, 4, &LUT_SMW_STD))
+        .unwrap_or(turret0);
+    let thwomp2 = g03
+        .as_deref()
+        .map(|g| smw_tile(g, 10, 4, &LUT_SMW_STD))
+        .unwrap_or(turret1);
 
     // 1. sp:10 (raw 0x83) — Mountain/Water Lynel, Tektite, Zora, Poe -> Dino Rhino, Buzzy, Cheep, Boo!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x83,
+        rom_z,
+        sess,
+        0x83,
         "Bestiaire Montagne/Eau (sp:10) ← Dino Rhino, Buzzy Beetle, Cheep Cheep & Boo SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &dino_h);
             write_3bpp_16x16_pub(raw, 0, 2, &dino_b);
@@ -667,13 +823,18 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 8, 2, &boo2);
             write_3bpp_16x16_pub(raw, 10, 2, &boo1);
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 2. sp:12 (raw 0x85) — Desert Vulture, Geldman, Leever -> Swoopers, Pokey Stacks & Monty Moles!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x85,
+        rom_z,
+        sess,
+        0x85,
         "Bestiaire Désert (sp:12) ← Swoopers, Pokeys & Monty Moles SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &bat0);
             write_3bpp_16x16_pub(raw, 2, 0, &bat1);
@@ -684,34 +845,60 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 10, 0, &pokey_h);
             write_3bpp_16x16_pub(raw, 10, 2, &pokey_b);
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 3. sp:13 (raw 0x86) — Dark World Guards/Soldiers -> Chargin' Chucks & Hammer Bros (GFX13)!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x86,
+        rom_z,
+        sess,
+        0x86,
         "Bestiaire Monde des Ténèbres 1/6 (sp:13) ← Chargin' Chucks & Hammer Bros SMW (GFX13)",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             for col in (0..8).step_by(2) {
-                let h = if col % 4 == 0 { chuck_h } else { flip_h_16x16_pub(&chuck_h) };
-                let b = if col % 4 == 0 { chuck_b } else { flip_h_16x16_pub(&chuck_b) };
+                let h = if col % 4 == 0 {
+                    chuck_h
+                } else {
+                    flip_h_16x16_pub(&chuck_h)
+                };
+                let b = if col % 4 == 0 {
+                    chuck_b
+                } else {
+                    flip_h_16x16_pub(&chuck_b)
+                };
                 write_3bpp_16x16_pub(raw, col, 0, &h);
                 write_3bpp_16x16_pub(raw, col, 2, &b);
             }
             for col in (8..16).step_by(2) {
-                let h = if col % 4 == 0 { hbro_h } else { flip_h_16x16_pub(&hbro_h) };
-                let b = if col % 4 == 0 { hbro_b } else { flip_h_16x16_pub(&hbro_b) };
+                let h = if col % 4 == 0 {
+                    hbro_h
+                } else {
+                    flip_h_16x16_pub(&hbro_h)
+                };
+                let b = if col % 4 == 0 {
+                    hbro_b
+                } else {
+                    flip_h_16x16_pub(&hbro_b)
+                };
                 write_3bpp_16x16_pub(raw, col, 0, &h);
                 write_3bpp_16x16_pub(raw, col, 2, &b);
             }
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 4. sp:16 (raw 0x89) — Dark World Moblin / Taros -> Rex Dinosaur (GFX20) & Dino Torch (GFX23)!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x89,
+        rom_z,
+        sess,
+        0x89,
         "Bestiaire Monde des Ténèbres 2/6 (sp:16) ← Rex & Dino Torch SMW (GFX20/23)",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &rex_h);
             write_3bpp_16x16_pub(raw, 0, 2, &rex_b);
@@ -730,16 +917,26 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 14, 0, &torch1);
             write_3bpp_16x16_pub(raw, 14, 2, &torch2);
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 5. sp:17 (raw 0x8A) — Dark World Ropa / Snapdragon -> Piranha Plants & Ninjis!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x8A,
+        rom_z,
+        sess,
+        0x8A,
         "Bestiaire Monde des Ténèbres 3/6 (sp:17) ← Plantes Piranha & Ninjis SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             for col in (2..10).step_by(2) {
-                write_3bpp_16x16_pub(raw, col, 0, if col % 4 == 0 { &piranha1 } else { &piranha2 });
+                write_3bpp_16x16_pub(
+                    raw,
+                    col,
+                    0,
+                    if col % 4 == 0 { &piranha1 } else { &piranha2 },
+                );
                 write_3bpp_16x16_pub(raw, col, 2, if col % 4 == 0 { &ninji0 } else { &ninji1 });
             }
             write_3bpp_16x16_pub(raw, 10, 0, &piranha1);
@@ -749,13 +946,18 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 14, 0, &flip_h_16x16_pub(&piranha1));
             write_3bpp_16x16_pub(raw, 14, 2, &flip_h_16x16_pub(&piranha2));
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 6. sp:18 (raw 0x8B) — Dark World Sluggula / Swamola -> Spike Tops (GFX04) & Big Boos (GFX11)!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x8B,
+        rom_z,
+        sess,
+        0x8B,
         "Bestiaire Monde des Ténèbres 4/6 (sp:18) ← Spike Tops & Big Boos SMW (GFX04/11)",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &spiketop1);
             write_3bpp_16x16_pub(raw, 2, 0, &spiketop2);
@@ -772,13 +974,18 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 10, 2, &boo1);
             write_3bpp_16x16_pub(raw, 12, 2, &flip_h_16x16_pub(&boo2));
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 7. sp:19 (raw 0x8C) — Dark World Zazak / Red Eyegore -> Sumo Bros (GFX09) & Magikoopas!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x8C,
+        rom_z,
+        sess,
+        0x8C,
         "Bestiaire Monde des Ténèbres 5/6 (sp:19) ← Sumo Bros & Magikoopas SMW (GFX09)",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 4, 0, &sumo1);
             write_3bpp_16x16_pub(raw, 6, 0, &sumo2);
@@ -791,13 +998,18 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 12, 2, &sumo1);
             write_3bpp_16x16_pub(raw, 14, 2, &sumo2);
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 8. sp:1A (raw 0x8D) — Dark World Bats / Keese / Gargoyles -> Swooper Bats & Paratroopas!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x8D,
+        rom_z,
+        sess,
+        0x8D,
         "Bestiaire Monde des Ténèbres 6/6 (sp:1A) ← Swoopers & Paratroopas SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &bat0);
             write_3bpp_16x16_pub(raw, 2, 0, &bat1);
@@ -812,13 +1024,18 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 12, 2, &bat0);
             write_3bpp_16x16_pub(raw, 14, 2, &bat1);
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 9. sp:20 (raw 0x93) — Dungeon Wizzrobes & Bubbles -> SMW Magikoopas (Kamek) & Boos!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x93,
+        rom_z,
+        sess,
+        0x93,
         "Bestiaire Donjons 1/8 (sp:20) ← Magikoopas Kamek & Boos SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &boo1);
             write_3bpp_16x16_pub(raw, 2, 0, &boo2);
@@ -835,13 +1052,18 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 12, 0, &flip_h_16x16_pub(&km_h1));
             write_3bpp_16x16_pub(raw, 12, 2, &flip_h_16x16_pub(&km_b1));
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 10. sp:22 (raw 0x95) — Dungeon Mini-Helmasaur / Mimics -> Buzzy Beetles & Mechakoopas (GFX24)!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x95,
+        rom_z,
+        sess,
+        0x95,
         "Bestiaire Donjons 2/8 (sp:22) ← Buzzy Beetles & Mechakoopas SMW (GFX24)",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &buzzy1);
             write_3bpp_16x16_pub(raw, 2, 0, &buzzy2);
@@ -855,13 +1077,18 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 12, 2, &buzzy1);
             write_3bpp_16x16_pub(raw, 14, 2, &buzzy2);
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 11. sp:23 (raw 0x96) — Dungeon Popo / Stalfos Knight -> Dino Torch & Chargin' Chucks!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x96,
+        rom_z,
+        sess,
+        0x96,
         "Bestiaire Donjons 3/8 (sp:23) ← Dino Torch & Chargin' Chucks SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &torch1);
             write_3bpp_16x16_pub(raw, 2, 0, &torch2);
@@ -872,13 +1099,18 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 4, 2, &flip_h_16x16_pub(&chuck_h));
             write_3bpp_16x16_pub(raw, 6, 2, &flip_h_16x16_pub(&chuck_b));
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 12. sp:24 (raw 0x97) — Dungeon Beamos & Guruguru Firebar -> Bill Blaster Turrets & SMW Sparky/Firebars!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x97,
+        rom_z,
+        sess,
+        0x97,
         "Bestiaire Donjons 4/8 (sp:24) ← Tourelles Bill Blaster & Firebars Sparky SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &turret0);
             write_3bpp_16x16_pub(raw, 2, 0, &turret1);
@@ -893,13 +1125,18 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 4, 2, &spark0);
             write_3bpp_16x16_pub(raw, 6, 2, &spark1);
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 13. sp:25 (raw 0x98) — Ice Palace Pengator, Freezor, Biri -> Ice Koopas & Frost Thwomps!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x98,
+        rom_z,
+        sess,
+        0x98,
         "Bestiaire Palais de Glace 5/8 (sp:25) ← Koopas de Glace & Thwomps Gelés SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &ice0);
             write_3bpp_16x16_pub(raw, 2, 0, &ice1);
@@ -918,13 +1155,18 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 12, 2, &ice1);
             write_3bpp_16x16_pub(raw, 14, 2, &flip_h_16x16_pub(&ice0));
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 14. sp:26 (raw 0x99) — Dungeon Wizzrobe / Sluggula -> Magikoopas & Spike Tops!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x99,
+        rom_z,
+        sess,
+        0x99,
         "Bestiaire Donjons 6/8 (sp:26) ← Magikoopas & Spike Tops SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &spiketop1);
             write_3bpp_16x16_pub(raw, 2, 0, &spiketop2);
@@ -938,13 +1180,18 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 8, 2, &km_b1);
             write_3bpp_16x16_pub(raw, 10, 2, &flip_h_16x16_pub(&km_b0));
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 15. sp:27 (raw 0x9A) — Dungeon Chain Chomp (`(0,0)..(2,2)`) & Hokkubokku -> SMW Chain Chomp & Pokeys!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x9A,
+        rom_z,
+        sess,
+        0x9A,
         "Bestiaire Donjons 7/8 (sp:27) ← Chain Chomp Noir & Pokeys SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &chomp0);
             write_3bpp_16x16_pub(raw, 2, 0, &chomp1);
@@ -957,13 +1204,18 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 8, 2, &pokey_b);
             write_3bpp_16x16_pub(raw, 10, 2, &thwomp1);
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 16. sp:2A (raw 0x9D) — Dungeon Terrorpin (Flip-Turtle) & Kodongo -> Spiny Shells & Blargg/Podoboo!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x9D,
+        rom_z,
+        sess,
+        0x9D,
         "Bestiaire Donjons 8/8 (sp:2A) ← Carapaces Spiny & Blargg SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &spiketop1);
             write_3bpp_16x16_pub(raw, 2, 0, &spiketop2);
@@ -980,7 +1232,9 @@ fn patch_smw_bestiary_expansion(
             write_3bpp_16x16_pub(raw, 12, 2, &flip_h_16x16_pub(&blargg2));
             write_3bpp_16x16_pub(raw, 14, 2, &spark1);
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     Ok(ops)
 }
@@ -1002,8 +1256,22 @@ fn build_smw_dungeon_qblock_bg_16x16() -> [[u8; 16]; 16] {
     }
     // Crisp '?' emblem with drop shadow!
     let q_pts = [
-        (5, 4), (6, 3), (7, 3), (8, 3), (9, 3), (10, 4), (10, 5), (10, 6),
-        (9, 7), (8, 8), (7, 8), (7, 9), (7, 11), (7, 12), (8, 11), (8, 12),
+        (5, 4),
+        (6, 3),
+        (7, 3),
+        (8, 3),
+        (9, 3),
+        (10, 4),
+        (10, 5),
+        (10, 6),
+        (9, 7),
+        (8, 8),
+        (7, 8),
+        (7, 9),
+        (7, 11),
+        (7, 12),
+        (8, 11),
+        (8, 12),
     ];
     for &(qx, qy) in &q_pts {
         g.set(qx + 1, qy + 1, 1);
@@ -1029,15 +1297,18 @@ fn build_stone_bowser_statue_32x32() -> Grid {
     g.rect(11, 19, 10, 1, 2);
     g.rect(11, 22, 10, 1, 2);
     // Fierce horned stone Bowser head on top!
-    g.tri(6, 2, 4, 8, 10, 8, 6);  // left curved horn
-    g.tri(26, 2, 22, 8, 28, 8, 6);// right curved horn
-    g.tri(16, 1, 12, 6, 20, 6, 2);// mohawk stone crest
+    g.tri(6, 2, 4, 8, 10, 8, 6); // left curved horn
+    g.tri(26, 2, 22, 8, 28, 8, 6); // right curved horn
+    g.tri(16, 1, 12, 6, 20, 6, 2); // mohawk stone crest
     g.ellipse_o(16.0, 9.5, 8.0, 5.5, 4, 1);
-    g.rect(11, 7, 3, 3, 1); g.set(12, 8, 6); // stone eyes
-    g.rect(18, 7, 3, 3, 1); g.set(19, 8, 6);
+    g.rect(11, 7, 3, 3, 1);
+    g.set(12, 8, 6); // stone eyes
+    g.rect(18, 7, 3, 3, 1);
+    g.set(19, 8, 6);
     g.rect(11, 11, 10, 3, 2); // grimacing jaw
-    g.set(12, 12, 6); g.set(19, 12, 6); // stone fangs!
-    // Spikes on shoulders
+    g.set(12, 12, 6);
+    g.set(19, 12, 6); // stone fangs!
+                      // Spikes on shoulders
     g.tri(5, 16, 2, 20, 7, 20, 6);
     g.tri(27, 16, 25, 20, 30, 20, 6);
     g.outline(1);
@@ -1058,8 +1329,10 @@ fn build_stone_thwomp_pillar_16x32() -> Grid {
     // Angry Thwomp furrowed brows & glowing eyes
     g.rect(3, 9, 4, 2, 1);
     g.rect(9, 9, 4, 2, 1);
-    g.rect(4, 11, 3, 3, 6); g.set(5, 12, 1);
-    g.rect(9, 11, 3, 3, 6); g.set(10, 12, 1);
+    g.rect(4, 11, 3, 3, 6);
+    g.set(5, 12, 1);
+    g.rect(9, 11, 3, 3, 6);
+    g.set(10, 12, 1);
     // Gritting teeth grimace
     g.rect(3, 18, 10, 5, 1);
     for x in (4..12).step_by(2) {
@@ -1099,8 +1372,8 @@ fn build_smw_skull_brick_half_8x16() -> ([[u8; 8]; 8], [[u8; 8]; 8]) {
     // Brick mortar lines + cute Bowser skull center
     g.rect(1, 7, 7, 1, 1);
     g.ellipse(7.5, 7.5, 3.2, 3.5, 6); // bright skull face
-    g.rect(5, 6, 2, 2, 1);            // eye socket
-    g.set(6, 10, 1);                  // tooth
+    g.rect(5, 6, 2, 2, 1); // eye socket
+    g.set(6, 10, 1); // tooth
     let mut top = [[0u8; 8]; 8];
     let mut bot = [[0u8; 8]; 8];
     for y in 0..8 {
@@ -1177,37 +1450,61 @@ fn patch_worldwide_bg_tilesets(
     //    Add gleaming SMW '?' Blocks at cols 12..15 row 0 (same push/treasure block slots as bg:08/09/0A!)
     //    + SMW Bowser's Castle Stone Masonry accents from GFX18 / Ghost House GFX07!
     const LUT_BG_STONE: [u8; 8] = [0, 6, 1, 2, 3, 4, 5, 2];
-    let castle_brick = g18.as_deref().map(|g| smw_tile(g, 0, 0, &LUT_BG_STONE)).unwrap_or(qblock_bg);
-    let ghost_win = g07.as_deref().map(|g| smw_tile(g, 0, 0, &LUT_BG_STONE)).unwrap_or(castle_brick);
+    let castle_brick = g18
+        .as_deref()
+        .map(|g| smw_tile(g, 0, 0, &LUT_BG_STONE))
+        .unwrap_or(qblock_bg);
+    let ghost_win = g07
+        .as_deref()
+        .map(|g| smw_tile(g, 0, 0, &LUT_BG_STONE))
+        .unwrap_or(castle_brick);
 
     for &(bg_id, label, use_ghost) in &[
-        (0x0Dusize, "Tour de Ganon → CHÂTEAU FINAL DE BOWSER (bg:0D) ← Blocs ? & Maçonnerie SMW GFX18", false),
-        (0x0Busize, "Donjons Skull Woods / Turtle Rock (bg:0B) ← Blocs ? & Briques Château SMW", true),
-        (0x0Cusize, "Donjons Palais Ténèbres / Voleurs (bg:0C) ← Blocs ? & Briques Château SMW", false),
-        (0x06usize, "Château d'Hyrule → Château de Peach (bg:06) ← Blocs ? & Maçonnerie SMW", false),
+        (
+            0x0Dusize,
+            "Tour de Ganon → CHÂTEAU FINAL DE BOWSER (bg:0D) ← Blocs ? & Maçonnerie SMW GFX18",
+            false,
+        ),
+        (
+            0x0Busize,
+            "Donjons Skull Woods / Turtle Rock (bg:0B) ← Blocs ? & Briques Château SMW",
+            true,
+        ),
+        (
+            0x0Cusize,
+            "Donjons Palais Ténèbres / Voleurs (bg:0C) ← Blocs ? & Briques Château SMW",
+            false,
+        ),
+        (
+            0x06usize,
+            "Château d'Hyrule → Château de Peach (bg:06) ← Blocs ? & Maçonnerie SMW",
+            false,
+        ),
     ] {
-        if patch_alttp_raw_sheet_pub(
-            rom_z, sess, bg_id, label, free_cursor, free_end,
-            &|raw| {
-                // Gleaming SMW '?' Blocks on push-block / prize-block tile slots (cols 12..15 row 0)
-                write_3bpp_16x16_pub(raw, 12, 0, &qblock_bg);
-                write_3bpp_16x16_pub(raw, 14, 0, &qblock_bg);
-                // Castle masonry decorative floor/wall accent at (10,2)
-                if bg_id == 0x0D {
-                    // Bowser's Final Castle also gets a carved Bowser Floor Emblem at (10,0)!
-                    write_3bpp_16x16_pub(raw, 10, 0, &castle_brick);
-                } else if use_ghost {
-                    write_3bpp_16x16_pub(raw, 10, 0, &ghost_win);
-                }
-            },
-        )? { ops += 1; }
+        if patch_alttp_raw_sheet_pub(rom_z, sess, bg_id, label, free_cursor, free_end, &|raw| {
+            // Gleaming SMW '?' Blocks on push-block / prize-block tile slots (cols 12..15 row 0)
+            write_3bpp_16x16_pub(raw, 12, 0, &qblock_bg);
+            write_3bpp_16x16_pub(raw, 14, 0, &qblock_bg);
+            // Castle masonry decorative floor/wall accent at (10,2)
+            if bg_id == 0x0D {
+                // Bowser's Final Castle also gets a carved Bowser Floor Emblem at (10,0)!
+                write_3bpp_16x16_pub(raw, 10, 0, &castle_brick);
+            } else if use_ghost {
+                write_3bpp_16x16_pub(raw, 10, 0, &ghost_win);
+            }
+        })? {
+            ops += 1;
+        }
     }
 
     // 3. bg:18 (raw 0x18) & bg:19 (raw 0x19) — DUNGEON STATUES ACROSS EVERY DUNGEON -> BOWSER STATUES & THWOMP PILLARS!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x18,
+        rom_z,
+        sess,
+        0x18,
         "Statues de Donjons 1/2 (bg:18) ← Statues de Pierre Roi Bowser & Piliers Thwomp SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             // 32x32 Carved Stone Bowser Statue at cols 0..3 rows 0..3!
             write_3bpp_16x16_pub(raw, 0, 0, &bowser_statue.slice_16x16(0, 0));
@@ -1218,12 +1515,17 @@ fn patch_worldwide_bg_tilesets(
             write_3bpp_16x16_pub(raw, 4, 0, &thwomp_pillar.slice_16x16(0, 0));
             write_3bpp_16x16_pub(raw, 4, 2, &thwomp_pillar.slice_16x16(0, 16));
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x19,
+        rom_z,
+        sess,
+        0x19,
         "Statues de Donjons 2/2 (bg:19) ← Statues de Pierre Roi Bowser & Piliers Thwomp SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &bowser_statue.slice_16x16(0, 0));
             write_3bpp_16x16_pub(raw, 2, 0, &bowser_statue.slice_16x16(16, 0));
@@ -1232,15 +1534,20 @@ fn patch_worldwide_bg_tilesets(
             write_3bpp_16x16_pub(raw, 4, 0, &thwomp_pillar.slice_16x16(0, 0));
             write_3bpp_16x16_pub(raw, 4, 2, &thwomp_pillar.slice_16x16(0, 16));
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 4. bg:4D (raw 0x4D) — TOAD TOWN (Kakariko) HOUSE ROOFS -> SPOTTED MUSHROOM HOUSE ROOF TILES!
     // Add crisp circular white Toad Mushroom spots directly onto roof shingle tiles (cols 0..3 row 0)
     // while keeping structural wall/door alignment 100% intact!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x4D,
+        rom_z,
+        sess,
+        0x4D,
         "Maisons Village Cocorico → TOAD TOWN (bg:4D) : Toits Champignons à Pois Blancs SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             let mut spot_roof = read_3bpp_16x16(raw, 0, 0);
             // Overlay crisp circular white mushroom cap spots (index 6/7 bright cream-white!)
@@ -1258,17 +1565,24 @@ fn patch_worldwide_bg_tilesets(
             write_3bpp_16x16_pub(raw, 0, 0, &spot_roof);
             write_3bpp_16x16_pub(raw, 2, 0, &spot_roof);
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     // 5. bg:4C (raw 0x4C) — Castle / Sanctuary Exterior -> SMW Castle Battlement Crest!
     if patch_alttp_raw_sheet_pub(
-        rom_z, sess, 0x4C,
+        rom_z,
+        sess,
+        0x4C,
         "Extérieur Château & Sanctuaire (bg:4C) ← Blason Étoile & Maçonnerie SMW",
-        free_cursor, free_end,
+        free_cursor,
+        free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &castle_brick);
         },
-    )? { ops += 1; }
+    )? {
+        ops += 1;
+    }
 
     Ok(ops)
 }

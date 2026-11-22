@@ -1,7 +1,7 @@
+use image::{ImageBuffer, Rgba};
 use std::fs;
 use std::path::Path;
 use std::time::Instant;
-use image::{ImageBuffer, Rgba};
 
 use crate::assets::scan_assets_for_rom;
 use crate::disasm_dma::decompress_nintendo_lz2_with_endian;
@@ -93,7 +93,8 @@ pub fn deconstruct_rom(
     // 0. UNIVERSAL HARDWARE DISCOVERY & ROUND-TRIP PROJECT EXPORT (`project.json`)
     // Works identically on 100% of SNES ROMs (LoROM, HiROM, ExHiROM, Unknown, Homebrew!)
     // =========================================================================
-    let catalog = crate::universal::discover_universal_catalog_with_mode(rom, config.full_extraction);
+    let catalog =
+        crate::universal::discover_universal_catalog_with_mode(rom, config.full_extraction);
     crate::universal::export_universal_editable_project_with_mode(
         rom,
         &catalog,
@@ -145,7 +146,10 @@ pub fn deconstruct_rom(
             if let Some((decompressed, _)) =
                 decompress_nintendo_lz2_with_endian(&rom.data, off, max_len, true)
             {
-                let _ = fs::write(sheets_dir.join(format!("{}.bin", sheet_name)), &decompressed);
+                let _ = fs::write(
+                    sheets_dir.join(format!("{}.bin", sheet_name)),
+                    &decompressed,
+                );
                 let cols = 16;
                 let total_tiles = decompressed.len() / fmt.bytes_per_tile();
                 let rows = (total_tiles / cols).max(1);
@@ -470,7 +474,7 @@ pub fn create_spc_file(
     let magic = b"SNES-SPC700 Sound File Data v0.30\x1a\x1a";
     spc[0..magic.len()].copy_from_slice(magic);
     spc[0x23] = 0x1A; // Has ID666 tag
-    spc[0x24] = 30;   // Version minor
+    spc[0x24] = 30; // Version minor
 
     // CPU Registers
     spc[0x25..0x27].copy_from_slice(&pc.to_le_bytes());
@@ -492,8 +496,8 @@ pub fn create_spc_file(
     write_tag(&mut spc[0x6E..0x7E], dumper, 16);
     write_tag(&mut spc[0x7E..0x9E], comments, 32);
     write_tag(&mut spc[0x9E..0xA9], "2026/11/17", 11);
-    write_tag(&mut spc[0xA9..0xAC], "180", 3);     // Play length 180s
-    write_tag(&mut spc[0xAC..0xB1], "5000", 5);    // Fade 5000ms
+    write_tag(&mut spc[0xA9..0xAC], "180", 3); // Play length 180s
+    write_tag(&mut spc[0xAC..0xB1], "5000", 5); // Fade 5000ms
     write_tag(&mut spc[0xB1..0xD1], artist, 32);
 
     // 64 KB SPC700 RAM
@@ -569,7 +573,12 @@ fn extract_rom_texts(rom: &SnesRom, text_dir: &Path) -> std::io::Result<usize> {
                 // Write dialogues.txt
                 let mut txt_file = String::from("; =====================================================\n; THE LEGEND OF ZELDA: A LINK TO THE PAST - DIALOGUES\n; Décodés depuis la Banque 1C ($0E0000)\n; =====================================================\n\n");
                 for (i, (off, text)) in dialogues.iter().enumerate() {
-                    txt_file.push_str(&format!("[Dialogue #{:03} @ 0x{:06X}]\n{}\n\n", i + 1, off, text));
+                    txt_file.push_str(&format!(
+                        "[Dialogue #{:03} @ 0x{:06X}]\n{}\n\n",
+                        i + 1,
+                        off,
+                        text
+                    ));
                 }
                 fs::write(text_dir.join("dialogues_zelda.txt"), txt_file)?;
 
@@ -579,7 +588,9 @@ fn extract_rom_texts(rom: &SnesRom, text_dir: &Path) -> std::io::Result<usize> {
                     let clean = text.replace('\n', "\\n").replace('"', "\\\"");
                     json_file.push_str(&format!(
                         "  {{ \"id\": {}, \"offset\": \"0x{:06X}\", \"text\": \"{}\" }}{}",
-                        i + 1, off, clean,
+                        i + 1,
+                        off,
+                        clean,
                         if i + 1 < dialogues.len() { "," } else { "" }
                     ));
                     json_file.push('\n');
@@ -588,7 +599,8 @@ fn extract_rom_texts(rom: &SnesRom, text_dir: &Path) -> std::io::Result<usize> {
                 fs::write(text_dir.join("dialogues_zelda.json"), json_file)?;
 
                 // Write Thingy .tbl character table
-                let mut tbl_file = String::from("; Table Thingy / SNES ALTTP French Dialogue Table\n");
+                let mut tbl_file =
+                    String::from("; Table Thingy / SNES ALTTP French Dialogue Table\n");
                 for i in 0..26u8 {
                     tbl_file.push_str(&format!("{:02X}={}\n", i, (b'a' + i) as char));
                     tbl_file.push_str(&format!("{:02X}={}\n", i + 0x1A, (b'A' + i) as char));
@@ -623,14 +635,16 @@ fn extract_rom_texts(rom: &SnesRom, text_dir: &Path) -> std::io::Result<usize> {
                     }
                 }
 
-                let mut txt = String::from("; SUPER MARIO WORLD - OVERWORLD LEVEL & AREA NAMES\n\n");
+                let mut txt =
+                    String::from("; SUPER MARIO WORLD - OVERWORLD LEVEL & AREA NAMES\n\n");
                 for (i, name) in names.iter().enumerate() {
                     txt.push_str(&format!("{:02}: {}\n", i + 1, name));
                 }
                 fs::write(text_dir.join("smw_overworld_names.txt"), txt)?;
 
                 // Write Thingy SMW table
-                let mut tbl = String::from("; Table Thingy / Super Mario World Overworld Text Table\n");
+                let mut tbl =
+                    String::from("; Table Thingy / Super Mario World Overworld Text Table\n");
                 for i in 0..26u8 {
                     tbl.push_str(&format!("{:02X}={}\n", i, (b'A' + i) as char));
                 }

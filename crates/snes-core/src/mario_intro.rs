@@ -51,7 +51,11 @@ fn fill_diag(mask: &mut [[bool; 128]; 48], x0: f32, y0: f32, x1: f32, y1: f32, h
     let yb = y0.max(y1).ceil().min(47.0) as i32;
     for y in ya..=yb {
         let t = ((y as f32) - y0) / (y1 - y0);
-        let t_clamped = if (y1 - y0).abs() < 0.001 { 0.5 } else { t.clamp(0.0, 1.0) };
+        let t_clamped = if (y1 - y0).abs() < 0.001 {
+            0.5
+        } else {
+            t.clamp(0.0, 1.0)
+        };
         let cx = x0 + (x1 - x0) * t_clamped;
         let xa = (cx - half_w).floor().max(0.0) as i32;
         let xb = (cx + half_w).ceil().min(127.0) as i32;
@@ -67,11 +71,11 @@ fn render_giant_peach_128x48() -> [[u8; 128]; 48] {
     let mut m = [[false; 128]; 48];
 
     // --- LETTER 'P' (x = 1..24, y = 4..44) ---
-    fill_rect(&mut m, 4, 5, 11, 43);   // Main vertical pillar (7px thick, 100% solid & complete!)
-    fill_rect(&mut m, 1, 4, 18, 9);    // Top bar & dramatic left serif overhang
-    fill_rect(&mut m, 1, 39, 15, 44);  // Flared bottom serif foot
-    fill_rect(&mut m, 3, 37, 13, 40);  // Serif bracket flare
-    fill_rect(&mut m, 15, 5, 21, 10);  // Upper curve
+    fill_rect(&mut m, 4, 5, 11, 43); // Main vertical pillar (7px thick, 100% solid & complete!)
+    fill_rect(&mut m, 1, 4, 18, 9); // Top bar & dramatic left serif overhang
+    fill_rect(&mut m, 1, 39, 15, 44); // Flared bottom serif foot
+    fill_rect(&mut m, 3, 37, 13, 40); // Serif bracket flare
+    fill_rect(&mut m, 15, 5, 21, 10); // Upper curve
     fill_rect(&mut m, 17, 7, 23, 12);
     fill_rect(&mut m, 18, 10, 24, 24); // Thick outer right curve of 'P'
     fill_rect(&mut m, 16, 22, 23, 27);
@@ -201,84 +205,84 @@ const SUBTITLE_ALPHABET: [char; 16] = [
 fn letter_bitmap_8x16(ch: char) -> [&'static str; 16] {
     match ch {
         'A' => [
-            "........", "........", "...##...", "..####..", "..#..#..", ".##..##.",
-            ".##..##.", ".######.", ".######.", ".##..##.", ".##..##.", ".##..##.",
-            "###..###", "........", "........", "........",
+            "........", "........", "...##...", "..####..", "..#..#..", ".##..##.", ".##..##.",
+            ".######.", ".######.", ".##..##.", ".##..##.", ".##..##.", "###..###", "........",
+            "........", "........",
         ],
         'D' => [
-            "........", "........", "#####...", ".##.##..", ".##..##.", ".##..##.",
-            ".##..##.", ".##..##.", ".##..##.", ".##..##.", ".##..##.", ".##.##..",
-            "#####...", "........", "........", "........",
+            "........", "........", "#####...", ".##.##..", ".##..##.", ".##..##.", ".##..##.",
+            ".##..##.", ".##..##.", ".##..##.", ".##..##.", ".##.##..", "#####...", "........",
+            "........", "........",
         ],
         'E' => [
-            "........", "........", "#######.", ".##...#.", ".##.....", ".##.....",
-            ".#####..", ".#####..", ".##.....", ".##.....", ".##.....", ".##...#.",
-            "#######.", "........", "........", "........",
+            "........", "........", "#######.", ".##...#.", ".##.....", ".##.....", ".#####..",
+            ".#####..", ".##.....", ".##.....", ".##.....", ".##...#.", "#######.", "........",
+            "........", "........",
         ],
         'F' => [
-            "........", "........", "#######.", ".##...#.", ".##.....", ".##.....",
-            ".#####..", ".#####..", ".##.....", ".##.....", ".##.....", ".##.....",
-            "####....", "........", "........", "........",
+            "........", "........", "#######.", ".##...#.", ".##.....", ".##.....", ".#####..",
+            ".#####..", ".##.....", ".##.....", ".##.....", ".##.....", "####....", "........",
+            "........", "........",
         ],
         'G' => [
-            "........", "........", "..#####.", ".##...#.", ".##.....", ".##.....",
-            ".##.....", ".##.###.", ".##..##.", ".##..##.", ".##..##.", ".##..##.",
-            "..#####.", "........", "........", "........",
+            "........", "........", "..#####.", ".##...#.", ".##.....", ".##.....", ".##.....",
+            ".##.###.", ".##..##.", ".##..##.", ".##..##.", ".##..##.", "..#####.", "........",
+            "........", "........",
         ],
         'H' => [
-            "........", "........", "###.###.", ".##..##.", ".##..##.", ".##..##.",
-            ".######.", ".######.", ".##..##.", ".##..##.", ".##..##.", ".##..##.",
-            "###.###.", "........", "........", "........",
+            "........", "........", "###.###.", ".##..##.", ".##..##.", ".##..##.", ".######.",
+            ".######.", ".##..##.", ".##..##.", ".##..##.", ".##..##.", "###.###.", "........",
+            "........", "........",
         ],
         'I' => [
-            "........", "........", ".#####..", "...##...", "...##...", "...##...",
-            "...##...", "...##...", "...##...", "...##...", "...##...", "...##...",
-            ".#####..", "........", "........", "........",
+            "........", "........", ".#####..", "...##...", "...##...", "...##...", "...##...",
+            "...##...", "...##...", "...##...", "...##...", "...##...", ".#####..", "........",
+            "........", "........",
         ],
         'K' => [
-            "........", "........", "###.###.", ".##..##.", ".##.##..", ".####...",
-            ".###....", ".###....", ".####...", ".##.##..", ".##..##.", ".##..##.",
-            "###.###.", "........", "........", "........",
+            "........", "........", "###.###.", ".##..##.", ".##.##..", ".####...", ".###....",
+            ".###....", ".####...", ".##.##..", ".##..##.", ".##..##.", "###.###.", "........",
+            "........", "........",
         ],
         'L' => [
-            "........", "........", "####....", ".##.....", ".##.....", ".##.....",
-            ".##.....", ".##.....", ".##.....", ".##.....", ".##.....", ".##...#.",
-            "#######.", "........", "........", "........",
+            "........", "........", "####....", ".##.....", ".##.....", ".##.....", ".##.....",
+            ".##.....", ".##.....", ".##.....", ".##.....", ".##...#.", "#######.", "........",
+            "........", "........",
         ],
         'M' => [
-            "........", "........", "##...##.", "###.###.", "#######.", "##.#.##.",
-            "##.#.##.", "##...##.", "##...##.", "##...##.", "##...##.", "##...##.",
-            "##...##.", "........", "........", "........",
+            "........", "........", "##...##.", "###.###.", "#######.", "##.#.##.", "##.#.##.",
+            "##...##.", "##...##.", "##...##.", "##...##.", "##...##.", "##...##.", "........",
+            "........", "........",
         ],
         'N' => [
-            "........", "........", "###..##.", ".###.##.", ".###.##.", ".######.",
-            ".##.###.", ".##.###.", ".##..##.", ".##..##.", ".##..##.", ".##..##.",
-            "###..##.", "........", "........", "........",
+            "........", "........", "###..##.", ".###.##.", ".###.##.", ".######.", ".##.###.",
+            ".##.###.", ".##..##.", ".##..##.", ".##..##.", ".##..##.", "###..##.", "........",
+            "........", "........",
         ],
         'O' => [
-            "........", "........", "..####..", ".##..##.", ".##..##.", ".##..##.",
-            ".##..##.", ".##..##.", ".##..##.", ".##..##.", ".##..##.", ".##..##.",
-            "..####..", "........", "........", "........",
+            "........", "........", "..####..", ".##..##.", ".##..##.", ".##..##.", ".##..##.",
+            ".##..##.", ".##..##.", ".##..##.", ".##..##.", ".##..##.", "..####..", "........",
+            "........", "........",
         ],
         'R' => [
-            "........", "........", "######..", ".##..##.", ".##..##.", ".##..##.",
-            ".#####..", ".####...", ".##.##..", ".##..##.", ".##..##.", ".##..##.",
-            "###..##.", "........", "........", "........",
+            "........", "........", "######..", ".##..##.", ".##..##.", ".##..##.", ".#####..",
+            ".####...", ".##.##..", ".##..##.", ".##..##.", ".##..##.", "###..##.", "........",
+            "........", "........",
         ],
         'S' => [
-            "........", "........", "..#####.", ".##...#.", ".##.....", ".###....",
-            "..####..", "....###.", ".....##.", ".....##.", ".#...##.", ".##..##.",
-            "..####..", "........", "........", "........",
+            "........", "........", "..#####.", ".##...#.", ".##.....", ".###....", "..####..",
+            "....###.", ".....##.", ".....##.", ".#...##.", ".##..##.", "..####..", "........",
+            "........", "........",
         ],
         'T' => [
-            "........", "........", "#######.", "#..##.#.", "...##...", "...##...",
-            "...##...", "...##...", "...##...", "...##...", "...##...", "...##...",
-            "..####..", "........", "........", "........",
+            "........", "........", "#######.", "#..##.#.", "...##...", "...##...", "...##...",
+            "...##...", "...##...", "...##...", "...##...", "...##...", "..####..", "........",
+            "........", "........",
         ],
         'U' => [
-            "........", "........", "###.###.", ".##..##.", ".##..##.", ".##..##.",
-            ".##..##.", ".##..##.", ".##..##.", ".##..##.", ".##..##.", ".##..##.",
-            "..####..", "........", "........", "........",
+            "........", "........", "###.###.", ".##..##.", ".##..##.", ".##..##.", ".##..##.",
+            ".##..##.", ".##..##.", ".##..##.", ".##..##.", ".##..##.", "..####..", "........",
+            "........", "........",
         ],
         _ => ["........"; 16],
     }
@@ -308,7 +312,10 @@ fn build_shaded_letter_8x16(ch: char) -> ([[u8; 8]; 8], [[u8; 8]; 8]) {
                     for dx in -1i32..=1 {
                         let nx = x as i32 + dx;
                         let ny = y as i32 + dy;
-                        if (0..8).contains(&nx) && (0..16).contains(&ny) && on[ny as usize][nx as usize] {
+                        if (0..8).contains(&nx)
+                            && (0..16).contains(&ny)
+                            && on[ny as usize][nx as usize]
+                        {
                             adj = true;
                         }
                     }
@@ -324,10 +331,8 @@ fn build_shaded_letter_8x16(ch: char) -> ([[u8; 8]; 8], [[u8; 8]; 8]) {
     }
     let mut top = [[0u8; 8]; 8];
     let mut bot = [[0u8; 8]; 8];
-    for y in 0..8 {
-        top[y] = px[y];
-        bot[y] = px[y + 8];
-    }
+    top.copy_from_slice(&px[..8]);
+    bot.copy_from_slice(&px[8..16]);
     (top, bot)
 }
 
@@ -340,113 +345,47 @@ fn build_copyleft_glyph_8x8(ch: char) -> [[u8; 8]; 8] {
     let rows: [&str; 8] = match ch {
         // Reversed-C inside circle (Copyleft symbol 🄯) matching Nintendo's © size!
         '@' => [
-            "..111...",
-            ".13331..",
-            "1311131.",
-            "1.331.1.",
-            "1.111.1.",
-            "3133313.",
-            ".31113..",
+            "..111...", ".13331..", "1311131.", "1.331.1.", "1.111.1.", "3133313.", ".31113..",
             "..333...",
         ],
         '2' => [
-            "........",
-            ".11111..",
-            "1133311.",
-            "33..113.",
-            "..1113..",
-            ".1133...",
-            "1111111.",
+            "........", ".11111..", "1133311.", "33..113.", "..1113..", ".1133...", "1111111.",
             "3333333.",
         ],
         '0' => [
-            "........",
-            ".11111..",
-            "1133311.",
-            "11..111.",
-            "11.1.11.",
-            "111..11.",
-            ".111113.",
+            "........", ".11111..", "1133311.", "11..111.", "11.1.11.", "111..11.", ".111113.",
             "..3333..",
         ],
         '6' => [
-            "........",
-            "..1111..",
-            ".113333.",
-            "111111..",
-            "1133311.",
-            "11...11.",
-            ".111113.",
+            "........", "..1111..", ".113333.", "111111..", "1133311.", "11...11.", ".111113.",
             "..3333..",
         ],
         'p' => [
-            "........",
-            "........",
-            "111111..",
-            "1133311.",
-            "11...11.",
-            "1111113.",
-            "113333..",
+            "........", "........", "111111..", "1133311.", "11...11.", "1111113.", "113333..",
             "33......",
         ],
         'o' => [
-            "........",
-            "........",
-            ".11111..",
-            "1133311.",
-            "11...11.",
-            "11...11.",
-            ".111113.",
+            "........", "........", ".11111..", "1133311.", "11...11.", "11...11.", ".111113.",
             "..3333..",
         ],
         'm' => [
-            "........",
-            "........",
-            "111.111.",
-            "1111111.",
-            "11.1.11.",
-            "11.1.11.",
-            "11.3.11.",
+            "........", "........", "111.111.", "1111111.", "11.1.11.", "11.1.11.", "11.3.11.",
             "33...33.",
         ],
         'e' => [
-            "........",
-            "........",
-            ".11111..",
-            "1133311.",
-            "1111111.",
-            "1133333.",
-            ".111111.",
+            "........", "........", ".11111..", "1133311.", "1111111.", "1133333.", ".111111.",
             "..33333.",
         ],
         'r' => [
-            "........",
-            "........",
-            "11.111..",
-            "1113311.",
-            "113..33.",
-            "11......",
-            "11......",
+            "........", "........", "11.111..", "1113311.", "113..33.", "11......", "11......",
             "33......",
         ],
         'c' => [
-            "........",
-            "........",
-            ".11111..",
-            "1133311.",
-            "113..33.",
-            "11......",
-            ".111111.",
+            "........", "........", ".11111..", "1133311.", "113..33.", "11......", ".111111.",
             "..33333.",
         ],
         'i' => [
-            "........",
-            "...11...",
-            "...33...",
-            "..111...",
-            "...11...",
-            "...11...",
-            "..1111..",
+            "........", "...11...", "...33...", "..111...", "...11...", "...11...", "..1111..",
             "..3333..",
         ],
         _ => ["........"; 8],
@@ -588,22 +527,74 @@ fn shade_3d_material(mat: u8, is_front: bool, nx: f32, ny: f32, nz: f32) -> u8 {
     if !is_front {
         // 3D extruded bevel/rim side & back walls!
         return match mat {
-            b'R' => 6,  // Deep Crimson 3D side
-            b'W' => 4,  // Shaded Cream 3D side
-            b'S' => 4,  // Warm Tan 3D stem side
-            b'O' => 6,  // Deep Orange-Red 3D side
-            b'Y' => if dot > 0.15 { 9 } else { 13 }, // Rich Amber / Bronze 3D star thickness!
+            b'R' => 6, // Deep Crimson 3D side
+            b'W' => 4, // Shaded Cream 3D side
+            b'S' => 4, // Warm Tan 3D stem side
+            b'O' => 6, // Deep Orange-Red 3D side
+            b'Y' => {
+                if dot > 0.15 {
+                    9
+                } else {
+                    13
+                }
+            } // Rich Amber / Bronze 3D star thickness!
             b'G' => 11, // Deep Emerald 3D leaf side
             _ => 1,
         };
     }
     match mat {
-        b'R' => if dot > 0.68 { 12 } else if dot > 0.20 { 5 } else { 6 },
-        b'W' => if dot > 0.25 { 2 } else { 3 },
-        b'S' => if dot > 0.62 { 2 } else if dot > 0.15 { 3 } else { 4 },
-        b'O' => if dot > 0.62 { 8 } else if dot > 0.15 { 7 } else { 6 },
-        b'Y' => if dot > 0.66 { 14 } else if dot > 0.15 { 8 } else { 9 },
-        b'G' => if dot > 0.66 { 14 } else if dot > 0.15 { 10 } else { 11 },
+        b'R' => {
+            if dot > 0.68 {
+                12
+            } else if dot > 0.20 {
+                5
+            } else {
+                6
+            }
+        }
+        b'W' => {
+            if dot > 0.25 {
+                2
+            } else {
+                3
+            }
+        }
+        b'S' => {
+            if dot > 0.62 {
+                2
+            } else if dot > 0.15 {
+                3
+            } else {
+                4
+            }
+        }
+        b'O' => {
+            if dot > 0.62 {
+                8
+            } else if dot > 0.15 {
+                7
+            } else {
+                6
+            }
+        }
+        b'Y' => {
+            if dot > 0.66 {
+                14
+            } else if dot > 0.15 {
+                8
+            } else {
+                9
+            }
+        }
+        b'G' => {
+            if dot > 0.66 {
+                14
+            } else if dot > 0.15 {
+                10
+            } else {
+                11
+            }
+        }
         _ => 1,
     }
 }
@@ -638,10 +629,18 @@ fn render_3d_icon_frame(icon: &[&str; 24], yaw: f32, pitch: f32, scale: f32) -> 
                 let rt_empty = x == 23 || row[x + 1] == b'.';
                 let mut nx = 0.0f32;
                 let mut ny = 0.0f32;
-                if lt_empty { nx -= 0.55; }
-                if rt_empty { nx += 0.55; }
-                if up_empty { ny -= 0.55; }
-                if dn_empty { ny += 0.55; }
+                if lt_empty {
+                    nx -= 0.55;
+                }
+                if rt_empty {
+                    nx += 0.55;
+                }
+                if up_empty {
+                    ny -= 0.55;
+                }
+                if dn_empty {
+                    ny += 0.55;
+                }
                 // Slight dome curvature
                 nx += (x as f32 - half) / 22.0;
                 ny += (y as f32 - half) / 22.0;
@@ -650,7 +649,11 @@ fn render_3d_icon_frame(icon: &[&str; 24], yaw: f32, pitch: f32, scale: f32) -> 
                 // Place centered at (4..28, 4..28) inside 32x32!
                 color_buf[y + 4][x + 4] = col;
                 // Add subtle 1px bottom-right 3D extruded bevel rim!
-                if (dn_empty || rt_empty) && y + 5 < 31 && x + 5 < 31 && color_buf[y + 5][x + 5] == 0 {
+                if (dn_empty || rt_empty)
+                    && y + 5 < 31
+                    && x + 5 < 31
+                    && color_buf[y + 5][x + 5] == 0
+                {
                     color_buf[y + 5][x + 5] = shade_3d_material(mat, false, 0.4, 0.4, 0.2);
                 }
             }
@@ -1016,7 +1019,8 @@ fn rewrite_fr_dialog_in_place(raw_msg: &[u8]) -> Option<Vec<u8>> {
             continue;
         }
         // Single-byte control / special symbol codes
-        if matches!(b, 0x43..=0x50 | 0x52..=0x58 | 0x5A..=0x5F | 0x61..=0x65 | 0x73..=0x76 | 0x7B..=0x83 | 0x85..=0x90 | 0x99 | 0xE8) {
+        if matches!(b, 0x43..=0x50 | 0x52..=0x58 | 0x5A..=0x5F | 0x61..=0x65 | 0x73..=0x76 | 0x7B..=0x83 | 0x85..=0x90 | 0x99 | 0xE8)
+        {
             push_raw(&mut parts, &[b]);
             i += 1;
             continue;
@@ -1098,7 +1102,10 @@ fn rewrite_fr_dialog_in_place(raw_msg: &[u8]) -> Option<Vec<u8>> {
                 .replace("la Triforce", "les Reliques")
                 .replace("La Triforce", "Les Reliques")
                 .replace("Triforce", "Reliques");
-            if next.ends_with("les jeunes") || next.ends_with("des jeunes") || next.ends_with("Les jeunes") {
+            if next.ends_with("les jeunes")
+                || next.ends_with("des jeunes")
+                || next.ends_with("Les jeunes")
+            {
                 if let Some(Part::Txt(next_line)) = p.get_mut(idx + 2) {
                     if next_line.starts_with("filles") {
                         *next_line = next_line.replacen("filles", "Yoshi", 1);
@@ -1176,7 +1183,10 @@ fn rewrite_fr_dialog_in_place(raw_msg: &[u8]) -> Option<Vec<u8>> {
         if out.len() + 1 > target_len {
             for p in &mut ps {
                 if let Part::Txt(s) = p {
-                    *s = s.replace(" !", "!").replace(" ?", "?").replace("les 7 jeunes Yoshi", "les 7 Yoshi");
+                    *s = s
+                        .replace(" !", "!")
+                        .replace(" ?", "?")
+                        .replace("les 7 jeunes Yoshi", "les 7 Yoshi");
                 }
             }
             out = encode_parts(&ps);
@@ -1213,7 +1223,7 @@ fn rewrite_fr_dialog_in_place(raw_msg: &[u8]) -> Option<Vec<u8>> {
             }
             out = encode_parts(&ps);
         }
-        if out.len() + 1 <= target_len {
+        if out.len() < target_len {
             Some(out)
         } else {
             None
@@ -1477,7 +1487,8 @@ pub fn inject_legend_of_peach_intro(
         0x100000,
         0x100000,
         frames_3d,
-        "Banques $20-$21 (64 Ko) : 32 Frames 3D Champignon + Fleur de Feu + Étoile SMW (4bpp OBJ)".into(),
+        "Banques $20-$21 (64 Ko) : 32 Frames 3D Champignon + Fleur de Feu + Étoile SMW (4bpp OBJ)"
+            .into(),
         SwapKind::CodePatch { byte_count: 65536 },
     )?;
     ops += 1;
@@ -1491,26 +1502,26 @@ pub fn inject_legend_of_peach_intro(
 
     // $22:8000 — NMI 3D Frame DMA (called via JSL $22:8000 from $00:92F7 with 8-bit A/X/Y, DB=$00)
     let nmi_dma_code: [u8; 54] = [
-        0xAD, 0x0C, 0x1F,       // LDA $1F0C
-        0xF0, 0x2F,             // BEQ done (+47 bytes)
-        0xA9, 0x80,             // LDA #$80
-        0x8D, 0x15, 0x21,       // STA $2115 (VMAIN)
-        0xC2, 0x20,             // REP #$20 (16-bit A)
-        0xA9, 0x00, 0x58,       // LDA #$5800 (VRAM OBJ $180..$1BF)
-        0x8D, 0x16, 0x21,       // STA $2116 (VMADD)
-        0xA9, 0x01, 0x18,       // LDA #$1801 (DMA0 -> $2118)
-        0x8D, 0x00, 0x43,       // STA $4300
-        0xAD, 0x0E, 0x1F,       // LDA $1F0E (dynamic 16-bit ROM frame addr)
-        0x8D, 0x02, 0x43,       // STA $4302
-        0xAE, 0x10, 0x1F,       // LDX $1F10 (dynamic 8-bit ROM bank $20/$21)
-        0x8E, 0x04, 0x43,       // STX $4304
-        0xA9, 0x00, 0x08,       // LDA #$0800 (2048 bytes = 64 4bpp tiles)
-        0x8D, 0x05, 0x43,       // STA $4305
-        0xE2, 0x20,             // SEP #$20 (8-bit A)
-        0xA9, 0x01,             // LDA #$01
-        0x8D, 0x0B, 0x42,       // STA $420B (MDMAEN ch 0)
-        0x9C, 0x0C, 0x1F,       // STZ $1F0C
-        0x6B,                   // done: RTL
+        0xAD, 0x0C, 0x1F, // LDA $1F0C
+        0xF0, 0x2F, // BEQ done (+47 bytes)
+        0xA9, 0x80, // LDA #$80
+        0x8D, 0x15, 0x21, // STA $2115 (VMAIN)
+        0xC2, 0x20, // REP #$20 (16-bit A)
+        0xA9, 0x00, 0x58, // LDA #$5800 (VRAM OBJ $180..$1BF)
+        0x8D, 0x16, 0x21, // STA $2116 (VMADD)
+        0xA9, 0x01, 0x18, // LDA #$1801 (DMA0 -> $2118)
+        0x8D, 0x00, 0x43, // STA $4300
+        0xAD, 0x0E, 0x1F, // LDA $1F0E (dynamic 16-bit ROM frame addr)
+        0x8D, 0x02, 0x43, // STA $4302
+        0xAE, 0x10, 0x1F, // LDX $1F10 (dynamic 8-bit ROM bank $20/$21)
+        0x8E, 0x04, 0x43, // STX $4304
+        0xA9, 0x00, 0x08, // LDA #$0800 (2048 bytes = 64 4bpp tiles)
+        0x8D, 0x05, 0x43, // STA $4305
+        0xE2, 0x20, // SEP #$20 (8-bit A)
+        0xA9, 0x01, // LDA #$01
+        0x8D, 0x0B, 0x42, // STA $420B (MDMAEN ch 0)
+        0x9C, 0x0C, 0x1F, // STZ $1F0C
+        0x6B, // done: RTL
         0xEA,
     ];
     bank22[0x00..nmi_dma_code.len()].copy_from_slice(&nmi_dma_code);
@@ -1520,22 +1531,22 @@ pub fn inject_legend_of_peach_intro(
     // Keeping $09:F7DE intact preserves ALTTP's real IRQ coroutine thread ($00:822D/$09:F81D), which sits
     // safely idle while $1F00==0, while our NMI DMA uploads Frame 0 ($20:8000) immediately on next VBlank!
     let pal_load_code: &[u8] = &[
-        0xC2, 0x30,             // REP #$30 (16-bit A/X/Y)
-        0xA2, 0x00, 0x00,       // LDX #$0000
+        0xC2, 0x30, // REP #$30 (16-bit A/X/Y)
+        0xA2, 0x00, 0x00, // LDX #$0000
         // loop ($22:8045):
         0xBF, 0x00, 0x81, 0x22, // LDA $22:8100,X
         0x9F, 0xC0, 0xC6, 0x7E, // STA $7E:C6C0,X (OBJ Palette 6, all 16 colors!)
-        0xE8, 0xE8,             // INX : INX
-        0xE0, 0x20, 0x00,       // CPX #$0020 (32 bytes)
-        0xD0, 0xF1,             // BNE loop (-15 bytes)
-        0xE2, 0x30,             // SEP #$30 (8-bit A/X/Y)
-        0x9C, 0x0E, 0x1F,       // STZ $1F0E (Frame 0 addr lo = $00)
+        0xE8, 0xE8, // INX : INX
+        0xE0, 0x20, 0x00, // CPX #$0020 (32 bytes)
+        0xD0, 0xF1, // BNE loop (-15 bytes)
+        0xE2, 0x30, // SEP #$30 (8-bit A/X/Y)
+        0x9C, 0x0E, 0x1F, // STZ $1F0E (Frame 0 addr lo = $00)
         0xA9, 0x80, 0x8D, 0x0F, 0x1F, // LDA #$80 : STA $1F0F (addr hi = $80 -> $8000)
         0xA9, 0x20, 0x8D, 0x10, 0x1F, // LDA #$20 : STA $1F10 (bank = $20)
         0xA9, 0x01, 0x8D, 0x0C, 0x1F, // LDA #$01 : STA $1F0C (trigger immediate NMI DMA!)
-        0x9C, 0x00, 0x1F,       // STZ $1F00 (keep polyhedral thread peacefully idle in .wait)
-        0xE6, 0x15,             // INC $15 (trigger NMI CGRAM upload!)
-        0x6B,                   // RTL
+        0x9C, 0x00, 0x1F, // STZ $1F00 (keep polyhedral thread peacefully idle in .wait)
+        0xE6, 0x15, // INC $15 (trigger NMI CGRAM upload!)
+        0x6B, // RTL
     ];
     bank22[0x40..0x40 + pal_load_code.len()].copy_from_slice(pal_load_code);
 
@@ -1543,32 +1554,32 @@ pub fn inject_legend_of_peach_intro(
     // Computes f = 0 if locked ($1F05==0 && $1F04==0 && $1F02==0), else (($1F05 + $1F02) >> 3) & 0x1F!
     // Maps f (0..31) -> bank = 0x20 + (f >> 4), addr_hi = 0x80 + ((f & 0x0F) << 3), addr_lo = 0x00!
     let step_3d_code: &[u8] = &[
-        0xAD, 0x05, 0x1F,       // LDA $1F05
-        0x0D, 0x04, 0x1F,       // ORA $1F04
-        0x0D, 0x02, 0x1F,       // ORA $1F02
-        0xF0, 0x0C,             // BEQ locked (+12 bytes)
-        0xAD, 0x05, 0x1F,       // LDA $1F05
-        0x18,                   // CLC
-        0x6D, 0x02, 0x1F,       // ADC $1F02
-        0x4A, 0x4A, 0x4A,       // LSR : LSR : LSR (>> 3 -> 0..31)
-        0x29, 0x1F,             // AND #$1F
+        0xAD, 0x05, 0x1F, // LDA $1F05
+        0x0D, 0x04, 0x1F, // ORA $1F04
+        0x0D, 0x02, 0x1F, // ORA $1F02
+        0xF0, 0x0C, // BEQ locked (+12 bytes)
+        0xAD, 0x05, 0x1F, // LDA $1F05
+        0x18, // CLC
+        0x6D, 0x02, 0x1F, // ADC $1F02
+        0x4A, 0x4A, 0x4A, // LSR : LSR : LSR (>> 3 -> 0..31)
+        0x29, 0x1F, // AND #$1F
         // locked / compute addr:
-        0x48,                   // PHA (save f)
-        0x29, 0x0F,             // AND #$0F
-        0x0A, 0x0A, 0x0A,       // ASL : ASL : ASL (* 8 -> $00, $08, ..., $78)
-        0x09, 0x80,             // ORA #$80 ($80..$F8 -> $8000..$F800)
-        0x8D, 0x0F, 0x1F,       // STA $1F0F (addr_hi)
-        0x9C, 0x0E, 0x1F,       // STZ $1F0E (addr_lo = $00)
-        0x68,                   // PLA (restore f)
+        0x48, // PHA (save f)
+        0x29, 0x0F, // AND #$0F
+        0x0A, 0x0A, 0x0A, // ASL : ASL : ASL (* 8 -> $00, $08, ..., $78)
+        0x09, 0x80, // ORA #$80 ($80..$F8 -> $8000..$F800)
+        0x8D, 0x0F, 0x1F, // STA $1F0F (addr_hi)
+        0x9C, 0x0E, 0x1F, // STZ $1F0E (addr_lo = $00)
+        0x68, // PLA (restore f)
         0x4A, 0x4A, 0x4A, 0x4A, // LSR x4 (0 or 1)
-        0x18, 0x69, 0x20,       // CLC : ADC #$20 (bank $20 or $21)
-        0x8D, 0x10, 0x1F,       // STA $1F10 (bank)
-        0xA9, 0x01,             // LDA #$01
-        0x8D, 0x0C, 0x1F,       // STA $1F0C (trigger NMI DMA!)
-        0x9C, 0x00, 0x1F,       // STZ $1F00 (keep polyhedron idle)
-        0x6B,                   // RTL
+        0x18, 0x69, 0x20, // CLC : ADC #$20 (bank $20 or $21)
+        0x8D, 0x10, 0x1F, // STA $1F10 (bank)
+        0xA9, 0x01, // LDA #$01
+        0x8D, 0x0C, 0x1F, // STA $1F0C (trigger NMI DMA!)
+        0x9C, 0x00, 0x1F, // STZ $1F00 (keep polyhedron idle)
+        0x6B, // RTL
     ];
-    bank22[0x80..0x80 + step_3d_code.len()].copy_from_slice(&step_3d_code);
+    bank22[0x80..0x80 + step_3d_code.len()].copy_from_slice(step_3d_code);
 
     // $22:8100 — 16-color BGR555 4bpp OBJ Palette 6
     for (i, &w) in TRIO_3D_PALETTE_BGR555.iter().enumerate() {
@@ -1582,7 +1593,8 @@ pub fn inject_legend_of_peach_intro(
         0x110000,
         0x110000,
         bank22,
-        "Banque $22 ($22:8000) : Routines 65816 DMA 3D, Palette 4bpp OBJ Pal 6 & Stepper 32 frames".into(),
+        "Banque $22 ($22:8000) : Routines 65816 DMA 3D, Palette 4bpp OBJ Pal 6 & Stepper 32 frames"
+            .into(),
         SwapKind::CodePatch { byte_count: 0x200 },
     )?;
     ops += 1;
@@ -1622,10 +1634,16 @@ pub fn inject_legend_of_peach_intro(
     // 5b. NOP out initial boot `STA $1F00` (`8D 00 1F`) at $0E:81D9 (PC 0x0701D9) & $1E:CDE6 (PC 0x0F4DE6)
     //     so the vanilla polyhedral thread NEVER runs its triangle rasterizer over Frame 0!
     for &(pc, label) in &[
-        (0x0701D9usize, "Désactivation Polyèdre Triforce Boot ($0E:81D9) -> NOP x3"),
-        (0x0F4DE6usize, "Désactivation Polyèdre Triforce Fin ($1E:CDE6) -> NOP x3"),
+        (
+            0x0701D9usize,
+            "Désactivation Polyèdre Triforce Boot ($0E:81D9) -> NOP x3",
+        ),
+        (
+            0x0F4DE6usize,
+            "Désactivation Polyèdre Triforce Fin ($1E:CDE6) -> NOP x3",
+        ),
     ] {
-        if &rom_zelda.data[pc..pc + 3] == &[0x8D, 0x00, 0x1F] {
+        if rom_zelda.data[pc..pc + 3] == [0x8D, 0x00, 0x1F] {
             session.swap_custom_bytes(
                 rom_zelda,
                 pc,
@@ -1644,12 +1662,24 @@ pub fn inject_legend_of_peach_intro(
     //    - $0E:89FF (PC 0x0709FF): Intro Story Golden Land 3D
     //    - $1E:CE33 (PC 0x0F4E33): Triforce Room / Ending 3D
     for &(pc, label) in &[
-        (0x07027Cusize, "Hook Animation 3D Écran-Titre ($0E:827C) -> JSL $22:8080"),
-        (0x070906usize, "Hook Animation 3D Légende Intro ($0E:8906) -> JSL $22:8080"),
-        (0x0709FFusize, "Hook Animation 3D Terre d'Or Intro ($0E:89FF) -> JSL $22:8080"),
-        (0x0F4E33usize, "Hook Animation 3D Salle Finale ($1E:CE33) -> JSL $22:8080"),
+        (
+            0x07027Cusize,
+            "Hook Animation 3D Écran-Titre ($0E:827C) -> JSL $22:8080",
+        ),
+        (
+            0x070906usize,
+            "Hook Animation 3D Légende Intro ($0E:8906) -> JSL $22:8080",
+        ),
+        (
+            0x0709FFusize,
+            "Hook Animation 3D Terre d'Or Intro ($0E:89FF) -> JSL $22:8080",
+        ),
+        (
+            0x0F4E33usize,
+            "Hook Animation 3D Salle Finale ($1E:CE33) -> JSL $22:8080",
+        ),
     ] {
-        if &rom_zelda.data[pc..pc + 5] == &[0xA9, 0x01, 0x8D, 0x00, 0x1F] {
+        if rom_zelda.data[pc..pc + 5] == [0xA9, 0x01, 0x8D, 0x00, 0x1F] {
             session.swap_custom_bytes(
                 rom_zelda,
                 pc,
@@ -1671,7 +1701,12 @@ pub fn inject_legend_of_peach_intro(
             | ((rom_zelda.data[z_hi + sid] as usize & 0x7F) << 8)
             | (rom_zelda.data[z_lo + sid] as usize);
         if let Some((mut raw_d8, orig_clen)) =
-            crate::disasm_dma::decompress_nintendo_lz2_with_endian(&rom_zelda.data, orig_pc, 4096, false)
+            crate::disasm_dma::decompress_nintendo_lz2_with_endian(
+                &rom_zelda.data,
+                orig_pc,
+                4096,
+                false,
+            )
         {
             if raw_d8.len() == 0x800 {
                 // 16x16 gleaming golden Mario Trio over sepia hills (2bpp: 0=dark outline, 1=sepia hill, 2=light sand/sky, 3=bright gold!)
@@ -1741,9 +1776,30 @@ pub fn inject_legend_of_peach_intro(
                     if dst_pc != orig_pc {
                         let bk = ((dst_pc >> 15) & 0x7F) as u8;
                         let addr = 0x8000 | (dst_pc & 0x7FFF);
-                        session.swap_custom_bytes(rom_zelda, z_bk + sid, z_bk + sid, vec![bk], "Ptr Bank Sheet 0xD8".into(), SwapKind::CodePatch { byte_count: 1 })?;
-                        session.swap_custom_bytes(rom_zelda, z_hi + sid, z_hi + sid, vec![(addr >> 8) as u8], "Ptr Hi Sheet 0xD8".into(), SwapKind::CodePatch { byte_count: 1 })?;
-                        session.swap_custom_bytes(rom_zelda, z_lo + sid, z_lo + sid, vec![(addr & 0xFF) as u8], "Ptr Lo Sheet 0xD8".into(), SwapKind::CodePatch { byte_count: 1 })?;
+                        session.swap_custom_bytes(
+                            rom_zelda,
+                            z_bk + sid,
+                            z_bk + sid,
+                            vec![bk],
+                            "Ptr Bank Sheet 0xD8".into(),
+                            SwapKind::CodePatch { byte_count: 1 },
+                        )?;
+                        session.swap_custom_bytes(
+                            rom_zelda,
+                            z_hi + sid,
+                            z_hi + sid,
+                            vec![(addr >> 8) as u8],
+                            "Ptr Hi Sheet 0xD8".into(),
+                            SwapKind::CodePatch { byte_count: 1 },
+                        )?;
+                        session.swap_custom_bytes(
+                            rom_zelda,
+                            z_lo + sid,
+                            z_lo + sid,
+                            vec![(addr & 0xFF) as u8],
+                            "Ptr Lo Sheet 0xD8".into(),
+                            SwapKind::CodePatch { byte_count: 1 },
+                        )?;
                     }
                     ops += 1;
                 }
@@ -1761,7 +1817,8 @@ pub fn inject_legend_of_peach_intro(
             0x073AB9,
             0x073AB9,
             vec![0x03, 0x31, 0x4F, 0x31],
-            "Tilemap Plaque Intro Sépia Haut (0x073AB9) : Champignon, Fleur & Étoile sans miroir".into(),
+            "Tilemap Plaque Intro Sépia Haut (0x073AB9) : Champignon, Fleur & Étoile sans miroir"
+                .into(),
             SwapKind::CodePatch { byte_count: 4 },
         )?;
         session.swap_custom_bytes(
@@ -1800,34 +1857,56 @@ pub fn inject_legend_of_peach_intro(
         };
 
         // Title Screen 3D Mario Relics (attr = 0x1D: Priority 1 behind BG1 Pri-1 'PEACH', OBJ Pal 6, NameTable 1!)
-        write_at(&mut oam_block, 0x8449, &make_32x32_oam(0x80, 0x82, 0xA0, 0xA2, 0x1D)); // Top: Super Mushroom!
-        write_at(&mut oam_block, 0x8469, &make_32x32_oam(0x84, 0x86, 0xA4, 0xA6, 0x1D)); // Bottom-Left: Fire Flower!
-        write_at(&mut oam_block, 0x8489, &make_32x32_oam(0x88, 0x8A, 0xA8, 0xAA, 0x1D)); // Bottom-Right: Super Star!
+        write_at(
+            &mut oam_block,
+            0x8449,
+            &make_32x32_oam(0x80, 0x82, 0xA0, 0xA2, 0x1D),
+        ); // Top: Super Mushroom!
+        write_at(
+            &mut oam_block,
+            0x8469,
+            &make_32x32_oam(0x84, 0x86, 0xA4, 0xA6, 0x1D),
+        ); // Bottom-Left: Fire Flower!
+        write_at(
+            &mut oam_block,
+            0x8489,
+            &make_32x32_oam(0x88, 0x8A, 0xA8, 0xAA, 0x1D),
+        ); // Bottom-Right: Super Star!
 
         // Intro Story Scroll 3D Mario Relics (attr = 0x2D: Priority 2 crisp over sepia hills, OBJ Pal 6, NameTable 1!)
-        write_at(&mut oam_block, 0x84A9, &make_32x32_oam(0x80, 0x82, 0xA0, 0xA2, 0x2D)); // Top: Super Mushroom!
-        write_at(&mut oam_block, 0x84C9, &make_32x32_oam(0x84, 0x86, 0xA4, 0xA6, 0x2D)); // Bottom-Left: Fire Flower!
-        write_at(&mut oam_block, 0x84E9, &make_32x32_oam(0x88, 0x8A, 0xA8, 0xAA, 0x2D)); // Bottom-Right: Super Star!
+        write_at(
+            &mut oam_block,
+            0x84A9,
+            &make_32x32_oam(0x80, 0x82, 0xA0, 0xA2, 0x2D),
+        ); // Top: Super Mushroom!
+        write_at(
+            &mut oam_block,
+            0x84C9,
+            &make_32x32_oam(0x84, 0x86, 0xA4, 0xA6, 0x2D),
+        ); // Bottom-Left: Fire Flower!
+        write_at(
+            &mut oam_block,
+            0x84E9,
+            &make_32x32_oam(0x88, 0x8A, 0xA8, 0xAA, 0x2D),
+        ); // Bottom-Right: Super Star!
 
         // Title Screen 3-way dispatcher at $0E:8549 (X=0 Flower->$8469, X=1 Mushroom->$8449, X=2 Star->$8489)
         let disp_title: [u8; 26] = [
-            0xA9, 0x04, 0x85, 0x06, 0x64, 0x07, // LDA #$04 : STA $06 : STZ $07 (4 OAM sprites)
-            0xBD, 0x60, 0x85,                   // LDA $8560,X
+            0xA9, 0x04, 0x85, 0x06, 0x64,
+            0x07, // LDA #$04 : STA $06 : STZ $07 (4 OAM sprites)
+            0xBD, 0x60, 0x85, // LDA $8560,X
             0x85, 0x08, 0xA9, 0x84, 0x85, 0x09, // STA $08 : LDA #$84 : STA $09
-            0x20, 0xAC, 0x87, 0x60,             // JSR $87AC : RTS
-            0xEA, 0xEA, 0xEA, 0xEA,             // Padding to $8560
-            0x69, 0x49, 0x89,                   // $8560: [X=0 Flower, X=1 Mushroom, X=2 Star]
+            0x20, 0xAC, 0x87, 0x60, // JSR $87AC : RTS
+            0xEA, 0xEA, 0xEA, 0xEA, // Padding to $8560
+            0x69, 0x49, 0x89, // $8560: [X=0 Flower, X=1 Mushroom, X=2 Star]
         ];
         write_at(&mut oam_block, 0x8549, &disp_title);
 
         // Intro Story Scroll 3-way dispatcher at $0E:8669 (X=0 Flower->$84C9, X=1 Mushroom->$84A9, X=2 Star->$84E9)
         let disp_intro: [u8; 26] = [
-            0xA9, 0x04, 0x85, 0x06, 0x64, 0x07,
-            0xBD, 0x80, 0x86,                   // LDA $8680,X
-            0x85, 0x08, 0xA9, 0x84, 0x85, 0x09,
-            0x20, 0xAC, 0x87, 0x60,
-            0xEA, 0xEA, 0xEA, 0xEA,
-            0xC9, 0xA9, 0xE9,                   // $8680: [X=0 Flower, X=1 Mushroom, X=2 Star]
+            0xA9, 0x04, 0x85, 0x06, 0x64, 0x07, 0xBD, 0x80, 0x86, // LDA $8680,X
+            0x85, 0x08, 0xA9, 0x84, 0x85, 0x09, 0x20, 0xAC, 0x87, 0x60, 0xEA, 0xEA, 0xEA, 0xEA,
+            0xC9, 0xA9, 0xE9, // $8680: [X=0 Flower, X=1 Mushroom, X=2 Star]
         ];
         write_at(&mut oam_block, 0x8669, &disp_intro);
 
@@ -1841,18 +1920,18 @@ pub fn inject_legend_of_peach_intro(
         let copyleft_line: &[(i16, u8, u8)] = &[
             (-12, 0x40, 0x4A), // 🄯 (native © H-flipped!)
             // (-4: space)
-            (  4, 0x43, 0x0A), // 2 (native Nintendo '2'!)
-            ( 12, 0x60, 0x0A), // 0
-            ( 20, 0x43, 0x0A), // 2
-            ( 28, 0x61, 0x0A), // 6
+            (4, 0x43, 0x0A),  // 2 (native Nintendo '2'!)
+            (12, 0x60, 0x0A), // 0
+            (20, 0x43, 0x0A), // 2
+            (28, 0x61, 0x0A), // 6
             // (36: space)
-            ( 44, 0x66, 0x0A), // p
-            ( 52, 0x67, 0x0A), // o
-            ( 60, 0x70, 0x0A), // m
-            ( 68, 0x71, 0x0A), // e
-            ( 76, 0x76, 0x0A), // r
-            ( 84, 0x77, 0x0A), // c
-            ( 92, 0x78, 0x0A), // i
+            (44, 0x66, 0x0A),  // p
+            (52, 0x67, 0x0A),  // o
+            (60, 0x70, 0x0A),  // m
+            (68, 0x71, 0x0A),  // e
+            (76, 0x76, 0x0A),  // r
+            (84, 0x77, 0x0A),  // c
+            (92, 0x78, 0x0A),  // i
             (100, 0x71, 0x0A), // e
             (108, 0x76, 0x0A), // r
         ];
@@ -1880,9 +1959,9 @@ pub fn inject_legend_of_peach_intro(
         if rom_zelda.data[0x07070A] == 0xA9 && rom_zelda.data[0x07070B] == 0x0D {
             let copy_call = vec![
                 0xA9, 0x1B, 0x85, 0x06, 0x64, 0x07, // 27 sprites!
-                0xA9, 0x69, 0x85, 0x08,             // $08 = $69
-                0xA9, 0x85, 0x85, 0x09,             // $09 = $85 -> $0E:8569!
-                0x20, 0xAC, 0x87, 0x60,             // JSR $87AC : RTS
+                0xA9, 0x69, 0x85, 0x08, // $08 = $69
+                0xA9, 0x85, 0x85, 0x09, // $09 = $85 -> $0E:8569!
+                0x20, 0xAC, 0x87, 0x60, // JSR $87AC : RTS
             ];
             session.swap_custom_bytes(
                 rom_zelda,
@@ -1988,10 +2067,30 @@ pub fn inject_legend_of_peach_intro(
     );
 
     for (pc, expected_len, msg_opt, label) in [
-        (0x0E5564usize, 381usize, intro0, "Intro Légende Écran 1 (0x0E5564) : Princesse Peach, 3 Reliques & Bowser"),
-        (0x0E56E1usize, 87usize, intro1, "Intro Légende Écran 2 (0x0E56E1) : Roi Bowser brise le sceau"),
-        (0x0E5738usize, 66usize, intro2, "Intro Légende Écran 3 (0x0E5738) : Capture des Sept jeunes Yoshi"),
-        (0x0E577Ausize, 53usize, intro3, "Intro Légende Écran 4 (0x0E577A) : Princesse Peach & Mario"),
+        (
+            0x0E5564usize,
+            381usize,
+            intro0,
+            "Intro Légende Écran 1 (0x0E5564) : Princesse Peach, 3 Reliques & Bowser",
+        ),
+        (
+            0x0E56E1usize,
+            87usize,
+            intro1,
+            "Intro Légende Écran 2 (0x0E56E1) : Roi Bowser brise le sceau",
+        ),
+        (
+            0x0E5738usize,
+            66usize,
+            intro2,
+            "Intro Légende Écran 3 (0x0E5738) : Capture des Sept jeunes Yoshi",
+        ),
+        (
+            0x0E577Ausize,
+            53usize,
+            intro3,
+            "Intro Légende Écran 4 (0x0E577A) : Princesse Peach & Mario",
+        ),
     ] {
         if let Some(bytes) = msg_opt {
             if bytes.len() == expected_len
@@ -2004,7 +2103,9 @@ pub fn inject_legend_of_peach_intro(
                     pc,
                     bytes,
                     label.into(),
-                    SwapKind::CodePatch { byte_count: expected_len },
+                    SwapKind::CodePatch {
+                        byte_count: expected_len,
+                    },
                 )?;
                 ops += 1;
             }
@@ -2101,7 +2202,11 @@ mod tests {
             let mush_nz = sl[0..4 * 32].iter().filter(|&&b| b != 0).count();
             let flw_nz = sl[4 * 32..8 * 32].iter().filter(|&&b| b != 0).count();
             let star_nz = sl[8 * 32..12 * 32].iter().filter(|&&b| b != 0).count();
-            assert!(mush_nz > 10 && flw_nz > 10 && star_nz > 10, "Frame {} must render all 3 3D icons", f);
+            assert!(
+                mush_nz > 10 && flw_nz > 10 && star_nz > 10,
+                "Frame {} must render all 3 3D icons",
+                f
+            );
         }
     }
 }

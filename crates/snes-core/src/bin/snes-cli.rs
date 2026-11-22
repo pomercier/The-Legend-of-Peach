@@ -17,6 +17,195 @@ fn main() {
     }
 
     match args[1].as_str() {
+        "--build-peach" => {
+            let mut zelda_path: Option<String> = None;
+            let mut smw_path: Option<String> = None;
+            let mut out_path = "legend_of_peach_mario_kingdom.sfc".to_string();
+            let mut allow_unverified = false;
+            let mut verify_only = false;
+
+            let mut i = 2usize;
+            while i < args.len() {
+                match args[i].as_str() {
+                    "--zelda" | "--base" => {
+                        if let Some(v) = args.get(i + 1) {
+                            zelda_path = Some(v.clone());
+                            i += 2;
+                            continue;
+                        }
+                    }
+                    "--smw" | "--donor" => {
+                        if let Some(v) = args.get(i + 1) {
+                            smw_path = Some(v.clone());
+                            i += 2;
+                            continue;
+                        }
+                    }
+                    "--out" | "-o" => {
+                        if let Some(v) = args.get(i + 1) {
+                            out_path = v.clone();
+                            i += 2;
+                            continue;
+                        }
+                    }
+                    "--allow-unverified-roms" => {
+                        allow_unverified = true;
+                    }
+                    "--verify-only" => {
+                        verify_only = true;
+                    }
+                    _ => {}
+                }
+                i += 1;
+            }
+
+            let Some(z_path) = zelda_path else {
+                eprintln!(
+                    "Usage: snes-cli --build-peach --zelda <zelda_fr.sfc> --smw <smw_eu.sfc> [--out <output.sfc>] [--verify-only]"
+                );
+                std::process::exit(2);
+            };
+            let Some(m_path) = smw_path else {
+                eprintln!(
+                    "Usage: snes-cli --build-peach --zelda <zelda_fr.sfc> --smw <smw_eu.sfc> [--out <output.sfc>] [--verify-only]"
+                );
+                std::process::exit(2);
+            };
+
+            let z_bytes = match std::fs::read(&z_path) {
+                Ok(b) => b,
+                Err(e) => {
+                    eprintln!("Error: could not read Zelda base ROM '{z_path}': {e}");
+                    std::process::exit(1);
+                }
+            };
+            let m_bytes = match std::fs::read(&m_path) {
+                Ok(b) => b,
+                Err(e) => {
+                    eprintln!("Error: could not read Super Mario World donor ROM '{m_path}': {e}");
+                    std::process::exit(1);
+                }
+            };
+
+            let orig_zelda = match SnesRom::from_bytes(&z_path, &z_bytes) {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("Error: invalid Zelda SNES ROM '{z_path}': {e}");
+                    std::process::exit(1);
+                }
+            };
+            let smw_rom = match SnesRom::from_bytes(&m_path, &m_bytes) {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("Error: invalid Super Mario World SNES ROM '{m_path}': {e}");
+                    std::process::exit(1);
+                }
+            };
+
+            if orig_zelda.has_copier_header {
+                println!("Notice: stripped 512-byte SMC copier header from Zelda base ROM.");
+            }
+            if smw_rom.has_copier_header {
+                println!("Notice: stripped 512-byte SMC copier header from Super Mario World ROM.");
+            }
+
+            let (z_sha, m_sha) = match snes_core::rom::verify_legend_of_peach_inputs(
+                &orig_zelda,
+                &smw_rom,
+                allow_unverified,
+            ) {
+                Ok(hashes) => hashes,
+                Err(msg) => {
+                    eprintln!("Input ROM verification failed:\n{msg}");
+                    std::process::exit(1);
+                }
+            };
+
+            if allow_unverified {
+                eprintln!("WARNING: --allow-unverified-roms enabled; skipping strict No-Intro SHA-256 enforcement.");
+            }
+            println!("Verified input ROMs (originals are read-only and never modified):");
+            println!(
+                "  Zelda ALTTP (FR PAL) : {z_sha} ({} bytes)",
+                orig_zelda.data.len()
+            );
+            println!(
+                "  Super Mario World    : {m_sha} ({} bytes)",
+                smw_rom.data.len()
+            );
+
+            if verify_only {
+                println!("Input verification passed.");
+                return;
+            }
+
+            let recipe = snes_core::mixer::legend_of_peach_canonical_recipe(&z_path, &m_path);
+            let mut target_rom = orig_zelda.clone();
+            let mut donors = std::collections::HashMap::new();
+            donors.insert("smw".to_string(), smw_rom);
+            let mut session = SwapSession::new();
+
+            let rep = match snes_core::mixer::execute_mix_recipe(
+                &mut target_rom,
+                &donors,
+                &recipe,
+                &mut session,
+            ) {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("Build failed during ROM fusion: {e}");
+                    std::process::exit(1);
+                }
+            };
+
+            let audit = match snes_core::mixer::audit_legend_of_peach_output(
+                &orig_zelda,
+                &target_rom,
+                &session,
+            ) {
+                Ok(a) => a,
+                Err(e) => {
+                    eprintln!("Build failed hardware integrity audit: {e}");
+                    std::process::exit(1);
+                }
+            };
+
+            let out_bytes = target_rom.to_sfc_bytes();
+            if let Some(parent) = std::path::Path::new(&out_path).parent() {
+                if !parent.as_os_str().is_empty() {
+                    let _ = std::fs::create_dir_all(parent);
+                }
+            }
+            if let Err(e) = std::fs::write(&out_path, &out_bytes) {
+                eprintln!("Error: could not write output ROM '{out_path}': {e}");
+                std::process::exit(1);
+            }
+
+            println!("==================================================================");
+            println!("THE LEGEND OF PEACH: A MARIO TO THE MUSHROOM KINGDOM — BUILD OK");
+            println!("==================================================================");
+            println!(
+                "Output ROM      : {out_path} ({} bytes, 2 MiB LoROM)",
+                audit.output_size_bytes
+            );
+            println!("Internal Title  : '{}'", rep.output_title);
+            println!(
+                "Hardware Ops    : {} patches across {} rules ({} ms)",
+                rep.operations_applied,
+                rep.applied_rules.len(),
+                rep.elapsed_ms
+            );
+            println!(
+                "Bank Audit      : {} sheets verified, {} relocated in $23..$3F (0 overlaps)",
+                audit.verified_raw_sheets, audit.relocated_sheet_count
+            );
+            println!(
+                "SNES Checksum   : 0x{:04X} (Complement: 0x{:04X}, Valid: {})",
+                audit.checksum, audit.complement, rep.checksum_valid
+            );
+            println!("Output CRC32    : 0x{:08X}", rep.crc32);
+            println!("Output SHA-256  : {}", audit.output_sha256);
+        }
         "--generate-demo" => {
             let out_dir = args.get(2).map(|s| s.as_str()).unwrap_or(".");
             let (rom_a, rom_b) = generate_demo_rom_pair();
@@ -48,29 +237,45 @@ fn main() {
                 full_extraction: full_mode,
                 ..Default::default()
             };
-            let report = snes_core::deconstruct::deconstruct_rom(&rom, std::path::Path::new(out_dir), &cfg)
-                .expect("Erreur lors de la déconstruction intégrale");
+            let report =
+                snes_core::deconstruct::deconstruct_rom(&rom, std::path::Path::new(out_dir), &cfg)
+                    .expect("Erreur lors de la déconstruction intégrale");
 
             println!("============================================================");
-            println!("🚀 DÉCONSTRUCTION INTÉGRALE DES ASSETS SNES — {}", report.rom_title);
+            println!(
+                "🚀 DÉCONSTRUCTION INTÉGRALE DES ASSETS SNES — {}",
+                report.rom_title
+            );
             println!("============================================================");
             println!("Dossier d'exportation : {}", report.out_dir);
             println!("Temps d'exécution    : {} ms", report.elapsed_ms);
-            println!("ROM                  : {} ({} | Checksum 0x{:04X})", report.internal_name, report.mapping, report.checksum);
+            println!(
+                "ROM                  : {} ({} | Checksum 0x{:04X})",
+                report.internal_name, report.mapping, report.checksum
+            );
             println!("------------------------------------------------------------");
             println!("Actifs Décomposés :");
             println!("  - 🏃 Sprites Individuels Assemblés : {} personnages & objets (.png 1x/3x + .json)", report.sprites_count);
-            println!("  - 🗺️ Planches Graphiques           : {} feuilles décompressées (.png + .bin)", report.sheets_count);
+            println!(
+                "  - 🗺️ Planches Graphiques           : {} feuilles décompressées (.png + .bin)",
+                report.sheets_count
+            );
             println!("  - 🎵 Musiques & Fichiers .SPC      : {} fichiers SPC700 (66 048 octets standard)", report.spc_files_count);
             println!("  - 🔊 Échantillons Audio WAV        : {} fichiers PCM 16-bit (.wav @ 16kHz + .brr)", report.audio_wav_count);
             println!("  - 📜 Textes & Dialogues In-Game    : {} blocs de dialogue & noms (.txt, .json, .tbl)", report.text_dialogues_count);
             println!("  - 🎨 Palettes de Couleurs          : {} palettes BGR555 (.png swatches, .json, .pal)", report.palettes_count);
             println!("  - 🖼️ Écrans & Tilemaps             : {} écrans-titres & plans natifs (.png 256x224)", report.screens_count);
-            println!("  - ⚙️ Code Source 65c816            : {} banques désassemblées + header.asm", report.disassembled_banks_count);
+            println!(
+                "  - ⚙️ Code Source 65c816            : {} banques désassemblées + header.asm",
+                report.disassembled_banks_count
+            );
             println!("------------------------------------------------------------");
             println!("✓ Index maître généré : {}/INDEX.md", report.out_dir);
             println!("✓ Manifeste JSON      : {}/manifest.json", report.out_dir);
-            println!("✓ Projet Aller-Retour : {}/project.json (prêt pour --reconstruct)", report.out_dir);
+            println!(
+                "✓ Projet Aller-Retour : {}/project.json (prêt pour --reconstruct)",
+                report.out_dir
+            );
         }
         "--catalog" => {
             if args.len() < 3 {
@@ -85,36 +290,69 @@ fn main() {
             println!("============================================================");
             println!("🌐 CATALOGUE MATÉRIEL UNIVERSEL SNES — {}", cat.rom_title);
             println!("============================================================");
-            println!("Titre interne : {} | Mapping : {} | Taille : {} Ko | Checksum : 0x{:04X}",
-                cat.internal_title, cat.mapping, cat.rom_size_bytes / 1024, cat.checksum);
-            println!("Scan matériel : {} ms ({} transferts DMA détectés)", cat.scan_elapsed_ms, cat.dma_count);
+            println!(
+                "Titre interne : {} | Mapping : {} | Taille : {} Ko | Checksum : 0x{:04X}",
+                cat.internal_title,
+                cat.mapping,
+                cat.rom_size_bytes / 1024,
+                cat.checksum
+            );
+            println!(
+                "Scan matériel : {} ms ({} transferts DMA détectés)",
+                cat.scan_elapsed_ms, cat.dma_count
+            );
             println!("------------------------------------------------------------");
             println!("🗺️ Graphismes & Sprites ({}) :", cat.graphics.len());
             for g in cat.graphics.iter().take(12) {
-                println!("  - {} | {} | {} | {} tuiles | budget {} o | {}",
-                    g.id, g.snes_addr, g.format.short_label(), g.tile_count, g.rom_byte_budget, g.discovery_source);
+                println!(
+                    "  - {} | {} | {} | {} tuiles | budget {} o | {}",
+                    g.id,
+                    g.snes_addr,
+                    g.format.short_label(),
+                    g.tile_count,
+                    g.rom_byte_budget,
+                    g.discovery_source
+                );
             }
             println!("🎨 Palettes BGR555 ({}) :", cat.palettes.len());
             for p in cat.palettes.iter().take(8) {
-                println!("  - {} | {} | {} couleurs | {}", p.id, p.snes_addr, p.color_count, p.discovery_source);
+                println!(
+                    "  - {} | {} | {} couleurs | {}",
+                    p.id, p.snes_addr, p.color_count, p.discovery_source
+                );
             }
             println!("🎵 Flux SPC700 IPL ({}) :", cat.spc_streams.len());
             for s in &cat.spc_streams {
-                println!("  - {} | {} | Entry ${:04X} | {} chunks ({} o) | DIR ${:02X}00",
-                    s.id, s.snes_addr, s.entry_pc, s.chunk_count, s.total_payload_bytes, s.detected_dir_page);
+                println!(
+                    "  - {} | {} | Entry ${:04X} | {} chunks ({} o) | DIR ${:02X}00",
+                    s.id,
+                    s.snes_addr,
+                    s.entry_pc,
+                    s.chunk_count,
+                    s.total_payload_bytes,
+                    s.detected_dir_page
+                );
             }
             println!("🔊 Échantillons Audio BRR ({}) :", cat.audio_samples.len());
             for a in cat.audio_samples.iter().take(8) {
-                println!("  - {} | {} | {} o | {} ms | Loop: {}",
-                    a.id, a.snes_addr, a.byte_len, a.duration_ms_16khz, a.loops);
+                println!(
+                    "  - {} | {} | {} o | {} ms | Loop: {}",
+                    a.id, a.snes_addr, a.byte_len, a.duration_ms_16khz, a.loops
+                );
             }
             println!("📜 Textes & Tables .tbl ({}) :", cat.texts.len());
             for t in cat.texts.iter().take(10) {
-                println!("  - {} | {} | {} | \"{}\"", t.id, t.snes_addr, t.encoding, t.text);
+                println!(
+                    "  - {} | {} | {} | \"{}\"",
+                    t.id, t.snes_addr, t.encoding, t.text
+                );
             }
             println!("🖼️ Tilemaps & Écrans ({}) :", cat.tilemaps.len());
             for tm in &cat.tilemaps {
-                println!("  - {} | {} ({}x{} tuiles)", tm.id, tm.snes_addr, tm.width_tiles, tm.height_tiles);
+                println!(
+                    "  - {} | {} ({}x{} tuiles)",
+                    tm.id, tm.snes_addr, tm.width_tiles, tm.height_tiles
+                );
             }
         }
         "--reconstruct" => {
@@ -126,10 +364,13 @@ fn main() {
             let proj_dir = &args[3];
             let out_rom_path = &args[4];
             let ips_idx = args.iter().position(|a| a == "--ips");
-            let ips_path = ips_idx.and_then(|i| args.get(i + 1)).map(std::path::Path::new);
+            let ips_path = ips_idx
+                .and_then(|i| args.get(i + 1))
+                .map(std::path::Path::new);
 
             let bytes = std::fs::read(orig_path).expect("Impossible de lire la ROM originale");
-            let orig_rom = SnesRom::from_bytes(orig_path.clone(), &bytes).expect("ROM originale invalide");
+            let orig_rom =
+                SnesRom::from_bytes(orig_path.clone(), &bytes).expect("ROM originale invalide");
             let rep = snes_core::universal::reconstruct_rom_from_project(
                 &orig_rom,
                 std::path::Path::new(proj_dir),
@@ -139,7 +380,10 @@ fn main() {
             .expect("Erreur lors de la reconstruction de la ROM");
 
             println!("============================================================");
-            println!("🔄 RECONSTRUCTION UNIVERSELLE DE ROM SNES TERMINÉE ({} ms)", rep.elapsed_ms);
+            println!(
+                "🔄 RECONSTRUCTION UNIVERSELLE DE ROM SNES TERMINÉE ({} ms)",
+                rep.elapsed_ms
+            );
             println!("============================================================");
             println!("ROM générée            : {}", rep.out_rom_path);
             if let Some(ip) = &rep.ips_path {
@@ -150,7 +394,10 @@ fn main() {
             println!("Audio BRR/WAV patchés  : {}", rep.audio_patched_count);
             println!("Textes patchés         : {}", rep.text_patched_count);
             println!("Octets modifiés total  : {}", rep.total_bytes_changed);
-            println!("Checksum SNES          : 0x{:04X} (Valide: {})", rep.new_checksum, rep.checksum_valid);
+            println!(
+                "Checksum SNES          : 0x{:04X} (Valide: {})",
+                rep.new_checksum, rep.checksum_valid
+            );
             for w in &rep.warnings {
                 println!("⚠️ {}", w);
             }
@@ -165,7 +412,12 @@ fn main() {
             let out_path = &args[4];
             let flags = &args[5..];
 
-            let has_any_explicit = flags.iter().any(|f| matches!(f.as_str(), "--gfx" | "--palettes" | "--audio" | "--text" | "--all"));
+            let has_any_explicit = flags.iter().any(|f| {
+                matches!(
+                    f.as_str(),
+                    "--gfx" | "--palettes" | "--audio" | "--text" | "--all"
+                )
+            });
             let all = !has_any_explicit || flags.iter().any(|f| f == "--all");
             let opts = snes_core::universal::UniversalBatchSwapOptions {
                 swap_graphics: all || flags.iter().any(|f| f == "--gfx"),
@@ -190,7 +442,12 @@ fn main() {
             let cat_b = snes_core::universal::discover_universal_catalog(&rom_b);
             let mut session = SwapSession::new();
             let ops = snes_core::universal::apply_universal_batch_swap(
-                &mut rom_a, &rom_b, &cat_a, &cat_b, &opts, &mut session,
+                &mut rom_a,
+                &rom_b,
+                &cat_a,
+                &cat_b,
+                &opts,
+                &mut session,
             )
             .expect("Erreur lors du swap universel");
 
@@ -200,17 +457,33 @@ fn main() {
             println!("============================================================");
             println!("⇄ SWAP UNIVERSEL MULTI-ROM SNES TERMINÉ");
             println!("============================================================");
-            println!("ROM Cible (A) : {} ({})", rom_a.canonical_title(), rom_a.header.mapping.as_str());
-            println!("ROM Donneuse  : {} ({})", rom_b.canonical_title(), rom_b.header.mapping.as_str());
+            println!(
+                "ROM Cible (A) : {} ({})",
+                rom_a.canonical_title(),
+                rom_a.header.mapping.as_str()
+            );
+            println!(
+                "ROM Donneuse  : {} ({})",
+                rom_b.canonical_title(),
+                rom_b.header.mapping.as_str()
+            );
             println!("Opérations    : {} échanges matériels appliqués", ops);
             for op in &session.operations {
                 println!("  ✓ [{}] {}", op.kind.category_badge(), op.description);
             }
-            println!("ROM Exportée  : {} (Checksum 0x{:04X}, Valide: {})",
-                out_path, rom_a.header.checksum, rom_a.header.is_checksum_valid());
+            println!(
+                "ROM Exportée  : {} (Checksum 0x{:04X}, Valide: {})",
+                out_path,
+                rom_a.header.checksum,
+                rom_a.header.is_checksum_valid()
+            );
 
             if let Some(ip) = ips_path {
-                let raw_orig_a = if (orig_a.len() % 1024) == 512 { &orig_a[512..] } else { &orig_a };
+                let raw_orig_a = if (orig_a.len() % 1024) == 512 {
+                    &orig_a[512..]
+                } else {
+                    &orig_a
+                };
                 let ips = snes_core::universal::build_ips_patch(raw_orig_a, &out_bytes);
                 std::fs::write(ip, ips).expect("Erreur écriture IPS");
                 println!("Patch IPS     : {}", ip);
@@ -230,9 +503,11 @@ fn main() {
             let base_bytes = std::fs::read(base_path).expect("Impossible de lire ROM de base");
             let donor_bytes = std::fs::read(donor_path).expect("Impossible de lire ROM donneuse");
 
-            let orig_base = SnesRom::from_bytes(base_path.clone(), &base_bytes).expect("ROM de base invalide");
+            let orig_base =
+                SnesRom::from_bytes(base_path.clone(), &base_bytes).expect("ROM de base invalide");
             let mut target_rom = orig_base.clone();
-            let donor_rom = SnesRom::from_bytes(donor_path.clone(), &donor_bytes).expect("ROM donneuse invalide");
+            let donor_rom = SnesRom::from_bytes(donor_path.clone(), &donor_bytes)
+                .expect("ROM donneuse invalide");
 
             let mut session = SwapSession::new();
             let decisions = snes_core::assets::get_default_swap_decisions(&target_rom, &donor_rom);
@@ -251,15 +526,23 @@ fn main() {
             println!("============================================================");
             println!("🚀 HYBRIDE GÉNÉRÉ AVEC SUCCÈS !");
             println!("============================================================");
-            println!("Base          : {} ({})", orig_base.canonical_title(), orig_base.header.mapping.as_str());
+            println!(
+                "Base          : {} ({})",
+                orig_base.canonical_title(),
+                orig_base.header.mapping.as_str()
+            );
             println!("Donneur       : {}", donor_rom.canonical_title());
             println!("Opérations    : {} fusions matérielles appliquées", ops);
             for op in &session.operations {
                 println!("  ✓ [{}] {}", op.kind.category_badge(), op.description);
             }
             println!("ROM Exportée  : {} ({} octets)", out_path, out_bytes.len());
-            println!("Checksum SNES : 0x{:04X} (Complément: 0x{:04X}, Valide: {})",
-                target_rom.header.checksum, target_rom.header.checksum_complement, target_rom.header.is_checksum_valid());
+            println!(
+                "Checksum SNES : 0x{:04X} (Complément: 0x{:04X}, Valide: {})",
+                target_rom.header.checksum,
+                target_rom.header.checksum_complement,
+                target_rom.header.is_checksum_valid()
+            );
             println!("CRC32         : 0x{:08X}", target_rom.crc32);
 
             if let Some(ip) = ips_path {
@@ -276,13 +559,18 @@ fn main() {
             let zelda_path = &args[2];
             let smw_path = &args[3];
             let out_path = &args[4];
-            let ips_path = args.windows(2).find(|w| w[0] == "--ips").map(|w| w[1].as_str());
+            let ips_path = args
+                .windows(2)
+                .find(|w| w[0] == "--ips")
+                .map(|w| w[1].as_str());
 
             let zelda_bytes = std::fs::read(zelda_path).expect("Impossible de lire ROM Zelda");
             let smw_bytes = std::fs::read(smw_path).expect("Impossible de lire ROM SMW");
-            let orig_zelda = SnesRom::from_bytes(zelda_path.clone(), &zelda_bytes).expect("ROM Zelda invalide");
+            let orig_zelda =
+                SnesRom::from_bytes(zelda_path.clone(), &zelda_bytes).expect("ROM Zelda invalide");
             let mut target_rom = orig_zelda.clone();
-            let smw_rom = SnesRom::from_bytes(smw_path.clone(), &smw_bytes).expect("ROM SMW invalide");
+            let smw_rom =
+                SnesRom::from_bytes(smw_path.clone(), &smw_bytes).expect("ROM SMW invalide");
 
             let mut session = SwapSession::new();
             let ops = snes_core::demo::apply_mario_into_zelda_alttp_swap(
@@ -294,20 +582,29 @@ fn main() {
 
             target_rom.fix_checksum();
             let out_bytes = target_rom.to_sfc_bytes();
-            std::fs::write(out_path, &out_bytes).expect("Impossible d'écrire la ROM Super Mario Hyrule");
+            std::fs::write(out_path, &out_bytes)
+                .expect("Impossible d'écrire la ROM Super Mario Hyrule");
 
             println!("============================================================");
             println!("🍄🗡️ NOUVEAU JEU HYBRIDE : SUPER MARIO HYRULE GÉNÉRÉ !");
             println!("============================================================");
-            println!("Base          : {} ({})", orig_zelda.canonical_title(), orig_zelda.header.mapping.as_str());
+            println!(
+                "Base          : {} ({})",
+                orig_zelda.canonical_title(),
+                orig_zelda.header.mapping.as_str()
+            );
             println!("Héros         : Mario (Super Mario World) -> Link (Zelda ALTTP)");
             println!("Opérations    : {} fusions matérielles appliquées", ops);
             for op in &session.operations {
                 println!("  ✓ [{}] {}", op.kind.category_badge(), op.description);
             }
             println!("ROM Exportée  : {} ({} octets)", out_path, out_bytes.len());
-            println!("Checksum SNES : 0x{:04X} (Complément: 0x{:04X}, Valide: {})",
-                target_rom.header.checksum, target_rom.header.checksum_complement, target_rom.header.is_checksum_valid());
+            println!(
+                "Checksum SNES : 0x{:04X} (Complément: 0x{:04X}, Valide: {})",
+                target_rom.header.checksum,
+                target_rom.header.checksum_complement,
+                target_rom.header.is_checksum_valid()
+            );
             println!("CRC32         : 0x{:08X}", target_rom.crc32);
 
             if let Some(ip) = ips_path {
@@ -332,7 +629,13 @@ fn main() {
                 };
                 let prof = snes_core::mixer::inspect_rom_for_mixing(&rom, alias, path);
                 println!("============================================================");
-                println!("🎮 [{}] {} ({} | {} Ko)", prof.alias, prof.title, prof.mapping, prof.size_bytes / 1024);
+                println!(
+                    "🎮 [{}] {} ({} | {} Ko)",
+                    prof.alias,
+                    prof.title,
+                    prof.mapping,
+                    prof.size_bytes / 1024
+                );
                 println!("  Slots cibles ({}) :", prof.target_slots.len());
                 for s in prof.target_slots.iter().take(14) {
                     println!("    • {:18} [{}] {}", s.id, s.category.label_fr(), s.label);
@@ -345,7 +648,10 @@ fn main() {
             }
             if profiles.len() >= 2 {
                 println!("============================================================");
-                println!("✨ PRESETS MULTI-JEUX DISPONIBLES (Base = {}) :", profiles[0].title);
+                println!(
+                    "✨ PRESETS MULTI-JEUX DISPONIBLES (Base = {}) :",
+                    profiles[0].title
+                );
                 for pr in snes_core::mixer::suggest_presets(&profiles[0], &profiles[1..]) {
                     println!("  ★ {:24} — {} ({} règles)", pr.id, pr.name, pr.rules.len());
                     println!("    {}", pr.description);
@@ -453,23 +759,35 @@ fn main() {
                 recipe.custom_title = title_opt;
             }
 
-            let base_bytes = std::fs::read(&recipe.base_rom).expect("Impossible de lire la ROM de base");
-            let orig_base = SnesRom::from_bytes(recipe.base_rom.clone(), &base_bytes).expect("ROM de base invalide");
+            let base_bytes =
+                std::fs::read(&recipe.base_rom).expect("Impossible de lire la ROM de base");
+            let orig_base = SnesRom::from_bytes(recipe.base_rom.clone(), &base_bytes)
+                .expect("ROM de base invalide");
             let mut target_rom = orig_base.clone();
 
             let mut donor_roms = std::collections::HashMap::new();
             let mut donor_profiles = Vec::new();
             for (alias, path) in &recipe.donors {
                 let dbytes = std::fs::read(path).expect("Impossible de lire une ROM donneuse");
-                let drom = SnesRom::from_bytes(path.clone(), &dbytes).expect("ROM donneuse invalide");
-                donor_profiles.push(snes_core::mixer::inspect_rom_for_mixing(&drom, alias.clone(), path.clone()));
+                let drom =
+                    SnesRom::from_bytes(path.clone(), &dbytes).expect("ROM donneuse invalide");
+                donor_profiles.push(snes_core::mixer::inspect_rom_for_mixing(
+                    &drom,
+                    alias.clone(),
+                    path.clone(),
+                ));
                 donor_roms.insert(alias.clone(), drom);
             }
 
-            let base_profile = snes_core::mixer::inspect_rom_for_mixing(&orig_base, "base", &recipe.base_rom);
+            let base_profile =
+                snes_core::mixer::inspect_rom_for_mixing(&orig_base, "base", &recipe.base_rom);
 
             if chaos_mode {
-                let chaos = snes_core::mixer::generate_chaos_recipe(&base_profile, &donor_profiles, chaos_seed);
+                let chaos = snes_core::mixer::generate_chaos_recipe(
+                    &base_profile,
+                    &donor_profiles,
+                    chaos_seed,
+                );
                 if recipe.custom_title.is_none() {
                     recipe.custom_title = chaos.custom_title;
                 }
@@ -515,17 +833,38 @@ fn main() {
             }
 
             let mut session = SwapSession::new();
-            let rep = snes_core::mixer::execute_mix_recipe(&mut target_rom, &donor_roms, &recipe, &mut session)
-                .expect("Erreur lors du mixage multi-jeux");
+            let rep = snes_core::mixer::execute_mix_recipe(
+                &mut target_rom,
+                &donor_roms,
+                &recipe,
+                &mut session,
+            )
+            .expect("Erreur lors du mixage multi-jeux");
 
             let out_bytes = target_rom.to_sfc_bytes();
             std::fs::write(&out_path, &out_bytes).expect("Impossible d'écrire la ROM mixée");
 
             println!("============================================================");
-            println!("🎛️ SNES OMNI-MIXER MULTI-JEUX — FUSION TERMINÉE ({} ms)", rep.elapsed_ms);
+            println!(
+                "🎛️ SNES OMNI-MIXER MULTI-JEUX — FUSION TERMINÉE ({} ms)",
+                rep.elapsed_ms
+            );
             println!("============================================================");
-            println!("ROM de Base   : {} ({})", rep.base_title, orig_base.header.mapping.as_str());
-            println!("Donneuses ({}) : {}", recipe.donors.len(), recipe.donors.iter().map(|(a, _)| a.as_str()).collect::<Vec<_>>().join(", "));
+            println!(
+                "ROM de Base   : {} ({})",
+                rep.base_title,
+                orig_base.header.mapping.as_str()
+            );
+            println!(
+                "Donneuses ({}) : {}",
+                recipe.donors.len(),
+                recipe
+                    .donors
+                    .iter()
+                    .map(|(a, _)| a.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
             println!("Titre Cartouche: '{}'", rep.output_title);
             println!("Règles ({})    :", rep.applied_rules.len());
             for r in &rep.applied_rules {
@@ -534,10 +873,15 @@ fn main() {
             for w in &rep.warnings {
                 println!("  ⚠️ {}", w);
             }
-            println!("Opérations    : {} fusions matérielles appliquées", rep.operations_applied);
+            println!(
+                "Opérations    : {} fusions matérielles appliquées",
+                rep.operations_applied
+            );
             println!("ROM Exportée  : {} ({} octets)", out_path, out_bytes.len());
-            println!("Checksum SNES : 0x{:04X} (Complément: 0x{:04X}, Valide: {})",
-                rep.checksum, rep.complement, rep.checksum_valid);
+            println!(
+                "Checksum SNES : 0x{:04X} (Complément: 0x{:04X}, Valide: {})",
+                rep.checksum, rep.complement, rep.checksum_valid
+            );
             println!("CRC32         : 0x{:08X}", rep.crc32);
 
             if let Some(ref ip) = ips_path {
@@ -549,7 +893,17 @@ fn main() {
             if play_after {
                 println!("▶️ Lancement dans Mednafen...");
                 let _ = std::process::Command::new("mednafen")
-                    .args(["-force_module", "snes_faust", "-video.fs", "0", "-snes_faust.xscale", "3", "-snes_faust.yscale", "3", &out_path])
+                    .args([
+                        "-force_module",
+                        "snes_faust",
+                        "-video.fs",
+                        "0",
+                        "-snes_faust.xscale",
+                        "3",
+                        "-snes_faust.yscale",
+                        "3",
+                        &out_path,
+                    ])
                     .spawn();
             }
         }
@@ -559,7 +913,10 @@ fn main() {
                 return;
             }
             let rom_path = &args[2];
-            let out_dir = args.get(3).map(|s| s.as_str()).unwrap_or("./decompiled_rom");
+            let out_dir = args
+                .get(3)
+                .map(|s| s.as_str())
+                .unwrap_or("./decompiled_rom");
             let bytes = std::fs::read(rom_path).expect("Impossible de lire le fichier ROM");
             let rom = SnesRom::from_bytes(rom_path.clone(), &bytes).expect("ROM SNES invalide");
             let summary = decompile_rom_to_project_dir(&rom, std::path::Path::new(out_dir))
@@ -589,16 +946,36 @@ fn main() {
                 return;
             }
             let rom_path = &args[2];
-            let out_dir = args.get(3).map(|s| s.as_str()).unwrap_or("./extracted_assets");
+            let out_dir = args
+                .get(3)
+                .map(|s| s.as_str())
+                .unwrap_or("./extracted_assets");
             let bytes = std::fs::read(rom_path).expect("Impossible de lire le fichier ROM");
             let rom = SnesRom::from_bytes(rom_path.clone(), &bytes).expect("ROM SNES invalide");
-            let summary = snes_core::export::export_all_rom_assets(&rom, std::path::Path::new(out_dir))
-                .expect("Erreur lors de l'extraction des assets");
-            println!("✓ Tous les assets de la ROM '{}' ont été extraits dans '{}' :", rom.canonical_title(), summary.out_dir);
-            println!("  - {} sprites individuels (.png)", summary.sprites_png_count);
-            println!("  - {} planches graphiques complètes (.png)", summary.sheets_png_count);
-            println!("  - {} échantillons audio (.wav + .brr)", summary.audio_wav_count);
-            println!("  - {} palettes BGR555 (.json + .png + .pal)", summary.palettes_count);
+            let summary =
+                snes_core::export::export_all_rom_assets(&rom, std::path::Path::new(out_dir))
+                    .expect("Erreur lors de l'extraction des assets");
+            println!(
+                "✓ Tous les assets de la ROM '{}' ont été extraits dans '{}' :",
+                rom.canonical_title(),
+                summary.out_dir
+            );
+            println!(
+                "  - {} sprites individuels (.png)",
+                summary.sprites_png_count
+            );
+            println!(
+                "  - {} planches graphiques complètes (.png)",
+                summary.sheets_png_count
+            );
+            println!(
+                "  - {} échantillons audio (.wav + .brr)",
+                summary.audio_wav_count
+            );
+            println!(
+                "  - {} palettes BGR555 (.json + .png + .pal)",
+                summary.palettes_count
+            );
         }
         "--inspect" => {
             for path in &args[2..] {
@@ -693,15 +1070,20 @@ fn main() {
             let donor2_path = args.get(4).filter(|s| !s.starts_with("--"));
             let export_idx = args.iter().position(|a| a == "--export");
             let out_path = if let Some(idx) = export_idx {
-                args.get(idx + 1).cloned().unwrap_or_else(|| "swapped_output.sfc".to_string())
+                args.get(idx + 1)
+                    .cloned()
+                    .unwrap_or_else(|| "swapped_output.sfc".to_string())
             } else {
                 "swapped_output.sfc".to_string()
             };
 
             let target_bytes = std::fs::read(target_path).expect("Impossible de lire la ROM cible");
-            let mut target_rom = SnesRom::from_bytes(target_path, &target_bytes).expect("ROM cible invalide");
-            let donor1_bytes = std::fs::read(donor1_path).expect("Impossible de lire la ROM donneuse 1");
-            let donor1_rom = SnesRom::from_bytes(donor1_path, &donor1_bytes).expect("ROM donneuse 1 invalide");
+            let mut target_rom =
+                SnesRom::from_bytes(target_path, &target_bytes).expect("ROM cible invalide");
+            let donor1_bytes =
+                std::fs::read(donor1_path).expect("Impossible de lire la ROM donneuse 1");
+            let donor1_rom =
+                SnesRom::from_bytes(donor1_path, &donor1_bytes).expect("ROM donneuse 1 invalide");
             let _donor2_bytes = donor2_path.and_then(|p| std::fs::read(p).ok());
 
             let mut session = SwapSession::new();
@@ -710,11 +1092,13 @@ fn main() {
             let brr_a = scan_brr_samples(&target_rom.data, 16);
             let brr_b = scan_brr_samples(&donor1_rom.data, 16);
 
-            ops += apply_obvious_demo_swap(&mut target_rom, &donor1_rom, &mut session, &brr_a, &brr_b)
-                .expect("Erreur swap");
+            ops +=
+                apply_obvious_demo_swap(&mut target_rom, &donor1_rom, &mut session, &brr_a, &brr_b)
+                    .expect("Erreur swap");
 
             target_rom.fix_checksum();
-            std::fs::write(&out_path, target_rom.to_sfc_bytes()).expect("Erreur écriture ROM exportée");
+            std::fs::write(&out_path, target_rom.to_sfc_bytes())
+                .expect("Erreur écriture ROM exportée");
             println!(
                 "✓ ROM SNES 100% matérielle exportée avec succès : '{}' ({} opérations appliquées, Checksum 0x{:04X})",
                 out_path, ops, target_rom.header.checksum
@@ -722,33 +1106,23 @@ fn main() {
         }
         "--demo-smw" | "--demo-zelda" | "--demo-bbb" | "--demo-aaa" => {
             let is_smw = args[1] == "--demo-smw" || args[1] == "--demo-bbb";
-            let in_path = args
-                .get(2)
-                .map(|s| s.as_str())
-                .unwrap_or(if is_smw {
-                    "roms/super_mario_world.sfc"
-                } else {
-                    "roms/zelda_alttp.sfc"
-                });
-            let out_path = args
-                .get(3)
-                .map(|s| s.as_str())
-                .unwrap_or(if is_smw {
-                    "smw_swapped.sfc"
-                } else {
-                    "zelda_swapped.sfc"
-                });
-            let donor_path = args
-                .get(4)
-                .map(|s| s.as_str())
-                .unwrap_or(if is_smw {
-                    "roms/zelda_alttp.sfc"
-                } else {
-                    "roms/super_mario_world.sfc"
-                });
+            let in_path = args.get(2).map(|s| s.as_str()).unwrap_or(if is_smw {
+                "roms/super_mario_world.sfc"
+            } else {
+                "roms/zelda_alttp.sfc"
+            });
+            let out_path = args.get(3).map(|s| s.as_str()).unwrap_or(if is_smw {
+                "smw_swapped.sfc"
+            } else {
+                "zelda_swapped.sfc"
+            });
+            let donor_path = args.get(4).map(|s| s.as_str()).unwrap_or(if is_smw {
+                "roms/zelda_alttp.sfc"
+            } else {
+                "roms/super_mario_world.sfc"
+            });
             let bytes = std::fs::read(in_path).expect("Impossible de lire la ROM cible");
-            let mut rom_a =
-                SnesRom::from_bytes(in_path, &bytes).expect("ROM SNES cible invalide");
+            let mut rom_a = SnesRom::from_bytes(in_path, &bytes).expect("ROM SNES cible invalide");
             let rom_b = if let Ok(bytes_b) = std::fs::read(donor_path) {
                 SnesRom::from_bytes(donor_path, &bytes_b).expect("ROM SNES donneuse invalide")
             } else {
@@ -784,7 +1158,12 @@ fn main() {
                 count, in_path, rom_a.canonical_title(), out_path, rom_a.header.checksum
             );
             for op in &session.operations {
-                println!("  ✓ #{} [{}] {}", op.id, op.kind.category_badge(), op.description);
+                println!(
+                    "  ✓ #{} [{}] {}",
+                    op.id,
+                    op.kind.category_badge(),
+                    op.description
+                );
             }
         }
         "--auto-swap-demo" => {
@@ -838,21 +1217,25 @@ fn main() {
 }
 
 fn print_help() {
-    println!("snes-cli — Outil Universel Multi-Jeux SNES Omni-Mixer, Déconstructeur & Échangeur (.sfc/.smc)");
-    println!("Commandes principales (OMNI-MIXER MULTI-JEUX) :");
-    println!("  --mix-inspect <rom1.sfc> [rom2.sfc ...]                Inspecte N ROMs, liste tous les slots mixables & presets multi-jeux");
-    println!("  --mix --base <base.sfc> --donor <alias=rom.sfc> [...]  MIXE TOUT AVEC TOUT (N ROMs donneuses -> 1 ROM hybride jouable !)");
-    println!("        Options : --rule <slot=alias:source>  --preset <id|auto>  --chaos [--seed N]");
-    println!("                  --recipe <rec.json>  --save-recipe <rec.json>  --title <TITRE>  --out <out.sfc>  --ips <out.ips>  --play");
-    println!("Autres commandes :");
-    println!("  --deconstruct <rom.sfc> [out_dir]                      DÉCONSTRUCTION TOTALE en projet éditable (project.json, PNG, WAV, SPC, TBL, ASM)");
-    println!("  --reconstruct <orig.sfc> <proj_dir> <out.sfc> [--ips]  RECONSTRUCTION aller-retour : réinjecte vos PNG/WAV/Palettes/Textes modifiés !");
-    println!("  --swap-universal <rom_a> <rom_b> <out.sfc> [options]   ÉCHANGE UNIVERSEL entre N'IMPORTE QUELLES ROMs (--gfx --palettes --audio --text --all --ips)");
-    println!("  --catalog <rom.sfc>                                    Affiche le catalogue matériel universel découvert (DMA, LZ2, Palettes, IPL SPC, BRR, Textes)");
-    println!("  --swap <target.sfc> <donor1.sfc> [donor2.sfc] [--export <out.sfc>] Swap autonome & export de ROM matérielle");
-    println!("  --dump-assets <rom.sfc> [out_dir]                      Extrait les assets graphiques et audio de base");
-    println!("  --decompile <rom.sfc> [out_dir]                        Décompose une ROM en projet WLA-DX (ASM 65c816, hdr.asm, WAV, GFX)");
-    println!("  --inspect <rom1.sfc> [rom2.sfc]                        Analyse universelle (Header, DMA, Entropie, GFX, Palettes, BRR)");
-    println!("  --generate-demo [dossier]                              Génère 2 ROMs SNES (.sfc) de test complètes");
-    println!("  --auto-swap-demo [sortie.sfc]                          Exécute un Smart Swap Graphique + Audio BRR entre ROM A et ROM B");
+    println!("snes-cli — The Legend of Peach Builder & SNES ROM Transformation Toolkit");
+    println!();
+    println!("Primary command (The Legend of Peach — Reproducible Build):");
+    println!("  --build-peach --zelda <zelda_fr.sfc> --smw <smw_eu.sfc> [--out <out.sfc>] [--verify-only]");
+    println!("        Verify both original ROMs (strict SHA-256) and deterministically build");
+    println!("        The Legend of Peach: A Mario to the Mushroom Kingdom (2 MiB LoROM).");
+    println!(
+        "        Use --verify-only to validate input ROM hashes without writing an output file."
+    );
+    println!();
+    println!("General SNES Omni-Mixer commands:");
+    println!("  --mix-inspect <rom1.sfc> [rom2.sfc ...]                Inspect ROMs, discover mixable slots & presets");
+    println!("  --mix --base <base.sfc> --donor <alias=rom.sfc> [...]  Combine assets from multiple donor ROMs into a playable hybrid");
+    println!("        Options: --rule <slot=alias:source>  --preset <id|auto>  --chaos [--seed N]");
+    println!("                 --recipe <rec.json>  --save-recipe <rec.json>  --title <TITLE>  --out <out.sfc>  --ips <out.ips>");
+    println!("  --deconstruct <rom.sfc> [out_dir]                      Deconstruct a ROM into an editable directory (PNG, WAV, SPC, TBL, ASM)");
+    println!("  --reconstruct <orig.sfc> <proj_dir> <out.sfc> [--ips]  Round-trip reconstruct edited assets back into a SNES ROM");
+    println!("  --swap-universal <rom_a> <rom_b> <out.sfc> [options]   Universal asset swap (--gfx --palettes --audio --text --all --ips)");
+    println!("  --catalog <rom.sfc>                                    Display discovered hardware catalog (DMA, LZ2, palettes, SPC, BRR, text)");
+    println!("  --inspect <rom1.sfc> [rom2.sfc]                        Analyze SNES header, mapping, checksum, entropy, graphics, and BRR samples");
+    println!("  --generate-demo [dir]                                  Generate two synthetic test SNES ROMs (.sfc)");
 }

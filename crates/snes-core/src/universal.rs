@@ -5,8 +5,8 @@ use std::time::Instant;
 use image::{ImageBuffer, Rgba};
 
 use crate::audio::{
-    decode_brr_to_pcm16, decode_wav_to_pcm16, encode_pcm16_to_brr_fit_budget,
-    encode_pcm16_to_wav, resample_and_encode_brr_for_swap, scan_brr_samples, BrrSampleInfo,
+    decode_brr_to_pcm16, decode_wav_to_pcm16, encode_pcm16_to_brr_fit_budget, encode_pcm16_to_wav,
+    resample_and_encode_brr_for_swap, scan_brr_samples, BrrSampleInfo,
 };
 use crate::disasm_dma::{
     classify_rom_chunks, compress_nintendo_lz2_with_endian, compute_shannon_entropy,
@@ -300,9 +300,7 @@ pub fn discover_universal_catalog_with_mode(
     let scanned_pals = scan_candidate_palettes(&rom.data, max_heuristic_pals);
     for p in scanned_pals {
         if let Some(pc) = p.source_offset {
-            if pc + 32 <= rom.data.len()
-                && !seen_pal_offsets.iter().any(|&o| o.abs_diff(pc) < 16)
-            {
+            if pc + 32 <= rom.data.len() && !seen_pal_offsets.iter().any(|&o| o.abs_diff(pc) < 16) {
                 let idx = palettes.len() + 1;
                 let id = format!("pal_{:03}_0x{:06X}", idx, pc);
                 let (bank, addr) = rom.pc_to_snes(pc);
@@ -403,7 +401,11 @@ pub fn discover_universal_catalog_with_mode(
                             format: fmt,
                             compression: UniversalGfxCompression::None,
                             tile_count,
-                            suggested_palette_idx: if palettes.is_empty() { 0 } else { (idx - 1) % palettes.len() },
+                            suggested_palette_idx: if palettes.is_empty() {
+                                0
+                            } else {
+                                (idx - 1) % palettes.len()
+                            },
                             discovery_source: "DMA VRAM ($2118)".to_string(),
                             sheet_file: format!("sheets/{}.png", id),
                         });
@@ -571,7 +573,14 @@ pub fn render_universal_gfx_asset(
         return None;
     }
     let rows = total_tiles.div_ceil(cols).clamp(1, max_rows.max(1));
-    Some(render_tile_sheet_rgba(&raw, 0, cols, rows, asset.format, palette))
+    Some(render_tile_sheet_rgba(
+        &raw,
+        0,
+        cols,
+        rows,
+        asset.format,
+        palette,
+    ))
 }
 
 // =============================================================================
@@ -586,10 +595,7 @@ struct Lz2Hit {
     compression: UniversalGfxCompression,
 }
 
-fn scan_universal_lz2_graphics(
-    rom: &SnesRom,
-    audio_ranges: &[(usize, usize)],
-) -> Vec<Lz2Hit> {
+fn scan_universal_lz2_graphics(rom: &SnesRom, audio_ranges: &[(usize, usize)]) -> Vec<Lz2Hit> {
     let mut hits: Vec<Lz2Hit> = Vec::new();
     let data = &rom.data;
     if data.len() < 0x10000 {
@@ -620,7 +626,10 @@ fn scan_universal_lz2_graphics(
         if start_off < visited_until || start_off + 64 >= data.len() {
             continue;
         }
-        if audio_ranges.iter().any(|&(a, b)| start_off >= a && start_off < b) {
+        if audio_ranges
+            .iter()
+            .any(|&(a, b)| start_off >= a && start_off < b)
+        {
             continue;
         }
 
@@ -644,9 +653,8 @@ fn scan_universal_lz2_graphics(
                     decompress_nintendo_lz2_with_endian(data, cursor, 32768, be)
                 {
                     // Strict validation: real SNES compressed graphic stream
-                    let tile_aligned = (dec.len() % 512 == 0)
-                        || (dec.len() % 384 == 0)
-                        || (dec.len() % 256 == 0);
+                    let tile_aligned =
+                        (dec.len() % 512 == 0) || (dec.len() % 384 == 0) || (dec.len() % 256 == 0);
                     if (96..=24576).contains(&consumed)
                         && dec.len() >= 1024
                         && dec.len() > (consumed * 11) / 10
@@ -792,7 +800,10 @@ pub fn scan_universal_spc_ipl_streams(rom: &SnesRom) -> Vec<UniversalSpcStream> 
             if cursor + 8 >= bank_end || streams.len() >= 16 {
                 break;
             }
-            if visited_ranges.iter().any(|&(a, b)| cursor >= a && cursor < b) {
+            if visited_ranges
+                .iter()
+                .any(|&(a, b)| cursor >= a && cursor < b)
+            {
                 break;
             }
             if let Some((entry_pc, chunks, total_payload, end_pos, dir_page)) =
@@ -860,7 +871,11 @@ fn parse_ipl_stream_at(data: &[u8], start_pos: usize) -> Option<(u16, usize, usi
         }
 
         // Detect DIR page candidate (page-aligned small table of 4-byte pointers)
-        if (dest & 0x00FF) == 0 && (16..=512).contains(&sz) && sz.is_multiple_of(4) && dest >= 0x0200 {
+        if (dest & 0x00FF) == 0
+            && (16..=512).contains(&sz)
+            && sz.is_multiple_of(4)
+            && dest >= 0x0200
+        {
             dir_page = (dest >> 8) as u8;
         }
 
@@ -956,7 +971,10 @@ pub fn build_spc_from_universal_stream(
 /// Discover text strings in ANY SNES ROM using:
 /// 1) Direct printable ASCII scan (credits, menus, Rareware/Capcom/Square games) skipping BRR audio ranges
 /// 2) Universal Relative-Search `.tbl` inference (discovers custom font encodings automatically!)
-pub fn scan_universal_texts(rom: &SnesRom, skip_ranges: &[(usize, usize)]) -> Vec<UniversalTextAsset> {
+pub fn scan_universal_texts(
+    rom: &SnesRom,
+    skip_ranges: &[(usize, usize)],
+) -> Vec<UniversalTextAsset> {
     let mut results: Vec<UniversalTextAsset> = Vec::new();
     let mut seen_offsets: Vec<usize> = Vec::new();
     let mut seen_texts: Vec<String> = Vec::new();
@@ -989,7 +1007,11 @@ pub fn scan_universal_texts(rom: &SnesRom, skip_ranges: &[(usize, usize)]) -> Ve
                 && is_plausible_human_text(trimmed)
                 && !seen_texts.iter().any(|s| s == trimmed)
             {
-                let term = if b == 0x00 || b == 0xFF { Some(b) } else { None };
+                let term = if b == 0x00 || b == 0xFF {
+                    Some(b)
+                } else {
+                    None
+                };
                 let id = format!("txt_{:03}_0x{:06X}", results.len() + 1, start_off);
                 let (bank, addr) = rom.pc_to_snes(start_off);
                 results.push(UniversalTextAsset {
@@ -1040,7 +1062,13 @@ pub fn scan_universal_texts(rom: &SnesRom, skip_ranges: &[(usize, usize)]) -> Ve
     for &(word, is_upper) in probe_words {
         let base_bytes: Vec<u8> = word
             .bytes()
-            .map(|c| if is_upper { c.to_ascii_uppercase() } else { c.to_ascii_lowercase() })
+            .map(|c| {
+                if is_upper {
+                    c.to_ascii_uppercase()
+                } else {
+                    c.to_ascii_lowercase()
+                }
+            })
             .collect();
         let wlen = base_bytes.len();
         if wlen < 5 {
@@ -1100,7 +1128,10 @@ pub fn scan_universal_texts(rom: &SnesRom, skip_ranges: &[(usize, usize)]) -> Ve
             let b = rom.data[pos];
             let decoded = if alpha_min <= alpha_max && b >= alpha_min && b <= alpha_max {
                 Some(((base_letter as u8) + (b - alpha_min)) as char)
-            } else if !is_upper && b >= alpha_min.wrapping_add(26) && b <= alpha_min.wrapping_add(51) {
+            } else if !is_upper
+                && b >= alpha_min.wrapping_add(26)
+                && b <= alpha_min.wrapping_add(51)
+            {
                 // Lowercase + consecutive Uppercase (e.g. Zelda ALTTP!)
                 Some((b'A' + (b - alpha_min.wrapping_add(26))) as char)
             } else if b == space_byte {
@@ -1152,7 +1183,7 @@ pub fn scan_universal_texts(rom: &SnesRom, skip_ranges: &[(usize, usize)]) -> Ve
     }
 
     // Rank discovered strings by linguistic clarity so real human game strings (spaces, custom TBL, clean words) come FIRST
-    results.sort_by(|a, b| text_quality_score(b).cmp(&text_quality_score(a)));
+    results.sort_by_key(|a| std::cmp::Reverse(text_quality_score(a)));
     for (i, t) in results.iter_mut().enumerate() {
         t.id = format!("txt_{:03}_0x{:06X}", i + 1, t.rom_offset);
     }
@@ -1231,7 +1262,12 @@ fn is_plausible_human_text(s: &str) -> bool {
         if w[0].is_ascii_lowercase() && w[1].is_ascii_uppercase() {
             weird_transitions += 1;
         }
-        if w[0].is_ascii_digit() && w[1].is_ascii_alphabetic() && w[1] != 'P' && w[1] != 'p' && w[1] != 's' {
+        if w[0].is_ascii_digit()
+            && w[1].is_ascii_alphabetic()
+            && w[1] != 'P'
+            && w[1] != 'p'
+            && w[1] != 's'
+        {
             weird_transitions += 1;
         }
     }
@@ -1559,8 +1595,7 @@ pub fn swap_universal_audio_asset(
         });
     }
     let donor_brr = &rom_b.data[audio_b.rom_offset..end_b];
-    let replacement =
-        resample_and_encode_brr_for_swap(donor_brr, audio_a.byte_len, audio_a.loops);
+    let replacement = resample_and_encode_brr_for_swap(donor_brr, audio_a.byte_len, audio_a.loops);
     session.swap_custom_bytes(
         rom_a,
         audio_a.rom_offset,
@@ -1607,7 +1642,9 @@ pub fn patch_universal_text_asset(
             text_asset.rom_offset,
             new_text.chars().take(24).collect::<String>()
         ),
-        SwapKind::CodePatch { byte_count: max_len },
+        SwapKind::CodePatch {
+            byte_count: max_len,
+        },
     )?;
     Ok(1)
 }
@@ -1713,9 +1750,7 @@ pub fn apply_universal_batch_swap(
     }
 
     // 3. Audio BRR Swaps
-    if opts.swap_audio
-        && !catalog_a.audio_samples.is_empty()
-        && !catalog_b.audio_samples.is_empty()
+    if opts.swap_audio && !catalog_a.audio_samples.is_empty() && !catalog_b.audio_samples.is_empty()
     {
         let count = opts
             .max_audio_swaps
@@ -1826,7 +1861,11 @@ pub fn export_universal_editable_project_with_mode(
                 i,
                 hex,
                 bgr,
-                if i + 1 < pal.colors_rgba.len() { "," } else { "" }
+                if i + 1 < pal.colors_rgba.len() {
+                    ","
+                } else {
+                    ""
+                }
             ));
         }
         json.push_str("  ]\n}\n");
@@ -1864,9 +1903,9 @@ pub fn export_universal_editable_project_with_mode(
             let bpt = gfx.format.bytes_per_tile();
             let total_tiles = raw_tiles.len() / bpt;
             let rows = total_tiles.div_ceil(cols).clamp(1, 64);
-            let (w, h, rgba) =
-                render_tile_sheet_rgba(&raw_tiles, 0, cols, rows, gfx.format, pal);
-            if let Some(img) = ImageBuffer::<Rgba<u8>, Vec<u8>>::from_raw(w as u32, h as u32, rgba) {
+            let (w, h, rgba) = render_tile_sheet_rgba(&raw_tiles, 0, cols, rows, gfx.format, pal);
+            if let Some(img) = ImageBuffer::<Rgba<u8>, Vec<u8>>::from_raw(w as u32, h as u32, rgba)
+            {
                 let _ = img.save(out_dir.join(&gfx.sheet_file));
             }
         }
@@ -1944,7 +1983,10 @@ pub fn export_universal_editable_project_with_mode(
     if let Some(custom_t) = catalog.texts.iter().find(|t| t.char_shift != 0) {
         let is_upper = custom_t.encoding.contains("A=");
         let base_c = if is_upper { b'A' as i16 } else { b'a' as i16 };
-        let mut tbl = format!("; Table Thingy (.tbl) auto-détectée pour {}\n", rom.canonical_title());
+        let mut tbl = format!(
+            "; Table Thingy (.tbl) auto-détectée pour {}\n",
+            rom.canonical_title()
+        );
         for k in 0..26i16 {
             let b = (base_c + k + custom_t.char_shift).rem_euclid(256) as u8;
             tbl.push_str(&format!("{:02X}={}\n", b, (base_c as u8 + k as u8) as char));
@@ -1958,13 +2000,12 @@ pub fn export_universal_editable_project_with_mode(
         if let Some(gfx) = catalog.graphics.get(tm.linked_gfx_idx) {
             if let Some(tiles) = read_universal_gfx_bytes(rom, gfx) {
                 let pal = snes_pals.get(tm.linked_pal_idx).unwrap_or(&fallback_pal);
-                let tm_slice = if tm.rom_offset + 1792 <= rom.data.len()
-                    && tm.rom_offset != gfx.rom_offset
-                {
-                    &rom.data[tm.rom_offset..tm.rom_offset + 1792]
-                } else {
-                    &[]
-                };
+                let tm_slice =
+                    if tm.rom_offset + 1792 <= rom.data.len() && tm.rom_offset != gfx.rom_offset {
+                        &rom.data[tm.rom_offset..tm.rom_offset + 1792]
+                    } else {
+                        &[]
+                    };
                 let (w, h, rgba) = render_tilemap_screen_rgba(
                     tm_slice,
                     &tiles,
@@ -1990,7 +2031,10 @@ pub fn export_universal_editable_project_with_mode(
         let bank_size = rom.bank_size();
         for (b_idx, bank_data) in rom.banks().iter().enumerate() {
             let (snes_bank, _) = rom.pc_to_snes(b_idx * bank_size);
-            fs::write(raw_dir.join(format!("bank_{:02X}.bin", snes_bank)), bank_data)?;
+            fs::write(
+                raw_dir.join(format!("bank_{:02X}.bin", snes_bank)),
+                bank_data,
+            )?;
         }
     }
 
@@ -2012,10 +2056,22 @@ pub fn export_universal_editable_project_with_mode(
     let mut proj = String::new();
     proj.push_str("{\n");
     proj.push_str("  \"schema\": \"snes_universal_project_v1\",\n");
-    proj.push_str(&format!("  \"rom_title\": \"{}\",\n", escape_json(&catalog.rom_title)));
-    proj.push_str(&format!("  \"mapping\": \"{}\",\n", escape_json(&catalog.mapping)));
-    proj.push_str(&format!("  \"rom_size_bytes\": {},\n", catalog.rom_size_bytes));
-    proj.push_str(&format!("  \"checksum\": \"0x{:04X}\",\n", catalog.checksum));
+    proj.push_str(&format!(
+        "  \"rom_title\": \"{}\",\n",
+        escape_json(&catalog.rom_title)
+    ));
+    proj.push_str(&format!(
+        "  \"mapping\": \"{}\",\n",
+        escape_json(&catalog.mapping)
+    ));
+    proj.push_str(&format!(
+        "  \"rom_size_bytes\": {},\n",
+        catalog.rom_size_bytes
+    ));
+    proj.push_str(&format!(
+        "  \"checksum\": \"0x{:04X}\",\n",
+        catalog.checksum
+    ));
     proj.push_str(&format!("  \"crc32\": \"0x{:08X}\",\n", catalog.crc32));
 
     proj.push_str("  \"graphics\": [\n");
@@ -2148,7 +2204,8 @@ pub fn reconstruct_rom_from_project(
         let budget = parse_json_usize(&line, "rom_byte_budget").unwrap_or(0);
         let dec_len = parse_json_usize(&line, "decompressed_len").unwrap_or(budget);
         let fmt_str = parse_json_string(&line, "format").unwrap_or_else(|| "4bpp".to_string());
-        let comp_str = parse_json_string(&line, "compression").unwrap_or_else(|| "none".to_string());
+        let comp_str =
+            parse_json_string(&line, "compression").unwrap_or_else(|| "none".to_string());
         let pal_idx = parse_json_usize(&line, "palette_idx").unwrap_or(0);
         let sheet_file = parse_json_string(&line, "sheet_file").unwrap_or_default();
 
@@ -2184,7 +2241,9 @@ pub fn reconstruct_rom_from_project(
 
             let orig_rendered = render_universal_gfx_asset(original_rom, &orig_asset, pal, 64);
             let pixels_changed = match orig_rendered {
-                Some((ow, oh, orgba)) => ow != w || oh != h || orgba != rgba_img.as_raw().as_slice(),
+                Some((ow, oh, orgba)) => {
+                    ow != w || oh != h || orgba != rgba_img.as_raw().as_slice()
+                }
                 None => true,
             };
 
@@ -2223,7 +2282,8 @@ pub fn reconstruct_rom_from_project(
 
         if let Ok(wav_bytes) = fs::read(&wav_path) {
             // Compare against exact original exported WAV so unmodified samples stay bit-identical
-            let orig_pcm = decode_brr_to_pcm16(&original_rom.data[rom_offset..rom_offset + byte_len]);
+            let orig_pcm =
+                decode_brr_to_pcm16(&original_rom.data[rom_offset..rom_offset + byte_len]);
             let orig_wav = encode_pcm16_to_wav(&orig_pcm, 16000);
             if wav_bytes != orig_wav {
                 if let Some((_sr, new_pcm)) = decode_wav_to_pcm16(&wav_bytes) {
@@ -2250,7 +2310,8 @@ pub fn reconstruct_rom_from_project(
             let id = parse_json_string(line, "id").unwrap_or_default();
             let rom_offset = parse_json_usize(line, "rom_offset").unwrap_or(0);
             let max_byte_len = parse_json_usize(line, "max_byte_len").unwrap_or(0);
-            let encoding = parse_json_string(line, "encoding").unwrap_or_else(|| "ASCII".to_string());
+            let encoding =
+                parse_json_string(line, "encoding").unwrap_or_else(|| "ASCII".to_string());
             let char_shift = parse_json_i16(line, "char_shift").unwrap_or(0);
             let space_byte = parse_json_usize(line, "space_byte").unwrap_or(0x20) as u8;
             let original_text = parse_json_string(line, "original_text");
@@ -2467,7 +2528,11 @@ fn export_universal_disassembly(rom: &SnesRom, disasm_dir: &Path) -> std::io::Re
             RomMapping::HiROM => "HIROM",
             RomMapping::ExHiROM => "EXHIROM",
         },
-        if rom.header.fast_rom { "FASTROM" } else { "SLOWROM" },
+        if rom.header.fast_rom {
+            "FASTROM"
+        } else {
+            "SLOWROM"
+        },
         rom.header.chipset_byte,
         rom.header.rom_size_byte,
         rom.header.sram_size_byte,
@@ -2498,7 +2563,10 @@ fn export_universal_disassembly(rom: &SnesRom, disasm_dir: &Path) -> std::io::Re
             asm_output.push_str(&instr);
             asm_output.push('\n');
         }
-        fs::write(disasm_dir.join(format!("bank_{:02X}.asm", snes_bank)), asm_output)?;
+        fs::write(
+            disasm_dir.join(format!("bank_{:02X}.asm", snes_bank)),
+            asm_output,
+        )?;
     }
 
     let dmas = scan_hardware_dma_transfers(rom);
@@ -2892,8 +2960,7 @@ fn export_oam_sprite_collection(
             .iter()
             .copied()
             .filter(|&pc| {
-                rom.data[pc] >= 2
-                    && (rom.data[pc] as usize + rom.data[pc + 1] as usize) >= 3
+                rom.data[pc] >= 2 && (rom.data[pc] as usize + rom.data[pc + 1] as usize) >= 3
             })
             .collect();
         let src = if substantial.len() >= 32 {
