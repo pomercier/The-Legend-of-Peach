@@ -93,7 +93,6 @@ impl SnesHeader {
 pub enum RecognizedGame {
     SuperMarioWorld,
     ZeldaAlttp,
-    DonkeyKongCountry,
     Unknown,
 }
 
@@ -102,7 +101,6 @@ impl RecognizedGame {
         match self {
             RecognizedGame::SuperMarioWorld => "SUPER MARIOWORLD",
             RecognizedGame::ZeldaAlttp => "THE LEGEND OF ZELDA",
-            RecognizedGame::DonkeyKongCountry => "DONKEY KONG COUNTRY",
             RecognizedGame::Unknown => "INCONNU / PERSONNALISÉ",
         }
     }
@@ -183,22 +181,10 @@ impl SnesRom {
             return RecognizedGame::ZeldaAlttp;
         }
 
-        // 3. Donkey Kong Country
-        if self.header.title.to_uppercase().contains("DONKEY KONG")
-            || self.crc32 == 0x3EAA5697
-            || (self.data.len() >= 4 * 1024 * 1024
-                && self.header.mapping == RomMapping::HiROM
-                && self.header.reset_vector == 0x8000
-                && self.header.nmi_vector == 0xA95F
-                && self.header.irq_vector == 0xA987)
-        {
-            return RecognizedGame::DonkeyKongCountry;
-        }
-
         RecognizedGame::Unknown
     }
 
-    /// Returns the authentic canonical game title (e.g. "SUPER MARIOWORLD", "THE LEGEND OF ZELDA", "DONKEY KONG COUNTRY")
+    /// Returns the authentic canonical game title (e.g. "SUPER MARIOWORLD", "THE LEGEND OF ZELDA")
     pub fn canonical_title(&self) -> String {
         let recognized = self.identify_game();
         if recognized != RecognizedGame::Unknown {

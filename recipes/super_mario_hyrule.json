@@ -1,19 +1,28 @@
 {
-  "name": "Super Mario Hyrule (Conversion Totale 100% Mario dans Zelda !)",
-  "custom_title": "SUPER MARIO HYRULE",
+  "name": "The Legend of Peach: A Mario to the Mushroom Kingdom (Conversion Totale 100% Super Mario World dans Zelda ALTTP !)",
+  "custom_title": "THE LEGEND OF PEACH",
   "base_rom": "roms/zelda_alttp.sfc",
   "donors": [
     { "alias": "smw", "path": "roms/super_mario_world.sfc" }
   ],
   "rules": [
+    { "target": "intro_title", "donor": "smw", "source": "peach_kingdom_intro" },
     { "target": "hero", "donor": "smw", "source": "mario" },
-    { "target": "audio_percussion", "donor": "smw", "source": "percussion" },
-    { "target": "soldiers", "donor": "smw", "source": "goomba" },
+    { "target": "princess", "donor": "smw", "source": "peach" },
+    { "target": "uncle_allies", "donor": "smw", "source": "luigi_yoshi_pack" },
+    { "target": "bosses", "donor": "smw", "source": "bosses_pack" },
+    { "target": "soldiers", "donor": "smw", "source": "koopa" },
+    { "target": "castle_guards", "donor": "smw", "source": "goomba" },
     { "target": "elite_knights", "donor": "smw", "source": "spiny" },
     { "target": "sewer_enemies", "donor": "smw", "source": "sewer_pack" },
+    { "target": "overworld_enemies", "donor": "smw", "source": "overworld_pack" },
+    { "target": "zoras_water", "donor": "smw", "source": "water_pack" },
+    { "target": "dungeon_enemies", "donor": "smw", "source": "dungeon_pack" },
+    { "target": "dungeon_extra", "donor": "smw", "source": "dungeon_extra_pack" },
     { "target": "items", "donor": "smw", "source": "items_pack" },
-    { "target": "overworld_enemies", "donor": "smw", "source": "piranha" },
-    { "target": "dungeon_enemies", "donor": "smw", "source": "magikoopa" },
-    { "target": "rocks", "donor": "smw", "source": "qblock" }
+    { "target": "chests_pots", "donor": "smw", "source": "blocks_pack" },
+    { "target": "rocks", "donor": "smw", "source": "qblock" },
+    { "target": "audio_percussion", "donor": "smw", "source": "percussion" },
+    { "target": "mario_music", "donor": "smw", "source": "nspc_soundtrack" }
   ]
 }

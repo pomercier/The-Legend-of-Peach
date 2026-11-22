@@ -1,8 +1,8 @@
 //! Universal Multi-Game SNES Omni-Mixer Engine (`N` Donor ROMs -> 1 Base ROM)
 //!
 //! Enables mixing **anything with anything** across any combination of SNES ROMs:
-//! - Semantic high-fidelity cross-game mixing for recognized games (Zelda ALTTP, Super Mario World,
-//!   Donkey Kong Country): heroes, mounts, soldiers/enemies, collectibles/items, world tiles, palettes,
+//! - Semantic high-fidelity cross-game mixing for recognized games (Zelda ALTTP, Super Mario World):
+//!   heroes, mounts, soldiers/enemies, collectibles/items, world tiles, palettes,
 //!   and unpitched BRR percussion audio.
 //! - 100% generic ROM-agnostic mixing (`gfx:N`, `pal:N`, `audio:N`) powered by hardware DMA/LZ2/BRR
 //!   discovery for ANY unknown LoROM / HiROM / ExHiROM cartridge.
@@ -13,8 +13,8 @@ use std::time::Instant;
 
 use crate::audio::{resample_and_encode_brr_for_swap, scan_brr_samples};
 use crate::demo::{
-    apply_donkey_kong_into_smw_yoshi, apply_link_into_smw_swap, apply_link_world_title_screen,
-    apply_mario_into_zelda_alttp_swap, apply_swap_into_dkc,
+    apply_link_into_smw_swap, apply_link_world_title_screen,
+    apply_mario_into_zelda_alttp_swap,
 };
 use crate::disasm_dma::{compress_nintendo_lz2_with_endian, decompress_nintendo_lz2_with_endian};
 use crate::graphics::{remap_and_transcode_tiles, SnesPalette, TileFormat};
@@ -332,7 +332,7 @@ impl MixRecipe {
 }
 
 // =============================================================================
-// LOW-LEVEL 3BPP / 4BPP / POINTER-TABLE HELPERS (SMW, ZELDA, DKC, GENERIC)
+// LOW-LEVEL 3BPP / 4BPP / POINTER-TABLE HELPERS (SMW, ZELDA, GENERIC)
 // =============================================================================
 
 fn find_smw_gfx_table(smw: &[u8]) -> Option<(usize, usize, usize)> {
@@ -349,7 +349,7 @@ fn find_smw_gfx_table(smw: &[u8]) -> Option<(usize, usize, usize)> {
     None
 }
 
-fn load_smw_3bpp_sheet(smw: &[u8], sheet: usize) -> Option<(Vec<u8>, usize, usize)> {
+pub(crate) fn load_smw_3bpp_sheet(smw: &[u8], sheet: usize) -> Option<(Vec<u8>, usize, usize)> {
     let (lo_b, hi_b, bk_b) = find_smw_gfx_table(smw)?;
     if sheet >= 0x32 {
         return None;
@@ -359,6 +359,22 @@ fn load_smw_3bpp_sheet(smw: &[u8], sheet: usize) -> Option<(Vec<u8>, usize, usiz
         | (smw[lo_b + sheet] as usize);
     let (data, clen) = decompress_nintendo_lz2_with_endian(smw, pc, 4096, true)?;
     Some((data, pc, clen))
+}
+
+pub(crate) fn find_alttp_gfx_table_pub(zelda: &[u8]) -> Option<(usize, usize, usize)> {
+    find_alttp_gfx_table(zelda)
+}
+
+/// Exact unshifted ALTTP GFX pointer table (`0x4F00` / `0x4FDF` / `0x50BE` in FR PAL):
+/// - `raw_idx = 0x00..=0x72` -> BG tileset sheet `bg_id`
+/// - `raw_idx = 0x73 + sp_id` -> Sprite sheet `sp_id` (`SP[0x00] = raw 0x73 = $10:F000`)
+pub(crate) fn find_alttp_raw_gfx_table(zelda: &[u8]) -> Option<(usize, usize, usize)> {
+    let (b, h, l) = find_alttp_gfx_table(zelda)?;
+    if b >= 2 && h >= 2 && l >= 2 {
+        Some((b - 2, h - 2, l - 2))
+    } else {
+        None
+    }
 }
 
 fn find_alttp_gfx_table(zelda: &[u8]) -> Option<(usize, usize, usize)> {
@@ -396,7 +412,7 @@ pub(crate) fn load_alttp_3bpp_sheet(zelda: &[u8], sheet: usize) -> Option<(Vec<u
     Some((data, pc, clen))
 }
 
-fn read_3bpp_16x16(buf: &[u8], tx: usize, ty: usize) -> [[u8; 16]; 16] {
+pub(crate) fn read_3bpp_16x16(buf: &[u8], tx: usize, ty: usize) -> [[u8; 16]; 16] {
     let mut px = [[0u8; 16]; 16];
     for dy in 0..2usize {
         for dx in 0..2usize {
@@ -419,6 +435,10 @@ fn read_3bpp_16x16(buf: &[u8], tx: usize, ty: usize) -> [[u8; 16]; 16] {
         }
     }
     px
+}
+
+pub(crate) fn write_3bpp_16x16_pub(buf: &mut [u8], tx: usize, ty: usize, px: &[[u8; 16]; 16]) {
+    write_3bpp_16x16(buf, tx, ty, px);
 }
 
 fn write_3bpp_16x16(buf: &mut [u8], tx: usize, ty: usize, px: &[[u8; 16]; 16]) {
@@ -446,6 +466,35 @@ fn write_3bpp_16x16(buf: &mut [u8], tx: usize, ty: usize, px: &[[u8; 16]; 16]) {
     }
 }
 
+pub(crate) fn write_3bpp_8x8_pub(buf: &mut [u8], tx: usize, ty: usize, px: &[[u8; 8]; 8]) {
+    write_3bpp_8x8(buf, tx, ty, px);
+}
+
+fn write_3bpp_8x8(buf: &mut [u8], tx: usize, ty: usize, px: &[[u8; 8]; 8]) {
+    let ti = ty * 16 + tx;
+    let off = ti * 24;
+    if off + 24 > buf.len() {
+        return;
+    }
+    for y in 0..8usize {
+        let (mut b0, mut b1, mut b2) = (0u8, 0u8, 0u8);
+        for x in 0..8usize {
+            let c = px[y][x] & 7;
+            let sh = 7 - x;
+            b0 |= (c & 1) << sh;
+            b1 |= ((c >> 1) & 1) << sh;
+            b2 |= ((c >> 2) & 1) << sh;
+        }
+        buf[off + y * 2] = b0;
+        buf[off + y * 2 + 1] = b1;
+        buf[off + 16 + y] = b2;
+    }
+}
+
+pub(crate) fn remap_16x16_pub(src: &[[u8; 16]; 16], lut: &[u8; 8]) -> [[u8; 16]; 16] {
+    remap_16x16(src, lut)
+}
+
 fn remap_16x16(src: &[[u8; 16]; 16], lut: &[u8; 8]) -> [[u8; 16]; 16] {
     let mut out = [[0u8; 16]; 16];
     for y in 0..16 {
@@ -454,6 +503,10 @@ fn remap_16x16(src: &[[u8; 16]; 16], lut: &[u8; 8]) -> [[u8; 16]; 16] {
         }
     }
     out
+}
+
+pub(crate) fn flip_h_16x16_pub(src: &[[u8; 16]; 16]) -> [[u8; 16]; 16] {
+    flip_h_16x16(src)
 }
 
 fn flip_h_16x16(src: &[[u8; 16]; 16]) -> [[u8; 16]; 16] {
@@ -537,19 +590,6 @@ fn render_16x32_preview(top: &[[u8; 16]; 16], bot: &[[u8; 16]; 16], pal: &[[u8; 
     out
 }
 
-fn default_dk_palette_rgba() -> Vec<[u8; 4]> {
-    vec![
-        [0, 0, 0, 0],
-        [255, 255, 255, 255], // 1: White eyes
-        [24, 16, 12, 255],    // 2: Dark outline
-        [104, 48, 24, 255],   // 3: Deep fur brown
-        [164, 84, 40, 255],   // 4: Mid fur brown
-        [216, 136, 72, 255],  // 5: Fur highlight
-        [236, 36, 36, 255],   // 6: Iconic Red Tie
-        [248, 196, 136, 255], // 7: Warm tan muzzle/chest
-    ]
-}
-
 fn default_smw_enemy_palette_rgba() -> Vec<[u8; 4]> {
     vec![
         [0, 0, 0, 0],
@@ -572,16 +612,74 @@ fn extract_donor_16x16_for_zelda(
     for_soldier: bool,
 ) -> Option<([[u8; 16]; 16], [[u8; 16]; 16])> {
     const LUT_STD: [u8; 8] = [0, 1, 5, 3, 2, 4, 6, 7];
+    const LUT_KOOPA_TRUE: [u8; 8] = [0, 1, 5, 7, 6, 6, 3, 4]; // Universal Green/Blue/Red Koopa shell + warm yellow-tan snout (ZERO pink!)
     const LUT_GOOMBA_SOL: [u8; 8] = [0, 1, 5, 7, 6, 4, 4, 3];
-    const LUT_MUSHROOM: [u8; 8] = [0, 1, 5, 7, 6, 6, 6, 7];
-    const LUT_GOLD: [u8; 8] = [0, 1, 5, 3, 2, 6, 6, 3];
+    const LUT_GOOMBA_BRN: [u8; 8] = [0, 1, 5, 7, 6, 1, 7, 2]; // RTX-3080 CIELAB optimal for PAL_ALTTP_BRN (S 0x8D)
+    const LUT_MUSHROOM: [u8; 8] = [0, 1, 5, 3, 2, 2, 2, 3];   // Verified ALTTP 0x0DD228 Red Sprite Pal: 2/3=Vibrant Ruby Red cap, 1=White spots/stem, 5=Outline!
+    const LUT_GOLD: [u8; 8] = [0, 1, 5, 2, 6, 6, 7, 2];       // RTX-3080 CIELAB optimal for PAL_ALTTP_GLD (pure gold, zero violet!)
     const LUT_BOBOMB: [u8; 8] = [0, 1, 5, 6, 2, 1, 5, 5];
-    const LUT_DK_TO_ZELDA: [u8; 8] = [0, 1, 5, 3, 3, 4, 7, 4];
+    const LUT_QBLOCK_SPR: [u8; 8] = [0, 1, 5, 2, 6, 6, 7, 2]; // RTX-3080 CIELAB optimal (91.6% sim!)
+    const LUT_MAGIK_AGA: [u8; 8] = [0, 1, 5, 7, 6, 1, 2, 3];  // RTX-3080 CIELAB optimal for PAL_ALTTP_AGA (blue/purple robe + gold hat!)
+    const LUT_DRYBONES: [u8; 8] = [0, 1, 5, 7, 2, 1, 6, 7];   // RTX-3080 CIELAB optimal for PAL_ALTTP_CRM (96.5% sim, crisp white/silver bones!)
+    const LUT_THWOMP: [u8; 8] = [0, 1, 5, 7, 6, 1, 6, 7];     // RTX-3080 CIELAB optimal for PAL_ALTTP_CRM (95.3% SSIM!)
+    const LUT_BOO: [u8; 8] = [0, 1, 5, 7, 3, 1, 1, 6];        // RTX-3080 CIELAB optimal for PAL_ALTTP_CRM (90.4% sim, white + red tongue!)
+    const LUT_YOSHI_EGG: [u8; 8] = [0, 1, 5, 7, 6, 1, 2, 3];  // RTX-3080 CIELAB optimal for PAL_ALTTP_GRN (91.4% sim, white + green spots!)
+    const LUT_FIRE_FLW: [u8; 8] = [0, 1, 5, 3, 1, 4, 3, 2];   // Verified ALTTP 0x0DD228 Red Lantern Pal: 2/3=Fiery Red petals, 1/4=White/Cream stem, 5=Outline!
+
+    let composite_koopa = |g01: &[u8], hx: usize, bx: usize| -> [[u8; 16]; 16] {
+        let h = remap_16x16(&read_3bpp_16x16(g01, hx, 0), &LUT_KOOPA_TRUE);
+        let b = remap_16x16(&read_3bpp_16x16(g01, bx, 2), &LUT_KOOPA_TRUE);
+        let mut out = [[0u8; 16]; 16];
+        for y in 4..16usize {
+            for x in 0..16usize {
+                if b[y][x] != 0 {
+                    out[y][x] = b[y][x];
+                }
+            }
+        }
+        for y in 0..10usize {
+            let sy = y + 5;
+            if sy < 16 {
+                for x in 0..16usize {
+                    if h[sy][x] != 0 {
+                        out[y][x] = h[sy][x];
+                    }
+                }
+            }
+        }
+        out
+    };
 
     match source_id {
+        "koopa" => {
+            let (g01, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x01)?;
+            Some((composite_koopa(&g01, 2, 0), composite_koopa(&g01, 4, 2)))
+        }
+        "chargin_chuck" => {
+            let (g13, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x13)?;
+            let h1 = remap_16x16(&read_3bpp_16x16(&g13, 14, 0), &LUT_STD);
+            let b1 = remap_16x16(&read_3bpp_16x16(&g13, 6, 2), &LUT_STD);
+            let mut c1 = [[0u8; 16]; 16];
+            for y in 6..16usize {
+                for x in 0..16usize {
+                    if b1[y - 1][x] != 0 {
+                        c1[y][x] = b1[y - 1][x];
+                    }
+                }
+            }
+            for y in 0..9usize {
+                for x in 0..16usize {
+                    if h1[y + 3][x] != 0 {
+                        c1[y][x] = h1[y + 3][x];
+                    }
+                }
+            }
+            let c2 = remap_16x16(&read_3bpp_16x16(&g13, 6, 4), &LUT_STD);
+            Some((c1, c2))
+        }
         "goomba" => {
             let (g01, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x01)?;
-            let lut = if for_soldier { &LUT_GOOMBA_SOL } else { &LUT_STD };
+            let lut = if for_soldier { &LUT_GOOMBA_SOL } else { &LUT_GOOMBA_BRN };
             Some((
                 remap_16x16(&read_3bpp_16x16(&g01, 8, 2), lut),
                 remap_16x16(&read_3bpp_16x16(&g01, 10, 2), lut),
@@ -590,8 +688,8 @@ fn extract_donor_16x16_for_zelda(
         "koopa_shell" => {
             let (g01, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x01)?;
             Some((
-                remap_16x16(&read_3bpp_16x16(&g01, 10, 0), &LUT_STD),
-                remap_16x16(&read_3bpp_16x16(&g01, 12, 0), &LUT_STD),
+                remap_16x16(&read_3bpp_16x16(&g01, 10, 0), &LUT_KOOPA_TRUE),
+                remap_16x16(&read_3bpp_16x16(&g01, 12, 0), &LUT_KOOPA_TRUE),
             ))
         }
         "spiny" => {
@@ -601,11 +699,68 @@ fn extract_donor_16x16_for_zelda(
                 remap_16x16(&read_3bpp_16x16(&g02, 2, 0), &LUT_STD),
             ))
         }
+        "buzzy_beetle" => {
+            let (g02, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x02)?;
+            let bb = remap_16x16(&read_3bpp_16x16(&g02, 12, 0), &LUT_STD);
+            Some((bb, flip_h_16x16(&bb)))
+        }
+        "dry_bones" => {
+            let (g03, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x03)?;
+            Some((
+                remap_16x16(&read_3bpp_16x16(&g03, 4, 0), &LUT_DRYBONES),
+                remap_16x16(&read_3bpp_16x16(&g03, 6, 0), &LUT_DRYBONES),
+            ))
+        }
+        "thwomp" => {
+            let (g03, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x03)?;
+            Some((
+                remap_16x16(&read_3bpp_16x16(&g03, 8, 4), &LUT_THWOMP),
+                remap_16x16(&read_3bpp_16x16(&g03, 10, 4), &LUT_THWOMP),
+            ))
+        }
+        "bowser_statue" => {
+            let (g03, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x03)?;
+            Some((
+                remap_16x16(&read_3bpp_16x16(&g03, 0, 4), &LUT_THWOMP),
+                remap_16x16(&read_3bpp_16x16(&g03, 2, 4), &LUT_THWOMP),
+            ))
+        }
+        "wiggler" => {
+            let (g04, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x04)?;
+            Some((
+                remap_16x16(&read_3bpp_16x16(&g04, 0, 0), &LUT_STD),
+                remap_16x16(&read_3bpp_16x16(&g04, 2, 0), &LUT_STD),
+            ))
+        }
+        "monty_mole" => {
+            let (g04, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x04)?;
+            Some((
+                remap_16x16(&read_3bpp_16x16(&g04, 0, 6), &LUT_STD),
+                remap_16x16(&read_3bpp_16x16(&g04, 2, 6), &LUT_STD),
+            ))
+        }
+        "volcano_lotus" => {
+            let (g04, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x04)?;
+            let vl = remap_16x16(&read_3bpp_16x16(&g04, 14, 4), &LUT_STD);
+            Some((vl, flip_h_16x16(&vl)))
+        }
         "boo" | "sewer_pack" => {
             let (g06, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x06)?;
             Some((
-                remap_16x16(&read_3bpp_16x16(&g06, 12, 0), &LUT_STD),
-                remap_16x16(&read_3bpp_16x16(&g06, 14, 0), &LUT_STD),
+                remap_16x16(&read_3bpp_16x16(&g06, 12, 0), &LUT_BOO),
+                remap_16x16(&read_3bpp_16x16(&g06, 14, 0), &LUT_BOO),
+            ))
+        }
+        "swooper" => {
+            let (g06, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x06)?;
+            let sw = remap_16x16(&read_3bpp_16x16(&g06, 14, 4), &LUT_STD);
+            Some((sw, flip_h_16x16(&sw)))
+        }
+        "cheep_cheep" => {
+            let (g06, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x06)?;
+            Some((
+                remap_16x16(&read_3bpp_16x16(&g06, 10, 6), &LUT_STD),
+                remap_16x16(&read_3bpp_16x16(&g06, 12, 6), &LUT_STD),
             ))
         }
         "piranha" | "overworld_pack" => {
@@ -618,8 +773,8 @@ fn extract_donor_16x16_for_zelda(
         "magikoopa" | "dungeon_pack" => {
             let (g03, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x03)?;
             Some((
-                remap_16x16(&read_3bpp_16x16(&g03, 0, 2), &LUT_STD),
-                remap_16x16(&read_3bpp_16x16(&g03, 2, 2), &LUT_STD),
+                remap_16x16(&read_3bpp_16x16(&g03, 0, 2), &LUT_MAGIK_AGA),
+                remap_16x16(&read_3bpp_16x16(&g03, 2, 2), &LUT_MAGIK_AGA),
             ))
         }
         "bobomb" => {
@@ -627,25 +782,85 @@ fn extract_donor_16x16_for_zelda(
             let b = remap_16x16(&read_3bpp_16x16(&g02, 10, 4), &LUT_BOBOMB);
             Some((b, flip_h_16x16(&b)))
         }
+        "bullet_bill" => {
+            let (g02, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x02)?;
+            let bb = remap_16x16(&read_3bpp_16x16(&g02, 2, 4), &LUT_BOBOMB);
+            Some((bb, flip_h_16x16(&bb)))
+        }
         "coin" => {
             let (g01, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x01)?;
             let c = remap_16x16(&read_3bpp_16x16(&g01, 8, 6), &LUT_GOLD);
             Some((c, c))
+        }
+        "smw_key" => {
+            let (g01, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x01)?;
+            let k = remap_16x16(&read_3bpp_16x16(&g01, 12, 6), &LUT_GOLD);
+            Some((k, k))
+        }
+        "berry" => {
+            let (g01, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x01)?;
+            let br = remap_16x16(&read_3bpp_16x16(&g01, 0, 0), &LUT_MUSHROOM);
+            Some((br, br))
         }
         "mushroom" => {
             let (g00, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x00)?;
             let m = remap_16x16(&read_3bpp_16x16(&g00, 4, 2), &LUT_MUSHROOM);
             Some((m, m))
         }
+        "fire_flower" => {
+            let (g00, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x00)?;
+            let ff = remap_16x16(&read_3bpp_16x16(&g00, 6, 2), &LUT_FIRE_FLW);
+            Some((ff, ff))
+        }
+        "starman" => {
+            let (g00, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x00)?;
+            let st = remap_16x16(&read_3bpp_16x16(&g00, 8, 4), &LUT_GOLD);
+            Some((st, st))
+        }
+        "cape_feather" => {
+            let (g00, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x00)?;
+            let cf = remap_16x16(&read_3bpp_16x16(&g00, 14, 0), &LUT_GOLD);
+            Some((cf, cf))
+        }
+        "p_switch" => {
+            let (g00, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x00)?;
+            let ps = remap_16x16(&read_3bpp_16x16(&g00, 2, 4), &LUT_STD);
+            Some((ps, ps))
+        }
+        "yoshi_egg" => {
+            let (g13, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x13)?;
+            Some((
+                remap_16x16(&read_3bpp_16x16(&g13, 0, 0), &LUT_YOSHI_EGG),
+                remap_16x16(&read_3bpp_16x16(&g13, 2, 0), &LUT_YOSHI_EGG),
+            ))
+        }
+        "moon_3up" => {
+            let (g13, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x13)?;
+            let m = remap_16x16(&read_3bpp_16x16(&g13, 4, 0), &LUT_GOLD);
+            Some((m, m))
+        }
+        "baby_yoshi" => {
+            let (g00, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x00)?;
+            let by = remap_16x16(&read_3bpp_16x16(&g00, 14, 4), &[0, 1, 5, 7, 6, 1, 6, 7]);
+            Some((by, flip_h_16x16(&by)))
+        }
         "qblock" => {
             let (g00, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x00)?;
             let q = remap_16x16(&read_3bpp_16x16(&g00, 10, 2), &[0, 1, 2, 3, 7, 6, 6, 3]);
             Some((q, q))
         }
-        "baby_dk" | "dk" => {
-            let dk1 = remap_16x16(&crate::ai_sprites::DK_BABY_DK, &LUT_DK_TO_ZELDA);
-            Some((dk1, flip_h_16x16(&dk1)))
+        "qblock_spr" => {
+            let (g00, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x00)?;
+            let q = remap_16x16(&read_3bpp_16x16(&g00, 10, 2), &LUT_QBLOCK_SPR);
+            let used = remap_16x16(&read_3bpp_16x16(&g00, 14, 2), &LUT_QBLOCK_SPR);
+            Some((q, used))
         }
+        "turn_block" => {
+            let (g00, _, _) = load_smw_3bpp_sheet(&donor_rom.data, 0x00)?;
+            let tb = remap_16x16(&read_3bpp_16x16(&g00, 0, 4), &[0, 1, 2, 3, 7, 6, 6, 3]);
+            Some((tb, tb))
+        }
+
         "zelda_soldier" => {
             let (sba, _, _) = load_alttp_3bpp_sheet(&donor_rom.data, 0xBA)?;
             Some((read_3bpp_16x16(&sba, 0, 0), read_3bpp_16x16(&sba, 2, 0)))
@@ -702,10 +917,7 @@ fn extract_donor_16x16_for_smw(
             let h = remap_16x16(&read_3bpp_16x16(&scd, 0, 2), &LUT_ZELDA_TO_SMW);
             Some((h, h))
         }
-        "baby_dk" | "dk" => {
-            let dk = crate::ai_sprites::DK_BABY_DK;
-            Some((dk, flip_h_16x16(&dk)))
-        }
+
         _ => None,
     }
 }
@@ -895,7 +1107,7 @@ pub fn inspect_rom_for_mixing(
                     id: "mount".into(),
                     label: "Monture Yoshi (GFX33 + Bébé Yoshi GFX10 + Palette)".into(),
                     category: MixSlotCategory::Mount,
-                    description: "Remplace Yoshi par Donkey Kong ou un autre compagnon".into(),
+                    description: "Remplace Yoshi par un autre compagnon".into(),
                 },
                 MixTargetSlot {
                     id: "enemies".into(),
@@ -1083,64 +1295,6 @@ pub fn inspect_rom_for_mixing(
                 compatible_targets: vec![MixSlotCategory::Audio],
                 description: "Échantillons BRR non bouclés de SMW".into(),
                 preview_rgba: audio_wave_rgba(245, 180, 50),
-                preview_w: 16,
-                preview_h: 16,
-            });
-        }
-        RecognizedGame::DonkeyKongCountry => {
-            target_slots.extend([
-                MixTargetSlot {
-                    id: "hero".into(),
-                    label: "Héros Donkey Kong (Frames OAM 4bpp + Palette 0x39A068)".into(),
-                    category: MixSlotCategory::Hero,
-                    description: "Remplace Donkey Kong et sa palette par un autre héros (Mario/Link)".into(),
-                },
-                MixTargetSlot {
-                    id: "palette".into(),
-                    label: "Palette Principale DK (0x39A068 BGR555)".into(),
-                    category: MixSlotCategory::Palette,
-                    description: "Remplace la palette BGR555 de Donkey Kong".into(),
-                },
-                MixTargetSlot {
-                    id: "audio_percussion".into(),
-                    label: "Percussions Audio BRR DKC".into(),
-                    category: MixSlotCategory::Audio,
-                    description: "Échantillons BRR percussifs non bouclés de DKC".into(),
-                },
-            ]);
-
-            let dk_pal = default_dk_palette_rgba();
-            donor_sources.push(MixDonorSource {
-                id: "dk".into(),
-                label: "Donkey Kong (DKC — Héros 16x32 & Monture)".into(),
-                category: MixSlotCategory::Hero,
-                compatible_targets: vec![MixSlotCategory::Hero, MixSlotCategory::Mount],
-                description: "Donkey Kong (fourrure brune, cravate rouge, museau tan) jouable en Héros ou Monture".into(),
-                preview_rgba: render_16x32_preview(
-                    &crate::ai_sprites::DK_HEAD_NORM,
-                    &crate::ai_sprites::DK_BODY_ST,
-                    &dk_pal,
-                ),
-                preview_w: 16,
-                preview_h: 32,
-            });
-            donor_sources.push(MixDonorSource {
-                id: "baby_dk".into(),
-                label: "Mini Donkey Kong (DKC 16x16)".into(),
-                category: MixSlotCategory::Enemies,
-                compatible_targets: vec![MixSlotCategory::Soldiers, MixSlotCategory::Enemies],
-                description: "Mini Donkey Kong 16x16 utilisable comme ennemi ou garde".into(),
-                preview_rgba: render_16x16_preview(&crate::ai_sprites::DK_BABY_DK, &dk_pal),
-                preview_w: 16,
-                preview_h: 16,
-            });
-            donor_sources.push(MixDonorSource {
-                id: "percussion".into(),
-                label: "Percussions Jungle BRR Donkey Kong Country".into(),
-                category: MixSlotCategory::Audio,
-                compatible_targets: vec![MixSlotCategory::Audio],
-                description: "Bongos et percussions haute fidélité BRR de David Wise (DKC)".into(),
-                preview_rgba: audio_wave_rgba(235, 130, 50),
                 preview_w: 16,
                 preview_h: 16,
             });
@@ -1342,114 +1496,41 @@ pub fn suggest_presets(base: &GameMixProfile, donors: &[GameMixProfile]) -> Vec<
                     MixRule { target_slot: "items".into(), donor_alias: smw.alias.clone(), donor_source: "items_pack".into() },
                     MixRule { target_slot: "world_rocks".into(), donor_alias: smw.alias.clone(), donor_source: "qblock".into() },
                 ];
-                if let Some(dkc) = find_donor(RecognizedGame::DonkeyKongCountry) {
-                    rules.push(MixRule {
-                        target_slot: "audio_percussion".into(),
-                        donor_alias: dkc.alias.clone(),
-                        donor_source: "percussion".into(),
-                    });
-                }
+                rules.push(MixRule {
+                    target_slot: "audio_percussion".into(),
+                    donor_alias: smw.alias.clone(),
+                    donor_source: "percussion".into(),
+                });
                 presets.push(MixPreset {
                     id: "mario_hyrule_complete".into(),
                     name: "Super Mario Hyrule (Complet)".into(),
-                    description: "Mario 16x32 (SMW) + Soldats Goombas + Spiny + Boos + Piranha + Pièces/Champignons/Bob-ombs + Percussions DKC".into(),
+                    description: "Mario 16x32 (SMW) + Soldats Goombas + Spiny + Boos + Piranha + Pièces/Champignons/Bob-ombs + Percussions SMW".into(),
                     custom_title: "SUPER MARIO HYRULE".into(),
-                    rules,
-                });
-            }
-            if let Some(dkc) = find_donor(RecognizedGame::DonkeyKongCountry) {
-                let mut rules = vec![
-                    MixRule { target_slot: "hero".into(), donor_alias: dkc.alias.clone(), donor_source: "dk".into() },
-                    MixRule { target_slot: "audio_percussion".into(), donor_alias: dkc.alias.clone(), donor_source: "percussion".into() },
-                ];
-                if let Some(smw) = find_donor(RecognizedGame::SuperMarioWorld) {
-                    rules.push(MixRule { target_slot: "soldiers".into(), donor_alias: smw.alias.clone(), donor_source: "goomba".into() });
-                    rules.push(MixRule { target_slot: "elite_knights".into(), donor_alias: smw.alias.clone(), donor_source: "spiny".into() });
-                    rules.push(MixRule { target_slot: "sewer_enemies".into(), donor_alias: smw.alias.clone(), donor_source: "sewer_pack".into() });
-                    rules.push(MixRule { target_slot: "items".into(), donor_alias: smw.alias.clone(), donor_source: "items_pack".into() });
-                } else {
-                    rules.push(MixRule { target_slot: "soldiers".into(), donor_alias: dkc.alias.clone(), donor_source: "baby_dk".into() });
-                }
-                presets.push(MixPreset {
-                    id: "donkey_hyrule_3games".into(),
-                    name: "Donkey Kong dans Hyrule (Crossover 3 Jeux !)".into(),
-                    description: "Héros Donkey Kong (DKC) + Soldats Goombas & Objets (SMW) + Percussions Jungle (DKC) dans le monde de Zelda !".into(),
-                    custom_title: "DONKEY HYRULE WORLD".into(),
                     rules,
                 });
             }
         }
         RecognizedGame::SuperMarioWorld => {
             if let Some(zelda) = find_donor(RecognizedGame::ZeldaAlttp) {
-                let mut rules = vec![
-                    MixRule { target_slot: "hero".into(), donor_alias: zelda.alias.clone(), donor_source: "link".into() },
-                    MixRule { target_slot: "title_story".into(), donor_alias: zelda.alias.clone(), donor_source: "hyrule_theme".into() },
-                ];
-                if let Some(dkc) = find_donor(RecognizedGame::DonkeyKongCountry) {
-                    rules.push(MixRule { target_slot: "mount".into(), donor_alias: dkc.alias.clone(), donor_source: "dk".into() });
-                    rules.push(MixRule { target_slot: "audio_percussion".into(), donor_alias: dkc.alias.clone(), donor_source: "percussion".into() });
-                }
                 presets.push(MixPreset {
-                    id: "super_link_dk_world".into(),
-                    name: "Super Link & DK World (Crossover 3 Jeux !)".into(),
-                    description: "Héros Link (Zelda) chevauchant Donkey Kong (DKC) + Percussions DKC dans Super Mario World !".into(),
+                    id: "super_link_world".into(),
+                    name: "Super Link World (Link dans SMW)".into(),
+                    description: "Héros Link (Zelda) + Titre Super Link World dans Super Mario World !".into(),
                     custom_title: "SUPER LINK WORLD".into(),
-                    rules,
-                });
-
-                let mut inv_rules = vec![
-                    MixRule { target_slot: "hero".into(), donor_alias: zelda.alias.clone(), donor_source: "link".into() },
-                    MixRule { target_slot: "enemies".into(), donor_alias: zelda.alias.clone(), donor_source: "zelda_soldier".into() },
-                    MixRule { target_slot: "items".into(), donor_alias: zelda.alias.clone(), donor_source: "zelda_items_pack".into() },
-                ];
-                if let Some(dkc) = find_donor(RecognizedGame::DonkeyKongCountry) {
-                    inv_rules.push(MixRule { target_slot: "mount".into(), donor_alias: dkc.alias.clone(), donor_source: "dk".into() });
-                }
-                presets.push(MixPreset {
-                    id: "hyrule_invasion_smw".into(),
-                    name: "Invasion d'Hyrule dans Mario World".into(),
-                    description: "Link + Ennemis Soldats d'Hyrule + Rubis & Cœurs + Monture Donkey Kong dans SMW !".into(),
-                    custom_title: "HYRULE MARIO WORLD".into(),
-                    rules: inv_rules,
-                });
-            }
-            if let Some(dkc) = find_donor(RecognizedGame::DonkeyKongCountry) {
-                presets.push(MixPreset {
-                    id: "dk_mario_world".into(),
-                    name: "Donkey Kong World (DK Jouable dans SMW !)".into(),
-                    description: "Joue Donkey Kong directement comme héros dans Super Mario World + Percussions Jungle DKC !".into(),
-                    custom_title: "DONKEY KONG WORLD".into(),
-                    rules: vec![
-                        MixRule { target_slot: "hero".into(), donor_alias: dkc.alias.clone(), donor_source: "dk".into() },
-                        MixRule { target_slot: "audio_percussion".into(), donor_alias: dkc.alias.clone(), donor_source: "percussion".into() },
-                    ],
-                });
-            }
-        }
-        RecognizedGame::DonkeyKongCountry => {
-            if let Some(smw) = find_donor(RecognizedGame::SuperMarioWorld) {
-                let mut rules = vec![
-                    MixRule { target_slot: "hero".into(), donor_alias: smw.alias.clone(), donor_source: "mario".into() },
-                ];
-                if let Some(zelda) = find_donor(RecognizedGame::ZeldaAlttp) {
-                    rules.push(MixRule { target_slot: "audio_percussion".into(), donor_alias: zelda.alias.clone(), donor_source: "percussion".into() });
-                }
-                presets.push(MixPreset {
-                    id: "mario_in_dkc".into(),
-                    name: "Mario dans Donkey Kong Country".into(),
-                    description: "Injecte les tuiles 4bpp et la palette de Mario (SMW) + percussions Zelda dans DKC 4 Mo HiROM !".into(),
-                    custom_title: "MARIO KONG COUNTRY".into(),
-                    rules,
-                });
-            }
-            if let Some(zelda) = find_donor(RecognizedGame::ZeldaAlttp) {
-                presets.push(MixPreset {
-                    id: "link_in_dkc".into(),
-                    name: "Link dans Donkey Kong Country".into(),
-                    description: "Injecte les tuiles 4bpp et la palette Tunique Verte de Link (Zelda) dans DKC 4 Mo HiROM !".into(),
-                    custom_title: "LINK KONG COUNTRY".into(),
                     rules: vec![
                         MixRule { target_slot: "hero".into(), donor_alias: zelda.alias.clone(), donor_source: "link".into() },
+                        MixRule { target_slot: "title_story".into(), donor_alias: zelda.alias.clone(), donor_source: "hyrule_theme".into() },
+                    ],
+                });
+                presets.push(MixPreset {
+                    id: "hyrule_mario_world".into(),
+                    name: "Crossover Hyrule Mario World".into(),
+                    description: "Link + Ennemis Soldats d'Hyrule + Rubis & Cœurs dans SMW !".into(),
+                    custom_title: "HYRULE MARIO WORLD".into(),
+                    rules: vec![
+                        MixRule { target_slot: "hero".into(), donor_alias: zelda.alias.clone(), donor_source: "link".into() },
+                        MixRule { target_slot: "enemies".into(), donor_alias: zelda.alias.clone(), donor_source: "zelda_soldier".into() },
+                        MixRule { target_slot: "items".into(), donor_alias: zelda.alias.clone(), donor_source: "zelda_items_pack".into() },
                     ],
                 });
             }
@@ -1663,9 +1744,7 @@ pub fn execute_mix_recipe(
             RecognizedGame::SuperMarioWorld => {
                 apply_rule_to_smw(base_rom, donor_rom, rule, session)
             }
-            RecognizedGame::DonkeyKongCountry => {
-                apply_rule_to_dkc(base_rom, donor_rom, rule, session)
-            }
+
             RecognizedGame::Unknown => {
                 warnings.push(format!(
                     "Slot sémantique '{}' non supporté sur ROM inconnue (utilisez gfx:N / pal:N / audio:N)",
@@ -1758,8 +1837,7 @@ fn apply_rule_to_zelda(
                 // Inject Mario hero + Bank $0D OAM + Palettes (without overwriting other sheets yet;
                 // use dedicated hero-only injector so user rules control soldiers/items independently!)
                 ops += inject_smw_mario_hero_into_zelda(rom_zelda, donor, session)?;
-            } else if rule.donor_source == "dk" {
-                ops += inject_dk_hero_into_zelda(rom_zelda, session)?;
+
             } else if rule.donor_source == "link" && donor.identify_game() == RecognizedGame::ZeldaAlttp {
                 // Restore vanilla Link from donor Zelda ROM
                 let bank = donor.data[0x080000..0x087000].to_vec();
@@ -1779,7 +1857,52 @@ fn apply_rule_to_zelda(
             }
         }
         "soldiers" => {
-            if let Some((sp1, sp2)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, true) {
+            if rule.donor_source == "koopa" {
+                // Fix #11: Museum-Grade Upright SMW Koopa Troopa Warrior (Sheet 0xBA) + Guard OAM Overhaul!
+                // Patched OAM ($05:C6A4 + $05:C727..$05:C9F8) draws ONE centered 16x16 body per frame
+                // with 3-step smooth walking animation in all 4 directions and head perched 11-12px above shell!
+                if let Some(kp) = crate::mario_ui::build_smw_koopa_warrior_parts(donor) {
+                    let blank8 = [[0u8; 8]; 8];
+                    if patch_alttp_comp_sheet_helper(
+                        rom_zelda,
+                        session,
+                        0xBA,
+                        &format!(
+                            "Soldats d'Hyrule (Sheet 0xBA) ← {}:Guerrier Koopa Troopa SMW complet (4 directions)",
+                            rule.donor_alias
+                        ),
+                        free_cursor,
+                        free_end,
+                        &|raw| {
+                            // Heads (16x16 Top OAM): Front (0,0), Side Left (2,0), Back (4,0)
+                            write_3bpp_16x16(raw, 0, 0, &kp.head_front);
+                            write_3bpp_16x16(raw, 2, 0, &kp.head_side);
+                            write_3bpp_16x16(raw, 4, 0, &kp.head_back);
+                            // Front Bodies (Down): Stride L/R (6,0), Neutral (8,0)
+                            write_3bpp_16x16(raw, 6, 0, &kp.body_front_1);
+                            write_3bpp_16x16(raw, 8, 0, &kp.body_front_2);
+                            // Side Bodies (Left / H-flipped Right — 3-step walk!): (14,0), (0,2), (2,2)
+                            write_3bpp_16x16(raw, 14, 0, &kp.body_side_1);
+                            write_3bpp_16x16(raw, 0, 2, &kp.body_side_2);
+                            write_3bpp_16x16(raw, 2, 2, &kp.body_side_3);
+                            // Back Bodies (Up): Stride L/R (4,2), Neutral (6,2)
+                            write_3bpp_16x16(raw, 4, 2, &kp.body_back_1);
+                            write_3bpp_16x16(raw, 6, 2, &kp.body_back_2);
+                            // Explicitly blank 0x4D (13,0) used by OAM slots 1..3 + unused vanilla overhangs/shields
+                            // (Preserves Sword tiles at (14,2),(15,2),(14,3),(15,3)!)
+                            for &(bx, by) in &[
+                                (10, 0), (10, 1), (11, 0), (11, 1), (12, 0), (12, 1),
+                                (13, 0), (13, 1), (8, 2), (8, 3), (13, 2), (13, 3),
+                            ] {
+                                write_3bpp_8x8(raw, bx, by, &blank8);
+                            }
+                        },
+                    )? {
+                        ops += 1;
+                    }
+                    ops += crate::mario_ui::patch_koopa_guard_oam_tables(rom_zelda, session)?;
+                }
+            } else if let Some((sp1, sp2)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, true) {
                 let sp1_r = flip_h_16x16(&sp1);
                 let blank16 = [[0u8; 16]; 16];
                 if patch_alttp_comp_sheet_helper(
@@ -1794,7 +1917,7 @@ fn apply_rule_to_zelda(
                         write_3bpp_16x16(raw, 0, 0, &sp1);
                         write_3bpp_16x16(raw, 2, 0, &sp2);
                         write_3bpp_16x16(raw, 4, 0, &sp1_r);
-                        for &(tx, ty) in &[(6, 0), (8, 0), (10, 0), (14, 0), (0, 2), (2, 2), (4, 2), (6, 2), (8, 2)] {
+                        for &(tx, ty) in &[(6, 0), (8, 0), (10, 0), (12, 0), (14, 0), (0, 2), (2, 2), (4, 2), (6, 2), (8, 2), (10, 2)] {
                             write_3bpp_16x16(raw, tx, ty, &blank16);
                         }
                     },
@@ -1804,27 +1927,43 @@ fn apply_rule_to_zelda(
             }
         }
         "elite_knights" => {
-            if let Some((sp1, sp2)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, true) {
-                let blank16 = [[0u8; 16]; 16];
-                if patch_alttp_comp_sheet_helper(
-                    rom_zelda,
-                    session,
-                    0xB7,
-                    &format!("Chevaliers d'Élite (Sheet 0xB7) ← {}:{}", rule.donor_alias, rule.donor_source),
-                    free_cursor,
-                    free_end,
-                    &|raw| {
-                        write_3bpp_16x16(raw, 0, 0, &sp1);
-                        write_3bpp_16x16(raw, 2, 0, &sp2);
-                        write_3bpp_16x16(raw, 4, 0, &sp1);
-                        for &(tx, ty) in &[(6, 0), (8, 0), (10, 0), (12, 0), (0, 2), (2, 2), (4, 2), (6, 2), (12, 2)] {
-                            write_3bpp_16x16(raw, tx, ty, &blank16);
-                        }
-                    },
-                )? {
-                    ops += 1;
-                }
+            // Fix #3B: Dungeon Jailer Guarding Princess Peach (Ball & Chain Trooper `Sprite 0x6A`, Sheet 0xB7)
+            // + Red Spear / Charging Blue Spear / Bomb Guards -> Armored Heavy Koopa Captain swinging a
+            // fierce SMW Chain Chomp Flail (`tile $2A`), with clean single-centered OAM ($05:B16E..$05:B395)!
+            let cap = crate::mario_ui::build_ball_and_chain_koopa_captain();
+            let blank8 = [[0u8; 8]; 8];
+            if patch_alttp_comp_sheet_helper(
+                rom_zelda,
+                session,
+                0xB7,
+                &format!(
+                    "Boss Geôlier & Gardes Élite (Sheet 0xB7) ← {}:Capitaine Koopa Cuirassé + Chomp en Chaîne SMW",
+                    rule.donor_alias
+                ),
+                free_cursor,
+                free_end,
+                &|raw| {
+                    // Heads: Front (0,0), Side Left (2,0), Back (4,0)
+                    write_3bpp_16x16(raw, 0, 0, &cap.head_front);
+                    write_3bpp_16x16(raw, 2, 0, &cap.head_side);
+                    write_3bpp_16x16(raw, 4, 0, &cap.head_back);
+                    // Bodies strictly within Sheet 0xB7 ($00..$3F)
+                    write_3bpp_16x16(raw, 6, 0, &cap.body_front_idle);
+                    write_3bpp_16x16(raw, 8, 0, &cap.body_side_1);
+                    write_3bpp_16x16(raw, 10, 0, &cap.body_back_idle);
+                    write_3bpp_16x16(raw, 12, 0, &cap.body_front_stride);
+                    write_3bpp_16x16(raw, 2, 2, &cap.body_side_2);
+                    write_3bpp_16x16(raw, 12, 2, &cap.body_back_stride);
+                    // Fierce SMW Chain Chomp flail ball (`tile $2A` = (10,2))! Keep iron chain link `tile $3F` = (15,3) intact!
+                    write_3bpp_16x16(raw, 10, 2, &cap.chain_chomp);
+                    // Transparent blank tile 0x0E at (14,0) used for unused OAM slots 1..2
+                    write_3bpp_8x8(raw, 14, 0, &blank8);
+                    write_3bpp_8x8(raw, 14, 1, &blank8);
+                },
+            )? {
+                ops += 1;
             }
+            ops += crate::mario_ui::patch_ball_and_chain_oam_tables(rom_zelda, session)?;
         }
         "castle_guards" => {
             if let Some((sp1, sp2)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, true) {
@@ -1856,116 +1995,620 @@ fn apply_rule_to_zelda(
                 }
             }
         }
-        "sewer_enemies" => {
-            let (a1, a2, b1, b2, c1, c2) = if rule.donor_source == "sewer_pack" {
-                let (boo1, boo2) = extract_donor_16x16_for_zelda(donor, "boo", false)
-                    .unwrap_or(([[0; 16]; 16], [[0; 16]; 16]));
-                let (sp1, sp2) = extract_donor_16x16_for_zelda(donor, "spiny", false)
-                    .unwrap_or((boo1, boo2));
-                let (g1, g2) = extract_donor_16x16_for_zelda(donor, "goomba", true)
-                    .unwrap_or((sp1, sp2));
-                (boo1, boo2, sp1, sp2, g1, g2)
-            } else if let Some((s1, s2)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, false) {
-                (s1, s2, s1, s2, s1, s2)
+        "princess" => {
+            // Fix #9: 100% Centered, Symmetric, Unclipped SMW Princess Peach (ZERO flat vertical cut!)
+            let (peach_h, peach_d, peach_h_back, peach_h_side) = crate::mario_ui::build_unclipped_smw_peach();
+            let _ = build_smw_peach_for_zelda;
+            {
+                let peach_d_alt = flip_h_16x16(&peach_d);
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0xD5,
+                    &format!("Princesse Zelda (Sheet 0xD5) ← {}:Princesse Peach 16x32 centrée complète", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_16x16(raw, 0, 0, &peach_h);      // Front Head
+                        write_3bpp_16x16(raw, 2, 0, &peach_h_back); // Back Head
+                        write_3bpp_16x16(raw, 4, 0, &peach_h_side); // Side Head
+                        write_3bpp_16x16(raw, 6, 0, &peach_d);      // Walk/Stand Dress 1
+                        write_3bpp_16x16(raw, 8, 0, &peach_d_alt);  // Walk/Stand Dress 2
+                        write_3bpp_16x16(raw, 10, 0, &peach_d);     // Front Dress (Sanctuary!)
+                        write_3bpp_16x16(raw, 12, 0, &peach_d_alt); // Front Dress Alt
+                    },
+                )? {
+                    ops += 1;
+                }
+                // Intro Scene 3 Prison Cell Princess Peach + Intro Scene 4 Altar Captured Green Yoshi!
+                // Verified via jpdasm bank_0C.asm:13486 (`$0AA3 = $7F` -> `Sheet 0xC6`) + `Attract_DrawZelda` (`$28/$2A`)
+                // + `AttractAltarMaidenOAM` (`$00/$01` levitating & `$03/$04` resting = 24x16 on Pal 6 GREEN!)
+                let altar_yoshi = crate::mario_ui::build_captured_yoshi_altar_24x16();
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0xC6,
+                    &format!("Cellule Intro & Autel (Sheet 0xC6) ← {}:Princesse Peach & Yoshi Vert capturé", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_16x16(raw, 8, 2, &peach_h);
+                        write_3bpp_16x16(raw, 10, 2, &peach_d);
+                        // Write 24x16 Captured Green Yoshi across cols 0..2 (step1) & cols 3..5 (step0), rows 0..1!
+                        for base_col in [0usize, 3usize] {
+                            for ty in 0..2usize {
+                                for tx in 0..3usize {
+                                    let mut tile = [[0u8; 8]; 8];
+                                    for y in 0..8 {
+                                        for x in 0..8 {
+                                            tile[y][x] = altar_yoshi[ty * 8 + y][tx * 8 + x];
+                                        }
+                                    }
+                                    write_3bpp_8x8(raw, base_col + tx, ty, &tile);
+                                }
+                            }
+                        }
+                    },
+                )? {
+                    ops += 1;
+                }
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0xD6,
+                    &format!("Demoiselles & Zelda (Sheet 0xD6) ← {}:Princesse Peach 16x32 complète", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_16x16(raw, 0, 0, &peach_h);
+                        write_3bpp_16x16(raw, 2, 0, &peach_h_back);
+                        write_3bpp_16x16(raw, 4, 0, &peach_h_side);
+                        write_3bpp_16x16(raw, 6, 0, &peach_d);
+                        write_3bpp_16x16(raw, 8, 0, &peach_d_alt);
+                        write_3bpp_16x16(raw, 10, 0, &peach_d);
+                        write_3bpp_16x16(raw, 12, 0, &peach_d_alt);
+                        write_3bpp_16x16(raw, 0, 2, &peach_h);
+                        write_3bpp_16x16(raw, 2, 2, &peach_h_back);
+                        write_3bpp_16x16(raw, 4, 2, &peach_h_side);
+                        write_3bpp_16x16(raw, 6, 2, &peach_d);
+                        write_3bpp_16x16(raw, 8, 2, &peach_d_alt);
+                        write_3bpp_16x16(raw, 10, 2, &peach_d);
+                        write_3bpp_16x16(raw, 12, 2, &peach_d_alt);
+                    },
+                )? {
+                    ops += 1;
+                }
+                // Zero-Conflict SP3 Palette (`0x0DD272` & `0x0DD2EA`):
+                //   1=White (0x7FFF)
+                //   2=Vibrant Princess Peach Rose-Pink Gown (0x5A3F) -- NEVER used by Blue Koopa!
+                //   3=Golden Hair / Koopa Snout Shade (0x21FA)
+                //   4=Blonde / Peach Skin / Koopa Snout (0x435F)
+                //   5=Charcoal Outline (0x18C6)
+                //   6=Vibrant SMW Sky Blue (0x7E48) -- Blue Koopa Shell!
+                //   7=Deep SMW Royal Blue (0x5520)  -- Blue Koopa Dark Shell & Peach Sapphire Eyes/Brooch!
+                // Gives BOTH a Bright Pink Princess Peach AND Authentic Vibrant Blue Koopa Warriors!
+                let sp3_pal_14: Vec<u8> = [0x7FFFu16, 0x5A3F, 0x21FA, 0x435F, 0x18C6, 0x7E48, 0x5520]
+                    .iter()
+                    .flat_map(|w| w.to_le_bytes())
+                    .collect();
+                for &pal_pc in &[0x0DD272usize, 0x0DD2EA] {
+                    if pal_pc + 14 <= rom_zelda.data.len() {
+                        session.swap_custom_bytes(
+                            rom_zelda,
+                            pal_pc,
+                            pal_pc,
+                            sp3_pal_14.clone(),
+                            format!("Palette SP3 0x{:06X} ← Rose Royal Peach (idx 2) + Bleu Royal Koopa SMW (idx 6/7)", pal_pc),
+                            SwapKind::PaletteBgr555 { color_count: 7 },
+                        )?;
+                        ops += 1;
+                    }
+                }
+            }
+        }
+        "uncle_allies" => {
+            // 1. Fix #4/#5: Normal SINGLE-HEADED Uncle Luigi built pixel-for-pixel from MARIO'S EXACT 4bpp BANK
+            //    (`0x080000..0x087000`) remapped into Luigi's iconic GREEN clothes (Pal 6 `0x0C` on Head & Body!)
+            let _ = build_smw_luigi_3bpp;
+            let luigi = if 0x087000 <= rom_zelda.data.len() {
+                crate::mario_ui::build_mario_green_uncle_luigi_from_bank(&rom_zelda.data[0x080000..0x087000])
             } else {
-                return Ok(0);
+                crate::mario_ui::build_normal_uncle_luigi()
             };
+            let (baby_y1, _) = extract_donor_16x16_for_zelda(donor, "baby_yoshi", false)
+                .unwrap_or((luigi.body_sit, luigi.body_sit));
+            if patch_alttp_comp_sheet_helper(
+                rom_zelda,
+                session,
+                0x7F,
+                &format!("Oncle de Link & Poules (Sheet 0x7F) ← {}:Luigi normal & Bébé Yoshi", rule.donor_alias),
+                free_cursor,
+                free_end,
+                &|raw| {
+                    write_3bpp_16x16(raw, 0, 0, &luigi.head_front);
+                    write_3bpp_16x16(raw, 2, 0, &luigi.head_side);
+                    write_3bpp_16x16(raw, 4, 0, &luigi.head_hurt);
+                    write_3bpp_16x16(raw, 0, 2, &luigi.body_sit);
+                    write_3bpp_16x16(raw, 2, 2, &luigi.body_walk_side_1);
+                    write_3bpp_16x16(raw, 4, 2, &luigi.body_walk_down);
+                    write_3bpp_16x16(raw, 6, 0, &baby_y1); // Cucco -> Bébé Yoshi
+                },
+            )? {
+                ops += 1;
+            }
+            if patch_alttp_comp_sheet_helper(
+                rom_zelda,
+                session,
+                0xC2,
+                &format!("Oncle Maison & Égouts (Sheet 0xC2) ← {}:Luigi SMW normal (1 tête, salopette bleue)", rule.donor_alias),
+                free_cursor,
+                free_end,
+                &|raw| {
+                    // Heads (Pal 6 GREEN CAP): (0,0) Front, (2,0) Side, (8,0) Sewers
+                    write_3bpp_16x16(raw, 0, 0, &luigi.head_front);
+                    write_3bpp_16x16(raw, 2, 0, &luigi.head_side);
+                    write_3bpp_16x16(raw, 8, 0, &luigi.head_hurt);
+                    // Bodies (Pal 7 ROYAL BLUE OVERALLS — ZERO SECOND HEAD!):
+                    write_3bpp_16x16(raw, 4, 0, &luigi.body_walk_down);
+                    write_3bpp_16x16(raw, 6, 0, &luigi.body_sit);
+                    write_3bpp_16x16(raw, 0, 2, &luigi.body_walk_side_1);
+                    write_3bpp_16x16(raw, 4, 2, &luigi.body_walk_side_2);
+                    write_3bpp_16x16(raw, 8, 2, &luigi.body_sit);
+                },
+            )? {
+                ops += 1;
+            }
+            ops += crate::mario_ui::patch_uncle_luigi_oam_palettes(rom_zelda, session)?;
+            // 2. Sahasrahla (S 0xA5), Sage du Sanctuaire & Roi (S 0xA6), Grande Fée (S 0xAA) -> Authentiques SMW Yoshis!
+            if let Some((y_fh, y_fb, y_sh, y_sb, y_bh, y_bb)) = build_smw_yoshi_for_zelda(donor) {
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0xA5,
+                    &format!("Sahasrahla (Sheet 0xA5) ← {}:Yoshi Vert (GFX26)", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_16x16(raw, 0, 0, &y_fh);
+                        write_3bpp_16x16(raw, 0, 2, &y_fb);
+                        write_3bpp_16x16(raw, 2, 0, &y_sh);
+                        write_3bpp_16x16(raw, 2, 2, &y_sb);
+                        write_3bpp_16x16(raw, 4, 0, &y_bh);
+                        write_3bpp_16x16(raw, 4, 2, &y_bb);
+                    },
+                )? {
+                    ops += 1;
+                }
+                let toad = crate::mario_ui::build_smw_toad_sanctuary();
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0xA6,
+                    &format!("Sage Sanctuaire (Sheet 0xA6) ← {}:Toad (Kinoppio) complet 16x32", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_16x16(raw, 0, 0, &toad.head_front);
+                        write_3bpp_16x16(raw, 0, 2, &toad.body_front);
+                        write_3bpp_16x16(raw, 2, 0, &toad.head_blink);
+                        write_3bpp_16x16(raw, 2, 2, &toad.body_cheer);
+                        write_3bpp_16x16(raw, 4, 0, &toad.head_side);
+                        write_3bpp_16x16(raw, 4, 2, &toad.body_side);
+                        write_3bpp_16x16(raw, 14, 0, &toad.head_side);
+                        write_3bpp_16x16(raw, 14, 2, &toad.body_side);
+                    },
+                )? {
+                    ops += 1;
+                }
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0xAA,
+                    &format!("Grande Fée (Sheet 0xAA) ← {}:Yoshi Ailé (GFX26)", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_16x16(raw, 10, 0, &y_fh);
+                        write_3bpp_16x16(raw, 10, 2, &y_fb);
+                        write_3bpp_16x16(raw, 12, 0, &y_sh);
+                        write_3bpp_16x16(raw, 12, 2, &y_sb);
+                        write_3bpp_16x16(raw, 14, 0, &y_fh);
+                        write_3bpp_16x16(raw, 14, 2, &y_fb);
+                    },
+                )? {
+                    ops += 1;
+                }
+            }
+            // 3. Poules Cuccos (S 0x86) -> Bébés Yoshis SMW alignés OAM, Sorcière Syrup (S 0xBC) -> Magikoopa, Forgerons (S 0xD7) -> Koopas!
+            if patch_alttp_comp_sheet_helper(
+                rom_zelda,
+                session,
+                0x86,
+                &format!("Poules Cuccos Cocorico (Sheet 0x86) ← {}:Bébés Yoshis SMW complets", rule.donor_alias),
+                free_cursor,
+                free_end,
+                &|raw| {
+                    crate::mario_ui::patch_smw_baby_yoshi_sheet_86(raw);
+                },
+            )? {
+                ops += 1;
+            }
+            if let Some((mk1, mk2)) = extract_donor_16x16_for_zelda(donor, "magikoopa", false) {
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0xBC,
+                    &format!("Sorcière Syrup (Sheet 0xBC) ← {}:Magikoopa SMW", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_16x16(raw, 0, 0, &mk1);
+                        write_3bpp_16x16(raw, 0, 2, &mk2);
+                    },
+                )? {
+                    ops += 1;
+                }
+            }
+            if let Some((k1, k2)) = extract_donor_16x16_for_zelda(donor, "koopa", false) {
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0xD7,
+                    &format!("Forgerons Nains (Sheet 0xD7) ← {}:Deux Koopas SMW", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_16x16(raw, 6, 0, &k1);
+                        write_3bpp_16x16(raw, 8, 0, &k2);
+                        write_3bpp_16x16(raw, 10, 0, &flip_h_16x16(&k1));
+                        write_3bpp_16x16(raw, 12, 0, &flip_h_16x16(&k2));
+                        write_3bpp_16x16(raw, 6, 2, &k1);
+                        write_3bpp_16x16(raw, 8, 2, &k2);
+                        write_3bpp_16x16(raw, 10, 2, &flip_h_16x16(&k1));
+                        write_3bpp_16x16(raw, 12, 2, &flip_h_16x16(&k2));
+                    },
+                )? {
+                    ops += 1;
+                }
+            }
+        }
+        "bosses" => {
+            // 1. Complete SMW Boss Roster (v13): ALL 7 KOOPALINGS (Morton Jr., Wendy, Iggy, Roy,
+            //    Lemmy, Larry, Ludwig) + FINAL BOSS GIANT KING BOWSER (4 sheets!) + 3 Pokeys + Wiggler!
+            ops += crate::mario_bosses::apply_all_mario_bosses(
+                rom_zelda,
+                donor,
+                session,
+                free_cursor,
+                free_end,
+            )?;
+            // 2. Boss Guarding Princess Peach (Agahnim 1 & 2 -> Symmetric 32x32 King Bowser on Sheets 0xB3 & 0xB4!)
+            //    Verified $1E:D77F OAM layout:
+            //      F00 Front Idle (0xB3 (2,0)/(2,2) H-mirrored), F01 Front Cast ((0,0)/(0,2) H-mirrored),
+            //      F02 Back Idle ((4,0)/(4,2) H-mirrored), F03 Back Cast ((6,0)/(6,2) H-mirrored),
+            //      F04/F05 Side Left (0xB3 (8,0)..(F,3)), F06/F07 Side Cast (0xB4 (0,0)..(7,3))!
+            let bow = crate::mario_ui::build_king_bowser_for_agahnim();
+            if patch_alttp_comp_sheet_helper(
+                rom_zelda,
+                session,
+                0xB3,
+                &format!("Boss Gardien de Peach (Sheet 0xB3) ← {}:Roi Bowser 32x32 symétrique", rule.donor_alias),
+                free_cursor,
+                free_end,
+                &|raw| {
+                    // Front Cast (Left half H-mirrored to 32x32)
+                    write_3bpp_16x16(raw, 0, 0, &bow.front_cast_tl);
+                    write_3bpp_16x16(raw, 0, 2, &bow.front_cast_bl);
+                    // Front Idle guarding Peach (Left half H-mirrored to 32x32!)
+                    write_3bpp_16x16(raw, 2, 0, &bow.front_idle_tl);
+                    write_3bpp_16x16(raw, 2, 2, &bow.front_idle_bl);
+                    // Back Idle spiky shell (Left half H-mirrored to 32x32)
+                    write_3bpp_16x16(raw, 4, 0, &bow.back_idle_tl);
+                    write_3bpp_16x16(raw, 4, 2, &bow.back_idle_bl);
+                    // Back Cast (Left half H-mirrored to 32x32)
+                    write_3bpp_16x16(raw, 6, 0, &bow.back_cast_tl);
+                    write_3bpp_16x16(raw, 6, 2, &bow.back_cast_bl);
+                    // Side Profile 1 & 2 (Full 32x32)
+                    write_3bpp_16x16(raw, 8, 0, &bow.side_tl);
+                    write_3bpp_16x16(raw, 10, 0, &bow.side_tr);
+                    write_3bpp_16x16(raw, 8, 2, &bow.side_bl);
+                    write_3bpp_16x16(raw, 10, 2, &bow.side_br);
+                    write_3bpp_16x16(raw, 12, 0, &bow.side_tl);
+                    write_3bpp_16x16(raw, 14, 0, &bow.side_tr);
+                    write_3bpp_16x16(raw, 12, 2, &bow.side_bl);
+                    write_3bpp_16x16(raw, 14, 2, &bow.side_br);
+                },
+            )? {
+                ops += 1;
+            }
+            if patch_alttp_comp_sheet_helper(
+                rom_zelda,
+                session,
+                0xB4,
+                &format!("Boss Gardien de Peach Attaque (Sheet 0xB4) ← {}:Roi Bowser 32x32", rule.donor_alias),
+                free_cursor,
+                free_end,
+                &|raw| {
+                    // Verified AttractAgahnimOAM .char_step1 ($C4=TL, $C2=TR, $E4=BL, $E6=BR) + .step2 ($C0/$C2/$E0/$E2):
+                    write_3bpp_16x16(raw, 0, 0, &bow.side_tl);
+                    write_3bpp_16x16(raw, 2, 0, &bow.side_tr);
+                    write_3bpp_16x16(raw, 0, 2, &bow.side_bl);
+                    write_3bpp_16x16(raw, 2, 2, &bow.side_br);
+                    write_3bpp_16x16(raw, 4, 0, &bow.side_tl);
+                    write_3bpp_16x16(raw, 6, 0, &bow.side_tr);
+                    write_3bpp_16x16(raw, 4, 2, &bow.side_bl);
+                    write_3bpp_16x16(raw, 6, 2, &bow.side_br);
+                },
+            )? {
+                ops += 1;
+            }
+            ops += crate::mario_ui::patch_bowser_authentic_palettes(rom_zelda, session)?;
+        }
+        "chests_pots" => {
+            // Coffres (S 0xC9 & S 0xCE) -> Blocs '?' & Blocs vides + Fées -> Starman + Super Bombe -> Bob-omb!
+            if let (Some((qb_spr, used_spr)), Some((star, _)), Some((bob, _))) = (
+                extract_donor_16x16_for_zelda(donor, "qblock_spr", false),
+                extract_donor_16x16_for_zelda(donor, "starman", false),
+                extract_donor_16x16_for_zelda(donor, "bobomb", false),
+            ) {
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0xC9,
+                    &format!("Coffres, Fées & Super Bombe (Sheet 0xC9) ← {}:Blocs ?, Starman & Bob-omb", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_16x16(raw, 0, 0, &star);     // Petite Fée 1 -> Starman
+                        write_3bpp_16x16(raw, 2, 0, &star);     // Petite Fée 2 -> Starman
+                        write_3bpp_16x16(raw, 4, 0, &star);     // Petite Fée 3 -> Starman
+                        write_3bpp_16x16(raw, 6, 0, &qb_spr);   // Coffre fermé 1 -> Bloc '?'
+                        write_3bpp_16x16(raw, 8, 0, &qb_spr);   // Coffre fermé 2 -> Bloc '?'
+                        write_3bpp_16x16(raw, 10, 0, &used_spr);// Coffre ouvert 1 -> Bloc vidé SMW
+                        write_3bpp_16x16(raw, 12, 0, &used_spr);// Coffre ouvert 2 -> Bloc vidé SMW
+                        write_3bpp_16x16(raw, 6, 2, &bob);      // Super Bombe -> Bob-omb
+                        write_3bpp_16x16(raw, 8, 2, &bob);
+                        write_3bpp_16x16(raw, 10, 2, &bob);
+                        write_3bpp_16x16(raw, 12, 2, &bob);
+                    },
+                )? {
+                    ops += 1;
+                }
+                let (ff, _) = extract_donor_16x16_for_zelda(donor, "fire_flower", false).unwrap_or((star, star));
+                let mush = crate::mario_ui::build_crisp_smw_mushroom_16x16();
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0xCE,
+                    &format!("Coffres & Pendentifs Boss (Sheet 0xCE) ← {}:Blocs ?, Champignon, Fleur de Feu & Étoile", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_16x16(raw, 8, 0, &qb_spr);  // Grand Coffre -> Bloc '?'
+                        write_3bpp_16x16(raw, 0, 2, &qb_spr);  // Coffre fermé -> Bloc '?'
+                        write_3bpp_16x16(raw, 2, 2, &used_spr);// Coffre ouvert -> Bloc vidé
+                        write_3bpp_16x16(raw, 4, 0, &mush);    // VRAI Pendentif Boss (gfx 0x23) -> Super Champignon SMW!
+                        write_3bpp_16x16(raw, 6, 0, &ff);      // Fleur de Feu SMW
+                        write_3bpp_16x16(raw, 6, 2, &star);    // Étoile Super Mario SMW!
+                        write_3bpp_16x16(raw, 8, 2, &mush);    // Super Champignon SMW
+                    },
+                )? {
+                    ops += 1;
+                }
+            }
+            // Fix #1: VRAIES Jarres & Pots d'intérieur (Maison de Mario + TOUS les Donjons!)
+            // Vérifié en VRAM live Mednafen : Sheet 0x0C tiles (8,2) haut-gauche & (8,3) bas-gauche (miroir H par ALTTP!)
+            // (Sheet 0x21 (8,0)/(9,0) était les tabourets de la table -> laissés en bois intact!)
+            if let Some((g00, _, _)) = load_smw_3bpp_sheet(&donor.data, 0x00) {
+                // Live House/Dungeon Jar palette (S 0x0C (8,2)/(8,3)):
+                // 1=dark outline(82,82,82), 2=shadow(123), 3=silver(198), 4=white(255), 5=clay(156,107,107), 6=BRIGHT SMW GOLD(247,206,82), 7=amber(206,156,115)
+                const LUT_JAR_TURN: [u8; 8] = [0, 4, 1, 5, 7, 6, 6, 5];
+                let tb_raw = remap_16x16(&read_3bpp_16x16(&g00, 0, 4), &LUT_JAR_TURN);
+                let mut tb_top = [[0u8; 8]; 8];
+                let mut tb_bot = [[0u8; 8]; 8];
+                for y in 0..8 {
+                    for x in 0..8 {
+                        tb_top[y][x] = tb_raw[y][x];
+                        tb_bot[y][x] = tb_raw[y + 8][x];
+                    }
+                }
+                let q_push = crate::mario_ui::build_smw_dungeon_qblock_16x16();
+                let (psw_top, psw_bot) = crate::mario_ui::build_smw_dungeon_pswitch_half_8x16();
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0x0C,
+                    &format!("Jarres, Blocs ? & P-Switches Donjons (Sheet 0x0C) ← {}:Turn Blocks Dorés, Blocs ? & P-Switches SMW", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_8x8(raw, 8, 2, &tb_top);
+                        write_3bpp_8x8(raw, 8, 3, &tb_bot);
+                        write_3bpp_16x16(raw, 2, 2, &q_push);   // Dungeon Pushable Stone Block -> SMW '?' Block!
+                        write_3bpp_8x8(raw, 0xB, 0, &psw_top);  // Dungeon Floor Switch -> SMW 'P'-Switch!
+                        write_3bpp_8x8(raw, 0xB, 1, &psw_bot);
+                    },
+                )? {
+                    ops += 1;
+                }
+
+                // Coffres Intérieurs BG (Sheet 0x0D (1,2)/(1,3) fermé & (2,2)/(2,3) ouvert — Sanctuaire + Maison + Donjons!)
+                // Live Sanctuary/House Chest palette: 1=dark outline, 2=amber-red shade, 3=salmon, 4=white, 6=bright SMW gold!
+                const LUT_CHEST_BG: [u8; 8] = [0, 4, 1, 2, 6, 6, 2, 2];
+                let used_raw = remap_16x16(&read_3bpp_16x16(&g00, 14, 2), &LUT_CHEST_BG);
+                // Closed BG chest is H-mirrored by ALTTP's tilemap -> build a 100% H-symmetric SMW Golden '!' Prize Block
+                // using SMW's authentic riveted block frame (GFX00 (14,2)) + bright white '!' emblem down the center!
+                let mut prize_top = [[0u8; 8]; 8];
+                let mut prize_bot = [[0u8; 8]; 8];
+                let mut used_top = [[0u8; 8]; 8];
+                let mut used_bot = [[0u8; 8]; 8];
+                for y in 0..8 {
+                    for x in 0..8 {
+                        used_top[y][x] = used_raw[y][x];
+                        used_bot[y][x] = used_raw[y + 8][x];
+                        prize_top[y][x] = used_raw[y][x];
+                        prize_bot[y][x] = used_raw[y + 8][x];
+                    }
+                }
+                // Fill inner face of closed prize block with gleaming SMW gold (6) and crisp white '!' (4) with dark shadow (1)
+                for y in 2..8 {
+                    for x in 2..8 {
+                        if prize_top[y][x] == 2 { prize_top[y][x] = 6; }
+                    }
+                }
+                for y in 0..6 {
+                    for x in 2..8 {
+                        if prize_bot[y][x] == 2 { prize_bot[y][x] = 6; }
+                    }
+                }
+                // Crisp symmetric '!' stem (rows y=3..7 top, y=0..1 bot) + dot (rows y=3..4 bot) at x=6..7 (mirrored -> 4px wide!)
+                for y in 3..8 { prize_top[y][6] = 1; prize_top[y][7] = 4; }
+                prize_top[2][6] = 1; prize_top[2][7] = 1;
+                prize_bot[0][6] = 1; prize_bot[0][7] = 4;
+                prize_bot[1][6] = 1; prize_bot[1][7] = 1;
+                prize_bot[3][6] = 1; prize_bot[3][7] = 4;
+                prize_bot[4][6] = 1; prize_bot[4][7] = 4;
+                prize_bot[5][6] = 1; prize_bot[5][7] = 1;
+
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0x0D,
+                    &format!("Coffres Intérieurs Sanctuaire/Donjons (Sheet 0x0D) ← {}:Bloc « ! » Doré & Bloc Vidé SMW", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_8x8(raw, 1, 2, &prize_top);
+                        write_3bpp_8x8(raw, 1, 3, &prize_bot);
+                        write_3bpp_8x8(raw, 2, 2, &used_top);
+                        write_3bpp_8x8(raw, 2, 3, &used_bot);
+                    },
+                )? {
+                    ops += 1;
+                }
+            }
+        }
+        "zoras_water" => {
+            if let Some((cc1, cc2)) = extract_donor_16x16_for_zelda(donor, "cheep_cheep", false) {
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0x85,
+                    &format!("Zoras & Roi Zora (Sheet 0x85) ← {}:Cheep Cheeps & Porcu-Puffer", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_16x16(raw, 0, 0, &cc1);
+                        write_3bpp_16x16(raw, 2, 0, &cc2);
+                        write_3bpp_16x16(raw, 4, 0, &cc1);
+                        write_3bpp_16x16(raw, 6, 0, &cc2);
+                        write_3bpp_16x16(raw, 8, 0, &flip_h_16x16(&cc1));
+                    },
+                )? {
+                    ops += 1;
+                }
+            }
+        }
+        "dungeon_extra" => {
+            if patch_alttp_comp_sheet_helper(
+                rom_zelda,
+                session,
+                0x8E,
+                &format!("Armos & Statues (Sheet 0x8E) ← {}:Thwomps SMW 16x32 complets", rule.donor_alias),
+                free_cursor,
+                free_end,
+                &|raw| {
+                    crate::mario_ui::patch_smw_thwomp_sheet_8e(raw);
+                },
+            )? {
+                ops += 1;
+            }
+            if let (Some((bb1, bb2)), Some((wg1, wg2))) = (
+                extract_donor_16x16_for_zelda(donor, "buzzy_beetle", false),
+                extract_donor_16x16_for_zelda(donor, "wiggler", false),
+            ) {
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0x8F,
+                    &format!("Hardhat Beetles & Mini-Moldorms (Sheet 0x8F) ← {}:Buzzy Beetles & Wigglers", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_16x16(raw, 0, 0, &bb1);
+                        write_3bpp_16x16(raw, 2, 0, &bb2);
+                        write_3bpp_16x16(raw, 4, 0, &wg1);
+                        write_3bpp_16x16(raw, 6, 0, &wg2);
+                    },
+                )? {
+                    ops += 1;
+                }
+            }
+        }
+        "sewer_enemies" => {
             if patch_alttp_comp_sheet_helper(
                 rom_zelda,
                 session,
                 0x8D,
-                &format!("Égouts du Château (Sheet 0x8D) ← {}:{}", rule.donor_alias, rule.donor_source),
+                &format!("Égouts & Château (Sheet 0x8D) ← {}:Boos SMW (3 frames), Buzzy Beetles & Spinies", rule.donor_alias),
                 free_cursor,
                 free_end,
                 &|raw| {
-                    write_3bpp_16x16(raw, 0, 0, &a1);
-                    write_3bpp_16x16(raw, 2, 0, &a2);
-                    write_3bpp_16x16(raw, 4, 0, &a1);
-                    write_3bpp_16x16(raw, 8, 0, &b1);
-                    write_3bpp_16x16(raw, 10, 0, &b2);
-                    write_3bpp_16x16(raw, 12, 0, &b1);
-                    write_3bpp_16x16(raw, 14, 0, &b2);
-                    write_3bpp_16x16(raw, 2, 2, &b1);
-                    write_3bpp_16x16(raw, 6, 2, &c1);
-                    write_3bpp_16x16(raw, 8, 2, &c2);
-                    write_3bpp_16x16(raw, 10, 2, &flip_h_16x16(&c1));
+                    crate::mario_ui::patch_smw_sewers_sheet_8d(raw);
                 },
             )? {
                 ops += 1;
             }
         }
         "overworld_enemies" => {
-            let (p1, p2, s1, s2) = if rule.donor_source == "overworld_pack" {
-                let (pr1, pr2) = extract_donor_16x16_for_zelda(donor, "piranha", false)
-                    .unwrap_or(([[0; 16]; 16], [[0; 16]; 16]));
-                let (sp1, sp2) = extract_donor_16x16_for_zelda(donor, "spiny", false)
-                    .unwrap_or((pr1, pr2));
-                (pr1, pr2, sp1, sp2)
-            } else if let Some((x1, x2)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, false) {
-                (x1, x2, x1, x2)
-            } else {
-                return Ok(0);
-            };
-            if patch_alttp_comp_sheet_helper(
-                rom_zelda,
-                session,
-                0x7F,
-                &format!("Overworld Octoroks (Sheet 0x7F) ← {}:{}", rule.donor_alias, rule.donor_source),
-                free_cursor,
-                free_end,
-                &|raw| {
-                    write_3bpp_16x16(raw, 14, 0, &s1);
-                },
-            )? {
-                ops += 1;
+            if let Some((vl1, _)) = extract_donor_16x16_for_zelda(donor, "volcano_lotus", false) {
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0x7F,
+                    &format!("Overworld Octoroks Alt (Sheet 0x7F) ← {}:{}", rule.donor_alias, rule.donor_source),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_16x16(raw, 14, 0, &vl1);
+                    },
+                )? {
+                    ops += 1;
+                }
             }
             if patch_alttp_comp_sheet_helper(
                 rom_zelda,
                 session,
                 0x82,
-                &format!("Overworld Ennemis (Sheet 0x82) ← {}:{}", rule.donor_alias, rule.donor_source),
+                &format!("Overworld Ennemis (Sheet 0x82) ← {}:Galoombas SMW (4 dirs), Boules de Feu, Spinies & Paragoombas", rule.donor_alias),
                 free_cursor,
                 free_end,
                 &|raw| {
-                    write_3bpp_16x16(raw, 10, 0, &p1);
-                    write_3bpp_16x16(raw, 12, 0, &p2);
-                    write_3bpp_16x16(raw, 14, 0, &p1);
-                    write_3bpp_16x16(raw, 6, 2, &s1);
-                    write_3bpp_16x16(raw, 8, 2, &s2);
-                    write_3bpp_16x16(raw, 12, 2, &s1);
+                    crate::mario_ui::patch_smw_overworld_enemies_sheet_82(raw);
                 },
             )? {
                 ops += 1;
             }
+            // v13 Total World Conversion: Toad Town NPCs (6 sheets) + Full SMW Bestiary (16 sheets)
+            // + Dark World / Bowser's Castle / Bowser Statues / Toad Town Roofs BG Tilesets (9 sheets)!
+            ops += crate::mario_world::apply_mario_world_total_conversion(
+                rom_zelda,
+                donor,
+                session,
+                free_cursor,
+                free_end,
+            )?;
         }
         "dungeon_enemies" => {
-            let (b1, b2, m1, m2) = if rule.donor_source == "dungeon_pack" {
-                let (bo1, bo2) = extract_donor_16x16_for_zelda(donor, "boo", false)
-                    .unwrap_or(([[0; 16]; 16], [[0; 16]; 16]));
-                let (mk1, mk2) = extract_donor_16x16_for_zelda(donor, "magikoopa", false)
-                    .unwrap_or((bo1, bo2));
-                (bo1, bo2, mk1, mk2)
-            } else if let Some((x1, x2)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, false) {
-                (x1, x2, x1, x2)
-            } else {
-                return Ok(0);
-            };
             if patch_alttp_comp_sheet_helper(
                 rom_zelda,
                 session,
                 0x90,
-                &format!("Squelettes Stalfos (Sheet 0x90) ← {}:{}", rule.donor_alias, rule.donor_source),
+                &format!("Stalfos Donjons (Sheet 0x90) ← {}:Skelerex (Dry Bones) SMW complets", rule.donor_alias),
                 free_cursor,
                 free_end,
                 &|raw| {
-                    write_3bpp_16x16(raw, 0, 0, &b1);
-                    write_3bpp_16x16(raw, 2, 0, &b2);
-                    write_3bpp_16x16(raw, 4, 0, &b1);
-                    write_3bpp_16x16(raw, 6, 0, &m1);
-                    write_3bpp_16x16(raw, 8, 0, &m2);
-                    write_3bpp_16x16(raw, 10, 0, &m1);
-                    write_3bpp_16x16(raw, 12, 0, &m2);
-                    write_3bpp_16x16(raw, 12, 2, &m1);
+                    crate::mario_ui::patch_smw_dry_bones_sheet_90(raw);
                 },
             )? {
                 ops += 1;
@@ -1978,35 +2621,123 @@ fn apply_rule_to_zelda(
                     extract_donor_16x16_for_zelda(donor, "mushroom", false),
                     extract_donor_16x16_for_zelda(donor, "bobomb", false),
                 ) {
-                    let (g1, g2) = extract_donor_16x16_for_zelda(donor, "goomba", true)
-                        .unwrap_or((bob, bob));
+                    let (g1, g2) = extract_donor_16x16_for_zelda(donor, "goomba", true).unwrap_or((bob, bob));
+                    let (key, _) = extract_donor_16x16_for_zelda(donor, "smw_key", false).unwrap_or((coin, coin));
+                    let (shell, _) = extract_donor_16x16_for_zelda(donor, "koopa_shell", false).unwrap_or((coin, coin));
+                    let (bill, _) = extract_donor_16x16_for_zelda(donor, "bullet_bill", false).unwrap_or((bob, bob));
+                    let (ff, _) = extract_donor_16x16_for_zelda(donor, "fire_flower", false).unwrap_or((mush, mush));
+                    let (star, _) = extract_donor_16x16_for_zelda(donor, "starman", false).unwrap_or((coin, coin));
+                    let (cf, _) = extract_donor_16x16_for_zelda(donor, "cape_feather", false).unwrap_or((coin, coin));
+                    let (ps, _) = extract_donor_16x16_for_zelda(donor, "p_switch", false).unwrap_or((coin, coin));
+                    let (moon, _) = extract_donor_16x16_for_zelda(donor, "moon_3up", false).unwrap_or((coin, coin));
+                    let (egg, _) = extract_donor_16x16_for_zelda(donor, "yoshi_egg", false).unwrap_or((mush, mush));
+                    let (berry, _) = extract_donor_16x16_for_zelda(donor, "berry", false).unwrap_or((mush, mush));
+
+                    // Fix #2 & #6: Double 8x16 complete SMW Red/Gold Coins + Crisp High-Contrast 16x16 Super Mushroom
+                    //              + 8x8 Red Mini-Mushroom & Berry pair in S 0xCD (6,2)!
+                    let crisp_mush = crate::mario_ui::build_crisp_smw_mushroom_16x16();
+                    let crisp_bill = crate::mario_ui::build_smw_bullet_bill_drop_16x16();
+                    let _ = (mush, bill);
+                    let double_coins = crate::mario_ui::build_double_8x16_smw_coins();
+                    let small_heart_magic = crate::mario_ui::build_small_heart_magic_pair();
                     if patch_alttp_comp_sheet_helper(
                         rom_zelda,
                         session,
                         0xCD,
-                        &format!("Collectibles Zelda (Sheet 0xCD) ← {}:Pièces & Champignons", rule.donor_alias),
+                        &format!("Collectibles Zelda (Sheet 0xCD) ← {}:Pièces 8x16 complètes, Champignons Rouges, Carapace, Bill Balle Noir, Œuf", rule.donor_alias),
                         free_cursor,
                         free_end,
                         &|raw| {
-                            write_3bpp_16x16(raw, 0, 0, &coin);
-                            write_3bpp_16x16(raw, 2, 0, &coin);
-                            write_3bpp_16x16(raw, 4, 0, &coin);
-                            write_3bpp_16x16(raw, 0, 2, &mush);
+                            write_3bpp_16x16(raw, 0, 0, &double_coins);      // Rubis 8x16 -> Double Coin Rouge/Or SMW complet!
+                            write_3bpp_16x16(raw, 2, 0, &double_coins);      // Rubis 8x16 -> Double Coin SMW complet!
+                            write_3bpp_16x16(raw, 5, 0, &egg);               // VRAI Cristal (gfx 0x28) -> Œuf Yoshi!
+                            write_3bpp_16x16(raw, 8, 0, &crisp_bill);        // Arc -> Bill Balle Noir contour blanc!
+                            write_3bpp_16x16(raw, 0, 2, &crisp_mush);        // Réceptacle Cœur -> Super Champignon ROUGE net!
+                            write_3bpp_16x16(raw, 2, 2, &shell);             // Boomerang -> Carapace
+                            write_3bpp_16x16(raw, 4, 2, &shell);             // Bouclier -> Carapace
+                            write_3bpp_16x16(raw, 6, 2, &small_heart_magic); // Petit Cœur 8x8 -> Mini-Champignon Rouge + Baie!
+                            write_3bpp_16x16(raw, 8, 2, &crisp_bill);        // Flèche -> Bill Balle Noir contour blanc!
                         },
                     )? {
                         ops += 1;
                     }
-                    for &pc in &[0x087600usize, 0x08AC00] {
+                    let black_bob = crate::mario_ui::build_jet_black_smw_bobomb_16x16();
+                    let _ = bob;
+                    if patch_alttp_comp_sheet_helper(
+                        rom_zelda,
+                        session,
+                        0xCB,
+                        &format!("Objets & Boutique (Sheet 0xCB) ← {}:Champignon Rouge, Fleur Feu, Baie, Bob-omb Noir, Clé", rule.donor_alias),
+                        free_cursor,
+                        free_end,
+                        &|raw| {
+                            write_3bpp_16x16(raw, 2, 0, &berry);      // Potions -> Baies Yoshi
+                            write_3bpp_16x16(raw, 6, 0, &crisp_mush); // Cœur / Réserve -> Super Champignon Rouge net!
+                            write_3bpp_16x16(raw, 8, 0, &ff);         // Lanterne -> Fleur de Feu
+                            write_3bpp_16x16(raw, 14, 0, &shell);     // Bouclier -> Carapace
+                            write_3bpp_16x16(raw, 10, 2, &black_bob); // Bombes -> 100% JET-BLACK SMW Bob-omb!
+                            write_3bpp_16x16(raw, 14, 2, &key);       // Clé -> Clé SMW
+                        },
+                    )? {
+                        ops += 1;
+                    }
+                    if patch_alttp_comp_sheet_helper(
+                        rom_zelda,
+                        session,
+                        0xCC,
+                        &format!("Médaillons & Reliques (Sheet 0xCC) ← {}:Fleur Feu, P-Switch, Starman, Plume, Lune 3-UP", rule.donor_alias),
+                        free_cursor,
+                        free_end,
+                        &|raw| {
+                            write_3bpp_16x16(raw, 6, 0, &ff);    // VRAIE Lanterne (gfx 0x14) & Pendentif Puissance -> Fleur de Feu SMW!
+                            write_3bpp_16x16(raw, 0, 2, &ff);    // Bombos -> Fleur de Feu
+                            write_3bpp_16x16(raw, 2, 2, &ps);    // Éther -> Interrupteur P
+                            write_3bpp_16x16(raw, 4, 2, &ps);    // Secousse -> Interrupteur P
+                            write_3bpp_16x16(raw, 6, 2, &moon);  // Perle de Lune -> Lune 3-UP
+                            write_3bpp_16x16(raw, 10, 2, &star); // Byrna & Pendentif Sagesse (gfx 0x1E) -> Étoile Super Mario!
+                            write_3bpp_16x16(raw, 12, 2, &cf);   // Cape -> Plume de Cape
+                        },
+                    )? {
+                        ops += 1;
+                    }
+                    // Fix #5: Carried Overworld Rock (VERIFIED: S 0x72 & S 0x7C cell (4,0)!) & Carried Interior Jar (S 0x7B cell (6,0)!)
+                    //         -> SMW Turn Block matching exact ground/shelf palettes so blocks KEEP Mario look in Mario's hands!
+                    let (carry_rock, carry_pot) = if let Some((g00, _, _)) = load_smw_3bpp_sheet(&donor.data, 0x00) {
+                        const LUT_CARRY_ROCK: [u8; 8] = [0, 6, 1, 2, 7, 6, 7, 2]; // Matches 0x0DD49A mint-green Turn Block!
+                        const LUT_CARRY_POT: [u8; 8] = [0, 6, 1, 2, 3, 4, 4, 3];  // Matches 0x0DD4D2 golden Turn Block!
+                        let raw_tb = read_3bpp_16x16(&g00, 0, 4);
+                        (
+                            Some(remap_16x16(&raw_tb, &LUT_CARRY_ROCK)),
+                            Some(remap_16x16(&raw_tb, &LUT_CARRY_POT)),
+                        )
+                    } else {
+                        (None, None)
+                    };
+                    let carry_bush = crate::mario_ui::build_smw_smiling_bush_16x16();
+                    let carry_msg = crate::mario_ui::build_smw_message_block_16x16();
+                    let black_bob_spark = crate::mario_ui::build_jet_black_smw_bobomb_spark_16x16();
+                    for &(pc, is_interior) in &[(0x087600usize, false), (0x08AC00usize, true), (0x08B200usize, false)] {
                         let mut raw = rom_zelda.data[pc..pc + 0x600].to_vec();
                         write_3bpp_16x16(&mut raw, 4, 2, &g1);
                         write_3bpp_16x16(&mut raw, 6, 2, &g2);
-                        write_3bpp_16x16(&mut raw, 14, 2, &bob);
+                        write_3bpp_16x16(&mut raw, 14, 2, &black_bob); // Live ground/thrown Bob-omb -> 100% JET-BLACK!
+                        if is_interior {
+                            if let Some(ref pot) = carry_pot {
+                                write_3bpp_16x16(&mut raw, 6, 0, pot); // Carried House/Dungeon Jar (6,0) -> Golden Turn Block!
+                            }
+                        } else {
+                            write_3bpp_16x16(&mut raw, 2, 0, &carry_msg); // Carried/Cut OW Signpost (2,0) -> SMW Message Block!
+                            if let Some(ref rock) = carry_rock {
+                                write_3bpp_16x16(&mut raw, 4, 0, rock); // Carried OW Rock (4,0) -> Mint-Green Turn Block!
+                            }
+                            write_3bpp_16x16(&mut raw, 6, 0, &carry_bush); // Carried OW Bush (6,0) -> SMW Smiling Hill Bush!
+                        }
                         session.swap_custom_bytes(
                             rom_zelda,
                             pc,
                             pc,
                             raw,
-                            format!("Sprites Objets 0x{:06X} ← {}:Bob-ombs & Goombas", pc, rule.donor_alias),
+                            format!("Sprites Objets & Blocs Portés 0x{:06X} ← {}:Turn Blocks, Buissons, Blocs Message & Bob-ombs Noirs", pc, rule.donor_alias),
                             SwapKind::GraphicsTiles {
                                 format: TileFormat::Bpp3,
                                 tile_count: 64,
@@ -2015,15 +2746,84 @@ fn apply_rule_to_zelda(
                         )?;
                         ops += 1;
                     }
+                    // Complete 6-frame animated Jet-Black SMW Bob-omb spark on remaining water/rain sheets (0x087C00/0x088200/0x088800 (14,2))!
+                    for &(idx, pc) in &[(0usize, 0x087C00usize), (1, 0x088200usize), (2, 0x088800usize)] {
+                        let mut raw = rom_zelda.data[pc..pc + 0x600].to_vec();
+                        let frame = if idx % 2 == 0 { &black_bob_spark } else { &black_bob };
+                        write_3bpp_16x16(&mut raw, 14, 2, frame);
+                        session.swap_custom_bytes(
+                            rom_zelda,
+                            pc,
+                            pc,
+                            raw,
+                            format!("Bob-omb Noir Animé 0x{:06X} (14,2) ← {}:Étincelle mèche Bob-omb SMW", pc, rule.donor_alias),
+                            SwapKind::GraphicsTiles {
+                                format: TileFormat::Bpp3,
+                                tile_count: 64,
+                                smart_remapped: true,
+                            },
+                        )?;
+                        ops += 1;
+                    }
+                    // Live Combat Weapons & Projectiles (0x087000): Flying SMW Bullet Bills, Mini Bill Blaster, Spinning Koopa Shell Boomerang, Hammer Bro Hammer!
+                    {
+                        let mut w70 = rom_zelda.data[0x087000..0x087600].to_vec();
+                        crate::mario_ui::patch_smw_live_weapons_087000(&mut w70);
+                        session.swap_custom_bytes(
+                            rom_zelda,
+                            0x087000,
+                            0x087000,
+                            w70,
+                            format!("Armes & Projectiles Live 0x087000 ← {}:Bill Balles Volants, Canon Bill Blaster, Carapace Boomerang & Marteau Bro", rule.donor_alias),
+                            SwapKind::GraphicsTiles {
+                                format: TileFormat::Bpp3,
+                                tile_count: 64,
+                                smart_remapped: true,
+                            },
+                        )?;
+                        ops += 1;
+                    }
+                    // Mario's 3 Live Shields Held in Hand (Sheet 0xD0) -> SMW Koopa Shell Shields + Super Star Shield + '?' Block Tome!
+                    if patch_alttp_comp_sheet_helper(
+                        rom_zelda,
+                        session,
+                        0xD0,
+                        &format!("Boucliers de Mario (Sheet 0xD0) ← {}:Carapaces Koopa SMW, Bouclier Étoile & Livre Bloc ?", rule.donor_alias),
+                        free_cursor,
+                        free_end,
+                        &|raw| {
+                            crate::mario_ui::patch_mario_shields_sheet_d0(raw);
+                        },
+                    )? {
+                        ops += 1;
+                    }
+                    // Dungeon Mini-Map Player Marker (Sheet 0xD2 (1,3)) -> Mini Mario Red Cap Head!
+                    let dmap_mario = crate::mario_ui::build_smw_dungeon_map_mario_8x8();
+                    if patch_alttp_comp_sheet_helper(
+                        rom_zelda,
+                        session,
+                        0xD2,
+                        &format!("Carte Donjon Joueur (Sheet 0xD2 (1,3)) ← {}:Mini Tête Mario Casquette Rouge", rule.donor_alias),
+                        free_cursor,
+                        free_end,
+                        &|raw| {
+                            write_3bpp_8x8(raw, 1, 3, &dmap_mario);
+                        },
+                    )? {
+                        ops += 1;
+                    }
+                    // Verified World Map OBJ Sheet (0x088E00): (0,2)=Super Star, (4,2)=Yoshi Egg, (6,2)=Mario Head Red Cap!
                     let mut hud = rom_zelda.data[0x088E00..0x089400].to_vec();
-                    write_3bpp_16x16(&mut hud, 0, 2, &bob);
-                    write_3bpp_16x16(&mut hud, 4, 2, &coin);
+                    let wmap_mario = crate::mario_ui::build_smw_world_map_mario_head_16x16();
+                    write_3bpp_16x16(&mut hud, 0, 2, &star);
+                    write_3bpp_16x16(&mut hud, 4, 2, &egg);
+                    write_3bpp_16x16(&mut hud, 6, 2, &wmap_mario);
                     session.swap_custom_bytes(
                         rom_zelda,
                         0x088E00,
                         0x088E00,
                         hud,
-                        format!("Icônes HUD 0x088E00 ← {}:Pièce & Bob-omb", rule.donor_alias),
+                        format!("Icônes Carte du Monde 0x088E00 ($60/$64/$66) ← {}:Étoile Super Mario, Œuf Yoshi & Tête Mario", rule.donor_alias),
                         SwapKind::GraphicsTiles {
                             format: TileFormat::Bpp3,
                             tile_count: 64,
@@ -2031,6 +2831,18 @@ fn apply_rule_to_zelda(
                         },
                     )?;
                     ops += 1;
+
+                    // Fixes #4, #7, #8, #10: Top-HUD Mini-Mushrooms, Yellow Coin, Bob-omb, Start Menu Relics & Boss Pendants!
+                    ops += crate::mario_ui::patch_mario_hud_and_start_menu(
+                        rom_zelda,
+                        session,
+                        free_cursor,
+                        free_end,
+                    )?;
+                    // Fixes #8, #9, #10: House Chest Red Coin, Boss-Drop 3 Relics & +8px Carried Block Height!
+                    ops += crate::mario_ui::patch_red_coin_and_carry_height(rom_zelda, session)?;
+                    // Fix #10: Dialog Box 16x16 Red & White Super Mushroom Icon + French "réserve de champignon" + "Peach"!
+                    ops += crate::mario_ui::patch_dialog_mushroom_and_french_text(rom_zelda, session)?;
                 }
             } else if let Some((it, _)) = extract_donor_16x16_for_zelda(donor, &rule.donor_source, false) {
                 if patch_alttp_comp_sheet_helper(
@@ -2069,9 +2881,65 @@ fn apply_rule_to_zelda(
                     }
                 }
             }
+            // Overworld Light World Sheet 0x3C (devant la maison de Mario & tout le Royaume Champignon!):
+            // - (2,2)/(2,3) H-miroir: Rochers soulevables -> Blocs Tournants Verts SMW (GFX00 (0,4))!
+            // - (2,0)/(2,1) H-miroir: Panneaux en bois -> Blocs Message SMW (Information Box)!
+            // - (0,0)/(0,1) & (3,0)/(3,1) H-miroir: Buissons -> Buissons Souriants SMW (Hill Bushes aux yeux ovales)!
+            if let Some((g00, _, _)) = load_smw_3bpp_sheet(&donor.data, 0x00) {
+                // Live OW rock palette: 1=dark outline, 2=teal shade, 3=mint bright, 4=white shine, 5=deep green, 6=vibrant green
+                const LUT_OW_ROCK: [u8; 8] = [0, 4, 1, 5, 2, 3, 6, 5];
+                let tb = remap_16x16(&read_3bpp_16x16(&g00, 0, 4), &LUT_OW_ROCK);
+                let mut top = [[0u8; 8]; 8];
+                let mut bot = [[0u8; 8]; 8];
+                for y in 0..8 {
+                    for x in 0..8 {
+                        top[y][x] = tb[y][x];
+                        bot[y][x] = tb[y + 8][x];
+                    }
+                }
+                let (msg_top, msg_bot) = crate::mario_ui::build_smw_message_block_half_8x16();
+                let (bush_top, bush_bot) = crate::mario_ui::build_smw_smiling_bush_half_8x16();
+                let (brick_top, brick_bot) = crate::mario_ui::build_smw_ow_brick_block_half_8x16();
+                let (flw_top, flw_bot) = crate::mario_ui::build_smw_ow_smiling_flowers_8x16();
+                if patch_alttp_comp_sheet_helper(
+                    rom_zelda,
+                    session,
+                    0x3C,
+                    &format!("Overworld Props (Sheet 0x3C) ← {}:Blocs Tournants, Briques, Blocs Message, Buissons Souriants & Fleurs SMW", rule.donor_alias),
+                    free_cursor,
+                    free_end,
+                    &|raw| {
+                        write_3bpp_8x8(raw, 2, 2, &top);       // Liftable Rock -> SMW Mint-Green Turn-Block
+                        write_3bpp_8x8(raw, 2, 3, &bot);
+                        write_3bpp_8x8(raw, 0, 2, &brick_top); // Heavy Dark Rock -> SMW Classic Brick Block!
+                        write_3bpp_8x8(raw, 0, 3, &brick_bot);
+                        write_3bpp_8x8(raw, 1, 2, &flw_top);   // Grass Decorative Flowers -> SMW Daisy/Smiling Flowers!
+                        write_3bpp_8x8(raw, 1, 3, &flw_bot);
+                        write_3bpp_8x8(raw, 2, 0, &msg_top);   // Wooden Signpost -> SMW Message Block!
+                        write_3bpp_8x8(raw, 2, 1, &msg_bot);
+                        write_3bpp_8x8(raw, 0, 0, &bush_top);  // Overworld Bush -> SMW Smiling Hill Bush!
+                        write_3bpp_8x8(raw, 0, 1, &bush_bot);
+                        write_3bpp_8x8(raw, 3, 0, &bush_top);  // Overworld Bush Alt -> SMW Smiling Hill Bush!
+                        write_3bpp_8x8(raw, 3, 1, &bush_bot);
+                    },
+                )? {
+                    ops += 1;
+                }
+            }
         }
         "audio_percussion" => {
             ops += inject_unpitched_brr_percussion(rom_zelda, donor, &rule.donor_alias, session, 3)?;
+        }
+        "mario_music" => {
+            ops += crate::mario_music::inject_mario_nspc_soundtrack(rom_zelda, session)?;
+        }
+        "intro_title" => {
+            ops += crate::mario_intro::inject_legend_of_peach_intro(
+                rom_zelda,
+                session,
+                free_cursor,
+                free_end,
+            )?;
         }
         _ => {}
     }
@@ -2115,342 +2983,295 @@ fn inject_smw_mario_hero_into_zelda(
         SwapKind::CodePatch { byte_count: 303 * 3 },
     )?;
     ops += 1;
+    if 0x069CF1 <= scratch.data.len() {
+        session.swap_custom_bytes(
+            rom_zelda,
+            0x068EEF,
+            0x068EEF,
+            scratch.data[0x068EEF..0x068EEF + 0x3FE].to_vec(),
+            "Patch OAM Épée Bank $0D (Garde dans le gant blanc 4 dir)".into(),
+            SwapKind::CodePatch { byte_count: 0x3FE },
+        )?;
+        ops += 1;
+        session.swap_custom_bytes(
+            rom_zelda,
+            0x0698F3,
+            0x0698F3,
+            scratch.data[0x0698F3..0x0698F3 + 0x3FE].to_vec(),
+            "Patch OAM Lame Épée Bank $0D (Lame alignée 4 dir)".into(),
+            SwapKind::CodePatch { byte_count: 0x3FE },
+        )?;
+        ops += 1;
+    }
     session.swap_custom_bytes(
         rom_zelda,
         0x0DD308,
         0x0032DB,
         scratch.data[0x0DD308..0x0DD380].to_vec(),
-        "Palettes Link -> Mario SMW (Classique, Feu, Luigi, Sélection)".into(),
+        "Palettes Link -> Mario SMW (Classique, Mario Bleu, Fire Mario, 0 Luigi jouable)".into(),
         SwapKind::PaletteBgr555 { color_count: 60 },
     )?;
     ops += 1;
+    if 0x0DEDF9 <= scratch.data.len() {
+        session.swap_custom_bytes(
+            rom_zelda,
+            0x0DEDF5,
+            0x0DEDF5,
+            scratch.data[0x0DEDF5..0x0DEDF9].to_vec(),
+            "Patch Gants Puissance/Titan (0x0DEDF5 -> 0x7FFF) : 0 clignotement vert/rouge".into(),
+            SwapKind::PaletteBgr555 { color_count: 2 },
+        )?;
+        ops += 1;
+    }
     Ok(ops)
 }
 
-/// Inject **Donkey Kong** (16x32 full unsquished Gorilla Hero with iconic Red Tie!) into Zelda ALTTP!
-fn inject_dk_hero_into_zelda(
-    rom_zelda: &mut SnesRom,
-    session: &mut SwapSession,
-) -> Result<usize, RomError> {
-    let mut ops = 0usize;
+/// Build 100% authentic SMW Princess Peach (GFX26 (E,0) head + (E,2) dress) with symmetric closed outline
+/// plus back-hair and side-facing head variants ready for ALTTP Sheet 0xD5 / 0xD6!
+fn build_smw_peach_for_zelda(
+    rom_smw: &SnesRom,
+) -> Option<([[u8; 16]; 16], [[u8; 16]; 16], [[u8; 16]; 16], [[u8; 16]; 16])> {
+    let (g26, _, _) = load_smw_3bpp_sheet(&rom_smw.data, 0x26)?;
+    const LUT_PH: [u8; 8] = [0, 1, 5, 3, 4, 2, 4, 2];
+    const LUT_PD: [u8; 8] = [0, 1, 5, 3, 4, 1, 6, 2];
+    let raw_h = remap_16x16(&read_3bpp_16x16(&g26, 14, 0), &LUT_PH);
+    let raw_d = remap_16x16(&read_3bpp_16x16(&g26, 14, 2), &LUT_PD);
 
-    // Shift any 16x16 head down by `dy` pixels so DK's chin connects seamlessly to his shoulders (zero floating gap!)
-    let shift_down = |src: &[[u8; 16]; 16], dy: usize| -> [[u8; 16]; 16] {
-        let mut out = [[0u8; 16]; 16];
-        for y in 0..16 {
-            if y + dy < 16 {
-                out[y + dy] = src[y];
-            }
-        }
-        out
-    };
-
-    // DK sprites in ai_sprites face LEFT; mirror horizontally so Side faces RIGHT for ALTTP!
-    let head_side = shift_down(&flip_h_16x16(&crate::ai_sprites::DK_HEAD_NORM), 2);
-    let head_down = shift_down(&crate::ai_sprites::DK_HEAD_TURN, 2);
-    let head_roar = shift_down(&flip_h_16x16(&crate::ai_sprites::DK_HEAD_ROAR), 2);
-    // Clean Symmetrical Back Gorilla Head (brown fur dome + outline, zero eyes)
-    let mut head_up = [[0u8; 16]; 16];
+    let mut head = [[0u8; 16]; 16];
     for y in 0..16 {
-        for x in 0..16 {
-            let c = head_down[y][x];
-            head_up[y][x] = match c {
-                0 => 0,
-                2 => 2,
-                1 | 7 => 4, // replace eyes/muzzle with warm mid brown fur
-                other => other,
-            };
+        for x in 0..14 {
+            head[y][x + 2] = raw_h[y][x];
         }
-    }
-    let body_side_st = flip_h_16x16(&crate::ai_sprites::DK_BODY_ST);
-    let body_side_w1 = flip_h_16x16(&crate::ai_sprites::DK_BODY_W1);
-    let body_side_w2 = flip_h_16x16(&crate::ai_sprites::DK_BODY_W2);
-    let body_side_cr = flip_h_16x16(&crate::ai_sprites::DK_BODY_CR);
-
-    // Symmetrical Front-Facing Gorilla Torso (broad brown shoulders, tan chest, centered bright red tie!)
-    // Indices: 0=trans, 2=outline, 3=deep brown, 4=mid brown, 5=fur highlight, 6=red tie, 7=tan chest
-    let body_down_st: [[u8; 16]; 16] = [
-        [0, 0, 2, 2, 2, 2, 2, 6, 6, 2, 2, 2, 2, 2, 0, 0],
-        [0, 2, 4, 5, 4, 3, 2, 6, 6, 2, 3, 4, 5, 4, 2, 0],
-        [0, 2, 4, 4, 3, 7, 7, 6, 6, 7, 7, 3, 4, 4, 2, 0],
-        [2, 4, 4, 3, 2, 7, 7, 6, 6, 7, 7, 2, 3, 4, 4, 2],
-        [2, 4, 3, 3, 2, 7, 7, 6, 6, 7, 7, 2, 3, 3, 4, 2],
-        [2, 4, 3, 3, 2, 7, 7, 6, 6, 7, 7, 2, 3, 3, 4, 2],
-        [2, 3, 3, 2, 3, 7, 7, 6, 6, 7, 7, 3, 2, 3, 3, 2],
-        [2, 7, 7, 2, 3, 3, 7, 6, 6, 7, 3, 3, 2, 7, 7, 2],
-        [0, 2, 2, 2, 3, 3, 3, 2, 2, 3, 3, 3, 2, 2, 2, 0],
-        [0, 0, 2, 4, 4, 3, 3, 3, 3, 3, 3, 4, 4, 2, 0, 0],
-        [0, 0, 2, 4, 3, 3, 2, 2, 2, 2, 3, 3, 4, 2, 0, 0],
-        [0, 0, 2, 3, 3, 3, 2, 0, 0, 2, 3, 3, 3, 2, 0, 0],
-        [0, 0, 2, 3, 3, 2, 2, 0, 0, 2, 2, 3, 3, 2, 0, 0],
-        [0, 2, 7, 7, 7, 2, 0, 0, 0, 0, 2, 7, 7, 7, 2, 0],
-        [0, 2, 7, 7, 7, 2, 0, 0, 0, 0, 2, 7, 7, 7, 2, 0],
-        [0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0],
-    ];
-    let mut body_down_w1 = body_down_st;
-    // Stride 1: lift left foot 2px
-    for y in 11..16 {
-        for x in 1..7 {
-            body_down_w1[y][x] = if y + 2 < 16 { body_down_st[y + 2][x] } else { 0 };
-        }
-    }
-    let body_down_w2 = flip_h_16x16(&body_down_w1);
-
-    // Symmetrical Back-Facing Gorilla Torso (broad brown fur back + shoulder shading)
-    let mut body_up_st = body_down_st;
-    for y in 0..10 {
-        for x in 0..16 {
-            if body_up_st[y][x] == 6 || body_up_st[y][x] == 7 {
-                body_up_st[y][x] = if y <= 3 { 4 } else { 3 };
+        if head[y][2] != 0 && head[y][2] != 5 {
+            head[y][1] = if y <= 3 || head[y][3] == 5 { 5 } else { head[y][2] };
+            if head[y][1] != 5 && head[y][1] != 0 {
+                head[y][0] = 5;
             }
         }
     }
-    let mut body_up_w1 = body_up_st;
-    for y in 11..16 {
-        for x in 1..7 {
-            body_up_w1[y][x] = if y + 2 < 16 { body_up_st[y + 2][x] } else { 0 };
+    head[1][1] = 5; head[2][1] = 5; head[3][1] = 5;
+    head[4][1] = 3; head[4][0] = 5;
+    for y in 5..16 {
+        if head[y][2] != 0 {
+            head[y][1] = if y == 5 || y == 12 || y == 15 { 3 } else { 4 };
+            head[y][0] = 5;
         }
     }
-    let body_up_w2 = flip_h_16x16(&body_up_w1);
 
-    let mut link_bank = rom_zelda.data[0x080000..0x087000].to_vec();
-    let mut write_cell = |mx: usize, my: usize, px: &[[u8; 16]; 16]| {
-        let base = (my * 32 + mx * 2) * 32;
-        let coords = [base, base + 32, base + 512, base + 544];
-        for (q, &dst) in coords.iter().enumerate() {
-            if dst + 32 > link_bank.len() {
-                continue;
-            }
-            let qx = (q & 1) * 8;
-            let qy = (q >> 1) * 8;
-            let mut tile = [0u8; 32];
-            for y in 0..8usize {
-                let (mut b0, mut b1, mut b2, mut b3) = (0u8, 0u8, 0u8, 0u8);
-                for x in 0..8usize {
-                    let c = px[qy + y][qx + x] & 0x0F;
-                    let sh = 7 - x;
-                    b0 |= (c & 1) << sh;
-                    b1 |= ((c >> 1) & 1) << sh;
-                    b2 |= ((c >> 2) & 1) << sh;
-                    b3 |= ((c >> 3) & 1) << sh;
-                }
-                tile[y * 2] = b0;
-                tile[y * 2 + 1] = b1;
-                tile[16 + y * 2] = b2;
-                tile[16 + y * 2 + 1] = b3;
-            }
-            link_bank[dst..dst + 32].copy_from_slice(&tile);
+    let mut dress = [[0u8; 16]; 16];
+    for y in 0..16 {
+        for x in 0..14 {
+            dress[y][x + 2] = raw_d[y][x];
         }
-    };
-
-    // Populate all Link Head & Body animation rows (0..27) cleanly while preserving sword arcs & FX!
-    for mx in 0..8 {
-        let h = match mx {
-            0 => &head_side,
-            2 => &head_up,
-            _ => &head_down,
-        };
-        write_cell(mx, 0, h);
-    }
-    write_cell(0, 1, &body_side_w1);
-    write_cell(1, 1, &body_side_cr);
-    write_cell(2, 1, &body_side_w2);
-    write_cell(3, 1, &body_down_st);
-    write_cell(4, 1, &body_down_w1);
-    write_cell(5, 1, &body_down_w2);
-    write_cell(6, 1, &body_up_st);
-    write_cell(7, 1, &head_side);
-
-    write_cell(0, 2, &body_up_w1);
-    write_cell(1, 2, &body_up_w2);
-    write_cell(2, 2, &body_side_w1);
-    write_cell(3, 2, &body_side_st);
-    write_cell(4, 2, &body_side_w2);
-    write_cell(5, 2, &body_side_cr);
-    write_cell(6, 2, &body_side_w1);
-    write_cell(7, 2, &body_side_w2);
-
-    for mx in 0..8 {
-        write_cell(mx, 3, if mx % 2 == 0 { &body_down_w1 } else { &body_side_w1 });
-    }
-    write_cell(0, 4, &body_down_st);
-    write_cell(1, 4, &body_down_st);
-    write_cell(2, 4, &head_side);
-    write_cell(3, 4, &head_down);
-    write_cell(4, 4, &head_up);
-
-    // Rows 5..6, 7(5..7), 8(0..2), 10..25, 26(5..7), 27(0..4)
-    for &(mx, my, is_head, dir) in &[
-        (0, 5, true, 0), (1, 5, true, 2), (2, 5, true, 1), (3, 5, true, 0), (4, 5, true, 2),
-        (5, 5, false, 0), (6, 5, false, 0), (7, 5, false, 1),
-        (0, 6, false, 0), (1, 6, false, 2), (2, 6, false, 1), (3, 6, false, 0), (4, 6, false, 2),
-        (5, 6, true, 0), (6, 6, true, 2), (7, 6, false, 0),
-        (5, 7, true, 1), (6, 7, true, 0), (7, 7, true, 2),
-        (0, 8, false, 0), (1, 8, false, 0), (2, 8, false, 0),
-        (1, 10, false, 2), (2, 10, false, 1), (3, 10, true, 0), (4, 10, true, 0),
-        (5, 10, true, 2), (6, 10, false, 0), (7, 10, true, 1),
-        (1, 11, true, 0), (2, 11, false, 1), (3, 11, false, 1), (4, 11, false, 2),
-        (5, 11, true, 1), (6, 11, true, 0), (7, 11, true, 2),
-    ] {
-        let px = match (is_head, dir) {
-            (true, 0) => &head_side,
-            (true, 1) => &head_down,
-            (true, _) => &head_up,
-            (false, 0) => &body_side_w1,
-            (false, 1) => &body_down_st,
-            (false, _) => &body_up_st,
-        };
-        write_cell(mx, my, px);
-    }
-
-    // Sword & shieldless walk rows 12..25, 26(5..7), 27(0..4)
-    for my in 12..=24 {
-        for mx in 0..8 {
-            if (my == 15 || my == 17 || my == 18) && mx == 0 {
-                continue; // preserve dust & zap skeleton FX
-            }
-            if (my == 17 && (mx == 1 || mx == 2))
-                || (my == 18 && (mx == 1 || mx == 2))
-                || ((my == 19 || my == 20) && mx <= 2)
-                || (my == 23 && mx == 1)
-                || (my == 24 && mx >= 6)
-            {
-                let h = match mx % 3 {
-                    0 => &head_down,
-                    1 => &head_roar,
-                    _ => &head_up,
-                };
-                write_cell(mx, my, h);
-            } else if (my == 13 && mx >= 5) || (my == 14 && (mx == 0 || mx >= 5)) {
-                write_cell(mx, my, if mx % 2 == 0 { &body_up_w1 } else { &body_up_w2 });
-            } else if my == 14 && (1..=4).contains(&mx) {
-                write_cell(mx, my, if mx % 2 == 0 { &body_side_w1 } else { &body_side_w2 });
-            } else if my == 22 || my == 23 {
-                write_cell(mx, my, if mx % 2 == 0 { &body_side_w1 } else { &body_side_w2 });
+        if dress[y][2] != 0 {
+            dress[y][1] = if y < 6 {
+                if y >= 2 { 6 } else { 3 }
+            } else if y < 11 {
+                1
             } else {
-                write_cell(mx, my, if mx % 2 == 0 { &body_down_w1 } else { &body_down_w2 });
+                2
+            };
+            dress[y][0] = 5;
+        }
+    }
+    for x in 1..14 {
+        if dress[14][x] != 0 {
+            dress[15][x] = 5;
+        }
+    }
+
+    // Back head: golden blonde curls covering face area while keeping authentic SMW crown on top!
+    let mut head_back = head;
+    for y in 5..15 {
+        for x in 2..13 {
+            if head_back[y][x] == 1 || head_back[y][x] == 2 || head_back[y][x] == 5 {
+                head_back[y][x] = if (x + y) % 3 == 0 { 3 } else { 4 };
             }
         }
     }
-    write_cell(0, 25, &head_up);
-    write_cell(1, 25, &head_up);
-    write_cell(2, 25, &head_down);
-    write_cell(3, 25, &head_side);
-    write_cell(4, 25, &body_side_st);
-    write_cell(5, 26, &body_side_w1);
-    write_cell(6, 26, &body_side_cr);
-    write_cell(7, 26, &body_side_w2);
-    write_cell(0, 27, &body_side_w1);
-    write_cell(1, 27, &body_side_w2);
-    write_cell(2, 27, &body_down_st);
-    write_cell(3, 27, &body_up_st);
-    write_cell(4, 27, &body_down_w1);
-    drop(write_cell);
+    let head_side = flip_h_16x16(&head);
+    Some((head, dress, head_back, head_side))
+}
 
-    // Muscular brown Donkey Kong forearm holding the sword hilt at (6, 25) bottom-left 8x8!
-    let arm_dst = (25 * 32 + 6 * 2) * 32 + 512;
-    if arm_dst + 32 <= link_bank.len() {
-        const DK_ARM: [&str; 8] = [
-            "........",
-            "........",
-            "222222..",
-            "4444772.",
-            "3333772.",
-            "222222..",
-            "........",
-            "........",
-        ];
-        let mut tile = [0u8; 32];
-        for (y, row) in DK_ARM.iter().enumerate() {
-            let (mut b0, mut b1, mut b2, mut b3) = (0u8, 0u8, 0u8, 0u8);
-            for (x, ch) in row.bytes().enumerate().take(8) {
-                let c = if (b'1'..=b'9').contains(&ch) { ch - b'0' } else { 0 };
-                let sh = 7 - x;
-                b0 |= (c & 1) << sh;
-                b1 |= ((c >> 1) & 1) << sh;
-                b2 |= ((c >> 2) & 1) << sh;
-                b3 |= ((c >> 3) & 1) << sh;
+/// Extract 100% authentic SMW Luigi (GFX32 4bpp poses 0x0F Front, 0x01 Side, 0x39 Back)
+/// perceptually quantized to ALTTP's 3bpp green Uncle palette (S 0x7F & S 0xC2)!
+fn build_smw_luigi_3bpp(
+    rom_smw: &SnesRom,
+) -> Option<(
+    [[u8; 16]; 16], [[u8; 16]; 16],
+    [[u8; 16]; 16], [[u8; 16]; 16],
+    [[u8; 16]; 16], [[u8; 16]; 16],
+)> {
+    let (g32, _) = decompress_nintendo_lz2_with_endian(&rom_smw.data, 0x040000, 32768, true)?;
+    let (ptop, pbot) = crate::demo::find_smw_mario_pose_tables(&rom_smw.data);
+    // SMW 4bpp Mario/Luigi -> ALTTP 3bpp Uncle Green palette (RTX-3080 CIELAB optimal: dark overalls, green cap/shirt, yellow buttons, peach face!)
+    const LUT_4TO3: [u8; 16] = [0, 1, 5, 3, 2, 2, 4, 5, 7, 6, 5, 5, 5, 6, 3, 2];
+    let extract = |pose: usize, hflip: bool| -> ([[u8; 16]; 16], [[u8; 16]; 16]) {
+        let va = rom_smw.data.get(ptop + 0x46 + pose).copied().unwrap_or(0);
+        let vb = rom_smw.data.get(pbot + 0x46 + pose).copied().unwrap_or(0);
+        let t = crate::demo::read_smw_gfx32_16x16(&g32, va);
+        let b = crate::demo::read_smw_gfx32_16x16(&g32, vb);
+        let mut to = [[0u8; 16]; 16];
+        let mut bo = [[0u8; 16]; 16];
+        for y in 0..16 {
+            for x in 0..16 {
+                let sx = if hflip { 15 - x } else { x };
+                to[y][x] = LUT_4TO3[(t[y][sx] & 0x0F) as usize];
+                bo[y][x] = LUT_4TO3[(b[y][sx] & 0x0F) as usize];
             }
-            tile[y * 2] = b0;
-            tile[y * 2 + 1] = b1;
-            tile[16 + y * 2] = b2;
-            tile[16 + y * 2 + 1] = b3;
         }
-        link_bank[arm_dst..arm_dst + 32].copy_from_slice(&tile);
-    }
-
-    session.swap_custom_bytes(
-        rom_zelda,
-        0x080000,
-        0x0D16C4,
-        link_bank,
-        "Héros Zelda -> Donkey Kong (DKC 16x32 complet + bras épée)".into(),
-        SwapKind::GraphicsTiles {
-            format: TileFormat::Bpp4,
-            tile_count: 896,
-            smart_remapped: true,
-        },
-    )?;
-    ops += 1;
-
-    // Bank $0D OAM Y=-8, X=0 so 32px Donkey Kong renders unsquished across ALL poses & 4 sword swings!
-    let oam_pc = 0x068000usize;
-    let oam_len = 303 * 3;
-    let mut oam = rom_zelda.data[oam_pc..oam_pc + oam_len].to_vec();
-    for i in 0..303 {
-        if (oam[i * 3 + 2] & 0x0F) != 0x0F {
-            oam[i * 3] = (-8i8) as u8;
-            oam[i * 3 + 1] = 0;
-        }
-    }
-    session.swap_custom_bytes(
-        rom_zelda,
-        oam_pc,
-        oam_pc,
-        oam,
-        "Patch OAM Bank $0D (Y=-8, X=0) pour Donkey Kong 16x32".into(),
-        SwapKind::CodePatch { byte_count: oam_len },
-    )?;
-    ops += 1;
-
-    // Authentic Donkey Kong BGR555 palettes (Classic DK, Blue/Funky DK, Red/Cranky DK, File Select DK)
-    let build_dk_pal = |tie_col: u16, fur_mid: u16, fur_dark: u16| -> Vec<u8> {
-        let words: [u16; 15] = [
-            0x7FFF,   // 1: White eyes
-            0x0422,   // 2: Dark brown/black outline
-            fur_dark, // 3: Deep fur brown
-            fur_mid,  // 4: Mid fur brown
-            0x263B,   // 5: Fur highlight
-            tie_col,  // 6: Iconic Red Tie (or Blue/Gold variant!)
-            0x431F,   // 7: Warm tan muzzle & chest
-            0x0422, 0x001F, 0x1084, 0x263B, 0x431F, 0x0015, 0x219D, 0x03FF,
-        ];
-        let mut out = Vec::with_capacity(30);
-        for w in words {
-            out.extend_from_slice(&w.to_le_bytes());
-        }
-        out
+        (to, bo)
     };
-    let dk_classic = build_dk_pal(0x001F, 0x1154, 0x08AC); // Bright Red Tie + Rich Chestnut Fur
-    let dk_funky = build_dk_pal(0x7E44, 0x1154, 0x08AC);   // Blue Mail -> Funky Cyan Tie!
-    let dk_gold = build_dk_pal(0x03FF, 0x1997, 0x0CED);    // Red Mail -> Golden DK!
-    let mut pals = Vec::with_capacity(120);
-    pals.extend_from_slice(&dk_classic);
-    pals.extend_from_slice(&dk_funky);
-    pals.extend_from_slice(&dk_gold);
-    pals.extend_from_slice(&dk_classic);
+    let (hd, bd) = extract(0x0F, false);
+    let (hs, bs) = extract(0x01, true);
+    let (hu, bu) = extract(0x39, false);
+    Some((hd, bd, hs, bs, hu, bu))
+}
 
-    session.swap_custom_bytes(
-        rom_zelda,
-        0x0DD308,
-        0x39A068,
-        pals,
-        "Palettes Link -> Donkey Kong (Classique Cravate Rouge, Funky Bleu, Doré)".into(),
-        SwapKind::PaletteBgr555 { color_count: 60 },
-    )?;
-    ops += 1;
+/// Extract 100% authentic SMW Yoshi (GFX26: Front (4,4)+(4,6), Side (0,0)+(0,2), Back (6,4)+(6,6))
+/// with vibrant primary green/blue/yellow snout & body, pure white belly, and gold/orange boots!
+fn build_smw_yoshi_for_zelda(
+    rom_smw: &SnesRom,
+) -> Option<(
+    [[u8; 16]; 16], [[u8; 16]; 16],
+    [[u8; 16]; 16], [[u8; 16]; 16],
+    [[u8; 16]; 16], [[u8; 16]; 16],
+)> {
+    let (g26, _, _) = load_smw_3bpp_sheet(&rom_smw.data, 0x26)?;
+    const LUT_YOSHI: [u8; 8] = [0, 1, 5, 7, 6, 1, 6, 7];
+    let fh = remap_16x16(&read_3bpp_16x16(&g26, 4, 4), &LUT_YOSHI);
+    let mut fb = remap_16x16(&read_3bpp_16x16(&g26, 4, 6), &LUT_YOSHI);
+    let sh = remap_16x16(&read_3bpp_16x16(&g26, 0, 0), &LUT_YOSHI);
+    let mut sb = remap_16x16(&read_3bpp_16x16(&g26, 0, 2), &LUT_YOSHI);
+    let bh = remap_16x16(&read_3bpp_16x16(&g26, 6, 4), &LUT_YOSHI);
+    let mut bb = remap_16x16(&read_3bpp_16x16(&g26, 6, 6), &LUT_YOSHI);
+    for body in [&mut fb, &mut sb, &mut bb] {
+        for y in 12..16 {
+            for x in 0..16 {
+                if body[y][x] == 6 {
+                    body[y][x] = 2;
+                } else if body[y][x] == 7 {
+                    body[y][x] = 3;
+                }
+            }
+        }
+    }
+    Some((fh, fb, sh, sb, bh, bb))
+}
 
-    Ok(ops)
+pub(crate) fn patch_alttp_comp_sheet_pub(
+    rom_z: &mut SnesRom,
+    sess: &mut SwapSession,
+    sheet_id: usize,
+    desc: &str,
+    free_cursor: &mut usize,
+    free_end: usize,
+    edit_fn: &dyn Fn(&mut [u8]),
+) -> Result<bool, RomError> {
+    patch_alttp_comp_sheet_helper(rom_z, sess, sheet_id, desc, free_cursor, free_end, edit_fn)
+}
+
+/// Patch any compressed ALTTP 3bpp sheet using its EXACT hardware raw index on `0x4F00`/`0x4FDF`/`0x50BE`:
+/// - `raw_idx = 0x00..=0x72` for BG tileset sheet `bg_id`
+/// - `raw_idx = 0x73 + sp_id` for Sprite sheet `sp_id` (`SP[0x00] = raw 0x73 = $10:F000`).
+/// Automatically relocates larger compressed streams into clean 2 MB LoROM expansion banks (`$23..$3F`)
+/// with strict `$8000` LoROM bank-boundary protection and lossless LC_LZ2 roundtrip verification.
+pub(crate) fn patch_alttp_raw_sheet_pub(
+    rom_z: &mut SnesRom,
+    sess: &mut SwapSession,
+    raw_idx: usize,
+    desc: &str,
+    free_cursor: &mut usize,
+    free_end: usize,
+    edit_fn: &dyn Fn(&mut [u8]),
+) -> Result<bool, RomError> {
+    let Some((z_bk, z_hi, z_lo)) = find_alttp_raw_gfx_table(&rom_z.data) else {
+        return Ok(false);
+    };
+    if raw_idx >= 223 {
+        return Ok(false);
+    }
+    let pc = ((rom_z.data[z_bk + raw_idx] as usize & 0x7F) << 15)
+        | ((rom_z.data[z_hi + raw_idx] as usize & 0x7F) << 8)
+        | (rom_z.data[z_lo + raw_idx] as usize);
+    let Some((mut raw, orig_clen)) =
+        decompress_nintendo_lz2_with_endian(&rom_z.data, pc, 4096, false)
+    else {
+        return Ok(false);
+    };
+    if raw.len() != 0x600 {
+        return Ok(false);
+    }
+    edit_fn(&mut raw);
+    let comp = compress_nintendo_lz2_with_endian(&raw, false);
+    if decompress_nintendo_lz2_with_endian(&comp, 0, 4096, false).map(|(d, _)| d) != Some(raw) {
+        return Ok(false);
+    }
+    let orig_in_single_bank = pc / 0x8000 == (pc + orig_clen.saturating_sub(1)) / 0x8000;
+    if comp.len() <= orig_clen && orig_in_single_bank {
+        let mut padded = comp;
+        padded.resize(orig_clen, 0xFF);
+        sess.swap_custom_bytes(
+            rom_z,
+            pc,
+            pc,
+            padded,
+            desc.to_string(),
+            SwapKind::GraphicsTiles {
+                format: TileFormat::Bpp3,
+                tile_count: 64,
+                smart_remapped: true,
+            },
+        )?;
+        Ok(true)
+    } else {
+        // Relocate safely into clean LoROM 2MB expansion space (Bank $23..$3F, PC 0x118000..0x1FFFFF),
+        // keeping Banks $20..$22 (3D Intro) 100% untouched and never crossing a 32 KB ($8000) boundary!
+        const EXPANDED_FREE_START: usize = 0x118000;
+        let mut cur_end = if *free_cursor < 0x100000 { free_end } else { rom_z.data.len() };
+        if *free_cursor + comp.len() > cur_end {
+            if rom_z.data.len() < 0x200000 {
+                rom_z.data.resize(0x200000, 0xFF);
+                if 0x007FD7 < rom_z.data.len() {
+                    rom_z.data[0x007FD7] = 0x0B; // 16 Mbit standard SNES LoROM
+                }
+                rom_z.header.rom_size_byte = 0x0B;
+                rom_z.header.declared_rom_size_kb = 2048;
+                *free_cursor = EXPANDED_FREE_START;
+                cur_end = rom_z.data.len();
+            } else if *free_cursor < EXPANDED_FREE_START {
+                *free_cursor = EXPANDED_FREE_START;
+                cur_end = rom_z.data.len();
+            }
+        }
+        let bank_rem = 0x8000 - (*free_cursor % 0x8000);
+        if comp.len() > bank_rem {
+            *free_cursor += bank_rem;
+        }
+        if *free_cursor + comp.len() > cur_end {
+            return Ok(false);
+        }
+        let dst_pc = *free_cursor;
+        *free_cursor += comp.len();
+        let snes_bank = (dst_pc / 0x8000) as u8;
+        let snes_addr = 0x8000 + (dst_pc % 0x8000);
+        sess.swap_custom_bytes(
+            rom_z,
+            dst_pc,
+            pc,
+            comp,
+            format!("{} (repointé @ ${:02X}:{:04X})", desc, snes_bank, snes_addr),
+            SwapKind::GraphicsTiles {
+                format: TileFormat::Bpp3,
+                tile_count: 64,
+                smart_remapped: true,
+            },
+        )?;
+        sess.swap_custom_bytes(rom_z, z_bk + raw_idx, z_bk + raw_idx, vec![snes_bank], format!("Ptr Raw Bank 0x{:02X}", raw_idx), SwapKind::CodePatch { byte_count: 1 })?;
+        sess.swap_custom_bytes(rom_z, z_hi + raw_idx, z_hi + raw_idx, vec![(snes_addr >> 8) as u8], format!("Ptr Raw Hi 0x{:02X}", raw_idx), SwapKind::CodePatch { byte_count: 1 })?;
+        sess.swap_custom_bytes(rom_z, z_lo + raw_idx, z_lo + raw_idx, vec![(snes_addr & 0xFF) as u8], format!("Ptr Raw Lo 0x{:02X}", raw_idx), SwapKind::CodePatch { byte_count: 1 })?;
+        Ok(true)
+    }
 }
 
 fn patch_alttp_comp_sheet_helper(
@@ -2481,7 +3302,8 @@ fn patch_alttp_comp_sheet_helper(
     if decompress_nintendo_lz2_with_endian(&comp, 0, 4096, false).map(|(d, _)| d) != Some(raw) {
         return Ok(false);
     }
-    if comp.len() <= orig_clen {
+    let orig_in_single_bank = pc / 0x8000 == (pc + orig_clen.saturating_sub(1)) / 0x8000;
+    if comp.len() <= orig_clen && orig_in_single_bank {
         let mut padded = comp;
         padded.resize(orig_clen, 0xFF);
         sess.swap_custom_bytes(
@@ -2497,7 +3319,36 @@ fn patch_alttp_comp_sheet_helper(
             },
         )?;
         Ok(true)
-    } else if *free_cursor + comp.len() <= free_end {
+    } else {
+        // If 1MB free block (0x066F46..0x068000) is full, cleanly auto-expand to standard 2MB SNES LoROM
+        // (0x200000 bytes, header ROM size 0x0B at $007FD7 — 100% native SNES/Super Famicom LoROM 16Mbit!)
+        // CRITICAL: Banks $20..$22 (PC 0x100000..0x117FFF) are RESERVED for 32 3D Intro Frames + 65816 DMA Code!
+        // Therefore compressed sheet overflow MUST start at Bank $23 (PC 0x118000..0x1FFFFF = 928 KB clean space)!
+        const EXPANDED_FREE_START: usize = 0x118000;
+        let mut cur_end = if *free_cursor < 0x100000 { free_end } else { rom_z.data.len() };
+        if *free_cursor + comp.len() > cur_end {
+            if rom_z.data.len() < 0x200000 {
+                rom_z.data.resize(0x200000, 0xFF);
+                if 0x007FD7 < rom_z.data.len() {
+                    rom_z.data[0x007FD7] = 0x0B; // 16 Mbit (2048 KB) standard SNES LoROM
+                }
+                rom_z.header.rom_size_byte = 0x0B;
+                rom_z.header.declared_rom_size_kb = 2048;
+                *free_cursor = EXPANDED_FREE_START; // Bank $23:$8000 (ZERO collision with 3D Intro at $20..$22!)
+                cur_end = rom_z.data.len();
+            } else if *free_cursor < EXPANDED_FREE_START {
+                *free_cursor = EXPANDED_FREE_START;
+                cur_end = rom_z.data.len();
+            }
+        }
+        // Never allow a compressed sheet to straddle a $8000 LoROM bank boundary!
+        let bank_rem = 0x8000 - (*free_cursor % 0x8000);
+        if comp.len() > bank_rem {
+            *free_cursor += bank_rem;
+        }
+        if *free_cursor + comp.len() > cur_end {
+            return Ok(false);
+        }
         let dst_pc = *free_cursor;
         *free_cursor += comp.len();
         let snes_bank = (dst_pc / 0x8000) as u8;
@@ -2518,8 +3369,6 @@ fn patch_alttp_comp_sheet_helper(
         sess.swap_custom_bytes(rom_z, z_hi + sheet_id, z_hi + sheet_id, vec![(snes_addr >> 8) as u8], format!("Ptr Hi 0x{:02X}", sheet_id), SwapKind::CodePatch { byte_count: 1 })?;
         sess.swap_custom_bytes(rom_z, z_lo + sheet_id, z_lo + sheet_id, vec![(snes_addr & 0xFF) as u8], format!("Ptr Lo 0x{:02X}", sheet_id), SwapKind::CodePatch { byte_count: 1 })?;
         Ok(true)
-    } else {
-        Ok(false)
     }
 }
 
@@ -2538,14 +3387,9 @@ fn apply_rule_to_smw(
         "hero" => {
             if rule.donor_source == "link" && donor.identify_game() == RecognizedGame::ZeldaAlttp {
                 ops += apply_link_into_smw_swap(rom_smw, donor, session)?;
-            } else if rule.donor_source == "dk" {
-                ops += inject_dk_as_player_in_smw(rom_smw, session)?;
             }
         }
         "mount" => {
-            if rule.donor_source == "dk" {
-                ops += apply_donkey_kong_into_smw_yoshi(rom_smw, &donor.data, session)?;
-            }
         }
         "enemies" => {
             if let Some((e1, e2)) = extract_donor_16x16_for_smw(donor, &rule.donor_source) {
@@ -2649,236 +3493,6 @@ fn apply_rule_to_smw(
         _ => {}
     }
     Ok(ops)
-}
-
-/// Inject **Donkey Kong** directly as the playable Player Hero inside Super Mario World (`GFX32` + Palette)!
-fn inject_dk_as_player_in_smw(
-    rom_smw: &mut SnesRom,
-    session: &mut SwapSession,
-) -> Result<usize, RomError> {
-    let mut ops = 0usize;
-    let Some((mut g32, _)) = decompress_nintendo_lz2_with_endian(&rom_smw.data, 0x040000, 32768, true) else {
-        return Ok(0);
-    };
-    if g32.len() < 23808 {
-        g32.resize(23808, 0);
-    }
-
-    // Locate SMW's pose tables dynamically using Super Mario signature
-    const SUPER_SIG: [u8; 14] = [0x70, 0x70, 0x70, 0xA0, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0xA0, 0x74, 0x70, 0x80];
-    let Some(sig_pos) = rom_smw.data.windows(SUPER_SIG.len()).position(|w| w == SUPER_SIG) else {
-        return Ok(0);
-    };
-    let pose_top_base = sig_pos - 0x46;
-    let pose_bot_base = pose_top_base + 0xC0;
-
-    let write_g32_16x16 = |buf: &mut [u8], val: u8, px: &[[u8; 16]; 16]| {
-        let off = (((val as usize) & 0x08) << 11) | (((val as usize) & 0xF7) << 6);
-        let coords = [off, off + 32, off + 512, off + 544];
-        for (q, &dst) in coords.iter().enumerate() {
-            if dst + 32 > buf.len() {
-                continue;
-            }
-            let qx = (q & 1) * 8;
-            let qy = (q >> 1) * 8;
-            for y in 0..8 {
-                let (mut b0, mut b1, mut b2, mut b3) = (0u8, 0u8, 0u8, 0u8);
-                for x in 0..8 {
-                    let c = px[qy + y][qx + x] & 0x0F;
-                    let sh = 7 - x;
-                    b0 |= (c & 1) << sh;
-                    b1 |= ((c >> 1) & 1) << sh;
-                    b2 |= ((c >> 2) & 1) << sh;
-                    b3 |= ((c >> 3) & 1) << sh;
-                }
-                buf[dst + y * 2] = b0;
-                buf[dst + y * 2 + 1] = b1;
-                buf[dst + 16 + y * 2] = b2;
-                buf[dst + 16 + y * 2 + 1] = b3;
-            }
-        }
-    };
-
-    // Map DK 3bpp indices (1=white, 2=outline, 3=deep brown, 4=mid brown, 5=fur hi, 6=red tie, 7=tan)
-    // onto SMW Mario CGRAM indices (1=white, 2=black, 3=brown, 6=tan, 9=red tie, 10=deep brown, 11=mid brown, 12=fur hi)
-    const DK_TO_SMW_MARIO: [u8; 8] = [0, 1, 2, 10, 11, 12, 9, 6];
-    let map_dk = |src: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
-        let mut out = [[0u8; 16]; 16];
-        for y in 0..16 {
-            for x in 0..16 {
-                out[y][x] = DK_TO_SMW_MARIO[(src[y][x] & 7) as usize];
-            }
-        }
-        out
-    };
-
-    let dk_small = map_dk(&crate::ai_sprites::DK_BABY_DK);
-    let dk_head = map_dk(&crate::ai_sprites::DK_HEAD_NORM);
-    let dk_head_roar = map_dk(&crate::ai_sprites::DK_HEAD_ROAR);
-    let dk_body_st = map_dk(&crate::ai_sprites::DK_BODY_ST);
-    let dk_body_w1 = map_dk(&crate::ai_sprites::DK_BODY_W1);
-    let dk_body_w2 = map_dk(&crate::ai_sprites::DK_BODY_W2);
-    let blank16 = [[0u8; 16]; 16];
-
-    // Patch Small Mario pose_top_base (0x00..0x46 -> blank tile 197) + Super/Cape shared-leg remaps via SwapSession
-    // so both .sfc AND .ips patches are 100% consistent!
-    let mut patched_top = rom_smw.data[pose_top_base..pose_top_base + 0x46].to_vec();
-    patched_top.fill(197);
-    session.swap_custom_bytes(
-        rom_smw,
-        pose_top_base,
-        0x0D16C4,
-        patched_top,
-        "Table Poses Top Small Mario SMW -> Tile vierge 197 (Mini Donkey Kong propre)".into(),
-        SwapKind::CodePatch { byte_count: 0x46 },
-    )?;
-    ops += 1;
-
-    let mut patched_bot = rom_smw.data[pose_bot_base..pose_bot_base + 0xC0].to_vec();
-    for &(rel, new_t) in &[(0x55usize, 0x7Eu8), (0x92, 0x7E), (0x6B, 0x7F), (0xA8, 0x7F)] {
-        if rel < patched_bot.len() {
-            patched_bot[rel] = new_t;
-        }
-    }
-    session.swap_custom_bytes(
-        rom_smw,
-        pose_bot_base,
-        0x0D16C4,
-        patched_bot,
-        "Table Poses Bot Super/Cape Mario SMW -> Remap jambes partagées".into(),
-        SwapKind::CodePatch { byte_count: 0xC0 },
-    )?;
-    ops += 1;
-
-    // Populate Super/Cape DK poses FIRST (skipping blank tile 197 so it NEVER receives a head!)
-    for y in 0x46..0xC0 {
-        let pose = if y < 0x83 { y - 0x46 } else { y - 0x83 };
-        let va = rom_smw.data[pose_top_base + y];
-        let vb = rom_smw.data[pose_bot_base + y];
-        let h = if pose == 0x0B || pose == 0x0D { &dk_head_roar } else { &dk_head };
-        let b = match pose % 3 {
-            0 => &dk_body_st,
-            1 => &dk_body_w1,
-            _ => &dk_body_w2,
-        };
-        if va != 197 {
-            write_g32_16x16(&mut g32, va, h);
-        }
-        if vb != 197 {
-            write_g32_16x16(&mut g32, vb, b);
-        }
-    }
-
-    // Populate Small DK (16x16 Mini Donkey Kong) + explicitly wipe blank tile 197 LAST so Small DK NEVER has a double head!
-    for y in 0..0x46 {
-        let vb = rom_smw.data[pose_bot_base + y];
-        if vb != 197 {
-            write_g32_16x16(&mut g32, vb, &dk_small);
-        }
-    }
-    write_g32_16x16(&mut g32, 197, &blank16);
-
-    let comp = compress_nintendo_lz2_with_endian(&g32, true);
-    if comp.len() <= 0x3FC0 {
-        let mut padded = comp;
-        padded.resize(0x3FC0, 0xFF);
-        session.swap_custom_bytes(
-            rom_smw,
-            0x040000,
-            0x0D16C4,
-            padded,
-            "Héros SMW (GFX32) -> Donkey Kong Jouable !".into(),
-            SwapKind::GraphicsTiles {
-                format: TileFormat::Bpp4,
-                tile_count: 744,
-                smart_remapped: true,
-            },
-        )?;
-        ops += 1;
-    }
-
-    // Patch SMW Mario Player Palette (USA 0x0032C8 / PAL 0x0032DB) with Donkey Kong Fur + Red Tie + Warm Tan!
-    const MARIO_PAL_SIG: [u8; 8] = [0x5F, 0x63, 0x1D, 0x58, 0x0A, 0x00, 0x1F, 0x39];
-    let m_pal = rom_smw.data[..rom_smw.data.len().min(0x008000)]
-        .windows(MARIO_PAL_SIG.len())
-        .position(|w| w == MARIO_PAL_SIG)
-        .unwrap_or(if rom_smw.data.get(0x7FD9).copied() == Some(0x02) {
-            0x0032DB
-        } else {
-            0x0032C8
-        });
-    if m_pal + 20 <= rom_smw.data.len() {
-        let dk_10: [u16; 10] = [
-            0x431F, // 6: Warm tan muzzle/chest
-            0x35DF, // 7: Peach accent
-            0x0012, // 8: Dark tie shadow
-            0x001F, // 9: Bright Red Tie!
-            0x08AC, // 10: Deep fur brown
-            0x1154, // 11: Mid fur brown
-            0x263B, // 12: Fur highlight
-            0x0015, // 13: Red shadow
-            0x219D, // 14: Skin shadow
-            0x03FF, // 15: Gold accent
-        ];
-        let mut bytes = Vec::with_capacity(20);
-        for w in dk_10 {
-            bytes.extend_from_slice(&w.to_le_bytes());
-        }
-        session.swap_custom_bytes(
-            rom_smw,
-            m_pal,
-            0x39A068,
-            bytes,
-            format!("Palette Joueur SMW @ 0x{:06X} -> Donkey Kong (Fourrure & Cravate Rouge)", m_pal),
-            SwapKind::PaletteBgr555 { color_count: 10 },
-        )?;
-        ops += 1;
-    }
-
-    Ok(ops)
-}
-
-// =============================================================================
-// TARGET 3: DONKEY KONG COUNTRY INJECTORS
-// =============================================================================
-
-fn apply_rule_to_dkc(
-    rom_dkc: &mut SnesRom,
-    donor: &SnesRom,
-    rule: &MixRule,
-    session: &mut SwapSession,
-) -> Result<usize, RomError> {
-    match rule.target_slot.as_str() {
-        "hero" => apply_swap_into_dkc(rom_dkc, donor, session),
-        "palette" => {
-            if 0x39A068 + 30 <= rom_dkc.data.len() {
-                let mut new_pal = rom_dkc.data[0x39A068..0x39A068 + 30].to_vec();
-                if donor.identify_game() == RecognizedGame::SuperMarioWorld {
-                    let smw_pal = SnesPalette::mario_classic_full_16(Some(&donor.data));
-                    for (i, c) in smw_pal.colors_rgba.iter().skip(1).take(15).enumerate() {
-                        let w = crate::graphics::rgb_to_bgr555(c[0], c[1], c[2]);
-                        new_pal[i * 2..i * 2 + 2].copy_from_slice(&w.to_le_bytes());
-                    }
-                } else if donor.identify_game() == RecognizedGame::ZeldaAlttp {
-                    new_pal.copy_from_slice(&donor.data[0x0DD308..0x0DD308 + 30]);
-                }
-                session.swap_custom_bytes(
-                    rom_dkc,
-                    0x39A068,
-                    0x0DD308,
-                    new_pal,
-                    format!("Palette DKC (0x39A068) ← {}:{}", rule.donor_alias, rule.donor_source),
-                    SwapKind::PaletteBgr555 { color_count: 15 },
-                )?;
-                return Ok(1);
-            }
-            Ok(0)
-        }
-        "audio_percussion" => {
-            inject_unpitched_brr_percussion(rom_dkc, donor, &rule.donor_alias, session, 4)
-        }
-        _ => Ok(0),
-    }
 }
 
 // =============================================================================

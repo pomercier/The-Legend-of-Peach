@@ -3,13 +3,11 @@
   "custom_title": "HYRULE MARIO WORLD",
   "base_rom": "roms/super_mario_world.sfc",
   "donors": [
-    { "alias": "zelda", "path": "roms/zelda_alttp.sfc" },
-    { "alias": "dkc", "path": "roms/donkey_kong_country.sfc" }
+    { "alias": "zelda", "path": "roms/zelda_alttp.sfc" }
   ],
   "rules": [
     { "target": "hero", "donor": "zelda", "source": "link" },
     { "target": "enemies", "donor": "zelda", "source": "zelda_soldier" },
-    { "target": "items", "donor": "zelda", "source": "zelda_items_pack" },
-    { "target": "mount", "donor": "dkc", "source": "dk" }
+    { "target": "items", "donor": "zelda", "source": "zelda_items_pack" }
   ]
 }

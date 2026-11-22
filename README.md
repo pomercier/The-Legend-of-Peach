@@ -43,34 +43,30 @@ cargo run --release -p snes-studio
 ### 3. Utiliser le CLI Multi-Jeux (`snes-cli`)
 ```bash
 # Inspecter les slots, sources donneuses et presets de N ROMs
-./target/release/snes-cli --mix-inspect roms/zelda_alttp.sfc roms/super_mario_world.sfc roms/donkey_kong_country.sfc
+./target/release/snes-cli --mix-inspect roms/zelda_alttp.sfc roms/super_mario_world.sfc
 
-# Rejouer une recette d'exemple fournie dans recipes/
-./target/release/snes-cli --mix --recipe recipes/donkey_hyrule_world.json --out donkey_hyrule_world.sfc --ips donkey_hyrule_world.ips
+# Rejouer la recette officielle Super Mario Hyrule dans recipes/
+./target/release/snes-cli --mix --recipe recipes/super_mario_hyrule.json --out super_mario_hyrule.sfc --ips super_mario_hyrule.ips
 
 # Mix personnalisé règle par règle (slots sémantiques ou bruts gfx:N / pal:N / audio:N)
 ./target/release/snes-cli --mix \
   --base roms/super_mario_world.sfc \
   --donor zelda=roms/zelda_alttp.sfc \
-  --donor dkc=roms/donkey_kong_country.sfc \
   --rule hero=zelda:link \
   --rule enemies=zelda:zelda_soldier \
   --rule items=zelda:zelda_items_pack \
-  --rule mount=dkc:dk \
   --title "HYRULE MARIO WORLD" \
   --out hyrule_mario_world.sfc --ips hyrule_mario_world.ips
 
 # Mode Chaos Multi-Jeux déterministe (compatible avec n'importe quelles ROMs SNES)
 ./target/release/snes-cli --mix \
-  --base rom_a.sfc --donor b=rom_b.sfc --donor c=rom_c.sfc \
+  --base rom_a.sfc --donor b=rom_b.sfc \
   --chaos --seed 42 --out chaos_mix.sfc
 ```
 
 ### Recettes d'exemple incluses (`recipes/`)
-- `recipes/donkey_hyrule_world.json` — Crossover 3 jeux (Base Zelda + Donkey Kong DKC + Goombas/Objets SMW + Percussions DKC)
-- `recipes/hyrule_mario_world.json` — Crossover 3 jeux (Base SMW + Link & Soldats Zelda + Monture Donkey Kong)
-- `recipes/dk_mario_world.json` — Base SMW + Donkey Kong jouable + Percussions DKC
-- `recipes/mario_kong_country.json` — Base DKC (4 Mo HiROM) + Mario SMW + Percussions Zelda
+- `recipes/super_mario_hyrule.json` — Conversion Totale Super Mario Hyrule (Base Zelda + Héros Mario SMW + Goombas/Ennemis SMW + Objets SMW + Percussions)
+- `recipes/hyrule_mario_world.json` — Crossover Hyrule Mario World (Base SMW + Héros Link & Soldats Zelda + Objets Zelda)
 
 ---
 

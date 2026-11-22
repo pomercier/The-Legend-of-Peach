@@ -449,27 +449,11 @@ pub fn apply_obvious_demo_swap(
     let game_a = rom_a.identify_game();
     let game_b = rom_b.identify_game();
 
-    // Case 0 (Primary): Target is Super Mario World
-    // -> Replace Mario/Luigi with Link AND replace Yoshi with Donkey Kong!
+    // Case 0: Target is Super Mario World
     if game_a == crate::rom::RecognizedGame::SuperMarioWorld || rom_a.data.len() == 512 * 1024 {
         if game_b == crate::rom::RecognizedGame::ZeldaAlttp || rom_b.data.len() == 1024 * 1024 {
             ops_applied += apply_link_into_smw_swap(rom_a, rom_b, session)?;
-            if let Ok(dkc_bytes) = std::fs::read("roms/donkey_kong_country.sfc") {
-                if dkc_bytes.len() >= 0x3C0000 {
-                    ops_applied += apply_donkey_kong_into_smw_yoshi(rom_a, &dkc_bytes, session)?;
-                }
-            }
-        } else if game_b == crate::rom::RecognizedGame::DonkeyKongCountry || rom_b.data.len() >= 0x3C0000 {
-            if let Ok(zelda_bytes) = std::fs::read("roms/zelda_alttp.sfc") {
-                if let Ok(zelda_rom) = SnesRom::from_bytes("donor_zelda", &zelda_bytes) {
-                    ops_applied += apply_link_into_smw_swap(rom_a, &zelda_rom, session)?;
-                }
-            }
-            ops_applied += apply_donkey_kong_into_smw_yoshi(rom_a, &rom_b.data, session)?;
         }
-    } else if game_a == crate::rom::RecognizedGame::DonkeyKongCountry || rom_a.data.len() >= 0x3C0000 {
-        // Case 0b: ROM A is Donkey Kong Country
-        ops_applied += apply_swap_into_dkc(rom_a, rom_b, session)?;
     } else if (game_a == crate::rom::RecognizedGame::ZeldaAlttp || rom_a.data.len() >= 0x0E0000)
         && (game_b == crate::rom::RecognizedGame::SuperMarioWorld || rom_b.data.len() == 512 * 1024)
     {
@@ -694,21 +678,16 @@ pub fn apply_obvious_demo_swap(
     Ok(ops_applied)
 }
 
-/// Autonomous full fusion function: injects Link and Donkey Kong into Super Mario World,
-/// applies title screen "SUPER LINK WORLD", gorilla punch, horizontal quadruped posture,
-/// and validates the SNES hardware checksum.
+/// Autonomous full fusion function: injects Link into Super Mario World,
+/// applies title screen "SUPER LINK WORLD", and validates the SNES hardware checksum.
 pub fn apply_full_fusion(
     rom_target: &mut SnesRom,
     donor_zelda: Option<&SnesRom>,
-    donor_dkc: Option<&[u8]>,
     session: &mut crate::swapper::SwapSession,
 ) -> Result<usize, crate::rom::RomError> {
     let mut ops_applied = 0usize;
     if let Some(zelda) = donor_zelda {
         ops_applied += apply_link_into_smw_swap(rom_target, zelda, session)?;
-    }
-    if let Some(dkc_bytes) = donor_dkc {
-        ops_applied += apply_donkey_kong_into_smw_yoshi(rom_target, dkc_bytes, session)?;
     }
     if let Ok(title_ops) = apply_link_world_title_screen(rom_target, session) {
         ops_applied += title_ops;
@@ -720,7 +699,7 @@ pub fn apply_full_fusion(
 /// Dynamically locate SMW's Mario OAM Pose tables (`top_table`, `bot_table`) across all regions
 /// (USA: `0x00600C` / `0x0060CC`, PAL Europe: `0x005FFC` / `0x0060BC`, Japan, etc.)
 /// using the invariant Super Mario pose signature at `top_table + 0x46`.
-fn find_smw_mario_pose_tables(rom: &[u8]) -> (usize, usize) {
+pub(crate) fn find_smw_mario_pose_tables(rom: &[u8]) -> (usize, usize) {
     const SUPER_POSE_SIG: [u8; 14] = [
         0x70, 0x70, 0x70, 0xA0, 0x70, 0x70, 0x70, 0x70, 0x70, 0x70, 0xA0, 0x74, 0x70, 0x80,
     ];
@@ -772,16 +751,6 @@ fn find_smw_yoshi_and_mario_palettes(rom: &[u8]) -> (usize, usize) {
     } else {
         (0x003298, 0x0032C8)
     }
-}
-
-/// Dynamically locate SMW's Yoshi tongue Y displacement table `[0x08; 7, 0x13]`.
-fn find_smw_yoshi_tongue_y(rom: &[u8]) -> usize {
-    const TONGUE_SIG: [u8; 8] = [0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x13];
-    let end = rom.len().min(0x018000);
-    rom[..end]
-        .windows(TONGUE_SIG.len())
-        .position(|w| w == TONGUE_SIG)
-        .unwrap_or(0x00F61A)
 }
 
 /// Inject Link (from Zelda ALTTP `rom_b` @ `0x080000` & `0x0DD308`) into Super Mario World (`rom_a` @ `0x040000` GFX32,
@@ -1054,7 +1023,7 @@ pub fn apply_link_into_smw_swap(
 }
 
 /// Extract a 16x16 tile block from decompressed SMW GFX32 (4bpp) using SMW's hardware DMA formula.
-fn read_smw_gfx32_16x16(buf: &[u8], val: u8) -> [[u8; 16]; 16] {
+pub(crate) fn read_smw_gfx32_16x16(buf: &[u8], val: u8) -> [[u8; 16]; 16] {
     let off = (((val as usize) & 0x08) << 11) | (((val as usize) & 0xF7) << 6);
     let coords = [off, off + 32, off + 512, off + 544];
     let mut px = [[0u8; 16]; 16];
@@ -1156,11 +1125,26 @@ pub fn apply_mario_into_zelda_alttp_swap(
         out
     };
 
+    let remap_no_glove_idx = |mut px: [[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        // CRITICAL ALTTP HARDWARE FIX (#3):
+        // Equipping Power Glove (0x354=1) or Titan's Mitt (0x354=2) overwrites Link CGRAM index 13
+        // from ROM PC 0x0DEDF5/0x0DEDF7 (0x0376 = LIME GREEN!). Remapping SMW pixel index 13 -> 7
+        // (an unused slot NEVER overwritten by ALTTP!) eliminates 100% of green/red cap flicker!
+        for row in &mut px {
+            for c in row.iter_mut() {
+                if *c == 13 {
+                    *c = 7;
+                }
+            }
+        }
+        px
+    };
+
     let extract_smw_mario = |pose: usize, hflip: bool| -> ([[u8; 16]; 16], [[u8; 16]; 16]) {
         let va = rom_smw.data.get(pose_top_base + 0x46 + pose).copied().unwrap_or(0);
         let vb = rom_smw.data.get(pose_bot_base + 0x46 + pose).copied().unwrap_or(0);
-        let top = read_smw_gfx32_16x16(&g32, va);
-        let bot = read_smw_gfx32_16x16(&g32, vb);
+        let top = remap_no_glove_idx(read_smw_gfx32_16x16(&g32, va));
+        let bot = remap_no_glove_idx(read_smw_gfx32_16x16(&g32, vb));
         if hflip {
             (mirror_h(&top), mirror_h(&bot))
         } else {
@@ -1168,7 +1152,7 @@ pub fn apply_mario_into_zelda_alttp_swap(
         }
     };
 
-    // Lift left or right boot cleanly by 2px on Back Stand (pose 0x39) for smooth authentic SMW Up-walk
+    // Lift left or right boot cleanly by 2px (plus subtle opposite shoulder sway) for smooth authentic SMW strides
     let make_step_body = |base: &[[u8; 16]; 16], lift_left: bool| -> [[u8; 16]; 16] {
         let mut out = *base;
         let (x0, x1) = if lift_left { (0usize, 8usize) } else { (8usize, 16usize) };
@@ -1182,6 +1166,109 @@ pub fn apply_mario_into_zelda_alttp_swap(
                 out[y][x] = 0;
             }
         }
+        out
+    };
+
+    // Dedicated Overhead-Carrying Mario Heads & Bodies (calibrated pixel-for-pixel to LIVE Mednafen x4 zoom!):
+    // With Z=22 carry height, the bottom edge of the Turn-Block / Emerald Smiling Bush rests right at Head y=3,
+    // so wide rounded white SMW gloves at y=3..6 (x=0..3 & x=12..15) VISIBLY cradle the underside/sides of the block
+    // with ZERO pointy "cat ears" above Mario's cap (y=0..2 stays 100% clear!), ZERO "rabbit ears" along his cheeks!
+    let make_carry_front_head = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        let mut out = *base;
+        // Left wide rounded white SMW glove cradling block underside (y=3..6, x=0..3) + compact red elbow (y=7..9)
+        out[3][1] = 2; out[3][2] = 2; out[3][3] = 2;
+        out[4][0] = 2; out[4][1] = 1; out[4][2] = 1; out[4][3] = 1; out[4][4] = 2;
+        out[5][0] = 2; out[5][1] = 1; out[5][2] = 1; out[5][3] = 2;
+        out[6][0] = 2; out[6][1] = 3; out[6][2] = 2;
+        out[7][0] = 2; out[7][1] = 9; out[7][2] = 9;
+        out[8][1] = 2; out[8][2] = 9;
+        out[9][1] = 2; out[9][2] = 7;
+        // Right wide rounded white SMW glove cradling block underside (y=3..6, x=12..15) + compact red elbow (y=7..9)
+        out[3][12] = 2; out[3][13] = 2; out[3][14] = 2;
+        out[4][11] = 2; out[4][12] = 1; out[4][13] = 1; out[4][14] = 1; out[4][15] = 2;
+        out[5][12] = 2; out[5][13] = 1; out[5][14] = 1; out[5][15] = 2;
+        out[6][13] = 2; out[6][14] = 3; out[6][15] = 2;
+        out[7][13] = 9; out[7][14] = 9; out[7][15] = 2;
+        out[8][13] = 9; out[8][14] = 2;
+        out[9][13] = 7; out[9][14] = 2;
+        out
+    };
+
+    let make_carry_side_head = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        let mut out = *base;
+        // Clean cap top (ZERO horns at y=0..2!) + single crisp white SMW glove in front of visor (y=3..6, x=11..15)
+        out[3][12] = 2; out[3][13] = 2; out[3][14] = 2;
+        out[4][11] = 2; out[4][12] = 1; out[4][13] = 1; out[4][14] = 1; out[4][15] = 2;
+        out[5][11] = 2; out[5][12] = 1; out[5][13] = 1; out[5][14] = 1; out[5][15] = 2;
+        out[6][12] = 2; out[6][13] = 3; out[6][14] = 2;
+        out[7][12] = 2; out[7][13] = 9; out[7][14] = 2;
+        out[8][12] = 2; out[8][13] = 7; out[8][14] = 2;
+        out
+    };
+
+    // Clean Front Stand / Walk Mario body: replaces SMW's vine-climb/peace-sign shoulder white gloves
+    // (y=0..4, x=0..4 & 11..15) with classic smooth red sleeves sloping down to crisp white gloves at hips!
+    let make_clean_front_body = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        let mut out = *base;
+        // Wipe vine-climbing / raised shoulder white glove pixels cleanly on y=0..5
+        for y in 0..=5usize {
+            for &x in &[0usize, 1, 2, 3, 4, 11, 12, 13, 14, 15] {
+                if matches!(out[y][x], 1 | 2 | 3 | 7 | 8 | 9) {
+                    out[y][x] = 0;
+                }
+            }
+        }
+        // Smooth classic Mario red sleeves sloping from collar down to hips (y=1..5)
+        out[1][3] = 8; out[1][4] = 9; out[1][11] = 9; out[1][12] = 8;
+        out[2][2] = 8; out[2][3] = 9; out[2][4] = 9; out[2][11] = 9; out[2][12] = 9; out[2][13] = 8;
+        out[3][1] = 8; out[3][2] = 9; out[3][3] = 9; out[3][4] = 7; out[3][11] = 7; out[3][12] = 9; out[3][13] = 9; out[3][14] = 8;
+        out[4][1] = 8; out[4][2] = 9; out[4][3] = 7; out[4][12] = 7; out[4][13] = 9; out[4][14] = 8;
+        // Crisp rounded white SMW gloves naturally at sides (y=5..7)
+        out[5][1] = 2; out[5][2] = 1; out[5][3] = 2; out[5][12] = 2; out[5][13] = 1; out[5][14] = 2;
+        out[6][1] = 2; out[6][2] = 1; out[6][3] = 3; out[6][12] = 3; out[6][13] = 1; out[6][14] = 2;
+        out[7][2] = 2; out[7][13] = 2;
+        out
+    };
+
+    let make_carry_front_body = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        let mut out = *base;
+        // Clear ALL old arm/hand/brown-spike pixels across y=0..=9 (including y=0..1!) on both sides!
+        for y in 0..=9usize {
+            for &x in &[0usize, 1, 2, 3, 12, 13, 14, 15] {
+                if out[y][x] != 0xA && out[y][x] != 0xB && out[y][x] != 0xC {
+                    out[y][x] = 0;
+                }
+            }
+        }
+        // Smooth compact raised red shoulders tucked cleanly into Head's curved sleeves (ZERO brown spikes!)
+        out[0][1] = 2; out[0][2] = 9; out[0][3] = 9; out[0][12] = 9; out[0][13] = 9; out[0][14] = 2;
+        out[1][1] = 2; out[1][2] = 9; out[1][3] = 9; out[1][12] = 9; out[1][13] = 9; out[1][14] = 2;
+        out[2][1] = 2; out[2][2] = 9; out[2][3] = 7; out[2][12] = 7; out[2][13] = 9; out[2][14] = 2;
+        out[3][2] = 2; out[3][3] = 7; out[3][12] = 7; out[3][13] = 2;
+        out[4][2] = 2; out[4][13] = 2;
+        out
+    };
+
+    let make_carry_side_body = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        let mut out = *base;
+        // Erase lowered front/back white gloves at waist (NO arms hanging down while carrying a block!)
+        for y in 0..=9usize {
+            for x in 0..16usize {
+                if out[y][x] == 1 {
+                    out[y][x] = if x >= 4 && x <= 11 { 9 } else { 0 };
+                }
+            }
+            for x in 11..16usize {
+                if matches!(out[y][x], 2 | 3 | 4 | 5 | 7 | 8 | 9) {
+                    out[y][x] = 0;
+                }
+            }
+        }
+        // Clean raised red shoulder/upper arm angled upward toward the raised white gloves on (6,11)!
+        for y in 0..=3usize {
+            out[y][7] = 9; out[y][8] = 9; out[y][9] = 9; out[y][10] = 2;
+        }
+        out[0][6] = 2; out[1][6] = 9; out[2][10] = 7; out[3][9] = 2;
         out
     };
 
@@ -1201,18 +1288,75 @@ pub fn apply_mario_into_zelda_alttp_swap(
         out
     };
 
+    // Dedicated sword/bow action bodies calibrated to LIVE Mednafen SNES PPU frames (ZERO knee dots, ZERO white shoulder glitches!):
+    // 1. body_sword_side: athletic side lunge with smooth SMW red sleeve and rounded white-gloved fist
+    //    gripping ALTTP's sword / Bill Blaster cleanly at x=11..14, y=3..6!
+    let make_sword_side_body = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        let mut out = *base;
+        for y in 0..=7usize {
+            for x in 8..16usize {
+                if matches!(out[y][x], 1 | 2 | 3) {
+                    out[y][x] = 0;
+                }
+            }
+        }
+        for x in 6..=10usize {
+            out[2][x] = 8;
+            out[3][x] = 9;
+            out[4][x] = 9;
+            out[5][x] = 7;
+        }
+        out[5][10] = 3;
+        out[2][12] = 2; out[2][13] = 2;
+        out[3][11] = 3; out[3][12] = 1; out[3][13] = 1; out[3][14] = 2;
+        out[4][11] = 3; out[4][12] = 1; out[4][13] = 1; out[4][14] = 1;
+        out[5][11] = 3; out[5][12] = 1; out[5][13] = 1; out[5][14] = 2;
+        out[6][12] = 2; out[6][13] = 2;
+        out
+    };
+
+    // 2. body_sword_down: clean front stance (built from clean_front_body — NO vine-climb shoulders, NO floating knee circle!)
+    //    with right red sleeve extended neatly down to side fist gripping the sword/tool!
+    let make_sword_down_body = |clean_front: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        let mut out = *clean_front;
+        // Extend right arm neatly outward/downward for sword/item stance
+        out[3][12] = 9; out[3][13] = 9; out[3][14] = 8;
+        out[4][12] = 9; out[4][13] = 9; out[4][14] = 7;
+        out[5][12] = 3; out[5][13] = 1; out[5][14] = 1; out[5][15] = 2;
+        out[6][12] = 2; out[6][13] = 1; out[6][14] = 1; out[6][15] = 2;
+        out[7][13] = 2; out[7][14] = 2;
+        out
+    };
+
+    // 3. body_sword_up: back view with LEFT arm raised at x=0..4, y=0..6 holding upward sword hilt!
+    let make_sword_up_body = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        let mut out = *base;
+        for y in 3..=6usize {
+            for x in 1..=4usize {
+                out[y][x] = if x == 1 { 8 } else if y == 6 { 7 } else { 9 };
+            }
+        }
+        out[0][1] = 2; out[0][2] = 2;
+        out[1][0] = 2; out[1][1] = 1; out[1][2] = 1; out[1][3] = 3;
+        out[2][0] = 2; out[2][1] = 1; out[2][2] = 1; out[2][3] = 3;
+        out[3][1] = 3; out[3][2] = 3;
+        out
+    };
+
     // Extract 100% GENUINE OFFICIAL NINTENDO Super Mario World Super Mario poses (ZERO hand-drawn sprites!)
     // Side (H-flipped to face Right for ALTTP; ALTTP mirrors horizontally for Left automatically!)
     let (head_side, body_side_stand) = extract_smw_mario(0x00, true);
     let (_, body_side_w1) = extract_smw_mario(0x01, true);
     let (_, body_side_w2) = extract_smw_mario(0x02, true);
-    let (_, body_side_r1) = extract_smw_mario(0x04, true);
-    let (_, body_side_r2) = extract_smw_mario(0x05, true);
+    let body_side_r1 = make_step_body(&body_side_w2, false);
+    let body_side_r2 = body_side_w1;
     let (_, body_side_fall) = extract_smw_mario(0x0D, true);
 
-    // Front (Down): pose 0x0F (authentic symmetric front stand) + pose 0x22 body (authentic front stride!)
-    let (head_down, body_down_stand) = extract_smw_mario(0x0F, false);
-    let (_, body_down_w1) = extract_smw_mario(0x22, false);
+    // Front (Down): pose 0x0F & 0x22 cleaned of raised vine-climb shoulder gloves -> classic SMW front stand & stride!
+    let (head_down, raw_body_down_stand) = extract_smw_mario(0x0F, false);
+    let (_, raw_body_down_w1) = extract_smw_mario(0x22, false);
+    let body_down_stand = make_clean_front_body(&raw_body_down_stand);
+    let body_down_w1 = make_clean_front_body(&raw_body_down_w1);
     let body_down_w2 = mirror_h(&body_down_w1);
     let head_down_sleep = make_sleep_head(&head_down);
 
@@ -1220,6 +1364,25 @@ pub fn apply_mario_into_zelda_alttp_swap(
     let (head_up, body_up_stand) = extract_smw_mario(0x39, false);
     let body_up_w1 = make_step_body(&body_up_stand, true);
     let body_up_w2 = make_step_body(&body_up_stand, false);
+
+    // Overhead-carrying poses (verified via jpdasm bank_00.asm: Head=(5..7,11), Body=(7,13)+(0..7,14)!)
+    let head_carry_down = make_carry_front_head(&head_down);
+    let head_carry_side = make_carry_side_head(&head_side);
+    let head_carry_up = make_carry_front_head(&head_up);
+    let body_carry_down_stand = make_carry_front_body(&body_down_stand);
+    let body_carry_down_w1 = make_carry_front_body(&body_down_w1);
+    let body_carry_down_w2 = make_carry_front_body(&body_down_w2);
+    let body_carry_up_stand = make_carry_front_body(&body_up_stand);
+    let body_carry_up_w1 = make_carry_front_body(&body_up_w1);
+    let body_carry_up_w2 = make_carry_front_body(&body_up_w2);
+    let body_carry_side_stand = make_carry_side_body(&body_side_stand);
+    let body_carry_side_w1 = make_carry_side_body(&body_side_w1);
+    let body_carry_side_w2 = make_carry_side_body(&body_side_w2);
+
+    // Dedicated sword-holding bodies:
+    let body_sword_side = make_sword_side_body(&body_side_w1);
+    let body_sword_down = make_sword_down_body(&body_down_w1);
+    let body_sword_up = make_sword_up_body(&body_up_stand);
 
     // Clone the entire 28,672-byte Link sprite bank (0x080000..0x087000) so FX/sword-arcs/sparkles/bunny stay intact
     let mut link_bank = rom_zelda.data[0x080000..0x087000].to_vec();
@@ -1262,24 +1425,25 @@ pub fn apply_mario_into_zelda_alttp_swap(
     write_cell(6, 0, &head_down);
     write_cell(7, 0, &head_down);
 
-    // Row 1: Action Side Bodies, Primary Down Bodies, Primary Up Stand Body, Alt Side Head
-    write_cell(0, 1, &body_side_w1);
-    write_cell(1, 1, &body_side_r1);
-    write_cell(2, 1, &body_side_w2);
+    // Row 1: Side Bow/Action Bodies (0..1 -> verified via live Mednafen Image 1!), Down Action Body (2),
+    //        Primary Down Bodies (3..5), Primary Up Stand Body (6), Alt Side Head (7)
+    write_cell(0, 1, &body_sword_side);
+    write_cell(1, 1, &body_sword_side);
+    write_cell(2, 1, &body_sword_down);
     write_cell(3, 1, &body_down_stand);
     write_cell(4, 1, &body_down_w1);
     write_cell(5, 1, &body_down_w2);
     write_cell(6, 1, &body_up_stand);
     write_cell(7, 1, &head_side);
 
-    // Row 2: Primary Up Walk Bodies + Primary Side Stand/Walk/Run Bodies
+    // Row 2: Primary Up Walk Bodies + Primary Side Stand/Walk + Up Sword-Swing Bodies (5..6)
     write_cell(0, 2, &body_up_w1);
     write_cell(1, 2, &body_up_w2);
     write_cell(2, 2, &body_side_w1);
     write_cell(3, 2, &body_side_stand);
     write_cell(4, 2, &body_side_w2);
-    write_cell(5, 2, &body_side_r1);
-    write_cell(6, 2, &body_side_r2);
+    write_cell(5, 2, &body_sword_up);
+    write_cell(6, 2, &body_sword_up);
     write_cell(7, 2, &body_side_w2);
 
     // Row 3: Secondary Walk / Sword / Carry Bodies
@@ -1292,12 +1456,15 @@ pub fn apply_mario_into_zelda_alttp_swap(
     write_cell(6, 3, &body_up_w2);
     write_cell(7, 3, &body_side_w1);
 
-    // Row 4: Lift Bodies & Secondary Heads
-    write_cell(0, 4, &body_down_stand);
-    write_cell(1, 4, &body_down_stand);
+    // Row 4: Lift / Overhead Carry Bodies & Secondary Heads + Mario Pit-Fall / Swim (cols 5..7)
+    write_cell(0, 4, &body_carry_down_stand);
+    write_cell(1, 4, &body_carry_down_w1);
     write_cell(2, 4, &head_side);
     write_cell(3, 4, &head_down);
     write_cell(4, 4, &head_up);
+    write_cell(5, 4, &head_down);       // Pit-fall shrinking Mario f0
+    write_cell(6, 4, &head_up);         // Pit-fall shrinking Mario f1
+    write_cell(7, 4, &head_down);       // Swimming Mario head front
 
     // Row 5-6: Bed Wake-Up / Sitting / Holding Item poses + Action Heads
     write_cell(0, 5, &head_side);
@@ -1323,9 +1490,13 @@ pub fn apply_mario_into_zelda_alttp_swap(
     write_cell(7, 7, &head_up);
 
     // Row 8: Side Attack Bodies (cols 0..2 ONLY; cols 3..7 are sword spin arcs -> preserved!)
-    write_cell(0, 8, &body_side_r1);
-    write_cell(1, 8, &body_side_r2);
-    write_cell(2, 8, &body_side_w1);
+    write_cell(0, 8, &body_sword_side);
+    write_cell(1, 8, &body_sword_side);
+    write_cell(2, 8, &body_sword_side);
+
+    // Row 9: Swimming Mario (cols 3..4 ONLY; cols 0..2 are sword spin arcs & col 5 is splash -> preserved!)
+    write_cell(3, 9, &head_down);
+    write_cell(4, 9, &head_side);
 
     // Row 10-11: Dash / Swim / Ledge Heads & Bodies (preserving sword arcs in Row 9 & (0,11)!)
     write_cell(1, 10, &body_up_stand);
@@ -1339,11 +1510,12 @@ pub fn apply_mario_into_zelda_alttp_swap(
     write_cell(2, 11, &body_down_stand);
     write_cell(3, 11, &body_down_w1);
     write_cell(4, 11, &body_up_w1);
-    write_cell(5, 11, &head_down);
-    write_cell(6, 11, &head_side);
-    write_cell(7, 11, &head_up);
+    // Verified via jpdasm bank_00.asm: (5,11)=Carry Down Head, (6,11)=Carry Side Head, (7,11)=Carry Up Head!
+    write_cell(5, 11, &head_carry_down);
+    write_cell(6, 11, &head_carry_side);
+    write_cell(7, 11, &head_carry_up);
 
-    // Row 12-14: Sword-swing & Shield-walk bodies
+    // Row 12-14: Shield-walk & Overhead Carrying Bodies (verified via jpdasm bank_00.asm LinkOAM_BodyAddresses!)
     for mx in 0..3 {
         write_cell(mx, 12, if mx % 2 == 0 { &body_down_w1 } else { &body_down_w2 });
     }
@@ -1353,78 +1525,84 @@ pub fn apply_mario_into_zelda_alttp_swap(
     write_cell(6, 12, &body_side_w1);
     write_cell(7, 12, &body_side_w2);
 
-    // Row 13-14: Sword-swing bodies (Down = (1..4,13), Up = (5..7,13)+(0,14), Side = (1..4,14), Charge Up = (5..7,14))
+    // Row 13-14: Sword/Action + VERIFIED Carrying Bodies:
+    //   (7,13)=CarryDown0, (0,14)=CarryDown1, (1,14)=CarryDown2,
+    //   (2,14)=CarrySide0, (3,14)=CarrySide1, (4,14)=CarrySide2,
+    //   (5,14)=CarryUp0,   (6,14)=CarryUp1,   (7,14)=CarryUp2!
     write_cell(0, 13, &body_down_stand);
-    write_cell(1, 13, &body_down_w1);
-    write_cell(2, 13, &body_down_w2);
-    write_cell(3, 13, &body_down_w1);
-    write_cell(4, 13, &body_down_stand);
-    write_cell(5, 13, &body_up_w1);
-    write_cell(6, 13, &body_up_w2);
-    write_cell(7, 13, &body_up_stand);
+    write_cell(1, 13, &body_sword_down);
+    write_cell(2, 13, &body_sword_down);
+    write_cell(3, 13, &body_sword_down);
+    write_cell(4, 13, &body_sword_down);
+    write_cell(5, 13, &body_sword_up);
+    write_cell(6, 13, &body_sword_up);
+    write_cell(7, 13, &body_carry_down_stand);
 
-    write_cell(0, 14, &body_up_w1);
-    write_cell(1, 14, &body_side_r1);
-    write_cell(2, 14, &body_side_r2);
-    write_cell(3, 14, &body_side_w1);
-    write_cell(4, 14, &body_side_w2);
-    write_cell(5, 14, &body_up_stand);
-    write_cell(6, 14, &body_up_w1);
-    write_cell(7, 14, &body_up_w2);
+    write_cell(0, 14, &body_carry_down_w1);
+    write_cell(1, 14, &body_carry_down_w2);
+    write_cell(2, 14, &body_carry_side_stand);
+    write_cell(3, 14, &body_carry_side_w1);
+    write_cell(4, 14, &body_carry_side_w2);
+    write_cell(5, 14, &body_carry_up_stand);
+    write_cell(6, 14, &body_carry_up_w1);
+    write_cell(7, 14, &body_carry_up_w2);
 
-    // Row 15-16: Shieldless Walk & Carry Bodies (preserving (0,15) dust FX!)
+    // Row 15-16: Shieldless Walk & Overhead Carry Bodies (preserving (0,15) dust FX!)
+    // Note (verified jpdasm): (7,16) is Walk Left/Right pose 0x0BF -> MUST be body_side_w2 (zero carry flicker)!
     write_cell(1, 15, &body_side_w1);
     write_cell(2, 15, &body_down_stand);
     write_cell(3, 15, &body_down_w1);
     write_cell(4, 15, &body_down_w2);
     write_cell(5, 15, &body_up_stand);
     write_cell(6, 15, &body_side_w2);
-    write_cell(7, 15, &body_down_stand);
+    write_cell(7, 15, &body_carry_up_stand);
 
-    write_cell(0, 16, &body_down_w1);
-    write_cell(1, 16, &body_down_w2);
-    write_cell(2, 16, &body_down_stand);
-    write_cell(3, 16, &body_up_stand);
-    write_cell(4, 16, &body_up_w1);
-    write_cell(5, 16, &body_up_w2);
+    write_cell(0, 16, &body_carry_up_w1);
+    write_cell(1, 16, &body_carry_up_w2);
+    write_cell(2, 16, &body_carry_up_stand);
+    write_cell(3, 16, &body_carry_side_stand);
+    write_cell(4, 16, &body_carry_side_w1);
+    write_cell(5, 16, &body_carry_side_w2);
     write_cell(6, 16, &body_side_w1);
     write_cell(7, 16, &body_side_w2);
 
-    // Row 17-18: Pushing / Pulling / Dash Heads & Bodies (preserving (0,17) & (0,18) zap skeleton FX!)
+    // Row 17-19: Verified Walk Cycle Bodies (eliminating all jpdasm-audited direction-flicker bugs!):
+    //   Walk Left/Right uses (6,17), (7,17), (3,18), (4,18) -> ALL body_side_*!
+    //   Walk Down uses (5,18), (6,18) -> body_down_*!
+    //   Walk Up uses (7,18), (3..7,19) -> ALL body_up_*!
     write_cell(1, 17, &head_down);
     write_cell(2, 17, &head_up);
     write_cell(3, 17, &body_side_r1);
     write_cell(4, 17, &body_side_r2);
     write_cell(5, 17, &body_down_w1);
-    write_cell(6, 17, &body_down_w2);
+    write_cell(6, 17, &body_side_w1);
     write_cell(7, 17, &body_side_stand);
 
     write_cell(1, 18, &head_side);
     write_cell(2, 18, &head_side);
     write_cell(3, 18, &body_side_w1);
     write_cell(4, 18, &body_side_w2);
-    write_cell(5, 18, &body_up_w1);
-    write_cell(6, 18, &body_up_w2);
+    write_cell(5, 18, &body_down_w1);
+    write_cell(6, 18, &body_down_w2);
     write_cell(7, 18, &body_up_stand);
 
-    // Row 19-21: Action / Pulling / Sword / Pushing Heads & Bodies
     write_cell(0, 19, &head_down);
     write_cell(1, 19, &head_side);
     write_cell(2, 19, &head_up);
     write_cell(3, 19, &body_up_w1);
     write_cell(4, 19, &body_up_w2);
-    write_cell(5, 19, &body_down_w1);
-    write_cell(6, 19, &body_down_w2);
-    write_cell(7, 19, &body_down_stand);
+    write_cell(5, 19, &body_up_w1);
+    write_cell(6, 19, &body_up_w2);
+    write_cell(7, 19, &body_up_stand);
 
     write_cell(0, 20, &head_down);
     write_cell(1, 20, &head_side);
     write_cell(2, 20, &head_up);
-    write_cell(3, 20, &body_down_w1);
-    write_cell(4, 20, &body_down_w2);
-    write_cell(5, 20, &body_side_w1);
-    write_cell(6, 20, &body_side_w2);
-    write_cell(7, 20, &body_up_stand);
+    write_cell(3, 20, &body_carry_down_w1);
+    write_cell(4, 20, &body_carry_down_w2);
+    write_cell(5, 20, &body_carry_side_w1);
+    write_cell(6, 20, &body_carry_side_w2);
+    write_cell(7, 20, &body_carry_up_stand);
 
     write_cell(0, 21, &body_up_stand);
     write_cell(1, 21, &body_side_r1);
@@ -1435,11 +1613,11 @@ pub fn apply_mario_into_zelda_alttp_swap(
     write_cell(6, 21, &body_up_w2);
     write_cell(7, 21, &body_side_w1);
 
-    // Row 22-25 & 27: Shieldless Side Walk / Dash / Climb / Chest Heads & Bodies (preserving Dark World Bunny in 25..26!)
-    write_cell(0, 22, &body_side_w1);
-    write_cell(1, 22, &body_side_w2);
-    write_cell(2, 22, &body_side_stand);
-    write_cell(3, 22, &body_side_r1);
+    // Row 22-25 & 27: Shieldless Side Walk / Dash / Carry / Climb / Chest Heads & Bodies (preserving Dark World Bunny in 25..26!)
+    write_cell(0, 22, &body_carry_side_w1);
+    write_cell(1, 22, &body_carry_side_w2);
+    write_cell(2, 22, &body_carry_side_stand);
+    write_cell(3, 22, &body_carry_side_w1);
     write_cell(4, 22, &body_side_r2);
     write_cell(5, 22, &body_side_w1);
     write_cell(6, 22, &body_side_w2);
@@ -1450,9 +1628,9 @@ pub fn apply_mario_into_zelda_alttp_swap(
     write_cell(2, 23, &body_side_w2);
     write_cell(3, 23, &body_side_stand);
     write_cell(4, 23, &body_side_r1);
-    write_cell(5, 23, &body_down_w1);
-    write_cell(6, 23, &body_down_w2);
-    write_cell(7, 23, &body_down_stand);
+    write_cell(5, 23, &body_carry_down_w1);
+    write_cell(6, 23, &body_carry_down_w2);
+    write_cell(7, 23, &body_carry_down_stand);
 
     write_cell(0, 24, &body_side_w1);
     write_cell(1, 24, &body_side_w2);
@@ -1469,10 +1647,29 @@ pub fn apply_mario_into_zelda_alttp_swap(
     write_cell(3, 25, &head_side);
     write_cell(4, 25, &body_side_stand);
 
-    // Row 26 cols 5..7 = Side Sword Thrust / Lunge bodies (cols 0..4 are Dark World Bunny -> preserved!)
-    write_cell(5, 26, &body_side_w1);
-    write_cell(6, 26, &body_side_r1);
-    write_cell(7, 26, &body_side_r2);
+    // Dark World transformation (Row 25 col 5 & 7, Row 26 cols 0..4) -> Adorable Tanooki-Eared Mario!
+    let make_tanooki_head = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        let mut out = *base;
+        // Cute brown Tanooki ears on Mario's cap!
+        out[0][3] = 2; out[0][4] = 2; out[1][2] = 2; out[1][3] = 3; out[1][4] = 4; out[1][5] = 2; out[2][3] = 3; out[2][4] = 4;
+        out[0][11] = 2; out[0][12] = 2; out[1][10] = 2; out[1][11] = 4; out[1][12] = 3; out[1][13] = 2; out[2][11] = 4; out[2][12] = 3;
+        out
+    };
+    let head_tanooki_down = make_tanooki_head(&head_down);
+    let head_tanooki_up = make_tanooki_head(&head_up);
+    let head_tanooki_side = make_tanooki_head(&head_side);
+    write_cell(5, 25, &head_tanooki_down);
+    write_cell(7, 25, &body_down_stand);
+
+    // Row 26 cols 0..4 = Tanooki Mario Dark World, cols 5..7 = Side Sword Thrust / Lunge bodies!
+    write_cell(0, 26, &body_down_w1);
+    write_cell(1, 26, &head_tanooki_up);
+    write_cell(2, 26, &body_up_w1);
+    write_cell(3, 26, &body_up_w2);
+    write_cell(4, 26, &head_tanooki_side);
+    write_cell(5, 26, &body_sword_side);
+    write_cell(6, 26, &body_sword_side);
+    write_cell(7, 26, &body_sword_side);
 
     write_cell(0, 27, &body_side_w1);
     write_cell(1, 27, &body_side_w2);
@@ -1481,43 +1678,12 @@ pub fn apply_mario_into_zelda_alttp_swap(
     write_cell(4, 27, &body_down_w1);
     drop(write_cell);
 
-    // Cell (6, 25) bottom-left 8x8 quadrant (tile offset base + 512) = Link's extended arm holding the sword hilt
-    // during side sword thrust! Paint Mario's SMW red sleeve (8/9/D) + white glove (1 with chestnut 3 outline)
-    // while keeping the top half & bottom-right sparkle 100% untouched.
+    // Cell (6, 25) bottom-left 8x8 quadrant (tile offset base + 512):
+    // Zero out to guarantee NO horizontal crotch bar / tube!
     {
         let arm_tile_dst = (25 * 32 + 6 * 2) * 32 + 512;
         if arm_tile_dst + 32 <= link_bank.len() {
-            const ARM_ROWS: [&str; 8] = [
-                "........",
-                "........",
-                "888833..",
-                "9999313.",
-                "DDDD313.",
-                "888833..",
-                "........",
-                "........",
-            ];
-            let mut tile = [0u8; 32];
-            for (y, row) in ARM_ROWS.iter().enumerate() {
-                let (mut b0, mut b1, mut b2, mut b3) = (0u8, 0u8, 0u8, 0u8);
-                for (x, ch) in row.bytes().enumerate().take(8) {
-                    let c = match ch {
-                        b'1'..=b'9' => ch - b'0',
-                        b'A'..=b'F' => 10 + (ch - b'A'),
-                        _ => 0,
-                    };
-                    let sh = 7 - x;
-                    b0 |= (c & 1) << sh;
-                    b1 |= ((c >> 1) & 1) << sh;
-                    b2 |= ((c >> 2) & 1) << sh;
-                    b3 |= ((c >> 3) & 1) << sh;
-                }
-                tile[y * 2] = b0;
-                tile[y * 2 + 1] = b1;
-                tile[16 + y * 2] = b2;
-                tile[16 + y * 2 + 1] = b3;
-            }
-            link_bank[arm_tile_dst..arm_tile_dst + 32].copy_from_slice(&tile);
+            link_bank[arm_tile_dst..arm_tile_dst + 32].fill(0);
         }
     }
 
@@ -1565,31 +1731,126 @@ pub fn apply_mario_into_zelda_alttp_swap(
         ops += 1;
     }
 
-    // 2. Load 100% AUTHENTIC Super Mario World 15-color Mario / Fire Mario / Luigi CGRAM palettes
-    //    using the exact SMW fixed colors ($81..$85: 0x7FFF, 0x0000, 0x0D71, 0x1E9B, 0x3B7F) +
-    //    SMW's exact warm skin/gold ($86,$8E,$8F) with true CRT-faithful SMW Red & Royal Blue (no LCD pink/mint cast!)
-    let build_smw_15_pal = |smw_10_off: usize, true_red_blue: bool| -> Vec<u8> {
-        // Exact SMW CGRAM $81..$85 verified straight from vanilla SMW PPU in Mednafen!
+    // 1c. Surgical Bank $0D Sword OAM (X, Y) alignment patch (verified live in Mednafen!):
+    //     Pulls the extended slash peak poses so the sword hilt locks DIRECTLY into Mario's white-gloved hand
+    //     with ZERO gap and ZERO floating sword across ALL 4 directions (Down, Right, Up, Left)!
+    //     Tables: Y1 @ 0x068EEF, X1 @ 0x0690EE (stride 0x1FF), Y2 @ 0x0698F3, X2 @ 0x069AF2 (stride 0x1FF).
+    {
+        const Y1_BASE: usize = 0x068EEF;
+        const X1_BASE: usize = 0x0690EE;
+        const Y2_BASE: usize = 0x0698F3;
+        const X2_BASE: usize = 0x069AF2;
+        if X2_BASE + 0x1FF <= rom_zelda.data.len()
+            && rom_zelda.data[X1_BASE + 0x1FB] == 20
+            && rom_zelda.data[Y1_BASE + 0x1FB] == 12
+            && rom_zelda.data[X1_BASE + 0x1F2] == (-20i8) as u8
+            && rom_zelda.data[Y1_BASE + 0x1E9] == 23
+        {
+            let mut yx1 = rom_zelda.data[Y1_BASE..X1_BASE + 0x1FF].to_vec();
+            let mut yx2 = rom_zelda.data[Y2_BASE..X2_BASE + 0x1FF].to_vec();
+            let set_pose = |yx1: &mut [u8], yx2: &mut [u8], pose: usize, dx: i8, dy: i8| {
+                let y1_off = pose;
+                let x1_off = (X1_BASE - Y1_BASE) + pose;
+                let y2_off = pose;
+                let x2_off = (X2_BASE - Y2_BASE) + pose;
+                yx1[y1_off] = (yx1[y1_off] as i8).wrapping_add(dy) as u8;
+                yx1[x1_off] = (yx1[x1_off] as i8).wrapping_add(dx) as u8;
+                yx2[y2_off] = (yx2[y2_off] as i8).wrapping_add(dy) as u8;
+                yx2[x2_off] = (yx2[x2_off] as i8).wrapping_add(dx) as u8;
+            };
+            // RIGHT slash peaks: pull 7px left & 1px up directly into Mario's white fist (x=11..14, y=3..5)!
+            set_pose(&mut yx1, &mut yx2, 0x1FA, -4, 0);
+            set_pose(&mut yx1, &mut yx2, 0x1FB, -7, -1);
+            set_pose(&mut yx1, &mut yx2, 0x1FC, -4, -1);
+            set_pose(&mut yx1, &mut yx2, 0x043, -3, -1);
+            set_pose(&mut yx1, &mut yx2, 0x06A, -5, -1);
+            // LEFT slash peaks: mirror right (+7px right & 1px up into Mario's mirrored white fist!)
+            set_pose(&mut yx1, &mut yx2, 0x1F1, 4, 0);
+            set_pose(&mut yx1, &mut yx2, 0x1F2, 7, -1);
+            set_pose(&mut yx1, &mut yx2, 0x1F3, 4, -1);
+            set_pose(&mut yx1, &mut yx2, 0x03A, 3, -1);
+            set_pose(&mut yx1, &mut yx2, 0x067, 5, -1);
+            // DOWN slash peaks: lift 7px up right into Mario's front white glove!
+            set_pose(&mut yx1, &mut yx2, 0x1E8, 0, -4);
+            set_pose(&mut yx1, &mut yx2, 0x1E9, 0, -7);
+            set_pose(&mut yx1, &mut yx2, 0x1EA, 0, -3);
+            set_pose(&mut yx1, &mut yx2, 0x031, 0, -3);
+            // UP slash peaks: keep full shiny upward blade visible right above Mario's raised left white glove!
+            set_pose(&mut yx1, &mut yx2, 0x1DF, -1, 1);
+            set_pose(&mut yx1, &mut yx2, 0x1E0, -2, 1);
+            set_pose(&mut yx1, &mut yx2, 0x1E1, -1, 1);
+
+            session.swap_custom_bytes(
+                rom_zelda,
+                Y1_BASE,
+                Y1_BASE,
+                yx1,
+                "Patch OAM Épée Bank $0D (0x068EEF) : Alignement garde d'épée 100% dans le gant blanc (4 directions)".to_string(),
+                crate::swapper::SwapKind::CodePatch { byte_count: 0x3FE },
+            )?;
+            ops += 1;
+            session.swap_custom_bytes(
+                rom_zelda,
+                Y2_BASE,
+                Y2_BASE,
+                yx2,
+                "Patch OAM Lame Épée Bank $0D (0x0698F3) : Alignement lame 100% solidaire du gant (4 directions)".to_string(),
+                crate::swapper::SwapKind::CodePatch { byte_count: 0x3FE },
+            )?;
+            ops += 1;
+        }
+    }
+
+    // 2. Load 100% AUTHENTIC Super Mario World 15-color Mario Palettes (Fixes #3 & #12!):
+    //    - ZERO green/red cap flicker: cap/shirt shade moved to index 7 (`words[6]`, never overwritten by ALTTP!)
+    //      and Power Glove / Titan's Mitt override bytes (`0x0DEDF5..0x0DEDF9`) patched to pure white `0x7FFF`!
+    //    - ZERO playable Luigi: Green Mail = Mario Classique, Blue Mail = Mario Bleu (Glace),
+    //      Red Mail = Fire Mario, File Select = Mario Classique! Luigi remains strictly NPC Uncle (S 0x7F / S 0xC2)!
+    let build_smw_mario_pal = |variant: u8| -> Vec<u8> {
         let mut words = [0u16; 15];
         words[0] = 0x7FFF; // 1: Pure White (eyes, big SMW gloves)
         words[1] = 0x0000; // 2: Pure Black (mustache, visor, hair, soles)
         words[2] = 0x0D71; // 3: Exact SMW Chestnut Brown (shoes, glove outlines)
         words[3] = 0x1E9B; // 4: Exact SMW Warm Gold (cap badge & shoe shine)
         words[4] = 0x3B7F; // 5: Exact SMW Light Gold (cap highlight)
+        // Load authentic SMW skin & buttons from mario_pal_base
         for i in 0..10 {
-            let off = smw_10_off + i * 2;
+            let off = mario_pal_base + i * 2;
             if off + 1 < rom_smw.data.len() {
                 words[5 + i] = u16::from_le_bytes([rom_smw.data[off], rom_smw.data[off + 1]]);
             }
         }
-        if true_red_blue {
-            // CRT-accurate vibrant SMW Red & Royal/Sky Blue (eliminates LCD magenta/mint-green cast while keeping exact SMW shading!)
-            words[7] = 0x000A;  // 8: Deep Crimson outline
-            words[8] = 0x10DF;  // 9: True SMW Bright Red Cap & Shirt
-            words[9] = 0x4882;  // 10: True SMW Deep Royal Blue Overalls outline
-            words[10] = 0x6D85; // 11: True SMW Classic Blue Overalls mid
-            words[11] = 0x7E6B; // 12: True SMW Sky Blue Overalls highlight
-            words[12] = 0x0857; // 13: True SMW Shaded Red Cap & Shirt
+        match variant {
+            0 => {
+                // Mario Classique (Green Mail & File Select): Vibrant Red cap/shirt + Royal Blue overalls
+                words[6] = 0x0857;  // 7: Shaded Red cap/shirt (remapped from index 13 -> ZERO Glove flicker!)
+                words[7] = 0x000A;  // 8: Deep Crimson outline
+                words[8] = 0x10DF;  // 9: True SMW Bright Red Cap & Shirt
+                words[9] = 0x4882;  // 10: Deep Royal Blue Overalls outline
+                words[10] = 0x6D85; // 11: Classic Blue Overalls mid
+                words[11] = 0x7E6B; // 12: Sky Blue Overalls highlight
+                words[12] = 0x7FFF; // 13: White (safe even if ALTTP glove slot reloads)
+            }
+            1 => {
+                // Mario Bleu / Glace (Blue Mail): Vibrant Sky-Blue cap & shirt + Crisp Deep-Navy/White overalls!
+                words[6] = 0x5D60;  // 7: Shaded Royal Blue cap/shirt (index 7 -> ZERO Glove flicker!)
+                words[7] = 0x3440;  // 8: Deep Navy outline
+                words[8] = 0x7E48;  // 9: Bright Mario Ice/Sky Blue Cap & Shirt
+                words[9] = 0x354B;  // 10: Steel-Blue Overalls outline
+                words[10] = 0x56B5; // 11: Crisp Ice-Silver Overalls mid
+                words[11] = 0x77BD; // 12: Bright Ice-White Overalls highlight
+                words[12] = 0x7FFF; // 13: White
+            }
+            _ => {
+                // Fire Mario (Red Mail): Pure White cap & overalls + Fiery Crimson shirt!
+                words[6] = 0x5AD6;  // 7: Soft Silver-White cap shade (index 7 -> ZERO Glove flicker!)
+                words[7] = 0x318C;  // 8: Slate-Gray outline on white cap
+                words[8] = 0x7FFF;  // 9: Pure White Fire Mario Cap & Overalls
+                words[9] = 0x000D;  // 10: Deep Fire Crimson Shirt outline
+                words[10] = 0x0017; // 11: Vibrant Fire Red Shirt mid
+                words[11] = 0x111F; // 12: Bright Flame Orange-Red Shirt highlight
+                words[12] = 0x7FFF; // 13: White
+            }
         }
         let mut out = Vec::with_capacity(30);
         for w in words {
@@ -1598,26 +1859,40 @@ pub fn apply_mario_into_zelda_alttp_swap(
         out
     };
 
-    let mario_classic_30 = build_smw_15_pal(mario_pal_base, true);
-    let mario_fire_30 = build_smw_15_pal(mario_pal_base + 40, false);
-    let mario_luigi_30 = build_smw_15_pal(mario_pal_base + 20, false);
+    let mario_classic_30 = build_smw_mario_pal(0);
+    let mario_blue_30 = build_smw_mario_pal(1);
+    let mario_fire_30 = build_smw_mario_pal(2);
 
-    // Write all 4 Mail/File-Select Link palettes (0x0DD308 Green, 0x0DD326 Blue/Fire, 0x0DD344 Red/Luigi, 0x0DD362 File Select/Bunny -> Mario!)
+    // Write all 4 Mail/File-Select Link palettes (NO playable Luigi! Luigi is strictly NPC Uncle!)
     let mut mail_pals = Vec::with_capacity(120);
-    mail_pals.extend_from_slice(&mario_classic_30);
-    mail_pals.extend_from_slice(&mario_fire_30);
-    mail_pals.extend_from_slice(&mario_luigi_30);
-    mail_pals.extend_from_slice(&mario_classic_30);
+    mail_pals.extend_from_slice(&mario_classic_30); // 0x0DD308 Green Mail -> Mario Classique
+    mail_pals.extend_from_slice(&mario_blue_30);    // 0x0DD326 Blue Mail  -> Mario Bleu (Glace)
+    mail_pals.extend_from_slice(&mario_fire_30);    // 0x0DD344 Red Mail   -> Fire Mario
+    mail_pals.extend_from_slice(&mario_classic_30); // 0x0DD362 File Select -> Mario Classique
 
     session.swap_custom_bytes(
         rom_zelda,
         0x0DD308,
         mario_pal_base,
         mail_pals,
-        format!("Swap Palettes 100% SMW BGR555 (0x{:06X} -> 0x0DD308..0x0DD380) : Mario SMW (Rouge/Bleu vrai), Mario Feu, Luigi & Sélection Fichier", mario_pal_base),
+        format!("Swap Palettes 100% SMW BGR555 (0x{:06X} -> 0x0DD308..0x0DD380) : Mario Classique, Mario Bleu, Fire Mario (0 clignotement, 0 Luigi jouable)", mario_pal_base),
         crate::swapper::SwapKind::PaletteBgr555 { color_count: 60 },
     )?;
     ops += 1;
+
+    // 2a. Patch ALTTP Power Glove (0x0DEDF5) & Titan's Mitt (0x0DEDF7) dynamic CGRAM index 13 overrides
+    //     to pure white (0x7FFF) so picking up Power Glove or Titan's Mitt NEVER flashes lime-green on Mario!
+    if 0x0DEDF9 <= rom_zelda.data.len() {
+        session.swap_custom_bytes(
+            rom_zelda,
+            0x0DEDF5,
+            0x0DEDF5,
+            vec![0xFF, 0x7F, 0xFF, 0x7F],
+            "Patch Gants Puissance / Titan (0x0DEDF5..0x0DEDF9 -> 0x7FFF) : Suppression totale du clignotement vert/rouge sur Mario".to_string(),
+            crate::swapper::SwapKind::PaletteBgr555 { color_count: 2 },
+        )?;
+        ops += 1;
+    }
 
     // 2b. MASSIVE SUPER MARIO WORLD -> ZELDA ALTTP WORLD EXPANSION!
     //     Extract authentic 3bpp sprites & tiles directly from `rom_smw` (GFX00, GFX01, GFX02, GFX03, GFX06)
@@ -2339,258 +2614,6 @@ fn write_smw_gfx10_3bpp_16x16(buf: &mut [u8], mx: usize, my: usize, px16: &[[u8;
     }
 }
 
-fn encode_3bpp_tile_8x8(px8: &[[u8; 8]; 8]) -> [u8; 24] {
-    let mut tile = [0u8; 24];
-    for y in 0..8usize {
-        let mut b0 = 0u8;
-        let mut b1 = 0u8;
-        let mut b2 = 0u8;
-        for x in 0..8usize {
-            let c = px8[y][x] & 0x07;
-            let sh = 7 - x;
-            b0 |= (c & 1) << sh;
-            b1 |= ((c >> 1) & 1) << sh;
-            b2 |= ((c >> 2) & 1) << sh;
-        }
-        tile[y * 2] = b0;
-        tile[y * 2 + 1] = b1;
-        tile[16 + y] = b2;
-    }
-    tile
-}
-
-pub fn apply_donkey_kong_into_smw_yoshi(
-    rom_a: &mut SnesRom,
-    _ccc_bytes: &[u8],
-    session: &mut crate::swapper::SwapSession,
-) -> Result<usize, crate::rom::RomError> {
-    let mut ops_count = 0usize;
-
-    // Encode Gorilla Punch: Tile $66 (Fist Tip) and Tile $76 (Muscular Arm Shaft)
-    let fist_tile_3bpp = encode_3bpp_tile_8x8(&crate::ai_sprites::DK_FIST_TIP_8X8);
-    let arm_tile_3bpp = encode_3bpp_tile_8x8(&crate::ai_sprites::DK_ARM_SHAFT_8X8);
-
-    // 1. Decompress SMW GFX33 (PC 0x043FC0)
-    let (mut g33, _) = crate::disasm_dma::decompress_nintendo_lz2_with_endian(
-        &rom_a.data,
-        0x043FC0,
-        16384,
-        true,
-    )
-    .ok_or(crate::rom::RomError::OutOfBounds {
-        offset: 0x043FC0,
-        len: 16384,
-    })?;
-
-    // 2. Load Donkey Kong sprites ONLY into Yoshi's actual slots in GFX33!
-    // CRITICAL: Rows 0 & 1 are water/lava/cloud animations, Row 4 cols 3..7 & Row 5 are ON/OFF & level animations!
-    // Never overwrite non-Yoshi animated tiles — only replace Adult Yoshi (Rows 2 & 3) and Baby Yoshi (Row 3 col 6 & Row 4 cols 0..2).
-    let yoshi_map = [
-        // Row 2: In-Game Adult Donkey Kong Base Sprites (WRAM 0x8500 + 32 * charnum)
-        ((0, 2), &crate::ai_sprites::DK_HEAD_NORM), // Charnum 0x00: Adult Idle / Normal Head
-        ((1, 2), &crate::ai_sprites::DK_BODY_ST),   // Charnum 0x02: Adult Standing Body
-        ((2, 2), &crate::ai_sprites::DK_HEAD_NORM), // Charnum 0x04: Adult Walk Head
-        ((3, 2), &crate::ai_sprites::DK_BODY_W1),   // Charnum 0x06: Adult Walk 1 Body
-        ((4, 2), &crate::ai_sprites::DK_BODY_CR),   // Charnum 0x08: Adult Turn Body
-        ((5, 2), &crate::ai_sprites::DK_BODY_W2),   // Charnum 0x0A: Adult Walk 2 Body
-        ((6, 2), &crate::ai_sprites::DK_HEAD_TURN), // Charnum 0x0C: Adult Turn / 3/4 Front Head
-        ((7, 2), &crate::ai_sprites::DK_HEAD_DUCK), // Charnum 0x0E: Adult Duck Head
-
-        // Row 3: In-Game Adult Donkey Kong Action Sprites (WRAM 0x8900 + 32 * (charnum - 0x20))
-        ((0, 3), &crate::ai_sprites::DK_BODY_CR),   // Charnum 0x20: Adult Duck Body
-        ((1, 3), &crate::ai_sprites::DK_BODY_ST),   // Charnum 0x22: Adult Walk 3 / Idle Body
-        ((2, 3), &crate::ai_sprites::DK_HEAD_ROAR), // Charnum 0x24: Adult Roaring Attack Head
-        ((3, 3), &crate::ai_sprites::DK_BODY_CR),   // Charnum 0x26: Adult Attack Punch Stance Body
-        ((4, 3), &crate::ai_sprites::DK_BODY_CR),   // Charnum 0x28: Adult Attack Stance Body 2
-        ((5, 3), &crate::ai_sprites::DK_HEAD_ROAR), // Charnum 0x2A: Adult Punch Active Head
-        ((6, 3), &crate::ai_sprites::DK_BABY_DK),   // Charnum 0x2C: Baby Yoshi / Baby DK Idle
-        ((7, 3), &crate::ai_sprites::DK_BODY_ST),   // Charnum 0x2E: Adult Swallow Body
-
-        // Row 4 cols 0..2: Baby DK poses (cols 3..7 are level animations, kept 100% intact!)
-        ((0, 4), &crate::ai_sprites::DK_BABY_DK),
-        ((1, 4), &crate::ai_sprites::DK_BABY_DK),
-        ((2, 4), &crate::ai_sprites::DK_BABY_DK),
-    ];
-
-    for ((mx, my), px) in yoshi_map {
-        write_smw_gfx10_3bpp_16x16(&mut g33, mx, my, px);
-    }
-
-    // Compress GFX33 with Nintendo LZ2 Big-Endian
-    let c33 = crate::disasm_dma::compress_nintendo_lz2_with_endian(&g33, true);
-    let budget_33 = 0x0459F9 - 0x043FC0; // 6,713 bytes
-    if c33.len() <= budget_33 {
-        let mut replacement = c33;
-        replacement.resize(budget_33, 0xFF);
-        session.swap_custom_bytes(
-            rom_a,
-            0x043FC0,
-            0x0D16C4,
-            replacement,
-            "Yoshi Sprites In-Game -> Donkey Kong (GFX33 LC_LZ2 3bpp)".to_string(),
-            crate::swapper::SwapKind::GraphicsTiles {
-                format: TileFormat::Bpp4,
-                tile_count: 384,
-                smart_remapped: true,
-            },
-        )?;
-        ops_count += 1;
-    }
-
-    // 2b. Inject Gorilla Punch into GFX19 (PC 0x050910 .. 0x051348, budget 2616 bytes)
-    // GFX19 is loaded into SP3 (Table 1) in all standard SMW levels where Yoshi is ridden!
-    // Yoshi tongue routine Spr035_Yoshi_01F3FE directly references Tile $66 (tip) and Tile $76 (shaft) from Table 1!
-    if let Some((mut g19, _)) = crate::disasm_dma::decompress_nintendo_lz2_with_endian(
-        &rom_a.data,
-        0x050910,
-        8192,
-        true,
-    ) {
-        let off66 = 0x66 * 24;
-        let off76 = 0x76 * 24;
-        if off66 + 24 <= g19.len() {
-            g19[off66..off66 + 24].copy_from_slice(&fist_tile_3bpp);
-        }
-        if off76 + 24 <= g19.len() {
-            g19[off76..off76 + 24].copy_from_slice(&arm_tile_3bpp);
-        }
-        let c19 = crate::disasm_dma::compress_nintendo_lz2_with_endian(&g19, true);
-        let budget_19 = 0x051348 - 0x050910;
-        if c19.len() <= budget_19 {
-            let mut replacement = c19;
-            replacement.resize(budget_19, 0xFF);
-            session.swap_custom_bytes(
-                rom_a,
-                0x050910,
-                0x050910,
-                replacement,
-                "Gorilla Punch 'Coup de poing' & Arm -> GFX19 (SP3 Table 1 Tiles $66 & $76)".to_string(),
-                crate::swapper::SwapKind::GraphicsTiles {
-                    format: TileFormat::Bpp4,
-                    tile_count: 128,
-                    smart_remapped: true,
-                },
-            )?;
-            ops_count += 1;
-        }
-    }
-
-    // 2c. Also inject Gorilla Punch into GFX00 (PC 0x0459F9 .. 0x046231, budget 2104 bytes)
-    if let Some((mut g00, _)) = crate::disasm_dma::decompress_nintendo_lz2_with_endian(
-        &rom_a.data,
-        0x0459F9,
-        8192,
-        true,
-    ) {
-        let off66 = 0x66 * 24;
-        let off76 = 0x76 * 24;
-        if off66 + 24 <= g00.len() {
-            g00[off66..off66 + 24].copy_from_slice(&fist_tile_3bpp);
-        }
-        if off76 + 24 <= g00.len() {
-            g00[off76..off76 + 24].copy_from_slice(&arm_tile_3bpp);
-        }
-        let c00 = crate::disasm_dma::compress_nintendo_lz2_with_endian(&g00, true);
-        let budget_00 = 0x046231 - 0x0459F9;
-        if c00.len() <= budget_00 {
-            let mut replacement = c00;
-            replacement.resize(budget_00, 0xFF);
-            session.swap_custom_bytes(
-                rom_a,
-                0x0459F9,
-                0x0459F9,
-                replacement,
-                "Gorilla Punch 'Coup de poing' & Arm -> GFX00 (SP1 Table 0 Tiles $66 & $76)".to_string(),
-                crate::swapper::SwapKind::GraphicsTiles {
-                    format: TileFormat::Bpp4,
-                    tile_count: 128,
-                    smart_remapped: true,
-                },
-            )?;
-            ops_count += 1;
-        }
-    }
-
-    // 2d. Lower the punch attack from Yoshi's mouth to Donkey Kong's shoulder socket (dynamically located)
-    // Vanilla table: [0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x13] (Tongue Y displacement = 8px from top)
-    // Patched: [0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x18] (Punch Y displacement = 17px from top, emerging from shoulder)
-    let tongue_y_base = find_smw_yoshi_tongue_y(&rom_a.data);
-    session.swap_custom_bytes(
-        rom_a,
-        tongue_y_base,
-        tongue_y_base,
-        vec![0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x18],
-        format!("Décalage Y Coup de poing Donkey Kong (Épaule au lieu de la bouche PC 0x{:06X})", tongue_y_base),
-        crate::swapper::SwapKind::CodePatch { byte_count: 8 },
-    )?;
-    ops_count += 1;
-
-    // 3. Overworld Yoshi in GFX10 (0x04EF1E .. 0x04F7AF, budget 2,193 bytes)
-    if let Some((mut g10, _)) = crate::disasm_dma::decompress_nintendo_lz2_with_endian(
-        &rom_a.data,
-        0x04EF1E,
-        8192,
-        true,
-    ) {
-        write_smw_gfx10_3bpp_16x16(&mut g10, 7, 1, &crate::ai_sprites::DK_BABY_DK);
-        write_smw_gfx10_3bpp_16x16(&mut g10, 0, 2, &crate::ai_sprites::DK_BABY_DK);
-        write_smw_gfx10_3bpp_16x16(&mut g10, 1, 2, &crate::ai_sprites::DK_BABY_DK);
-        let c10 = crate::disasm_dma::compress_nintendo_lz2_with_endian(&g10, true);
-        let budget_10 = 0x04F7AF - 0x04EF1E;
-        if c10.len() <= budget_10 {
-            let mut replacement = c10;
-            replacement.resize(budget_10, 0xFF);
-            session.swap_custom_bytes(
-                rom_a,
-                0x04EF1E,
-                0x19FA3A,
-                replacement,
-                "Yoshi Overworld -> Baby Donkey Kong (GFX10 LC_LZ2 3bpp)".to_string(),
-                crate::swapper::SwapKind::GraphicsTiles {
-                    format: TileFormat::Bpp4,
-                    tile_count: 128,
-                    smart_remapped: true,
-                },
-            )?;
-            ops_count += 1;
-        }
-    }
-
-    // 4. Update Yoshi's 4 BGR555 Palettes (dynamically located: USA 0x003298 / PAL 0x0032AB, 48 bytes = 24 u16)
-    // Authentic Donkey Kong Country rich fur tones, iconic red tie & warm golden tan muzzle/chest
-    let (yoshi_pal_base, _) = find_smw_yoshi_and_mario_palettes(&rom_a.data);
-    let dk_palette_words: [u16; 6] = [
-        0x0045, // Color 2: Dark Fur / Outline (#291000)
-        0x04AB, // Color 3: Deep Chestnut Fur (#5A2908)
-        0x0911, // Color 4: Medium Golden-Brown Fur (#8B4110)
-        0x1197, // Color 5: Light Warm Fur Highlight (#BD6220)
-        0x0C7D, // Color 6: DK Iconic Vivid Red Tie (#EE1818)
-        0x3AFE, // Color 7: Warm Golden Peach/Tan Muzzle & Chest (#F6BD73 - NO PINK!)
-    ];
-
-    let mut new_pal = vec![0u8; 48];
-    for p in 0..4 {
-        let base = p * 12;
-        for c in 0..6 {
-            let w = dk_palette_words[c];
-            new_pal[base + c * 2] = (w & 0xFF) as u8;
-            new_pal[base + c * 2 + 1] = ((w >> 8) & 0xFF) as u8;
-        }
-    }
-    session.swap_custom_bytes(
-        rom_a,
-        yoshi_pal_base,
-        0x39A068,
-        new_pal,
-        format!("Palettes Yoshi -> Donkey Kong @ 0x{:06X} (Fourrure Brune, Cravate Rouge, Museau Tan)", yoshi_pal_base),
-        crate::swapper::SwapKind::PaletteBgr555 { color_count: 24 },
-    )?;
-    ops_count += 1;
-
-    rom_a.fix_checksum();
-    Ok(ops_count)
-}
-
 pub fn apply_link_world_title_screen(
     rom_a: &mut SnesRom,
     session: &mut crate::swapper::SwapSession,
@@ -2723,7 +2746,7 @@ pub fn apply_link_world_title_screen(
     }
 
     // 5. Rewrite Intro Cutscene Message Box (141 bytes exact) for full narrative coherence
-    //    (Link + Princess Zelda + Donkey Kong + Ganon in Hyrule Island!)
+    //    (Link + Princess Zelda + Yoshi + Ganon in Hyrule Island!)
     let encode_smw_msg_line = |line: &str| -> Vec<u8> {
         let mut out: Vec<u8> = line
             .bytes()
@@ -2758,7 +2781,7 @@ pub fn apply_link_world_title_screen(
             "we    find    that",
             "Princess  Zelda is",
             "missing  again! Go",
-            "ride  Donkey  Kong",
+            "ride  green  Yoshi",
             "to  stop Ganon!",
         ];
         let mut msg_bytes = Vec::with_capacity(141);
@@ -2771,7 +2794,7 @@ pub fn apply_link_world_title_screen(
                 intro_off,
                 intro_off,
                 msg_bytes,
-                format!("Boîte d'Intro @ 0x{:06X} : Hyrule Island, Princesse Zelda, Donkey Kong & Ganon", intro_off),
+                format!("Boîte d'Intro @ 0x{:06X} : Hyrule Island, Princesse Zelda & Ganon", intro_off),
                 crate::swapper::SwapKind::CodePatch { byte_count: 141 },
             )?;
         }
@@ -2797,163 +2820,4 @@ pub fn apply_link_world_title_screen(
 
     Ok(2)
 }
-
-pub fn apply_swap_into_dkc(
-    rom_a: &mut SnesRom,
-    rom_b: &SnesRom,
-    session: &mut crate::swapper::SwapSession,
-) -> Result<usize, crate::rom::RomError> {
-    let mut ops_count = 0usize;
-
-    let tiles_source: Option<Vec<u8>> = if rom_b.data.len() == 512 * 1024 {
-        crate::disasm_dma::decompress_nintendo_lz2_with_endian(&rom_b.data, 0x040000, 32768, true)
-            .map(|(d, _)| d)
-    } else if rom_b.data.len() >= 0x087000 {
-        Some(rom_b.data[0x080000..0x084000].to_vec())
-    } else {
-        None
-    };
-
-    if let Some(src_tiles) = tiles_source {
-        let dkc_target_frames = [0x0D16C4usize, 0x0D2472, 0x0D3534, 0x364902];
-        for &frame_pc in &dkc_target_frames {
-            if frame_pc + 8 < rom_a.data.len() {
-                let b0 = rom_a.data[frame_pc] as usize;
-                let b1 = rom_a.data[frame_pc + 1] as usize;
-                let b3 = rom_a.data[frame_pc + 3] as usize;
-                let total = b0 + b1 + b3;
-                let tile_base = frame_pc + 8 + total * 2;
-                let tiles_bytes = (b0 * 4 + b1 + b3) * 32;
-                if tile_base + tiles_bytes <= rom_a.data.len() && tiles_bytes <= src_tiles.len() {
-                    session.swap_custom_bytes(
-                        rom_a,
-                        tile_base,
-                        0x040000,
-                        src_tiles[..tiles_bytes].to_vec(),
-                        format!("DKC Frame 0x{:06X} -> Mario/Link 4bpp Tiles", frame_pc),
-                        crate::swapper::SwapKind::GraphicsTiles {
-                            format: TileFormat::Bpp4,
-                            tile_count: b0 * 4 + b1 + b3,
-                            smart_remapped: true,
-                        },
-                    )?;
-                    ops_count += 1;
-                }
-            }
-        }
-
-        if 0x39A068 + 30 <= rom_a.data.len() {
-            let mut new_pal = rom_a.data[0x39A068..0x39A068 + 30].to_vec();
-            if rom_b.data.len() == 512 * 1024 && rom_b.data.len() >= 0x0032C8 + 24 {
-                let mario_colors = &rom_b.data[0x0032C8..0x0032C8 + 24];
-                new_pal[..24].copy_from_slice(mario_colors);
-            } else if rom_b.data.len() >= 0x0DE604 + 24 {
-                let link_colors = &rom_b.data[0x0DE604..0x0DE604 + 24];
-                new_pal[..24].copy_from_slice(link_colors);
-            }
-            session.swap_custom_bytes(
-                rom_a,
-                0x39A068,
-                0x0032C8,
-                new_pal,
-                "DKC Donkey Kong Palette -> Mario/Link Palette".to_string(),
-                crate::swapper::SwapKind::PaletteBgr555 { color_count: 15 },
-            )?;
-            ops_count += 1;
-        }
-    }
-
-    rom_a.fix_checksum();
-    Ok(ops_count)
-}
-
-pub fn decode_dkc_frame_canvas(data: &[u8], pc: usize) -> [[u8; 64]; 64] {
-    let mut canvas = [[0u8; 64]; 64];
-    if pc + 8 > data.len() {
-        return canvas;
-    }
-    let b0 = data[pc] as usize;
-    let b1 = data[pc + 1] as usize;
-    let total = b0 + b1;
-    let coord_pos = pc + 8;
-    let mut cur_tile_pos = coord_pos + total * 2;
-
-    let decode_tile = |pos: usize| -> [u8; 64] {
-        let mut t = [0u8; 64];
-        if pos + 32 <= data.len() {
-            for y in 0..8 {
-                let p0 = data[pos + y * 2];
-                let p1 = data[pos + y * 2 + 1];
-                let p2 = data[pos + 16 + y * 2];
-                let p3 = data[pos + 16 + y * 2 + 1];
-                for x in 0..8 {
-                    let sh = 7 - x;
-                    let c = ((p0 >> sh) & 1)
-                        | (((p1 >> sh) & 1) << 1)
-                        | (((p2 >> sh) & 1) << 2)
-                        | (((p3 >> sh) & 1) << 3);
-                    t[y * 8 + x] = c;
-                }
-            }
-        }
-        t
-    };
-
-    // First b0 are 16x16 tiles (4 8x8 tiles = 128 bytes each, column order TL, BL, TR, BR)
-    for i in 0..b0 {
-        if coord_pos + i * 2 + 1 >= data.len() {
-            break;
-        }
-        let gx = (data[coord_pos + i * 2] as i32) - 0x68;
-        let gy = (data[coord_pos + i * 2 + 1] as i32) - 0x54;
-        let t0 = decode_tile(cur_tile_pos);
-        let t1 = decode_tile(cur_tile_pos + 32);
-        let t2 = decode_tile(cur_tile_pos + 64);
-        let t3 = decode_tile(cur_tile_pos + 96);
-        cur_tile_pos += 128;
-
-        for (dx, dy, t) in [(0, 0, &t0), (0, 8, &t1), (8, 0, &t2), (8, 8, &t3)] {
-            for y in 0..8 {
-                for x in 0..8 {
-                    let c = t[y * 8 + x];
-                    if c != 0 {
-                        let cx = gx + dx + x as i32;
-                        let cy = gy + dy + y as i32;
-                        if (0..64).contains(&cx) && (0..64).contains(&cy) {
-                            canvas[cy as usize][cx as usize] = c;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Next b1 are 8x8 tiles (32 bytes each)
-    for i in 0..b1 {
-        let idx = b0 + i;
-        if coord_pos + idx * 2 + 1 >= data.len() {
-            break;
-        }
-        let gx = (data[coord_pos + idx * 2] as i32) - 0x68;
-        let gy = (data[coord_pos + idx * 2 + 1] as i32) - 0x54;
-        let t = decode_tile(cur_tile_pos);
-        cur_tile_pos += 32;
-
-        for y in 0..8 {
-            for x in 0..8 {
-                let c = t[y * 8 + x];
-                if c != 0 {
-                    let cx = gx + x as i32;
-                    let cy = gy + y as i32;
-                    if (0..64).contains(&cx) && (0..64).contains(&cy) {
-                        canvas[cy as usize][cx as usize] = c;
-                    }
-                }
-            }
-        }
-    }
-
-    canvas
-}
-
 

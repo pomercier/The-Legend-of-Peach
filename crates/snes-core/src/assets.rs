@@ -112,7 +112,7 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 compressed: true,
                 palette_offset: Some(0x003280),
                 description: "Yoshi adulte (Row 2 & 3), bébé Yoshi, œufs et animations de course (384 tuiles 3bpp/4bpp)".to_string(),
-                partner_asset_id: Some("dkc_donkey".to_string()),
+                partner_asset_id: None,
             });
 
             assets.push(ScannedAsset {
@@ -197,7 +197,7 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
                 compressed: true,
                 palette_offset: Some(0x003280),
                 description: "Baies rouges, roses et vertes des buissons comestibles par Yoshi (Tuile $80)".to_string(),
-                partner_asset_id: Some("dkc_banana".to_string()),
+                partner_asset_id: None,
             });
 
             assets.push(ScannedAsset {
@@ -560,93 +560,6 @@ pub fn scan_assets_for_rom(rom: &SnesRom) -> Vec<ScannedAsset> {
             });
         }
 
-        RecognizedGame::DonkeyKongCountry => {
-            assets.push(ScannedAsset {
-                id: "dkc_donkey".to_string(),
-                name: "Donkey Kong (Gorilla Punch)".to_string(),
-                category: AssetCategory::Mount,
-                family_name: "🥊 Pack Héros Kong (Donkey Kong)",
-                family_pack_desc: "Pack Gorille Donkey Kong : animations de course quadrupède, roulade et frappe de poing.",
-                icon: "🥊",
-                sheet_name: "Frames 4bpp (0x0D16EC)".to_string(),
-                rom_offset: 0x0D16EC,
-                length: 0x3000,
-                format: TileFormat::Bpp4,
-                compressed: false,
-                palette_offset: Some(0x39A068),
-                description: "Gorille imposant avec cravate rouge, course quadrupède et frappe au poing".to_string(),
-                partner_asset_id: Some("smw_yoshi".to_string()),
-            });
-
-            assets.push(ScannedAsset {
-                id: "dkc_banana".to_string(),
-                name: "Régime de Bananes Dorées".to_string(),
-                category: AssetCategory::Collectible,
-                family_name: "🍌 Pack Collectibles DK (Bananes)",
-                family_pack_desc: "Pack Bananes Dorées : réserves royales de l'île Kong (100 bananes pour 1UP).",
-                icon: "🍌",
-                sheet_name: "Items (0x390000)".to_string(),
-                rom_offset: 0x390000,
-                length: 0x0800,
-                format: TileFormat::Bpp4,
-                compressed: false,
-                palette_offset: Some(0x39A068),
-                description: "Bananes des réserves de Donkey Kong (1UP à 100 bananes)".to_string(),
-                partner_asset_id: Some("smw_coin".to_string()),
-            });
-
-            assets.push(ScannedAsset {
-                id: "dkc_barrel".to_string(),
-                name: "Tonneau DK Projetable".to_string(),
-                category: AssetCategory::InteractiveBlock,
-                family_name: "🛢️ Pack Blocs & Projectiles (Tonneaux)",
-                family_pack_desc: "Pack Tonneaux : tonneaux explosifs, roulants et tonneaux canon de l'île.",
-                icon: "🛢️",
-                sheet_name: "Barrels (0x380000)".to_string(),
-                rom_offset: 0x380000,
-                length: 0x1000,
-                format: TileFormat::Bpp4,
-                compressed: false,
-                palette_offset: Some(0x39A068),
-                description: "Tonneau explosif ou roulant pouvant écraser les ennemis".to_string(),
-                partner_asset_id: Some("smw_turn_block".to_string()),
-            });
-
-            assets.push(ScannedAsset {
-                id: "dkc_kremling".to_string(),
-                name: "Kritter (Kremling Vert)".to_string(),
-                category: AssetCategory::Enemy,
-                family_name: "🐊 Pack Ennemis Kremlings",
-                family_pack_desc: "Pack Armée Kremling : fantassins crocodiles marchant et sautant.",
-                icon: "🐊",
-                sheet_name: "Enemies (0x370000)".to_string(),
-                rom_offset: 0x370000,
-                length: 0x2000,
-                format: TileFormat::Bpp4,
-                compressed: false,
-                palette_offset: Some(0x39A068),
-                description: "Crocodile bipède de l'armée de King K. Rool".to_string(),
-                partner_asset_id: Some("smw_koopa".to_string()),
-            });
-
-            assets.push(ScannedAsset {
-                id: "dkc_krool".to_string(),
-                name: "King K. Rool (Chef Kremling)".to_string(),
-                category: AssetCategory::Boss,
-                family_name: "👑 Pack Boss Kremling (King K. Rool)",
-                family_pack_desc: "Pack Boss Pirate : King K. Rool, son tromblon et sa couronne boomerang.",
-                icon: "👑",
-                sheet_name: "Boss (0x3A0000)".to_string(),
-                rom_offset: 0x3A0000,
-                length: 0x4000,
-                format: TileFormat::Bpp4,
-                compressed: false,
-                palette_offset: Some(0x39A068),
-                description: "Capitaine Kremling au ventre doré et couronne jetable".to_string(),
-                partner_asset_id: Some("smw_bowser".to_string()),
-            });
-        }
-
         RecognizedGame::Unknown => {
             // Scanner matériel universel 100% compatible avec TOUTES les ROMs SNES (LoROM/HiROM/ExHiROM, DMA, LZ2, 2/3/4/8bpp)
             let catalog = crate::universal::discover_universal_catalog(rom);
@@ -712,9 +625,7 @@ pub fn get_default_swap_decisions(
     let game_a = rom_a.identify_game();
     let game_b = rom_b.identify_game();
 
-    if game_a == RecognizedGame::SuperMarioWorld
-        && (game_b == RecognizedGame::ZeldaAlttp || game_b == RecognizedGame::DonkeyKongCountry)
-    {
+    if game_a == RecognizedGame::SuperMarioWorld && game_b == RecognizedGame::ZeldaAlttp {
         decisions.push(UserSwapDecision {
             id: "swap_mario_link".to_string(),
             label: "Pack Héros Complet : Mario ➡️ Link".to_string(),
@@ -725,32 +636,6 @@ pub fn get_default_swap_decisions(
             target_rom_asset: "Mario (Petit, Super, Feu, Cape) [GFX32]".to_string(),
             donor_rom_asset: "Link (Héros d'Hyrule) [Zelda Sheet 0x00 & 0x01]".to_string(),
             description: "Remplace Mario par Link : tuile supérieure 100% transparente en mode Petit et jambes découplées avec toutes poses d'action".to_string(),
-            enabled: true,
-        });
-
-        decisions.push(UserSwapDecision {
-            id: "swap_yoshi_dk".to_string(),
-            label: "Pack Montures : Yoshi ➡️ Donkey Kong".to_string(),
-            category: AssetCategory::Mount,
-            family_name: "🦖 Pack Montures & Alliés (DK)",
-            pack_summary: "Remplace la monture Yoshi au complet : Yoshi monté, selle, bébé Yoshi, œufs et coup de poing frontal.",
-            icon: "🥊",
-            target_rom_asset: "Yoshi & Bébé Yoshi [GFX33]".to_string(),
-            donor_rom_asset: "Donkey Kong (Frames 4bpp DKC)".to_string(),
-            description: "Remplace la monture Yoshi par Donkey Kong (Rows 2 & 3 dans GFX33, bloc sous l'œuf préservé)".to_string(),
-            enabled: true,
-        });
-
-        decisions.push(UserSwapDecision {
-            id: "swap_punch_fist".to_string(),
-            label: "Attaque : Coup de Poing Gorille".to_string(),
-            category: AssetCategory::Mount,
-            family_name: "🦖 Pack Montures & Alliés (DK)",
-            pack_summary: "Émerge directement de l'épaule de Donkey Kong (Y=17px) avec poing fermé et impact sonore.",
-            icon: "💥",
-            target_rom_asset: "Langue étirable de Yoshi [GFX19/GFX00]".to_string(),
-            donor_rom_asset: "Poing de boxe avec jointures vers l'avant".to_string(),
-            description: "Le coup de poing émerge directement de l'épaule de Donkey Kong (Y=17px) avec poing fermé".to_string(),
             enabled: true,
         });
 
@@ -906,11 +791,10 @@ pub fn get_default_swap_decisions(
 }
 
 /// Apply only the user-selected swaps onto the target ROM, maintaining 100% SNES hardware compliance.
-/// Supports BOTH curated SMW<->Zelda/DKC packs AND 100% Universal Cross-ROM Swapping for ANY pair of SNES ROMs!
+/// Supports BOTH curated SMW<->Zelda packs AND 100% Universal Cross-ROM Swapping for ANY pair of SNES ROMs!
 pub fn apply_custom_swaps(
     rom_target: &mut SnesRom,
     donor_rom: Option<&SnesRom>,
-    donor_dkc: Option<&[u8]>,
     decisions: &[UserSwapDecision],
     session: &mut SwapSession,
 ) -> Result<usize, RomError> {
@@ -958,15 +842,7 @@ pub fn apply_custom_swaps(
         }
     }
 
-    // 2. Donkey Kong Mount into SMW Yoshi
-    let dk_enabled = decisions.iter().any(|d| d.id == "swap_yoshi_dk" && d.enabled);
-    if dk_enabled {
-        let dummy = vec![0u8; 128];
-        let dkc_bytes = donor_dkc.unwrap_or(&dummy);
-        ops_count += crate::demo::apply_donkey_kong_into_smw_yoshi(rom_target, dkc_bytes, session)?;
-    }
-
-    // 3. Title Screen Logo: "SUPER LINK WORLD"
+    // 2. Title Screen Logo: "SUPER LINK WORLD"
     let title_enabled = decisions.iter().any(|d| d.id == "swap_title_screen" && d.enabled);
     if title_enabled {
         if let Ok(t_ops) = crate::demo::apply_link_world_title_screen(rom_target, session) {
@@ -1235,7 +1111,6 @@ mod tests {
         ) {
             let mut rom_a = SnesRom::from_bytes("smw", &bytes_a).unwrap();
             let rom_b = SnesRom::from_bytes("zelda", &bytes_b).unwrap();
-            let dkc_bytes = std::fs::read(root.join("roms/donkey_kong_country.sfc")).ok();
 
             // 1. Scan assets for ROM A
             let assets_a = scan_assets_for_rom(&rom_a);
@@ -1261,7 +1136,7 @@ mod tests {
 
             // 4. Test applying custom swaps with all enabled
             let mut session = SwapSession::new();
-            let ops = apply_custom_swaps(&mut rom_a, Some(&rom_b), dkc_bytes.as_deref(), &decisions, &mut session).unwrap();
+            let ops = apply_custom_swaps(&mut rom_a, Some(&rom_b), &decisions, &mut session).unwrap();
             assert!(ops >= 4, "Should apply custom swaps successfully");
             assert!(rom_a.header.is_checksum_valid(), "Checksum must be 100% valid after custom swaps!");
 

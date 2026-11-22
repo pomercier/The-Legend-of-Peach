@@ -413,53 +413,20 @@ impl RomKnowledgeBase {
                     audio_engine_notes: "N-SPC upload at PC 0x0C8000; 26 BRR samples starting at 0x0C8078.".to_string(),
                     oam_assembly_notes: "Link Head (16x16) overlaps Link Body (16x16) by 7-8 pixels vertically for a 23-24px composite character.".to_string(),
                 },
-                RomMemoryEntry {
-                    title: "DONKEY KONG COUNTRY".to_string(),
-                    crc32_hex: "0x3EAA5697".to_string(),
-                    crc32: 0x3EAA5697,
-                    size_bytes: 4_194_304,
-                    mapping: "HiROM".to_string(),
-                    reset_vector: 0x8000,
-                    nmi_vector: 0xA95F,
-                    irq_vector: 0xA987,
-                    sprite_regions: vec![
-                        LearnedSpriteRegion {
-                            name: "DKC1 32-bit Sprite Frame Pointer Table ($FB:CCE8..$FB:F780)".to_string(),
-                            pc_offset: 0x3BCCE8,
-                            max_budget_bytes: 0x2A98,
-                            format: "2,726 x 32-bit Frame Pointers -> 8B Header + Coords + VRAM-Row 4bpp Tiles".to_string(),
-                            compression: "None (Uncompressed VRAM-Row 4bpp Sprite Frames)".to_string(),
-                            hardware_notes: "Each frame at PC = (ptr & 0xFFFFFF) - 0xC00000 has 8-byte header [b0=n16, b1=n8_1, b2, b3=n8_2, b4, b5=dma1_tiles, b6, b7], followed by (b0+b1+b3)*2 coordinate bytes, then 4bpp tiles ordered as: [b0*2 top-half 16x16 tiles] + [b1 8x8 tiles] + [b0*2 bottom-half 16x16 tiles] + [b3 8x8 tiles]. Key DK frames: 0x0D16C4 (Walk1), 0x0D2472 (Walk2), 0x0D3534 (Stand), 0x3D66CA (Crouch), 0x0D5B9C (Roar), 0x19FA3A (Overworld DK 16x16).".to_string(),
-                        },
-                    ],
-                    palette_regions: vec![
-                        LearnedPaletteRegion {
-                            name: "Donkey Kong Brown Fur, Tan Muzzle & Red Tie Palettes ($F9:9618..$F9:A4B0)".to_string(),
-                            pc_offset: 0x39A068,
-                            color_count: 15,
-                            cgram_target: "15-color BGR555 Sprite Palette".to_string(),
-                        },
-                    ],
-                    audio_engine_notes: "62 SPC700 BRR samples starting at PC 0x070004.".to_string(),
-                    oam_assembly_notes: "Each sprite frame is self-contained with relative OAM (X,Y) offsets around center (0x80, 0x80).".to_string(),
-                },
+                
             ],
             verified_recipes: vec![
                 SwapRecipeMemory {
-                    recipe_id: "FUSION_SMW_LINK_AND_DK".to_string(),
+                    recipe_id: "FUSION_SUPER_MARIO_HYRULE".to_string(),
                     target_rom_title: "SUPER MARIOWORLD".to_string(),
                     donor_rom_titles: vec![
                         "THE LEGEND OF ZELDA".to_string(),
-                        "DONKEY KONG COUNTRY".to_string(),
-                    ],
-                    description: "Remplace Mario/Luigi par Link et Yoshi par Donkey Kong dans Super Mario World avec titre 'SUPER LINK WORLD', poing d'attaque gorille, dos quadrupède horizontal et 100% fonctionnel sur matériel.".to_string(),
+                                            ],
+                    description: "Remplace Mario/Luigi par Link dans Super Mario World avec titre 'SUPER LINK WORLD', poing d'attaque gorille, dos quadrupède horizontal et 100% fonctionnel sur matériel.".to_string(),
                     verified_functional_rom: true,
                     steps: vec![
                         "GFX32 (0x040000): Injection de Link 4bpp (Petit 16x16 & Super/Feu/Cape 16x32) selon les tables matérielles $00:E00C / $00:E0CC. Découplage absolu : $00:E00C forcé à 197 (transparent) sur toutes les poses de Petit Link (élimination totale des casquettes résiduelles), jambes de victoire ($7E) et d'escalade ($7F) séparées, glisse réassignée à la tuile 5.".to_string(),
-                        "GFX33 (0x043FC0): Extraction des frames 3D de Donkey Kong (Rows 2 & 3). Tuile (4,2) du bloc sous l'œuf (charnum 0x08) préservée intacte sans artéfact visuel. Coup de poing gorille émergeant de l'épaule (PC 0x00F61A, Y=17px) avec poing fermé et jointures vers l'avant.".to_string(),
-                        "GFX10 (0x04EF1E): Injection de Link Overworld ET Donkey Kong Overworld sur la carte de Yoshi's Island (LC_LZ2 <= 2 193B).".to_string(),
                         "GFX28/29 (0x05C06C/0x05C6A3) & Stripe Image 03 (0x02B375): Remplacement de 'MARIO' par 'LINK' sur l'écran-titre avec conservation exacte de la police 3D à bulles ('L'=Vert, 'I'=Cyan, 'N'=Jaune, 'K'=Rouge).".to_string(),
-                        "Palettes BGR555 (0x003298..0x003318): Injection du pelage brun chocolat (0x0045, 0x04AB, 0x0911, 0x1197), cravate rouge vif (0x0C7D) et museau/torse tan doré chaleureux (0x3AFE) de Donkey Kong dans les 4 palettes Yoshi.".to_string(),
                         "Audio SPC700: Préservation intégrale de la banque d'instruments N-SPC de SMW (évite la destruction du pitch et les bourdonnements stridents causés par le resampling arbitraire d'instruments musicaux mélodiques).".to_string(),
                         "Checksum & Complément SNES recalculés pour compatibilité 100% matériel flashcart.".to_string(),
                     ],
@@ -469,13 +436,11 @@ impl RomKnowledgeBase {
                     target_rom_title: "SUPER MARIOWORLD".to_string(),
                     donor_rom_titles: vec![
                         "THE LEGEND OF ZELDA".to_string(),
-                        "DONKEY KONG COUNTRY".to_string(),
-                    ],
+                                            ],
                     description: "Scanner d'actifs exhaustif et matrice de décision interactive : permet à l'utilisateur de choisir et permuter individuellement Mario, Yoshi, Champignon, Fleur, Étoile, Pièce, Bloc '?', Bloc Brique, Koopa, Goomba, Bowser et Écran Titre.".to_string(),
                     verified_functional_rom: true,
                     steps: vec![
-                        "Scanner d'actifs multi-ROM : identification automatique des sprites et blocs Map16 (GFX00, GFX01, GFX31, GFX32, GFX33, ALTTP 0x080000..0x098000, DKC 0x0D16EC..0x3A0000).".to_string(),
-                        "Matrice de sélection interactive : cases à cocher individuelles et préréglages rapides (Tout, Aucun, Pack Zelda, Pack DK).".to_string(),
+                        "Matrice de sélection interactive : cases à cocher individuelles et préréglages rapides (Tout, Aucun, Pack Zelda, Pack Mario).".to_string(),
                         "Remplacement modulaire : application sélective des swaps activés sans écraser les blocs non sélectionnés.".to_string(),
                         "Validation matérielle continue : recalcul automatique des checksums et compléments LoROM SNES.".to_string(),
                     ],

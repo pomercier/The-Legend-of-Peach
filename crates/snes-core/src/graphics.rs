@@ -775,309 +775,224 @@ pub fn render_single_asset_sprite(rom_data: &[u8], asset_id: &str) -> Option<(us
         }
 
         "smw_coin" => {
-            // UNE Pièce d'or animée (16x16) depuis GFX33 (0x043FC0, tuiles 14, 15, 30, 31)
-            let (dec, _) = crate::disasm_dma::decompress_nintendo_lz2(rom_data, 0x043FC0, 16384)?;
-            let p0 = decode_3bpp_tile_slice(&dec, 14);
-            let p1 = decode_3bpp_tile_slice(&dec, 15);
-            let p2 = decode_3bpp_tile_slice(&dec, 30);
-            let p3 = decode_3bpp_tile_slice(&dec, 31);
-
-            let pal: [[u8; 4]; 8] = [
-                [0, 0, 0, 0],
-                [255, 255, 255, 255], // White glint
-                [24, 24, 24, 255],     // Dark outline
-                [255, 215, 0, 255],   // Pure Gold
-                [220, 150, 0, 255],   // Amber
-                [150, 90, 0, 255],    // Dark Amber
-                [255, 240, 150, 255], // Light Gold
-                [240, 180, 0, 255],   // Gold shade
-            ];
-
-            let w = 16;
-            let h = 16;
-            let mut rgba = vec![0u8; w * h * 4];
-            for y in 0..8 {
-                for x in 0..8 {
-                    write_px(&mut rgba, w, x, y, pal[p0[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y, pal[p1[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x, y + 8, pal[p2[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y + 8, pal[p3[y * 8 + x] as usize % 8]);
-                }
-            }
-            Some((w, h, rgba))
-        }
-
-        "smw_question_block" => {
-            // UN Bloc '?' (16x16) depuis GFX00 (0x0459F9, tuiles 0, 1, 16, 17)
-            let (dec, _) = crate::disasm_dma::decompress_nintendo_lz2(rom_data, 0x0459F9, 8192)?;
-            let p0 = decode_3bpp_tile_slice(&dec, 0);
-            let p1 = decode_3bpp_tile_slice(&dec, 1);
-            let p2 = decode_3bpp_tile_slice(&dec, 16);
-            let p3 = decode_3bpp_tile_slice(&dec, 17);
-
-            let pal: [[u8; 4]; 8] = [
-                [0, 0, 0, 0],
-                [255, 255, 255, 255], // White '?'
-                [24, 24, 24, 255],     // Outline
-                [248, 184, 0, 255],   // Golden face
-                [200, 100, 0, 255],   // Amber shadow
-                [255, 224, 64, 255],  // Highlight
-                [120, 50, 0, 255],    // Dark shadow
-                [255, 240, 180, 255], // Cream
-            ];
-
-            let w = 16;
-            let h = 16;
-            let mut rgba = vec![0u8; w * h * 4];
-            for y in 0..8 {
-                for x in 0..8 {
-                    write_px(&mut rgba, w, x, y, pal[p0[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y, pal[p1[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x, y + 8, pal[p2[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y + 8, pal[p3[y * 8 + x] as usize % 8]);
-                }
-            }
-            Some((w, h, rgba))
-        }
-
-        "smw_turn_block" => {
-            // UN Bloc de brique tournant (16x16) depuis GFX00 (0x0459F9, tuiles 4, 5, 20, 21)
-            let (dec, _) = crate::disasm_dma::decompress_nintendo_lz2(rom_data, 0x0459F9, 8192)?;
-            let p0 = decode_3bpp_tile_slice(&dec, 4);
-            let p1 = decode_3bpp_tile_slice(&dec, 5);
-            let p2 = decode_3bpp_tile_slice(&dec, 20);
-            let p3 = decode_3bpp_tile_slice(&dec, 21);
-
-            let pal: [[u8; 4]; 8] = [
-                [0, 0, 0, 0],
-                [255, 255, 255, 255], // White shine
-                [24, 24, 24, 255],     // Outline
-                [224, 144, 16, 255],  // Amber brick
-                [140, 70, 8, 255],    // Brick shadow
-                [248, 200, 32, 255],  // Yellow face
-                [96, 40, 0, 255],     // Dark slit
-                [255, 230, 120, 255], // Cream
-            ];
-
-            let w = 16;
-            let h = 16;
-            let mut rgba = vec![0u8; w * h * 4];
-            for y in 0..8 {
-                for x in 0..8 {
-                    write_px(&mut rgba, w, x, y, pal[p0[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y, pal[p1[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x, y + 8, pal[p2[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y + 8, pal[p3[y * 8 + x] as usize % 8]);
-                }
-            }
-            Some((w, h, rgba))
-        }
-
-        "smw_mushroom" => {
-            // UN Super Champignon (16x16) depuis GFX00 (0x0459F9, tuiles 36, 37, 52, 53)
-            let (dec, _) = crate::disasm_dma::decompress_nintendo_lz2(rom_data, 0x0459F9, 8192)?;
-            let p0 = decode_3bpp_tile_slice(&dec, 36);
-            let p1 = decode_3bpp_tile_slice(&dec, 37);
-            let p2 = decode_3bpp_tile_slice(&dec, 52);
-            let p3 = decode_3bpp_tile_slice(&dec, 53);
-
-            let pal: [[u8; 4]; 8] = [
-                [0, 0, 0, 0],
-                [255, 255, 255, 255], // White spots
-                [24, 24, 24, 255],     // Eyes / outline
-                [232, 40, 24, 255],   // Red Cap
-                [152, 16, 16, 255],   // Cap Shadow
-                [254, 208, 152, 255], // Peach Stem
-                [216, 144, 96, 255],  // Stem Shadow
-                [255, 240, 200, 255], // Highlight
-            ];
-
-            let w = 16;
-            let h = 16;
-            let mut rgba = vec![0u8; w * h * 4];
-            for y in 0..8 {
-                for x in 0..8 {
-                    write_px(&mut rgba, w, x, y, pal[p0[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y, pal[p1[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x, y + 8, pal[p2[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y + 8, pal[p3[y * 8 + x] as usize % 8]);
-                }
-            }
-            Some((w, h, rgba))
-        }
-
-        "smw_fire_flower" => {
-            // UNE Fleur de Feu (16x16) depuis GFX00 (0x0459F9, tuiles 38, 39, 54, 55)
-            let (dec, _) = crate::disasm_dma::decompress_nintendo_lz2(rom_data, 0x0459F9, 8192)?;
-            let p0 = decode_3bpp_tile_slice(&dec, 38);
-            let p1 = decode_3bpp_tile_slice(&dec, 39);
-            let p2 = decode_3bpp_tile_slice(&dec, 54);
-            let p3 = decode_3bpp_tile_slice(&dec, 55);
-
+            // UNE Pièce d'or authentique (16x16) depuis SMW GFX01 (8,6)
+            let (dec, _, _) = crate::mixer::load_smw_3bpp_sheet(rom_data, 0x01)?;
+            let px = crate::mixer::read_3bpp_16x16(&dec, 8, 6);
             let pal: [[u8; 4]; 8] = [
                 [0, 0, 0, 0],
                 [255, 255, 255, 255],
                 [24, 24, 24, 255],
-                [232, 48, 24, 255],   // Orange/Red petals
-                [48, 168, 32, 255],   // Green stem
-                [248, 200, 32, 255],  // Yellow center
-                [24, 112, 16, 255],   // Dark Green
-                [255, 240, 180, 255],
+                [184, 112, 16, 255],
+                [248, 216, 40, 255],
+                [255, 240, 144, 255],
+                [248, 176, 24, 255],
+                [168, 88, 16, 255],
             ];
-
-            let w = 16;
-            let h = 16;
-            let mut rgba = vec![0u8; w * h * 4];
-            for y in 0..8 {
-                for x in 0..8 {
-                    write_px(&mut rgba, w, x, y, pal[p0[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y, pal[p1[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x, y + 8, pal[p2[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y + 8, pal[p3[y * 8 + x] as usize % 8]);
+            let mut rgba = vec![0u8; 16 * 16 * 4];
+            for y in 0..16 {
+                for x in 0..16 {
+                    write_px(&mut rgba, 16, x, y, pal[(px[y][x] & 7) as usize]);
                 }
             }
-            Some((w, h, rgba))
+            Some((16, 16, rgba))
+        }
+
+        "smw_question_block" => {
+            // UN Bloc '?' authentique (16x16) depuis SMW GFX00 (10,2)
+            let (dec, _, _) = crate::mixer::load_smw_3bpp_sheet(rom_data, 0x00)?;
+            let px = crate::mixer::read_3bpp_16x16(&dec, 10, 2);
+            let pal: [[u8; 4]; 8] = [
+                [0, 0, 0, 0],
+                [255, 255, 255, 255],
+                [24, 24, 24, 255],
+                [184, 112, 16, 255],
+                [248, 216, 40, 255],
+                [255, 240, 144, 255],
+                [248, 176, 24, 255],
+                [168, 88, 16, 255],
+            ];
+            let mut rgba = vec![0u8; 16 * 16 * 4];
+            for y in 0..16 {
+                for x in 0..16 {
+                    write_px(&mut rgba, 16, x, y, pal[(px[y][x] & 7) as usize]);
+                }
+            }
+            Some((16, 16, rgba))
+        }
+
+        "smw_turn_block" => {
+            // UN Bloc de brique tournant authentique (16x16) depuis SMW GFX00 (0,4)
+            let (dec, _, _) = crate::mixer::load_smw_3bpp_sheet(rom_data, 0x00)?;
+            let px = crate::mixer::read_3bpp_16x16(&dec, 0, 4);
+            let pal: [[u8; 4]; 8] = [
+                [0, 0, 0, 0],
+                [255, 255, 255, 255],
+                [24, 24, 24, 255],
+                [184, 112, 16, 255],
+                [248, 216, 40, 255],
+                [255, 240, 144, 255],
+                [248, 176, 24, 255],
+                [168, 88, 16, 255],
+            ];
+            let mut rgba = vec![0u8; 16 * 16 * 4];
+            for y in 0..16 {
+                for x in 0..16 {
+                    write_px(&mut rgba, 16, x, y, pal[(px[y][x] & 7) as usize]);
+                }
+            }
+            Some((16, 16, rgba))
+        }
+
+        "smw_mushroom" => {
+            // UN Super Champignon authentique (16x16) depuis SMW GFX00 (4,2)
+            let (dec, _, _) = crate::mixer::load_smw_3bpp_sheet(rom_data, 0x00)?;
+            let px = crate::mixer::read_3bpp_16x16(&dec, 4, 2);
+            let pal: [[u8; 4]; 8] = [
+                [0, 0, 0, 0],
+                [255, 255, 255, 255],
+                [24, 24, 24, 255],
+                [176, 32, 24, 255],
+                [248, 208, 48, 255],
+                [255, 224, 168, 255],
+                [240, 56, 40, 255],
+                [168, 24, 24, 255],
+            ];
+            let mut rgba = vec![0u8; 16 * 16 * 4];
+            for y in 0..16 {
+                for x in 0..16 {
+                    write_px(&mut rgba, 16, x, y, pal[(px[y][x] & 7) as usize]);
+                }
+            }
+            Some((16, 16, rgba))
+        }
+
+        "smw_fire_flower" => {
+            // UNE Fleur de Feu authentique (16x16) depuis SMW GFX00 (6,2)
+            let (dec, _, _) = crate::mixer::load_smw_3bpp_sheet(rom_data, 0x00)?;
+            let px = crate::mixer::read_3bpp_16x16(&dec, 6, 2);
+            let pal: [[u8; 4]; 8] = [
+                [0, 0, 0, 0],
+                [255, 255, 255, 255],
+                [24, 24, 24, 255],
+                [176, 32, 24, 255],
+                [248, 208, 48, 255],
+                [255, 224, 168, 255],
+                [240, 56, 40, 255],
+                [168, 24, 24, 255],
+            ];
+            let mut rgba = vec![0u8; 16 * 16 * 4];
+            for y in 0..16 {
+                for x in 0..16 {
+                    write_px(&mut rgba, 16, x, y, pal[(px[y][x] & 7) as usize]);
+                }
+            }
+            Some((16, 16, rgba))
         }
 
         "smw_star" => {
-            // Étoile d'invincibilité Starman (16x16) depuis GFX00 (0x0459F9, tuiles 72, 73, 88, 89)
-            let (dec, _) = crate::disasm_dma::decompress_nintendo_lz2(rom_data, 0x0459F9, 8192)?;
-            let p0 = decode_3bpp_tile_slice(&dec, 72);
-            let p1 = decode_3bpp_tile_slice(&dec, 73);
-            let p2 = decode_3bpp_tile_slice(&dec, 88);
-            let p3 = decode_3bpp_tile_slice(&dec, 89);
-
+            // Étoile Starman authentique (16x16) depuis SMW GFX00 (8,4)
+            let (dec, _, _) = crate::mixer::load_smw_3bpp_sheet(rom_data, 0x00)?;
+            let px = crate::mixer::read_3bpp_16x16(&dec, 8, 4);
             let pal: [[u8; 4]; 8] = [
                 [0, 0, 0, 0],
-                [255, 255, 255, 255], // White highlights
-                [24, 24, 24, 255],     // Black eyes
-                [248, 208, 0, 255],   // Vibrant yellow body
-                [208, 144, 0, 255],   // Amber shadow
-                [255, 240, 128, 255], // Light yellow
-                [144, 88, 0, 255],    // Dark shadow
                 [255, 255, 255, 255],
+                [24, 24, 24, 255],
+                [184, 112, 16, 255],
+                [248, 216, 40, 255],
+                [255, 240, 144, 255],
+                [248, 176, 24, 255],
+                [168, 88, 16, 255],
             ];
-
-            let w = 16;
-            let h = 16;
-            let mut rgba = vec![0u8; w * h * 4];
-            for y in 0..8 {
-                for x in 0..8 {
-                    write_px(&mut rgba, w, x, y, pal[p0[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y, pal[p1[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x, y + 8, pal[p2[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y + 8, pal[p3[y * 8 + x] as usize % 8]);
+            let mut rgba = vec![0u8; 16 * 16 * 4];
+            for y in 0..16 {
+                for x in 0..16 {
+                    write_px(&mut rgba, 16, x, y, pal[(px[y][x] & 7) as usize]);
                 }
             }
-            Some((w, h, rgba))
+            Some((16, 16, rgba))
         }
 
         "smw_goomba" => {
-            // Galoomba (16x16) depuis GFX01 (0x046231, tuiles 4, 5, 20, 21)
-            let (dec, _) = crate::disasm_dma::decompress_nintendo_lz2(rom_data, 0x046231, 8192)?;
-            let p0 = decode_3bpp_tile_slice(&dec, 4);
-            let p1 = decode_3bpp_tile_slice(&dec, 5);
-            let p2 = decode_3bpp_tile_slice(&dec, 20);
-            let p3 = decode_3bpp_tile_slice(&dec, 21);
-
+            // Galoomba authentique (16x16) depuis SMW GFX01 (8,2)
+            let (dec, _, _) = crate::mixer::load_smw_3bpp_sheet(rom_data, 0x01)?;
+            let px = crate::mixer::read_3bpp_16x16(&dec, 8, 2);
             let pal: [[u8; 4]; 8] = [
                 [0, 0, 0, 0],
-                [255, 255, 255, 255], // White eyes
-                [24, 24, 24, 255],     // Pupil / outline
-                [184, 96, 24, 255],   // Brown body
-                [128, 56, 16, 255],   // Dark brown
-                [248, 200, 136, 255], // Cream feet
-                [208, 144, 80, 255],  // Shaded feet
-                [248, 152, 56, 255],  // Light brown
+                [255, 255, 255, 255],
+                [24, 24, 24, 255],
+                [144, 64, 16, 255],
+                [248, 192, 88, 255],
+                [255, 224, 160, 255],
+                [200, 112, 40, 255],
+                [128, 56, 16, 255],
             ];
-
-            let w = 16;
-            let h = 16;
-            let mut rgba = vec![0u8; w * h * 4];
-            for y in 0..8 {
-                for x in 0..8 {
-                    write_px(&mut rgba, w, x, y, pal[p0[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y, pal[p1[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x, y + 8, pal[p2[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y + 8, pal[p3[y * 8 + x] as usize % 8]);
+            let mut rgba = vec![0u8; 16 * 16 * 4];
+            for y in 0..16 {
+                for x in 0..16 {
+                    write_px(&mut rgba, 16, x, y, pal[(px[y][x] & 7) as usize]);
                 }
             }
-            Some((w, h, rgba))
+            Some((16, 16, rgba))
         }
 
         "smw_koopa" => {
-            // UN Koopa Troopa (16x24) depuis GFX01 (0x046231, tuiles 0, 1, 16, 17, 32, 33)
-            let (dec, _) = crate::disasm_dma::decompress_nintendo_lz2(rom_data, 0x046231, 8192)?;
-            let p0 = decode_3bpp_tile_slice(&dec, 0);
-            let p1 = decode_3bpp_tile_slice(&dec, 1);
-            let p2 = decode_3bpp_tile_slice(&dec, 16);
-            let p3 = decode_3bpp_tile_slice(&dec, 17);
-            let p4 = decode_3bpp_tile_slice(&dec, 32);
-            let p5 = decode_3bpp_tile_slice(&dec, 33);
-
+            // UN Koopa Troopa authentique (16x24) depuis SMW GFX01 (2,0) tête + (0,2) carapace
+            let (dec, _, _) = crate::mixer::load_smw_3bpp_sheet(rom_data, 0x01)?;
+            let head = crate::mixer::read_3bpp_16x16(&dec, 2, 0);
+            let body = crate::mixer::read_3bpp_16x16(&dec, 0, 2);
             let pal: [[u8; 4]; 8] = [
                 [0, 0, 0, 0],
-                [255, 255, 255, 255], // White eyes
-                [24, 24, 24, 255],     // Dark outline
-                [56, 168, 48, 255],   // Green shell
-                [28, 104, 28, 255],   // Shell shadow
-                [254, 208, 152, 255], // Peach belly/beak
-                [248, 216, 32, 255],  // Yellow boots
-                [184, 120, 16, 255],  // Orange shade
+                [255, 255, 255, 255],
+                [24, 24, 24, 255],
+                [32, 128, 32, 255],
+                [88, 208, 56, 255],
+                [255, 224, 160, 255],
+                [248, 216, 48, 255],
+                [200, 128, 32, 255],
             ];
-
-            let w = 16;
-            let h = 24;
-            let mut rgba = vec![0u8; w * h * 4];
-            for y in 0..8 {
-                for x in 0..8 {
-                    write_px(&mut rgba, w, x, y, pal[p0[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y, pal[p1[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x, y + 8, pal[p2[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y + 8, pal[p3[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x, y + 16, pal[p4[y * 8 + x] as usize % 8]);
-                    write_px(&mut rgba, w, x + 8, y + 16, pal[p5[y * 8 + x] as usize % 8]);
-                }
-            }
-            Some((w, h, rgba))
-        }
-
-        "smw_yoshi" => {
-            // UN Yoshi (32x32) depuis GFX33 (0x043FC0, rangées 2 & 3)
-            let (dec, _) = crate::disasm_dma::decompress_nintendo_lz2(rom_data, 0x043FC0, 16384)?;
-            let pal_yoshi: [[u8; 4]; 8] = [
-                [0, 0, 0, 0],
-                [255, 255, 255, 255], // White cheeks & belly
-                [24, 24, 24, 255],     // Dark outline
-                [64, 184, 40, 255],   // Apple green body
-                [32, 112, 24, 255],   // Green shadow
-                [248, 120, 24, 255],  // Orange saddle
-                [232, 40, 24, 255],   // Red boots
-                [255, 200, 150, 255],
-            ];
-
-            let w = 32;
-            let h = 32;
-            let mut rgba = vec![0u8; w * h * 4];
-            // Render 4 blocks of 16x16: Row 2 & Row 3 (cols 0..3)
-            for by in 0..2usize {
-                for bx in 0..2usize {
-                    let tile_base = 32 + by * 16 * 2 + bx * 2;
-                    let p0 = decode_3bpp_tile_slice(&dec, tile_base);
-                    let p1 = decode_3bpp_tile_slice(&dec, tile_base + 1);
-                    let p2 = decode_3bpp_tile_slice(&dec, tile_base + 16);
-                    let p3 = decode_3bpp_tile_slice(&dec, tile_base + 17);
-                    for y in 0..8 {
-                        for x in 0..8 {
-                            write_px(&mut rgba, w, bx * 16 + x, by * 16 + y, pal_yoshi[p0[y * 8 + x] as usize % 8]);
-                            write_px(&mut rgba, w, bx * 16 + x + 8, by * 16 + y, pal_yoshi[p1[y * 8 + x] as usize % 8]);
-                            write_px(&mut rgba, w, bx * 16 + x, by * 16 + y + 8, pal_yoshi[p2[y * 8 + x] as usize % 8]);
-                            write_px(&mut rgba, w, bx * 16 + x + 8, by * 16 + y + 8, pal_yoshi[p3[y * 8 + x] as usize % 8]);
-                        }
+            let mut rgba = vec![0u8; 16 * 24 * 4];
+            for y in 0..16 {
+                for x in 0..16 {
+                    let cb = body[y][x] as usize & 7;
+                    if cb != 0 {
+                        write_px(&mut rgba, 16, x, y + 8, pal[cb]);
                     }
                 }
             }
-            Some((w, h, rgba))
+            for y in 0..16 {
+                for x in 0..16 {
+                    let ch = head[y][x] as usize & 7;
+                    if ch != 0 {
+                        write_px(&mut rgba, 16, x, y, pal[ch]);
+                    }
+                }
+            }
+            Some((16, 24, rgba))
+        }
+
+        "smw_yoshi" => {
+            // UN Yoshi authentique (16x32) depuis SMW GFX26 (4,4) tête + (4,6) corps
+            let (dec, _, _) = crate::mixer::load_smw_3bpp_sheet(rom_data, 0x26)?;
+            let head = crate::mixer::read_3bpp_16x16(&dec, 4, 4);
+            let body = crate::mixer::read_3bpp_16x16(&dec, 4, 6);
+            let pal_yoshi: [[u8; 4]; 8] = [
+                [0, 0, 0, 0],
+                [255, 255, 255, 255],
+                [24, 24, 24, 255],
+                [40, 144, 40, 255],
+                [104, 216, 56, 255],
+                [255, 255, 255, 255],
+                [248, 184, 48, 255],
+                [208, 96, 32, 255],
+            ];
+            let mut rgba = vec![0u8; 16 * 32 * 4];
+            for y in 0..16 {
+                for x in 0..16 {
+                    write_px(&mut rgba, 16, x, y, pal_yoshi[(head[y][x] & 7) as usize]);
+                    write_px(&mut rgba, 16, x, y + 16, pal_yoshi[(body[y][x] & 7) as usize]);
+                }
+            }
+            Some((16, 32, rgba))
         }
 
         // =========================================================================
@@ -1184,214 +1099,144 @@ pub fn render_single_asset_sprite(rom_data: &[u8], asset_id: &str) -> Option<(us
         }
 
         "zelda_zelda" => {
-            // Princesse Zelda (16x32) depuis Sheet 0x07 (0x087000, mx=0, my=0 pour tête, mx=0, my=1 pour robe)
-            if rom_data.len() < 0x088000 {
-                return None;
+            // Princesse Zelda / Peach authentique (16x32) depuis Sheet 0xD5 + vraie palette 0x0DD272!
+            let (s_d5, _, _) = crate::mixer::load_alttp_3bpp_sheet(rom_data, 0xD5)?;
+            let head = crate::mixer::read_3bpp_16x16(&s_d5, 0, 0);
+            let dress = crate::mixer::read_3bpp_16x16(&s_d5, 10, 0);
+            let mut pal = [[0u8; 4]; 8];
+            if rom_data.len() >= 0x0DD272 + 14 {
+                for i in 0..7 {
+                    let w = u16::from_le_bytes([rom_data[0x0DD272 + i * 2], rom_data[0x0DD272 + i * 2 + 1]]);
+                    pal[i + 1] = bgr555_to_rgba(w, false, false);
+                }
             }
-            let head = assemble_16x16_4bpp_slice(rom_data, 0x087000, 0, 0);
-            let dress = assemble_16x16_4bpp_slice(rom_data, 0x087000, 0, 1);
-
-            let pal: [[u8; 4]; 16] = [
-                [0, 0, 0, 0],
-                [255, 255, 255, 255],
-                [24, 24, 24, 255],
-                [240, 96, 160, 255],  // Pink dress
-                [180, 48, 100, 255],  // Dress shadow
-                [254, 208, 160, 255], // Peach skin
-                [216, 144, 96, 255],  // Skin shadow
-                [232, 184, 48, 255],  // Blonde hair
-                [248, 216, 32, 255],  // Gold tiara
-                [144, 96, 16, 255],
-                [255, 255, 255, 255],
-                [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0],
-            ];
-
-            let w = 16;
-            let h = 32;
-            let mut rgba = vec![0u8; w * h * 4];
+            let mut rgba = vec![0u8; 16 * 32 * 4];
             for y in 0..16 {
                 for x in 0..16 {
-                    let ch = head[y][x] as usize;
-                    if ch != 0 {
-                        let off = (y * w + x) * 4;
-                        rgba[off..off + 4].copy_from_slice(&pal[ch % 16]);
-                    }
-                    let cd = dress[y][x] as usize;
+                    let cd = dress[y][x] as usize & 7;
                     if cd != 0 {
-                        let off = ((16 + y) * w + x) * 4;
-                        rgba[off..off + 4].copy_from_slice(&pal[cd % 16]);
+                        write_px(&mut rgba, 16, x, y + 14, pal[cd]);
                     }
                 }
             }
-            Some((w, h, rgba))
+            for y in 0..16 {
+                for x in 0..16 {
+                    let ch = head[y][x] as usize & 7;
+                    if ch != 0 {
+                        write_px(&mut rgba, 16, x, y, pal[ch]);
+                    }
+                }
+            }
+            Some((16, 32, rgba))
         }
 
         "zelda_rupee" => {
-            // UN Rubis vert d'Hyrule (16x16) depuis Sheet 0x08 (0x082000, mx=2, my=0)
-            if rom_data.len() < 0x083000 {
-                return None;
-            }
-            let gem = assemble_16x16_4bpp_slice(rom_data, 0x082000, 2, 0);
-            let pal: [[u8; 4]; 16] = [
-                [0, 0, 0, 0],
-                [32, 224, 64, 255],   // Emerald green facet
-                [16, 160, 40, 255],   // Medium green
-                [0, 96, 24, 255],     // Deep shadow
-                [128, 255, 96, 255],  // Lime glint
-                [255, 255, 255, 255], // Pure white sparkle
-                [24, 24, 24, 255],
-                [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0],
-            ];
-            let w = 16;
-            let h = 16;
-            let mut rgba = vec![0u8; w * h * 4];
-            for y in 0..16 {
-                for x in 0..16 {
-                    let c = gem[y][x] as usize;
-                    if c != 0 {
-                        let off = (y * w + x) * 4;
-                        rgba[off..off + 4].copy_from_slice(&pal[c % 16]);
-                    }
+            // Rubis / Pièce authentique (16x16) depuis Sheet 0xCD (0,0) + vraie palette 0x0DD4FC
+            let (s_cd, _, _) = crate::mixer::load_alttp_3bpp_sheet(rom_data, 0xCD)?;
+            let gem = crate::mixer::read_3bpp_16x16(&s_cd, 0, 0);
+            let mut pal = [[0u8; 4]; 8];
+            if rom_data.len() >= 0x0DD4FC + 14 {
+                for i in 0..7 {
+                    let w = u16::from_le_bytes([rom_data[0x0DD4FC + i * 2], rom_data[0x0DD4FC + i * 2 + 1]]);
+                    pal[i + 1] = bgr555_to_rgba(w, false, false);
                 }
             }
-            Some((w, h, rgba))
+            let mut rgba = vec![0u8; 16 * 16 * 4];
+            for y in 0..16 {
+                for x in 0..16 {
+                    write_px(&mut rgba, 16, x, y, pal[(gem[y][x] & 7) as usize]);
+                }
+            }
+            Some((16, 16, rgba))
         }
 
         "zelda_chest" => {
-            // UN Coffre au Trésor d'Hyrule (16x16) depuis Sheet 0x08 (0x082000, mx=4, my=0)
-            if rom_data.len() < 0x083000 {
-                return None;
-            }
-            let chest = assemble_16x16_4bpp_slice(rom_data, 0x082000, 4, 0);
-            let pal: [[u8; 4]; 16] = [
-                [0, 0, 0, 0],
-                [200, 136, 32, 255],  // Polished wood
-                [140, 76, 16, 255],   // Wood shadow
-                [80, 40, 8, 255],     // Dark outline
-                [248, 216, 32, 255],  // Golden brass lock & bands
-                [255, 255, 255, 255], // Highlight
-                [24, 24, 24, 255],
-                [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0],
-            ];
-            let w = 16;
-            let h = 16;
-            let mut rgba = vec![0u8; w * h * 4];
-            for y in 0..16 {
-                for x in 0..16 {
-                    let c = chest[y][x] as usize;
-                    if c != 0 {
-                        let off = (y * w + x) * 4;
-                        rgba[off..off + 4].copy_from_slice(&pal[c % 16]);
-                    }
+            // Coffre / Bloc '?' authentique (16x16) depuis Sheet 0xC9 (6,0) + vraie palette 0x0DD4FC
+            let (s_c9, _, _) = crate::mixer::load_alttp_3bpp_sheet(rom_data, 0xC9)?;
+            let chest = crate::mixer::read_3bpp_16x16(&s_c9, 6, 0);
+            let mut pal = [[0u8; 4]; 8];
+            if rom_data.len() >= 0x0DD4FC + 14 {
+                for i in 0..7 {
+                    let w = u16::from_le_bytes([rom_data[0x0DD4FC + i * 2], rom_data[0x0DD4FC + i * 2 + 1]]);
+                    pal[i + 1] = bgr555_to_rgba(w, false, false);
                 }
             }
-            Some((w, h, rgba))
+            let mut rgba = vec![0u8; 16 * 16 * 4];
+            for y in 0..16 {
+                for x in 0..16 {
+                    write_px(&mut rgba, 16, x, y, pal[(chest[y][x] & 7) as usize]);
+                }
+            }
+            Some((16, 16, rgba))
         }
 
         "zelda_pot" => {
-            // UN Pot en Terre Cuite d'Hyrule (16x16) depuis Sheet 0x08 (0x082000, mx=6, my=0)
-            if rom_data.len() < 0x083000 {
-                return None;
-            }
-            let pot = assemble_16x16_4bpp_slice(rom_data, 0x082000, 6, 0);
-            let pal: [[u8; 4]; 16] = [
+            // Pot / Turn Block authentique (16x16 miroir H) depuis Sheet 0x21 (8,0)/(9,0)
+            let (s_21, _, _) = crate::mixer::load_alttp_3bpp_sheet(rom_data, 0x21)?;
+            let top_l = decode_3bpp_tile_slice(&s_21, 8);
+            let bot_l = decode_3bpp_tile_slice(&s_21, 9);
+            let pal: [[u8; 4]; 8] = [
                 [0, 0, 0, 0],
-                [208, 96, 48, 255],   // Terracotta clay
-                [144, 56, 16, 255],   // Clay shadow
-                [240, 160, 112, 255], // Rim highlight
-                [64, 24, 8, 255],     // Dark outline
-                [255, 255, 255, 255],
-                [24, 24, 24, 255],
-                [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0],
+                [107, 90, 74, 255],
+                [173, 140, 99, 255],
+                [222, 181, 140, 255],
+                [247, 198, 148, 255],
+                [64, 48, 32, 255],
+                [239, 214, 206, 255],
+                [136, 96, 64, 255],
             ];
-            let w = 16;
-            let h = 16;
-            let mut rgba = vec![0u8; w * h * 4];
-            for y in 0..16 {
-                for x in 0..16 {
-                    let c = pot[y][x] as usize;
-                    if c != 0 {
-                        let off = (y * w + x) * 4;
-                        rgba[off..off + 4].copy_from_slice(&pal[c % 16]);
-                    }
+            let mut rgba = vec![0u8; 16 * 16 * 4];
+            for y in 0..8 {
+                for x in 0..8 {
+                    let ct = pal[(top_l[y * 8 + x] & 7) as usize];
+                    let cb = pal[(bot_l[y * 8 + x] & 7) as usize];
+                    write_px(&mut rgba, 16, x, y, ct);
+                    write_px(&mut rgba, 16, 15 - x, y, ct);
+                    write_px(&mut rgba, 16, x, y + 8, cb);
+                    write_px(&mut rgba, 16, 15 - x, y + 8, cb);
                 }
             }
-            Some((w, h, rgba))
+            Some((16, 16, rgba))
         }
 
         "zelda_heart" => {
-            // UN Conteneur de Cœur d'Hyrule (16x16)
-            let pal: [[u8; 4]; 4] = [
-                [0, 0, 0, 0],
-                [232, 32, 48, 255],   // Ruby Red
-                [255, 216, 0, 255],   // Gold Border
-                [255, 255, 255, 255], // White Glint
-            ];
-            // Heart shape pattern (16x16)
-            #[rustfmt::skip]
-            let pattern = [
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-                [0,0,2,2,2,0,0,0,0,0,2,2,2,0,0,0],
-                [0,2,1,1,1,2,0,0,0,2,1,1,1,2,0,0],
-                [2,1,3,1,1,1,2,0,2,1,1,1,1,1,2,0],
-                [2,1,1,1,1,1,1,2,1,1,1,1,1,1,2,0],
-                [2,1,1,1,1,1,1,1,1,1,1,1,1,1,2,0],
-                [2,1,1,1,1,1,1,1,1,1,1,1,1,1,2,0],
-                [0,2,1,1,1,1,1,1,1,1,1,1,1,2,0,0],
-                [0,2,1,1,1,1,1,1,1,1,1,1,1,2,0,0],
-                [0,0,2,1,1,1,1,1,1,1,1,1,2,0,0,0],
-                [0,0,0,2,1,1,1,1,1,1,1,2,0,0,0,0],
-                [0,0,0,0,2,1,1,1,1,1,2,0,0,0,0,0],
-                [0,0,0,0,0,2,1,1,1,2,0,0,0,0,0,0],
-                [0,0,0,0,0,0,2,1,2,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0],
-                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-            ];
-            let w = 16;
-            let h = 16;
-            let mut rgba = vec![0u8; w * h * 4];
-            for y in 0..16 {
-                for x in 0..16 {
-                    let c = pattern[y][x];
-                    if c != 0 {
-                        let off = (y * w + x) * 4;
-                        rgba[off..off + 4].copy_from_slice(&pal[c as usize]);
-                    }
+            // Conteneur de Cœur / Super Champignon authentique (16x16) depuis Sheet 0xCD (0,2)
+            let (s_cd, _, _) = crate::mixer::load_alttp_3bpp_sheet(rom_data, 0xCD)?;
+            let heart = crate::mixer::read_3bpp_16x16(&s_cd, 0, 2);
+            let mut pal = [[0u8; 4]; 8];
+            if rom_data.len() >= 0x0DD3D6 + 14 {
+                for i in 0..7 {
+                    let w = u16::from_le_bytes([rom_data[0x0DD3D6 + i * 2], rom_data[0x0DD3D6 + i * 2 + 1]]);
+                    pal[i + 1] = bgr555_to_rgba(w, false, false);
                 }
             }
-            Some((w, h, rgba))
+            let mut rgba = vec![0u8; 16 * 16 * 4];
+            for y in 0..16 {
+                for x in 0..16 {
+                    write_px(&mut rgba, 16, x, y, pal[(heart[y][x] & 7) as usize]);
+                }
+            }
+            Some((16, 16, rgba))
         }
 
         "zelda_soldier" => {
-            // UN Soldat d'Hyrule (16x24) depuis Sheet 0x08 (0x088000)
-            if rom_data.len() < 0x08A000 {
-                return None;
-            }
-            let soldier = assemble_16x16_4bpp_slice(rom_data, 0x088000, 0, 0);
-            let pal: [[u8; 4]; 16] = [
-                [0, 0, 0, 0],
-                [56, 168, 48, 255],   // Green armor
-                [28, 104, 28, 255],   // Armor shadow
-                [200, 208, 220, 255], // Steel helmet/spear
-                [224, 40, 32, 255],   // Red plume
-                [248, 216, 32, 255],  // Gold crest
-                [24, 24, 24, 255],     // Dark outline
-                [255, 255, 255, 255],
-                [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0],
-            ];
-            let w = 16;
-            let h = 24;
-            let mut rgba = vec![0u8; w * h * 4];
-            for y in 0..16 {
-                for x in 0..16 {
-                    let c = soldier[y][x] as usize;
-                    if c != 0 {
-                        let off = ((y + 4) * w + x) * 4;
-                        rgba[off..off + 4].copy_from_slice(&pal[c % 16]);
-                    }
+            // Soldat d'Hyrule / Koopa Troopa authentique (16x16) depuis Sheet 0xBA (0,0) + vraie palette 0x0DD3E4
+            let (s_ba, _, _) = crate::mixer::load_alttp_3bpp_sheet(rom_data, 0xBA)?;
+            let soldier = crate::mixer::read_3bpp_16x16(&s_ba, 0, 0);
+            let mut pal = [[0u8; 4]; 8];
+            if rom_data.len() >= 0x0DD3E4 + 14 {
+                for i in 0..7 {
+                    let w = u16::from_le_bytes([rom_data[0x0DD3E4 + i * 2], rom_data[0x0DD3E4 + i * 2 + 1]]);
+                    pal[i + 1] = bgr555_to_rgba(w, false, false);
                 }
             }
-            Some((w, h, rgba))
+            let mut rgba = vec![0u8; 16 * 16 * 4];
+            for y in 0..16 {
+                for x in 0..16 {
+                    write_px(&mut rgba, 16, x, y, pal[(soldier[y][x] & 7) as usize]);
+                }
+            }
+            Some((16, 16, rgba))
         }
 
         _ => None,

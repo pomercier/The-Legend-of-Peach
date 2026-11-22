@@ -1888,7 +1888,7 @@ pub fn export_universal_editable_project_with_mode(
         fs::write(out_dir.join(&spc.spc_file), spc_bytes)?;
     }
 
-    // If ROM uses custom non-IPL audio engine (e.g. Donkey Kong Country Rareware), synthesize soundbank SPC
+    // If ROM uses custom non-IPL audio engine, synthesize soundbank SPC
     if catalog.spc_streams.is_empty() && !catalog.audio_samples.is_empty() {
         let brr_infos: Vec<BrrSampleInfo> = catalog
             .audio_samples
@@ -1994,7 +1994,7 @@ pub fn export_universal_editable_project_with_mode(
         }
     }
 
-    // 6b. Universal OAM Multi-Tile Sprite Table Auto-Extraction (Rareware / HiROM OAM engines like DKC 1/2/3!)
+    // 6b. Universal OAM Multi-Tile Sprite Table Auto-Extraction (HiROM OAM sprite engines)
     let sprites_dir = out_dir.join("sprites");
     fs::create_dir_all(&sprites_dir)?;
     if let Some((_table_off, frame_offsets)) = scan_universal_oam_sprite_table(rom) {
@@ -2629,7 +2629,7 @@ fn parse_hex_rgb(hex: &str) -> Option<[u8; 3]> {
 
 /// Universally scan HiROM/ExHiROM ROMs for contiguous 4-byte OAM sprite pointer tables
 /// (`[addr_lo, addr_hi, bank, 0x00]`) whose targets decode to valid multi-tile 4bpp OAM frames.
-/// Works automatically across DKC 1 (V1.0/V1.1/V1.2/J/E), DKC 2, DKC 3, and similar engines!
+/// Works automatically across standard HiROM multi-tile OAM sprite engines!
 pub fn scan_universal_oam_sprite_table(rom: &SnesRom) -> Option<(usize, Vec<usize>)> {
     if rom.header.mapping == RomMapping::LoROM || rom.data.len() < 0x100000 {
         return None;

@@ -217,74 +217,42 @@ fn main() {
             }
         }
         "--build-hybrid" => {
-            if args.len() < 6 {
-                eprintln!("Usage: snes-cli --build-hybrid <base_smw.sfc> <donor_zelda.sfc> <donor_dkc.smc> <out.sfc> [--ips <out.ips>]");
+            if args.len() < 5 {
+                eprintln!("Usage: snes-cli --build-hybrid <base.sfc> <donor.sfc> <out.sfc> [--ips <out.ips>]");
                 return;
             }
             let base_path = &args[2];
-            let zelda_path = &args[3];
-            let dkc_path = &args[4];
-            let out_path = &args[5];
+            let donor_path = &args[3];
+            let out_path = &args[4];
             let ips_idx = args.iter().position(|a| a == "--ips");
             let ips_path = ips_idx.and_then(|i| args.get(i + 1));
 
             let base_bytes = std::fs::read(base_path).expect("Impossible de lire ROM de base");
-            let zelda_bytes = std::fs::read(zelda_path).expect("Impossible de lire ROM Zelda");
-            let dkc_bytes = std::fs::read(dkc_path).expect("Impossible de lire ROM DKC");
+            let donor_bytes = std::fs::read(donor_path).expect("Impossible de lire ROM donneuse");
 
             let orig_base = SnesRom::from_bytes(base_path.clone(), &base_bytes).expect("ROM de base invalide");
             let mut target_rom = orig_base.clone();
-            let zelda_rom = SnesRom::from_bytes(zelda_path.clone(), &zelda_bytes).expect("ROM Zelda invalide");
-            let dkc_rom = SnesRom::from_bytes(dkc_path.clone(), &dkc_bytes).expect("ROM DKC invalide");
+            let donor_rom = SnesRom::from_bytes(donor_path.clone(), &donor_bytes).expect("ROM donneuse invalide");
 
             let mut session = SwapSession::new();
-            let decisions = snes_core::assets::get_default_swap_decisions(&target_rom, &zelda_rom);
-            let mut ops = snes_core::assets::apply_custom_swaps(
+            let decisions = snes_core::assets::get_default_swap_decisions(&target_rom, &donor_rom);
+            let ops = snes_core::assets::apply_custom_swaps(
                 &mut target_rom,
-                Some(&zelda_rom),
-                Some(&dkc_rom.data),
+                Some(&donor_rom),
                 &decisions,
                 &mut session,
             )
             .expect("Erreur lors de la fusion personnalisée");
-
-            // Inject 3 authentic unpitched PERCUSSION BRR samples (!loops) from Donor DKC V1.2
-            // into SMW's unpitched percussion/drum slots (!loops), keeping 100% of SMW's melodic instruments
-            // perfectly IN-TUNE while adding genuine Donkey Kong Country jungle percussion!
-            let cat_a = snes_core::universal::discover_universal_catalog(&target_rom);
-            let cat_dkc = snes_core::universal::discover_universal_catalog(&dkc_rom);
-            let perc_a: Vec<_> = cat_a
-                .audio_samples
-                .iter()
-                .filter(|s| !s.loops && s.byte_len >= 450)
-                .collect();
-            let perc_dkc: Vec<_> = cat_dkc
-                .audio_samples
-                .iter()
-                .filter(|s| !s.loops && s.byte_len >= 450)
-                .collect();
-            for i in 0..3usize.min(perc_a.len()).min(perc_dkc.len()) {
-                if let Ok(n) = snes_core::universal::swap_universal_audio_asset(
-                    &mut target_rom,
-                    &dkc_rom,
-                    perc_a[i],
-                    perc_dkc[i],
-                    &mut session,
-                ) {
-                    ops += n;
-                }
-            }
 
             target_rom.fix_checksum();
             let out_bytes = target_rom.to_sfc_bytes();
             std::fs::write(out_path, &out_bytes).expect("Impossible d'écrire la ROM hybride");
 
             println!("============================================================");
-            println!("🔥 ROM 100% HYBRIDE TRIPLE-FUSION GÉNÉRÉE AVEC SUCCÈS !");
+            println!("🚀 HYBRIDE GÉNÉRÉ AVEC SUCCÈS !");
             println!("============================================================");
             println!("Base          : {} ({})", orig_base.canonical_title(), orig_base.header.mapping.as_str());
-            println!("Donneur 1     : {} (Héros Link, Blocs/Objets d'Hyrule, Titre)", zelda_rom.canonical_title());
-            println!("Donneur 2     : {} (Monture Donkey Kong V1.2, Poing Gorille, Audio BRR)", dkc_rom.canonical_title());
+            println!("Donneur       : {}", donor_rom.canonical_title());
             println!("Opérations    : {} fusions matérielles appliquées", ops);
             for op in &session.operations {
                 println!("  ✓ [{}] {}", op.kind.category_badge(), op.description);
@@ -360,7 +328,6 @@ fn main() {
                 let alias = match rom.identify_game() {
                     snes_core::RecognizedGame::ZeldaAlttp => "zelda".to_string(),
                     snes_core::RecognizedGame::SuperMarioWorld => "smw".to_string(),
-                    snes_core::RecognizedGame::DonkeyKongCountry => "dkc".to_string(),
                     snes_core::RecognizedGame::Unknown => format!("rom{}", idx + 1),
                 };
                 let prof = snes_core::mixer::inspect_rom_for_mixing(&rom, alias, path);
@@ -797,25 +764,16 @@ fn main() {
             let mut kb = snes_core::memory::RomKnowledgeBase::load_or_init();
             kb.learn_from_rom(&rom_a);
             kb.learn_from_rom(&rom_b);
-            if let Ok(c_bytes) = std::fs::read("roms/donkey_kong_country.sfc") {
-                if let Ok(rom_c) = SnesRom::from_bytes("DONKEY KONG COUNTRY", &c_bytes) {
-                    kb.learn_from_rom(&rom_c);
-                }
-            }
             kb.record_verified_recipe(
-                "FUSION_SMW_LINK_AND_DK",
+                "FUSION_ZELDA_MARIO",
                 &rom_a.canonical_title(),
                 vec![
                     rom_b.canonical_title(),
-                    "DONKEY KONG COUNTRY".to_string(),
                 ],
-                "Mario & Luigi remplacés par Link + Yoshi remplacé par Donkey Kong (GFX33 LZ2, GFX10 Overworld, Palettes BGR555, BRR Audio, Checksum SNES validé)",
+                "Conversion Zelda <-> Mario World (GFX, Palettes BGR555, BRR Audio, Checksum SNES validé)",
                 vec![
-                    format!("GFX32 Mario LZ2 -> Link ({} octets compressés)", rom_a.data.len()),
-                    "GFX33 Yoshi LZ2 -> Donkey Kong (Posture quadrupède horizontale, Poing de frappe gorille, Course, Cri, Bébé DK)".to_string(),
-                    "GFX10 Overworld -> Link & Baby Donkey Kong".to_string(),
-                    "GFX29 & Stripe Image 03 -> Titre 'SUPER LINK WORLD' en police 3D à bulles".to_string(),
-                    "Palettes BGR555 Yoshi -> Fourrure Brune, Cravate Rouge, Museau Tan".to_string(),
+                    format!("GFX Décompressé LZ2 ({} octets)", rom_a.data.len()),
+                    "Palettes BGR555 synchronisées".to_string(),
                     "Checksum & Complément SNES recalculés pour compatibilité 100% matériel".to_string(),
                 ],
             );

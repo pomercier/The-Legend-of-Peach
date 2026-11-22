@@ -40,9 +40,6 @@ impl GameProfile {
         if self.profile_name.contains("Super Mario World") && recognized == crate::rom::RecognizedGame::SuperMarioWorld {
             return true;
         }
-        if self.profile_name.contains("Donkey Kong Country") && recognized == crate::rom::RecognizedGame::DonkeyKongCountry {
-            return true;
-        }
         let upper_title = rom.header.title.to_uppercase();
         self.match_titles
             .iter()
@@ -267,41 +264,6 @@ impl GameProfile {
                     ("Palette Joueur Luigi — Vert & Violet (0x0032DC)".to_string(), 0x0032DC),
                     ("Palette Joueur Mario de Feu — Blanc & Rouge (0x0032F0)".to_string(), 0x0032F0),
                     ("Banque Palettes Niveaux & Écran Titre SMW (0x003100)".to_string(), 0x003100),
-                ],
-                audio_samples: vec![],
-            },
-            Self {
-                profile_name: "Donkey Kong Country".to_string(),
-                match_titles: vec!["DONKEY KONG COUNTRY".to_string()],
-                match_crc32: vec![0x3EAA5697],
-                description: "Profil complet pour Donkey Kong Country (4 Mo HiROM : Table de 2 726 Frames 4bpp @ 0x3BCCE8, Donkey Kong @ 0x0D16C4/0x364902/0x19FA3A, Palettes BGR555 @ 0x39A068, 62 Sons BRR @ 0x070004)".to_string(),
-                graphics: vec![
-                    ProfileGraphicsBookmark {
-                        name: "Donkey Kong — Marche & Course Quadrupède (4bpp @ 0x0D16EC)".to_string(),
-                        offset: 0x0D16EC,
-                        length: 0x3000,
-                        format: TileFormat::Bpp4,
-                        palette_offset: Some(0x39A068),
-                    },
-                    ProfileGraphicsBookmark {
-                        name: "Donkey Kong — Debout & Cravate Rouge (4bpp @ 0x364928)".to_string(),
-                        offset: 0x364928,
-                        length: 0x2000,
-                        format: TileFormat::Bpp4,
-                        palette_offset: Some(0x39A068),
-                    },
-                    ProfileGraphicsBookmark {
-                        name: "Donkey Kong — Carte du Monde Overworld 16x16 (4bpp @ 0x19FA44)".to_string(),
-                        offset: 0x19FA44,
-                        length: 0x0800,
-                        format: TileFormat::Bpp4,
-                        palette_offset: Some(0x39A068),
-                    },
-                ],
-                palettes: vec![
-                    ("Palette Donkey Kong — Pelage Brun & Museau (0x39A068)".to_string(), 0x39A068),
-                    ("Palette Donkey Kong — Cravate Rouge & Ombres (0x399618)".to_string(), 0x399618),
-                    ("Palette Diddy Kong & Jungle (0x399A14)".to_string(), 0x399A14),
                 ],
                 audio_samples: vec![],
             },
