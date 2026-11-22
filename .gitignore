@@ -1,39 +1,60 @@
-# Rust build artifacts
+# Rust build artifacts & local outputs
 /target
+/build
 **/*.rs.bk
 
-# SNES ROMs, saves, patches & copyrighted game dumps (NEVER commit!)
+# SNES / retro ROM files, patches, archives & copyrighted game dumps (NEVER commit!)
 *.sfc
 *.smc
 *.fig
 *.swc
-*.zip
-*.7z
+*.nes
+*.gba
+*.gbc
+*.gb
+*.n64
+*.z64
+*.v64
 *.ips
 *.bps
 *.ups
+*.xdelta
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.tgz
 *.srm
 *.sav
+*.bs
 *.state*
 roms/*
 !roms/.gitkeep
 
-# Extracted / deconstructed dumps & media captures
+# Extracted / deconstructed dumps & temporary video/audio captures
 *.wav
 *.mp4
 *.mov
 *.mkv
+*.avi
 *.bin
 *.ppm
 *.pgm
 extracted_assets*
 deconstructed_*
+*.log
 
-# Runtime knowledge-base caches generated locally
+# Runtime caches & emulator files
 ROM_MEMORY.md
 snes_knowledge_base.json
+.mednafen/
 
 # OS / editor noise
 .DS_Store
 Thumbs.db
 *.swp
+*.swo
+*~
+.idea/
+.vscode/

@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 SNES Omni-Mixer Studio Contributors
+Copyright (c) 2026 pomercier
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,32 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+===============================================================================
+INTELLECTUAL PROPERTY, THIRD-PARTY REFERENCES & FAN-PROJECT NOTICE
+===============================================================================
+
+1. Original Source Code & Documentation:
+   The MIT License above applies strictly to the original Rust source code,
+   build scripts, tooling, and documentation authored for this repository.
+
+2. Nintendo Intellectual Property:
+   "Super Mario World", "The Legend of Zelda: A Link to the Past", "Super
+   Nintendo Entertainment System (SNES)", Mario, Luigi, Princess Peach, Bowser,
+   the Koopalings, and all related characters, names, sprites, artwork, music,
+   and game data are trademarks and/or copyrights of Nintendo Co., Ltd.
+   This is an unofficial, non-commercial fan-made project and is NOT affiliated
+   with, sponsored by, or endorsed by Nintendo.
+
+3. Zero-ROM Policy:
+   This repository contains NO copyrighted ROM files, NO extracted game ROM
+   data, and NO binary ROM patches distributing copyrighted Nintendo assets.
+   Users must supply their own legally obtained backups of the original SNES
+   cartridges to build the crossover locally.
+
+4. Third-Party Dependencies & Disassembly References:
+   - Rust crate dependencies (serde, serde_json, image) are governed by their
+     respective open-source licenses (MIT / Apache-2.0) as listed in Cargo.lock.
+   - Public SNES reverse-engineering references SMWDisX (IsoFrieze) and jpdasm
+     (spannerisms) were consulted solely as technical documentation for SNES
+     memory layouts, OAM structures, and hardware tables.

@@ -1,85 +1,268 @@
-# SNES Omni-Mixer Studio
+<p align="center">
+  <img src="docs/media/banner/hero_banner.png" alt="The Legend of Peach: A Mario to the Mushroom Kingdom — Promotional 16-bit Pixel Art Banner" width="100%" />
+</p>
 
-[![Rust](https://img.shields.io/badge/rust-2021%20edition-orange.svg)](https://www.rust-lang.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-brightgreen.svg)](#)
+<p align="center">
+  <sub><em>Promotional 16-bit key artwork created for the repository. Authentic live SNES emulator screenshots are featured immediately below.</em></sub>
+</p>
 
-Application multiplateforme (**Windows, macOS, Linux**) écrite 100 % en **Rust** permettant de **mixer tout avec tout** sur Super Nintendo (`.sfc` / `.smc`) : chargez **N ROMs SNES** (LoROM, HiROM, ExHiROM), choisissez n'importe quelle ROM de base, combinez librement **Héros, Montures, Soldats, Ennemis, Objets, Décors, Palettes, Planches GFX universelles et Audio SPC700 BRR** issus de plusieurs jeux différents, sauvegardez vos recettes en `.json`, et exportez une **ROM hybride jouable `.sfc` + patch `.ips`** avec checksum SNES recalculé.
+<h1 align="center">THE LEGEND OF PEACH</h1>
+<h3 align="center">A Mario to the Mushroom Kingdom</h3>
 
-> **Avertissement légal** : Ce dépôt ne contient **aucune ROM commerciale** ni aucun asset sous copyright. Vous devez fournir vos propres dumps légaux dans le dossier `roms/` (ignoré automatiquement par `.gitignore`). Les tests unitaires passent sans aucune ROM commerciale.
+<p align="center">
+  <strong>Two legendary SNES worlds. One unforgettable adventure.</strong>
+</p>
 
----
-
-## Architecture du Projet
-
-Le workspace Cargo est divisé en deux crates :
-
-1. **`crates/snes-core`** *(moteur de ROM hacking universel, CLI `snes-cli`)* :
-   - **`mixer.rs`** : Moteur universel multi-jeux (`N ROMs → 1 ROM hybride`) — découverte automatique des slots sémantiques haute fidélité et des slots universels bruts (`gfx:0..15`, `pal:0..11`, `audio:0..11`) sur **toute ROM SNES**, Presets 1-clic, Chaos Randomizer déterministe (`--chaos --seed N`), recettes `.json` portables.
-   - **`rom.rs`** : Détection LoROM (`$007FC0`), HiROM (`$00FFC0`), ExHiROM (`$40FFC0`), suppression d'en-têtes SMC 512 octets, recalcul checksum/complément SNES officiel.
-   - **`disasm_dma.rs`** : Scanner de transferts DMA matériels (`$43x0..$43x5` → VRAM/CGRAM/OAM), entropie de Shannon, compression/décompression `LC_LZ2` (BE & LE), désassembleur 65c816.
-   - **`graphics.rs`** : Décodeur/encodeur `2bpp`/`3bpp`/`4bpp`/`8bpp` & Mode 7, palettes `BGR555` ↔ `RGBA8888`, Smart Swap perceptuel (`remap_and_transcode_tiles`).
-   - **`audio.rs`** : Scanner de samples SPC700 BRR (répertoire N-SPC + heuristique), décodeur BRR → PCM/WAV, encodeur & ré-échantillonneur ADPCM respectant les budgets mémoire.
-   - **`universal.rs` / `deconstruct.rs` / `swapper.rs`** : Catalogue universel, déconstruction/reconstruction complète, export `.ips` & historique transactionnel.
-
-2. **`crates/snes-studio`** *(interface graphique native `eframe` / `egui`)* :
-   - Vue **SNES Omni-Mixer Multi-Jeux** : auto-découverte de `roms/`, ajout de ROMs illimitées, bascule de ROM de Base en 1 clic, Presets 1-clic, Chaos Randomizer, matrice complète par slot avec aperçus pixel-art temps réel, import/export `.json`, export `.sfc` + `.ips`, lancement direct dans Mednafen.
-
----
-
-## Démarrage Rapide
-
-### 1. Compiler en mode release
-```bash
-cargo build --release --workspace
-```
-
-### 2. Lancer l'interface graphique (`snes-studio`)
-Déposez vos propres ROMs `.sfc`/`.smc` dans `roms/`, puis lancez :
-```bash
-cargo run --release -p snes-studio
-```
-
-### 3. Utiliser le CLI Multi-Jeux (`snes-cli`)
-```bash
-# Inspecter les slots, sources donneuses et presets de N ROMs
-./target/release/snes-cli --mix-inspect roms/zelda_alttp.sfc roms/super_mario_world.sfc
-
-# Rejouer la recette officielle Super Mario Hyrule dans recipes/
-./target/release/snes-cli --mix --recipe recipes/super_mario_hyrule.json --out super_mario_hyrule.sfc --ips super_mario_hyrule.ips
-
-# Mix personnalisé règle par règle (slots sémantiques ou bruts gfx:N / pal:N / audio:N)
-./target/release/snes-cli --mix \
-  --base roms/super_mario_world.sfc \
-  --donor zelda=roms/zelda_alttp.sfc \
-  --rule hero=zelda:link \
-  --rule enemies=zelda:zelda_soldier \
-  --rule items=zelda:zelda_items_pack \
-  --title "HYRULE MARIO WORLD" \
-  --out hyrule_mario_world.sfc --ips hyrule_mario_world.ips
-
-# Mode Chaos Multi-Jeux déterministe (compatible avec n'importe quelles ROMs SNES)
-./target/release/snes-cli --mix \
-  --base rom_a.sfc --donor b=rom_b.sfc \
-  --chaos --seed 42 --out chaos_mix.sfc
-```
-
-### Recettes d'exemple incluses (`recipes/`)
-- `recipes/super_mario_hyrule.json` — Conversion Totale Super Mario Hyrule (Base Zelda + Héros Mario SMW + Goombas/Ennemis SMW + Objets SMW + Percussions)
-- `recipes/hyrule_mario_world.json` — Crossover Hyrule Mario World (Base SMW + Héros Link & Soldats Zelda + Objets Zelda)
+<p align="center">
+  <a href="https://github.com/pomercier/The-Legend-of-Peach/actions/workflows/ci.yml">
+    <img src="https://github.com/pomercier/The-Legend-of-Peach/actions/workflows/ci.yml/badge.svg" alt="CI Status" />
+  </a>
+  <a href="https://github.com/pomercier/The-Legend-of-Peach/releases">
+    <img src="https://img.shields.io/github/v/release/pomercier/The-Legend-of-Peach?color=e52521&label=Release" alt="Latest Release" />
+  </a>
+  <img src="https://img.shields.io/badge/Platform-SNES%20%2F%202%20MiB%20LoROM-5b459e" alt="Platform: SNES 2 MiB LoROM" />
+  <img src="https://img.shields.io/badge/Engine-Pure%20Rust-dea584?logo=rust&logoColor=white" alt="Built with Rust" />
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT%20(Code)-2ea44f" alt="License: MIT" />
+  </a>
+  <img src="https://img.shields.io/badge/ROMs%20Included-Zero-critical" alt="Zero ROMs Included" />
+</p>
 
 ---
 
-## Tests
+**The Legend of Peach: A Mario to the Mushroom Kingdom** is a fan-made Super Nintendo (SNES) total-conversion crossover that transforms *The Legend of Zelda: A Link to the Past* into a sprawling 16-bit *Super Mario World* action-adventure.
 
-```bash
-cargo test --workspace
-```
+Powered by a pure, headless **Rust** binary transformation engine, the project reads your own legally obtained original backups of *A Link to the Past* and *Super Mario World*, applies **177 verified SNES hardware patches** across graphics, 65c816 assembly, palettes, world tilesets, bosses, and native SPC700 N-SPC music, and outputs a **bit-for-bit deterministic 2 MiB SNES LoROM cartridge image**.
 
-Les tests fonctionnent entièrement sans ROM commerciale (en utilisant les ROMs de démonstration synthétiques intégrées), et activent automatiquement des tests d'intégration supplémentaires si vos propres dumps sont présents dans `roms/`.
+> **Zero Copyrighted ROMs Included:** This repository contains **only original Rust source code, tooling, and documentation**. You must provide your own legal personal backups of both required SNES games to build the crossover locally. See [Required Original Games](#required-original-games).
 
 ---
 
-## Licence
+## Gameplay Showcase
 
-Distribué sous licence **MIT** — voir [LICENSE](LICENSE).
+All screenshots below are **authentic, unretouched captures** from the locally built ROM running live in **Mednafen (`snes_faust` and cycle-accurate `bsnes`)**, integer-scaled `3×` nearest-neighbor (`768×672`) directly from native `256×224` SNES video output.
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/media/screenshots/01_title_screen.png" alt="Title Screen captured in cycle-accurate bsnes" width="100%" /><br />
+      <sub><strong>Custom Title Screen &amp; 3D Intro (bsnes)</strong> — 32-frame 3D Mushroom, Fire Flower &amp; Super Star relics DMA-streamed behind the metallic <em>PEACH</em> logo.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/media/screenshots/02_overworld_mario.png" alt="Mario outside his Mushroom-roof house in the overworld" width="100%" /><br />
+      <sub><strong>Mushroom Kingdom Overworld</strong> — Mario outside his red polka-dot Mushroom Roof house with SMW smiling bushes, Turn-Blocks, patrolling Koopa, and Mario HUD.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/media/screenshots/03_magikoopa_shop.png" alt="Kamek Magikoopa shop selling Super Mushroom, Yoshi Berry, and Black Bob-omb" width="100%" /><br />
+      <sub><strong>Kamek's Toad Town Shop</strong> — Magikoopa shopkeeper stocking Super Mushrooms, Yoshi Berries, and Black Bob-ombs for Gold Coins.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/media/screenshots/04_bowser_castle.png" alt="Bowser's Final Castle with SMW bricks and carved Stone King Bowser Statues" width="100%" /><br />
+      <sub><strong>Bowser's Castle Architecture</strong> — Dungeon brick walls and carved Stone King Bowser Statues replacing Hyrule stonework.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/media/screenshots/07_boss_lemmy_circus.png" alt="Koopaling #5 Lemmy Koopa boss fight in the Ice Palace" width="100%" /><br />
+      <sub><strong>Koopaling #5 — Lemmy Koopa</strong> — Rainbow Mohawk and bouncing circus ball encased in the Ice Palace crystal chamber.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/media/screenshots/09_boss_king_bowser.png" alt="Final Boss Giant King Bowser in the Pyramid" width="100%" /><br />
+      <sub><strong>Final Showdown — Giant King Bowser</strong> — Multi-sheet King Bowser with emerald spiked shell, crimson mane, and exclusive BGR555 palettes.</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
+## Key Features
+
+### World, Characters & Visual Overhaul
+- **Custom 3D Intro & Title Sequence:** 32 pre-rendered 4bpp frames of rotating 3D Super Mushroom, Fire Flower, and Super Star relics streamed via custom 65c816 VBlank DMA routines in LoROM banks `$20..$22`, paired with the giant **`THE LEGEND OF PEACH: A MARIO TO THE MUSHROOM KINGDOM`** title logo and rewritten story crawl.
+- **Playable Hero & Mushroom Kingdom Cast:**
+  - Full playable **Mario** animation set (walk, sword slash, Green Koopa Shell shield, spin attack, and overhead block/bush carry with fixed OAM carry-height offset).
+  - **Princess Peach**, **Uncle Luigi** (rebuilt from Mario's proportions in green with clean OAM head/body alignment), **Toad**, **Yoshi**, and **Kamek (Magikoopa)** shopkeeper.
+- **Mario HUD & Inventory:** Gold Coins, Black Bob-ombs, Bullet Bills, Bill Blaster, Green Koopa Shell, Super Mushroom life containers, and Mushroom / Fire Flower / Super Star quest relics.
+- **16-Sheet SMW Bestiary:** Koopa Troopas (with corrected weapon grip offsets), Goombas, Spinies, Rex, Spike Tops, Piranha Plants, Boos, Dry Bones, Thwomps, and Cheep Cheeps across overworld, caves, water, and dungeons.
+- **9 Worldwide Background Tilesets:** Mario's red polka-dot Mushroom Roof house (`bg:4D`), SMW smiling bushes, Turn-Blocks, Question Blocks, SMW Castle Brick walls (`bg:0D`), and carved Stone King Bowser Statues (`bg:18/19`).
+
+### Complete Boss Roster
+- **All 7 Koopalings:** Morton Koopa Jr. (iron spiked visor & flaming mace tail), Wendy O. Koopa (candy rings), Winged Iggy Koopa, Roy Koopa (pink shades), Lemmy Koopa (rainbow Mohawk & circus ball), Larry Koopa (+12 Mini-Spinies), and Ludwig von Koopa (+Dino Torch & Frost Koopa).
+- **Classic Giant Bosses:** **3 Giant Pokeys** (Desert Palace) and **Giant Wiggler** (Tower of Hera).
+- **Final Boss:** **Giant King Bowser** built across 4 dedicated sprite sheets and 2 exclusive BGR555 palettes.
+
+### Native SNES Hardware Audio (No MSU-1 Required)
+- **10 Native SPC700 N-SPC Tracks:** Super Mario melodies compiled directly into *A Link to the Past*'s native `$D000` N-SPC audio engine — including Title/Overworld, SMW Athletic, Ghost House, Underground, Koopalings/Bowser Boss battles, and Fanfares — running natively on the SNES Sony SPC700 sound chip.
+
+### Pure Rust Reproducible Build Pipeline
+- **Strict SHA-256 Input Enforcement:** Automatically strips optional 512-byte SMC copier headers in memory and verifies exact No-Intro input ROM hashes before touching a byte.
+- **100% Deterministic 2 MiB LoROM Output:** Compiles and builds in under 1 second, automatically audits bank alignment, zero patch overlaps, LC_LZ2 decompression round-trips across all 46 modified sheets, and valid SNES header checksum/complement (`0x464D` / `0xB9B2`).
+
+---
+
+## The Adventure
+
+Storm clouds gather over the Mushroom Kingdom. **Princess Peach** calls out telepathically from the castle dungeon, where **Bowser** and his seven **Koopalings** have seized control of the royal strongholds and twisted the realm into a dark shadow of itself.
+
+Waking in his mushroom-roofed home alongside **Uncle Luigi**, **Mario** takes up blade, Green Koopa Shell shield, Bill Blaster, and Black Bob-ombs — venturing across smiling overworld hills, Toad Town's Magikoopa shop, haunted castles, Bowser-guarded temples, and the Dark World Mushroom Pyramid to defeat every Koopaling and confront **Giant King Bowser** in the final chamber.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- **Rust (stable, 1.88+)** — [rustup.rs](https://rustup.rs/)
+- **Your own legal backups** of the two required original SNES ROMs (see [Required Original Games](#required-original-games))
+- **An accurate SNES emulator** (Mednafen `snes_faust` / `snes`, bsnes, Ares, or RetroArch)
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/pomercier/The-Legend-of-Peach.git
+cd The-Legend-of-Peach
+```
+
+### 2. Verify Your Input ROMs
+
+```bash
+./scripts/build.sh --verify-only /path/to/zelda_fr.sfc /path/to/smw_eu.sfc
+```
+
+### 3. Build the Playable SNES ROM
+
+**Linux / macOS:**
+```bash
+./scripts/build.sh /path/to/zelda_fr.sfc /path/to/smw_eu.sfc build/legend_of_peach.sfc
+```
+
+**Windows (PowerShell) or direct Cargo:**
+```powershell
+cargo run --release --bin snes-cli -- --build-peach `
+  --zelda C:\path\to\zelda_fr.sfc `
+  --smw C:\path\to\smw_eu.sfc `
+  --out build\legend_of_peach.sfc
+```
+
+Your original ROM files are read-only and **never modified**. For full step-by-step instructions, see [`docs/BUILDING.md`](docs/BUILDING.md).
+
+### 4. Launch in an Emulator
+
+```bash
+mednafen -force_module snes_faust build/legend_of_peach.sfc
+```
+
+---
+
+## Required Original Games
+
+Both original ROMs below are verified locally against **No-Intro** SNES catalog digests. Optional 512-byte `.smc` copier headers are stripped automatically in memory before verification.
+
+| Role | Game | Region / Rev | Unheadered Size | Verified SHA-256 (Unheadered) |
+| :--- | :--- | :--- | ---: | :--- |
+| **Base ROM** | *The Legend of Zelda: A Link to the Past* (`Legend of Zelda, The - A Link to the Past (France).sfc`) | France (PAL), Rev 1.0 | `1,048,576` B (1 MiB) | `29a0d5812ccbb4b11bdb55d8f751a2a797b4110bf402ca8ba15eb2bf85db7b39` |
+| **Donor ROM** | *Super Mario World* (`Super Mario World (Europe).sfc`) | Europe (PAL), Rev 1.0 | `524,288` B (512 KiB) | `b5be1dba3012b6811a5660fbf2981cb23cdd1e48f845a42df00f0f55b19f0392` |
+
+> Full verification details (SHA-1, CRC32, OS checksum commands, expected output SHA-256 `32540c4629c6b797f6933c7966a419fd959a3f711f36347f4348ceb2fa85b99c`, and why exact revisions are strictly enforced) are documented in [`docs/ROM_REQUIREMENTS.md`](docs/ROM_REQUIREMENTS.md).
+
+---
+
+## How It Works
+
+```text
+  [Zelda ALTTP (FR PAL)] ──┐
+                           ├──► SHA-256 Verifier ──► Planar Tile & Palette Transcoder
+  [Super Mario World (EU)] ┘        (rom.rs)          + LC_LZ2 Compressor (46 sheets)
+                                                      + 65c816 3D Intro & OAM Patches
+                                                      + Native SPC700 N-SPC Compiler
+                                                                   │
+                                                                   ▼
+                                                      LoROM 2 MiB Allocator ($00..$3F)
+                                                      + Hardware Integrity Audit
+                                                      + SNES Checksum (0x464D / 0xB9B2)
+                                                                   │
+                                                                   ▼
+                                                   [build/legend_of_peach.sfc] (Local)
+```
+
+Read the full technical deep-dive — including the 2 MiB LoROM bank map, reserved `$20..$22` 3D DMA intro buffers, protected world-map zones, and post-build audit checks — in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+---
+
+## More Screenshots — Dungeons & Bosses
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/media/screenshots/05_dark_world_pyramid.png" alt="Dark World Mushroom Pyramid with green carved Stone King Bowser Statues" width="100%" /><br />
+      <sub><strong>Dark World Mushroom Pyramid</strong> — Mario standing between carved emerald Stone Bowser Statues.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/media/screenshots/06_boss_morton_koopa.png" alt="Koopaling #1 Morton Koopa Jr. boss battle" width="100%" /><br />
+      <sub><strong>Koopaling #1 — Morton Koopa Jr.</strong> — Iron spiked visor, spiked shell, and flaming mace tail in the Palace of Darkness.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/media/screenshots/08_boss_wiggler.png" alt="Giant Wiggler boss battle in Tower of Hera" width="100%" /><br />
+      <sub><strong>Tower of Hera — Giant Wiggler</strong> — Multi-segmented SMW Wiggler charging across the tower summit.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/media/screenshots/10_boss_ludwig_trinity.png" alt="Koopaling #7 Ludwig von Koopa with Dino Torch and Frost Koopa" width="100%" /><br />
+      <sub><strong>Koopaling #7 — Ludwig von Koopa</strong> — Turtle Rock trinity with Dino Torch (fire) and Frost Koopa (ice) heads.</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
+## Compatibility & SNES Hardware Status
+
+| Target | Status | Notes |
+| :--- | :--- | :--- |
+| **Mednafen (`snes_faust`)** | **Verified** | Live-tested across title screen, overworld, shops, Dark World, castles, all 7 Koopalings, Pokeys, Wiggler, and Giant King Bowser. |
+| **Mednafen (`snes` / bsnes-accuracy)** | **Verified** | Cycle-accurate PPU/DMA verification of the 3D intro, title logo, and gameplay. |
+| **bsnes / Ares / RetroArch (`bsnes`, `snes9x`)** | **Expected Compatible** | Standard 2 MiB LoROM (`0x20`, PAL 50 Hz, no enhancement chips, no MSU-1). |
+| **Real SNES / Super Famicom / FXPAK Pro** | **Architecturally Compliant (Untested on Physical Hardware)** | Strictly respects LoROM 32 KiB single-bank boundaries, valid checksum/complement (`0x464D` / `0xB9B2`), OAM/VRAM/CGRAM/SPC700 limits, and clean DMA timing. Community physical-hardware test reports are very welcome! |
+
+---
+
+## Roadmap
+
+Items below are **planned future milestones** (not yet implemented in `v0.1.0`):
+
+- [ ] **Multi-Region Support:** Add verified offset tables for *The Legend of Zelda: A Link to the Past (USA)* (NTSC 60 Hz, English dialogue) and *Super Mario World (USA)*.
+- [ ] **Overworld Map & Additional Worlds:** Expand overworld world-map graphics, additional interior shops/houses, and Dark World palettes.
+- [ ] **Physical Hardware Verification:** Test and document behavior on original SNES/Super Famicom consoles via FXPAK Pro / SD2SNES.
+- [ ] **Expanded N-SPC Soundtrack:** Add additional native SPC700 Super Mario World arrangements for remaining dungeon and sanctuary themes.
+
+---
+
+## Credits & References
+
+- **Author & Lead Developer:** [`pomercier`](https://github.com/pomercier)
+- **SNES Reverse-Engineering References:**
+  - [`SMWDisX`](https://github.com/IsoFrieze/SMWDisX) by IsoFrieze — *Super Mario World* disassembly reference
+  - [`jpdasm`](https://github.com/spannerisms/jpdasm) by spannerisms — *The Legend of Zelda: A Link to the Past* disassembly reference
+- **ROM Verification Standards:** No-Intro SNES preservation catalog
+
+---
+
+## Legal Notice
+
+**The Legend of Peach: A Mario to the Mushroom Kingdom** is an unofficial, non-commercial fan-made project created for educational, reverse-engineering, and retro-gaming preservation purposes.
+
+*The Legend of Zelda: A Link to the Past*, *Super Mario World*, *Super Nintendo Entertainment System (SNES)*, Mario, Luigi, Princess Peach, Bowser, the Koopalings, and all related trademarks, characters, artwork, and original game assets are the sole property of **Nintendo Co., Ltd.** This project is **not** affiliated with, endorsed by, or sponsored by Nintendo.
+
+- Original Rust source code, scripts, and documentation in this repository are licensed under the [MIT License](LICENSE).
+- **No copyrighted ROM files or binary ROM patches containing Nintendo assets are hosted or distributed here.** Users must build locally from their own legally obtained backups.
+
+---
+
+## Support & Contributions
+
+- Hit a build or emulator issue? Check [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) or open a [Bug Report](.github/ISSUE_TEMPLATE/bug_report.md).
+- Want to contribute code, multi-region offset maps, or hardware tests? Read [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- Release history is tracked in [`CHANGELOG.md`](CHANGELOG.md), and security/integrity practices in [`SECURITY.md`](SECURITY.md).

@@ -2,24 +2,33 @@ name: CI
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
+
+permissions:
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test:
-    name: Build & Test
+  safety-audit:
+    name: Repository Safety Audit (Zero ROMs / Secrets)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Install system dependencies (eframe / egui)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
+      - name: Run repository safety audit
+        run: python3 scripts/check_repo_safety.py
+
+  rust-ci:
+    name: Rust Format, Clippy, Test & Release Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -29,11 +38,14 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Cargo Check
-        run: cargo check --workspace --all-targets
+      - name: Check formatting
+        run: cargo fmt --all -- --check
 
-      - name: Cargo Test
+      - name: Clippy lints
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Run test suite (ROM-free)
         run: cargo test --workspace --all-targets
 
-      - name: Cargo Build Release
+      - name: Build release binary
         run: cargo build --release --workspace
