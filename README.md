@@ -40,7 +40,7 @@ Powered by a pure, headless **Rust** binary transformation engine, the project r
 
 ## Gameplay Showcase
 
-All screenshots below are **authentic, unretouched captures** from the locally built `v0.2.0` ROM running live in **Mednafen (`snes_faust` and cycle-accurate `bsnes`)**, integer-scaled `3×` nearest-neighbor (`768×672`) directly from native `256×224` SNES video output.
+All screenshots below are **authentic, unretouched captures** from the locally built `v0.3.0` ROM running live in **Mednafen (`snes_faust` and cycle-accurate `bsnes`)**, integer-scaled `3×` nearest-neighbor (`768×672`) directly from native `256×224` SNES video output.
 
 <table>
   <tr>
@@ -167,7 +167,7 @@ Both original ROMs below are verified locally against **No-Intro** SNES catalog 
 | **Base ROM** | *The Legend of Zelda: A Link to the Past* (`Legend of Zelda, The - A Link to the Past (France).sfc`) | France (PAL), Rev 1.0 | `1,048,576` B (1 MiB) | `29a0d5812ccbb4b11bdb55d8f751a2a797b4110bf402ca8ba15eb2bf85db7b39` |
 | **Donor ROM** | *Super Mario World* (`Super Mario World (Europe).sfc`) | Europe (PAL), Rev 1.0 | `524,288` B (512 KiB) | `b5be1dba3012b6811a5660fbf2981cb23cdd1e48f845a42df00f0f55b19f0392` |
 
-> Full verification details (SHA-1, CRC32, OS checksum commands, expected `v0.2.0` output SHA-256 `c700d1d2b60f50e789e2214fa8528c0c3af132ebc8af35a2f7ced5aa16735edb`, and why exact revisions are strictly enforced) are documented in [`docs/ROM_REQUIREMENTS.md`](docs/ROM_REQUIREMENTS.md).
+> Full verification details (SHA-1, CRC32, OS checksum commands, expected `v0.3.0` output SHA-256 `fe7390a1c4e58e219d8e6f023cc4f09ce6e7e6d5164bf1bb30b2dbf1c2828785`, and why exact revisions are strictly enforced) are documented in [`docs/ROM_REQUIREMENTS.md`](docs/ROM_REQUIREMENTS.md).
 
 ---
 
@@ -247,13 +247,13 @@ Read the full technical deep-dive — including the 2 MiB LoROM bank map, reserv
 | **Mednafen (`snes_faust`)** | **Verified** | Live-tested across title screen, Start menu, overworld, Kamek's Shop, Dark World, castles, Eastern Palace Chargin' Chucks, Castle Tower Bowser, all 7 Koopalings, Pokeys, Wiggler, and Giant King Bowser (with verified stereo SPC700 audio RMS). |
 | **Mednafen (`snes` / bsnes-accuracy)** | **Verified** | Cycle-accurate PPU/DMA/SPC700 verification of the 3D intro, title logo, Final Boss Giant King Bowser combat, dialogue, and Final Bowser N-SPC soundtrack. |
 | **bsnes / Ares / RetroArch (`bsnes`, `snes9x`)** | **Expected Compatible** | Standard 2 MiB LoROM (`0x20`, PAL 50 Hz, no enhancement chips, no MSU-1). |
-| **Real SNES / Super Famicom / FXPAK Pro** | **Architecturally Compliant (Untested on Physical Hardware)** | Strictly respects LoROM 32 KiB single-bank boundaries, valid checksum/complement (`0xEE72` / `0x118D`), OAM/VRAM/CGRAM/SPC700 limits, and clean DMA timing. Community physical-hardware test reports are very welcome! |
+| **Real SNES / Super Famicom / FXPAK Pro** | **Architecturally Compliant (Untested on Physical Hardware)** | Strictly respects LoROM 32 KiB single-bank boundaries, valid checksum/complement (`0x2EC1` / `0xD13E`), OAM/VRAM/CGRAM/SPC700 limits, and clean DMA timing. Community physical-hardware test reports are very welcome! |
 
 ---
 
 ## Roadmap
 
-Items below are **planned future milestones** (not yet implemented in `v0.2.0`):
+Items below are **planned future milestones** (not yet implemented in `v0.3.0`):
 
 - [ ] **Multi-Region Support:** Add verified offset tables for *The Legend of Zelda: A Link to the Past (USA)* (NTSC 60 Hz, English dialogue) and *Super Mario World (USA)*.
 - [ ] **Overworld World Map & Title Landscape:** Replace remaining overworld world-map graphics and Title Screen background mountains with Yoshi's Island hills.

@@ -1923,6 +1923,85 @@ fn build_bowser_hammer_head_16x16(angle: usize) -> [[u8; 16]; 16] {
     c.slice_16x16(0, 0)
 }
 
+/// Convert 32x32 SMW Super Star pixel art into 16 8x8 3bpp tiles and write into row 3 (tiles 48..63) of Sheet 0x19.
+/// In vanilla ALTTP, row 3 of Sheet 0x19 (PC 0x092A72) is completely unused (all 16 tiles are empty).
+pub fn write_smw_golden_super_star_floor_tiles(raw_17: &mut [u8]) {
+    const LEFT_HALF: [&str; 32] = [
+        "................", // 0
+        "...............1", // 1
+        "..............15", // 2
+        ".............155", // 3
+        "............1544", // 4
+        "...........15444", // 5
+        "..........154444", // 6
+        ".........1544444", // 7
+        "1111111115444444", // 8
+        ".155555555444444", // 9
+        "..15444444444444", // 10
+        "...1544444444444", // 11
+        "....154444455444", // 12 eye shine (5)
+        ".....15444411444", // 13 eye (1)
+        "......1544411444", // 14 eye (1)
+        ".......154411444", // 15 eye (1)
+        "......1544411444", // 16 eye (1)
+        ".....15444444444", // 17
+        "....154444444444", // 18
+        "...1544444444441", // 19
+        "..1544444444441.", // 20
+        ".1544444444441..", // 21
+        "1544444444441...", // 22
+        "154444444441....", // 23
+        "15444444431.....", // 24
+        ".1544444321.....", // 25
+        "..15444321......", // 26
+        "...154321.......", // 27
+        "....1521........", // 28
+        ".....11.........", // 29
+        "................", // 30
+        "................", // 31
+    ];
+
+    let mut star = [[0u8; 32]; 32];
+    for y in 0..32 {
+        let l = LEFT_HALF[y].as_bytes();
+        for x in 0..16 {
+            let v = match l[x] {
+                b'1' => 1,        // Black outline & pupils (Palette 3 color 1)
+                b'4' => 2,        // Bright golden yellow body (Palette 3 color 2 #F8D048)
+                b'2' | b'3' => 3, // Warm gold-orange shadow (Palette 3 color 3 #E89868)
+                b'5' => 4,        // Pure white eye shine & highlights (Palette 3 color 4 #F8F8F8)
+                _ => 0,           // Transparent emerald floor shows through
+            };
+            star[y][x] = v;
+            star[y][31 - x] = v;
+        }
+    }
+
+    for star_ty in 0..4 {
+        for star_tx in 0..4 {
+            let tile_idx = star_ty * 4 + star_tx;
+            let t_base = (48 + tile_idx) * 24;
+            if t_base + 24 <= raw_17.len() {
+                for y in 0..8 {
+                    let mut p0 = 0u8;
+                    let mut p1 = 0u8;
+                    let mut p2 = 0u8;
+                    for x in 0..8 {
+                        let v = star[star_ty * 8 + y][star_tx * 8 + x];
+                        let bit = 7 - x;
+                        p0 |= (v & 1) << bit;
+                        p1 |= ((v >> 1) & 1) << bit;
+                        p2 |= ((v >> 2) & 1) << bit;
+                    }
+                    raw_17[t_base + y * 2] = p0;
+                    raw_17[t_base + y * 2 + 1] = p1;
+                    raw_17[t_base + 16 + y] = p2;
+                }
+            }
+        }
+    }
+}
+
 fn patch_boss_ganon_final_king_bowser(
     rom_z: &mut SnesRom,
     donor: &SnesRom,
@@ -2153,6 +2232,83 @@ fn patch_boss_ganon_final_king_bowser(
             bowser_pal6,
             "Palette Exclusive Roi Bowser Final Tête/Bras (Aux2 0x0D @ 0x0DD596)".into(),
             SwapKind::PaletteBgr555 { color_count: 7 },
+        )?;
+        ops += 1;
+    }
+
+    // 6. Final Bowser Pyramid (Room 0x00) Golden SMW Super Star Floor Emblem!
+    //    Replaces the vanilla Triforce floor emblem with an authentic 32x32 Golden SMW Super Star.
+    //    - Switches Room 0x00 RoomBlockset slot 3 (0x005D66) from 0x17 (stairs/railing) to 0x19 (clean sheet with 16 empty tiles on row 3!).
+    //    - Injects the 32x32 Golden SMW Super Star into row 3 of Sheet 0x19 without touching any shared dungeon tiles.
+    //    - Uses Palette 3 (0x0C00) in Room 0x00, which holds the authentic gold, orange, black, and white colors!
+    if 0x005D66 < rom_z.data.len() && rom_z.data[0x005D66] == 0x17 {
+        sess.swap_custom_bytes(
+            rom_z,
+            0x005D66,
+            0x005D66,
+            vec![0x19],
+            "Pyramide Bowser Blockset (0x005D66) : Sheet 0x19 (row 3 libre) pour Étoile SMW".into(),
+            SwapKind::CodePatch { byte_count: 1 },
+        )?;
+        ops += 1;
+    }
+
+    if patch_alttp_raw_sheet_pub(
+        rom_z,
+        sess,
+        0x19,
+        "PYRAMIDE BOWSER (Room 0x00) ← Étoile d'Or SMW Géante 32x32 au Sol (Sheet 0x19 row 3)",
+        free_cursor,
+        free_end,
+        &|raw| {
+            write_smw_golden_super_star_floor_tiles(raw);
+        },
+    )? {
+        ops += 1;
+    }
+
+    // Tiledata at PC 0x004008: 16 words column-major pointing to Palette 3 (0x0C00), VRAM tiles 0x1F0..0x1FF
+    let star_td_bytes: Vec<u8> = [
+        0x0DF0u16, 0x0DF4, 0x0DF8, 0x0DFC, // Col 0
+        0x0DF1, 0x0DF5, 0x0DF9, 0x0DFD, // Col 1
+        0x0DF2, 0x0DF6, 0x0DFA, 0x0DFE, // Col 2
+        0x0DF3, 0x0DF7, 0x0DFB, 0x0DFF, // Col 3
+    ]
+    .iter()
+    .flat_map(|w| w.to_le_bytes())
+    .collect();
+
+    if 0x004008 + 32 <= rom_z.data.len() {
+        sess.swap_custom_bytes(
+            rom_z,
+            0x004008,
+            0x004008,
+            star_td_bytes,
+            "Pyramide Bowser Sol : Tiledata 4x4 Étoile SMW (0x004008)".into(),
+            SwapKind::CodePatch { byte_count: 32 },
+        )?;
+        ops += 1;
+    }
+
+    // Centering routine at PC 0x00A7F0:
+    // LDA $08 : CLC : ADC #$00FE : TAY : JMP $97ED + 15 NOPs
+    let star_routine: Vec<u8> = vec![
+        0xA5, 0x08, // LDA $08
+        0x18, // CLC
+        0x69, 0xFE, 0x00, // ADC #$00FE
+        0xA8, // TAY
+        0x4C, 0xED, 0x97, // JMP $97ED
+        0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA,
+    ];
+
+    if 0x00A7F0 + 25 <= rom_z.data.len() {
+        sess.swap_custom_bytes(
+            rom_z,
+            0x00A7F0,
+            0x00A7F0,
+            star_routine,
+            "Pyramide Bowser Sol : Routine Centrage Étoile SMW (0x00A7F0)".into(),
+            SwapKind::CodePatch { byte_count: 25 },
         )?;
         ops += 1;
     }

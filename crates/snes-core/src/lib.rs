@@ -921,18 +921,18 @@ mod tests {
             );
             assert_eq!(
                 &target.data[0x0012F7..0x0012FC],
-                &[0x22, 0x00, 0x80, 0x22, 0x60],
-                "NMI 3D DMA hook at $00:92F7"
+                &[0xAD, 0x0C, 0x1F, 0xF0, 0x2E],
+                "NMI 3D DMA at $00:92F7 must stay native for 100% fluid intro rendering"
             );
             assert_eq!(
                 &target.data[0x07027C..0x070281],
-                &[0x22, 0x80, 0x80, 0x22, 0xEA],
-                "Title Screen 3D Step hook at $0E:827C"
+                &[0xA9, 0x01, 0x8D, 0x00, 0x1F],
+                "Title Screen 3D Step at $0E:827C must stay native (zero tile noise)"
             );
             assert_eq!(
                 &target.data[0x070906..0x07090B],
-                &[0x22, 0x80, 0x80, 0x22, 0xEA],
-                "Intro Scroll 3D Step hook at $0E:8906"
+                &[0xA9, 0x01, 0x8D, 0x00, 0x1F],
+                "Intro Scroll 3D Step at $0E:8906 must stay native"
             );
             assert_eq!(
                 target.data[0x073ABB], 0x4F,
@@ -1031,8 +1031,8 @@ mod tests {
             );
             assert_eq!(
                 target.data[0x02CAEA + 16],
-                2,
-                "Koopa Left/Right sword Y must be raised from 8 -> 2 (in Koopa's hand!)"
+                7,
+                "Koopa Left/Right sword Y must be centered at 7 (firmly in Koopa's hand!)"
             );
             assert_eq!(
                 target.data[0x02B16E], 12,
@@ -1261,5 +1261,66 @@ mod tests {
         let (demo_a, demo_b) = generate_demo_rom_pair();
         assert!(super::rom::verify_legend_of_peach_inputs(&demo_a, &demo_b, false).is_err());
         assert!(super::rom::verify_legend_of_peach_inputs(&demo_a, &demo_b, true).is_ok());
+    }
+
+    #[test]
+    fn test_kamek_shop_mini_mushroom_in_087000() {
+        let mut buf = vec![0u8; 0x600];
+        super::mario_ui::patch_smw_live_weapons_087000(&mut buf);
+        // Mini mushroom at (9,2) -> tile # = 2*16 + 9 = 41 -> offset 41*24 = 984
+        let t41 = &buf[41 * 24..42 * 24];
+        let nz = t41.iter().filter(|&&b| b != 0).count();
+        assert!(
+            nz >= 12,
+            "Mini Mushroom at (9,2) must have rich 3bpp pixel data"
+        );
+        // Mini berry at (A,2) -> tile # = 2*16 + 10 = 42
+        let t42 = &buf[42 * 24..43 * 24];
+        let nz42 = t42.iter().filter(|&&b| b != 0).count();
+        assert!(
+            nz42 >= 10,
+            "Mini Berry at (A,2) must have rich 3bpp pixel data"
+        );
+    }
+
+    #[test]
+    fn test_room00_star_floor_and_raw0e_untouched() {
+        let mut raw17 = vec![0u8; 0x600];
+        super::mario_bosses::write_smw_golden_super_star_floor_tiles(&mut raw17);
+        // Rows 0..2 (tiles 0..47) must be completely untouched (zero)
+        assert!(
+            raw17[0..48 * 24].iter().all(|&b| b == 0),
+            "Rows 0..2 must remain untouched"
+        );
+        // Row 3 (tiles 48..63) holds the 16 tiles of the 32x32 SMW Super Star
+        let star_nz = raw17[48 * 24..64 * 24].iter().filter(|&&b| b != 0).count();
+        assert!(
+            star_nz > 100,
+            "Row 3 must contain the full 32x32 SMW Super Star floor emblem"
+        );
+    }
+
+    #[test]
+    fn test_multi_region_known_rom_catalog() {
+        use super::rom::{identify_known_rom, RomRole, KNOWN_ROMS};
+        assert!(
+            KNOWN_ROMS.len() >= 7,
+            "Catalog must define at least 7 official revisions"
+        );
+
+        // Check each entry in KNOWN_ROMS has valid metadata
+        for entry in KNOWN_ROMS {
+            assert!(!entry.title.is_empty());
+            assert!(!entry.region.is_empty());
+            assert_eq!(entry.sha256.len(), 64);
+            match entry.role {
+                RomRole::BaseZelda => assert_eq!(entry.size_bytes, 1_048_576),
+                RomRole::DonorSMW => assert_eq!(entry.size_bytes, 524_288),
+            }
+        }
+
+        // Verify that arbitrary data is not recognized
+        let fake_rom = vec![0u8; 1_048_576];
+        assert!(identify_known_rom(&fake_rom).is_none());
     }
 }

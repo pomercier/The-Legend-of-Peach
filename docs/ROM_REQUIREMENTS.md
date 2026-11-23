@@ -94,16 +94,18 @@ Applying these patches to an unverified revision would corrupt code or graphics,
 
 ## Expected Reproducible Output ROM Signature
 
-When built with release **`v0.2.0`** from the two verified ROMs above, the locally generated output ROM is **100% deterministic (bit-for-bit identical)** across machines and operating systems:
+When built with release **`v0.3.0`** from the two verified ROMs above, the locally generated output ROM is **100% deterministic (bit-for-bit identical)** across machines and operating systems:
 
-| Field | Deterministic Output Value (`v0.2.0`) |
+| Field | Deterministic Output Value (`v0.3.0`) |
 | :--- | :--- |
 | **Output Size** | `2,097,152` bytes (`2 MiB`, LoROM expanded from `1 MiB`) |
 | **Internal Header Title** | `THE LEGEND OF PEACH` |
-| **SNES Checksum / Complement** | `0xEE72` / `0x118D` (Valid) |
-| **CRC32** | `DA56A034` |
-| **SHA-256** | `c700d1d2b60f50e789e2214fa8528c0c3af132ebc8af35a2f7ced5aa16735edb` |
+| **SNES Checksum / Complement** | `0x2EC1` / `0xD13E` (Valid) |
+| **CRC32** | `0DC79327` |
+| **MD5** | `2eb60aa2c2a6ef0e5ed484a839a9ad34` |
+| **SHA-1** | `8f5bfccf94ef528059f714f9a63447e5e108157e` |
+| **SHA-256** | `fe7390a1c4e58e219d8e6f023cc4f09ce6e7e6d5164bf1bb30b2dbf1c2828785` |
 
-*(Previous release `v0.1.0` SHA-256: `32540c4629c6b797f6933c7966a419fd959a3f711f36347f4348ceb2fa85b99c`, Checksum `0x464D` / `0xB9B2`.)*
+*(Previous release `v0.2.0` SHA-256: `c700d1d2b60f50e789e2214fa8528c0c3af132ebc8af35a2f7ced5aa16735edb`, Checksum `0xEE72` / `0x118D`; `v0.1.0` SHA-256: `32540c4629c6b797f6933c7966a419fd959a3f711f36347f4348ceb2fa85b99c`.)*
 
 > **Never commit, upload, or share the generated ROM file.** Both `roms/` and `build/` as well as all `.sfc`/`.smc` files are ignored by `.gitignore`.

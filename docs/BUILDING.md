@@ -95,16 +95,16 @@ After building, `snes-cli` automatically runs the internal hardware integrity au
 - Single-bank 32 KiB alignment and full LC_LZ2 decompression integrity across all 46 modified graphics sheets
 - Protected world-map table integrity (`0x08A000..0x08A2FF`) and 32-frame 3D intro buffer (`$20..$22`)
 
-Expected output summary for `v0.2.0`:
+Expected output summary for `v0.3.0`:
 
 ```text
-Output ROM      : build/legend_of_peach.sfc (2097152 bytes, 2 MiB LoROM)
+Output ROM      : build/legend_of_peach_mario_kingdom.sfc (2097152 bytes, 2 MiB LoROM)
 Internal Title  : 'THE LEGEND OF PEACH'
-Hardware Ops    : 182 patches across 18 rules
+Hardware Ops    : 156 patches across 17 rules
 Bank Audit      : 46 sheets verified, 8 relocated in $23..$3F (0 overlaps)
-SNES Checksum   : 0xEE72 (Complement: 0x118D, Valid: true)
-Output CRC32    : 0xDA56A034
-Output SHA-256  : c700d1d2b60f50e789e2214fa8528c0c3af132ebc8af35a2f7ced5aa16735edb
+SNES Checksum   : 0x2EC1 (Complement: 0xD13E, Valid: true)
+Output CRC32    : 0x0DC79327
+Output SHA-256  : fe7390a1c4e58e219d8e6f023cc4f09ce6e7e6d5164bf1bb30b2dbf1c2828785
 ```
 
 You can also confirm bit-for-bit determinism yourself by running the build twice into two paths and comparing `sha256sum`.

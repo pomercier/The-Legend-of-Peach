@@ -3261,17 +3261,23 @@ fn apply_rule_to_zelda(
                         ops += 1;
                     }
                     // Verified World Map OBJ Sheet (0x088E00): (0,2)=Super Star, (4,2)=Yoshi Egg, (6,2)=Mario Head Red Cap!
+                    // Also cols 8..15 in rows 0..1 = 4-frame sparkling SMW Super Star cursor (File Select & Game Over)!
                     let mut hud = rom_zelda.data[0x088E00..0x089400].to_vec();
                     let wmap_mario = crate::mario_ui::build_smw_world_map_mario_head_16x16();
+                    let cursor_frames = crate::mario_ui::build_smw_sparkling_star_cursor_frames();
                     write_3bpp_16x16(&mut hud, 0, 2, &star);
                     write_3bpp_16x16(&mut hud, 4, 2, &egg);
                     write_3bpp_16x16(&mut hud, 6, 2, &wmap_mario);
+                    write_3bpp_16x16(&mut hud, 8, 0, &cursor_frames[0]);
+                    write_3bpp_16x16(&mut hud, 10, 0, &cursor_frames[1]);
+                    write_3bpp_16x16(&mut hud, 12, 0, &cursor_frames[2]);
+                    write_3bpp_16x16(&mut hud, 14, 0, &cursor_frames[3]);
                     session.swap_custom_bytes(
                         rom_zelda,
                         0x088E00,
                         0x088E00,
                         hud,
-                        format!("Icônes Carte du Monde 0x088E00 ($60/$64/$66) ← {}:Étoile Super Mario, Œuf Yoshi & Tête Mario", rule.donor_alias),
+                        format!("Icônes Carte du Monde & Curseur Étoile Scintillante 0x088E00 ← {}:Étoile, Œuf, Tête Mario & Étoiles 4-frames", rule.donor_alias),
                         SwapKind::GraphicsTiles {
                             format: TileFormat::Bpp3,
                             tile_count: 64,

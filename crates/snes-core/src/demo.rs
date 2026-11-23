@@ -1232,31 +1232,9 @@ pub fn apply_mario_into_zelda_alttp_swap(
     };
 
     let make_carry_side_head = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
-        let mut out = *base;
-        // Clean cap top (ZERO horns at y=0..2!) + single crisp white SMW glove in front of visor (y=3..6, x=11..15)
-        out[3][12] = 2;
-        out[3][13] = 2;
-        out[3][14] = 2;
-        out[4][11] = 2;
-        out[4][12] = 1;
-        out[4][13] = 1;
-        out[4][14] = 1;
-        out[4][15] = 2;
-        out[5][11] = 2;
-        out[5][12] = 1;
-        out[5][13] = 1;
-        out[5][14] = 1;
-        out[5][15] = 2;
-        out[6][12] = 2;
-        out[6][13] = 3;
-        out[6][14] = 2;
-        out[7][12] = 2;
-        out[7][13] = 9;
-        out[7][14] = 2;
-        out[8][12] = 2;
-        out[8][13] = 7;
-        out[8][14] = 2;
-        out
+        // Keep Mario's authentic SMW side profile (cap, visor, nose, mustache) 100% clean and unobstructed
+        // (ZERO floating detached gloves in front of his face/visor!), while raised arms connect from body up to held block.
+        *base
     };
 
     // Clean Front Stand / Walk Mario body: replaces SMW's vine-climb/peace-sign shoulder white gloves

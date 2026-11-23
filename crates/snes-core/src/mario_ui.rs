@@ -1261,138 +1261,6 @@ pub fn patch_dialog_mushroom_and_french_text(
         ops += 1;
     }
 
-    // 2. Patch French Heart Pieces & Heart Container Dialog Strings IN-PLACE (exact byte length preserved!)
-    //    Verified tokens: EF="Tu as trouvé ", E4="un", A2="ch", CB="on", A6="de", C1="ment", 95=" d",
-    //                     B5="ie", BC="le ", D6="ra", 75=<L2>, 76=<L3>, 7E=<WAIT>, 73=<SCR>, 7F=<END>
-    let patches: &[(usize, usize, Vec<u8>, &str)] = &[
-        // 0x0E7461 (36B exact): "Tu as trouvé un fragment de<L2>champignon !<L3>            [52][53]<END>"
-        (
-            0x0E7461,
-            36,
-            vec![
-                0xEF, 0xE4, 0x59, 0x1F, 0xD6, 0x20, 0xC1, 0x95, 0x1E,
-                0x75, // "Tu as trouvé un fragment de\n" (10B)
-                0xA2, 0x1A, 0x26, 0x29, 0x22, 0x20, 0x27, 0xCB, 0x59, 0x3E,
-                0x76, // "champignon !\n" (11B)
-                0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59,
-                0x59, // 12 spaces (12B)
-                0x52, 0x53, 0x7F, // [52][53]<END> (3B) => Total = 36B!
-            ],
-            "Dialogue FR Fragment de Champignon 1/4 (0x0E7461)",
-        ),
-        // 0x0E7485 (36B exact): 2/4
-        (
-            0x0E7485,
-            36,
-            vec![
-                0xEF, 0xE4, 0x59, 0x1F, 0xD6, 0x20, 0xC1, 0x95, 0x1E, 0x75, 0xA2, 0x1A, 0x26, 0x29,
-                0x22, 0x20, 0x27, 0xCB, 0x59, 0x3E, 0x76, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59,
-                0x59, 0x59, 0x59, 0x59, 0x59, 0x54, 0x53, 0x7F,
-            ],
-            "Dialogue FR Fragment de Champignon 2/4 (0x0E7485)",
-        ),
-        // 0x0E74A9 (36B exact): 3/4
-        (
-            0x0E74A9,
-            36,
-            vec![
-                0xEF, 0xE4, 0x59, 0x1F, 0xD6, 0x20, 0xC1, 0x95, 0x1E, 0x75, 0xA2, 0x1A, 0x26, 0x29,
-                0x22, 0x20, 0x27, 0xCB, 0x59, 0x3E, 0x76, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59,
-                0x59, 0x59, 0x59, 0x59, 0x59, 0x55, 0x56, 0x7F,
-            ],
-            "Dialogue FR Fragment de Champignon 3/4 (0x0E74A9)",
-        ),
-        // 0x0E74CD (73B exact): "Tu as trouvé une réserve de<L2>champignon !<L3>        [57][58]<WAIT><SCR>Ton énergie vitale a<SCR>augmenté d'un champignon.<END>"
-        (
-            0x0E74CD,
-            73,
-            vec![
-                0xEF, 0xE4, 0x1E, 0x59, 0x2B, 0x67, 0x2C, 0x1E, 0x2B, 0x2F, 0x1E, 0x59,
-                0xA6, // "Tu as trouvé une réserve de" (13B)
-                0x75, 0xA2, 0x1A, 0x26, 0x29, 0x22, 0x20, 0x27, 0xCB, 0x59,
-                0x3E, // "<L2>champignon !" (11B)
-                0x76, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59,
-                0x59, // "<L3>" + 8 spaces (9B)
-                0x57, 0x58, 0x7E, 0x73, // [57][58]<WAIT><SCR> (4B)
-                0x13, 0xCB, 0x59, 0x67, 0x27, 0x1E, 0x2B, 0x20, 0xB5, 0x59, 0x2F, 0x22, 0x2D, 0x1A,
-                0xBC, 0x1A, // "Ton énergie vitale a" (16B)
-                0x73, // <SCR> (1B)
-                0x1A, 0x2E, 0x20, 0xC1, 0x67, 0x95, 0x51, 0xE4, 0x59, 0xA2, 0x1A, 0x26, 0x29, 0x22,
-                0x20, 0x27, 0xCB, 0x41, // "augmenté d'un champignon." (18B)
-                0x7F, // <END> (1B) => 13+11+9+4+16+1+18+1 = 73B!
-            ],
-            "Dialogue FR Réserve de Champignon 1 (0x0E74CD)",
-        ),
-        // 0x0E7516 (72B exact, Sanctuaire & Boss!): "Tu as trouvé une réserve de<L2>champignon !<L3>       [57][58]<WAIT><SCR>Ton énergie vitale a<SCR>augmenté d'un champignon!<END>"
-        (
-            0x0E7516,
-            72,
-            vec![
-                0xEF, 0xE4, 0x1E, 0x59, 0x2B, 0x67, 0x2C, 0x1E, 0x2B, 0x2F, 0x1E, 0x59,
-                0xA6, // 13B
-                0x75, 0xA2, 0x1A, 0x26, 0x29, 0x22, 0x20, 0x27, 0xCB, 0x59, 0x3E, // 11B
-                0x76, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, 0x59, // "<L3>" + 7 spaces (8B)
-                0x57, 0x58, 0x7E, 0x73, // 4B
-                0x13, 0xCB, 0x59, 0x67, 0x27, 0x1E, 0x2B, 0x20, 0xB5, 0x59, 0x2F, 0x22, 0x2D, 0x1A,
-                0xBC, 0x1A, // 16B
-                0x73, // 1B
-                0x1A, 0x2E, 0x20, 0xC1, 0x67, 0x95, 0x51, 0xE4, 0x59, 0xA2, 0x1A, 0x26, 0x29, 0x22,
-                0x20, 0x27, 0xCB, 0x3E, // "augmenté d'un champignon!" (18B)
-                0x7F, // 1B => 13+11+8+4+16+1+18+1 = 72B!
-            ],
-            "Dialogue FR Réserve de Champignon Sanctuaire (0x0E7516)",
-        ),
-    ];
-
-    for (pc, expected_len, bytes, label) in patches {
-        if bytes.len() == *expected_len
-            && *pc + *expected_len <= rom_zelda.data.len()
-            && rom_zelda.data[*pc] == 0xEF
-            && rom_zelda.data[*pc + *expected_len - 1] == 0x7F
-        {
-            session.swap_custom_bytes(
-                rom_zelda,
-                *pc,
-                *pc,
-                bytes.clone(),
-                label.to_string(),
-                SwapKind::CodePatch {
-                    byte_count: *expected_len,
-                },
-            )?;
-            ops += 1;
-        }
-    }
-
-    // 3. Replace exact 5-byte "Zelda" ([0x19,0x1E,0x25,0x1D,0x1A]) -> "Peach" ([0x0F,0x1E,0x1A,0x1C,0x21])
-    //    across Bank $1C French dialogs (0x0E0000..0x0E8000)!
-    const ZELDA_FR: [u8; 5] = [0x19, 0x1E, 0x25, 0x1D, 0x1A];
-    const PEACH_FR: [u8; 5] = [0x0F, 0x1E, 0x1A, 0x1C, 0x21];
-    if 0x0E8000 <= rom_zelda.data.len() {
-        let mut bank = rom_zelda.data[0x0E0000..0x0E8000].to_vec();
-        let mut hits = 0usize;
-        for i in 0..=(bank.len() - 5) {
-            if bank[i..i + 5] == ZELDA_FR {
-                bank[i..i + 5].copy_from_slice(&PEACH_FR);
-                hits += 1;
-            }
-        }
-        if hits > 0 {
-            session.swap_custom_bytes(
-                rom_zelda,
-                0x0E0000,
-                0x0E0000,
-                bank,
-                format!(
-                    "Dialogues FR Bank $1C : {} occurrences 'Zelda' -> 'Peach'",
-                    hits
-                ),
-                SwapKind::CodePatch { byte_count: 0x8000 },
-            )?;
-            ops += 1;
-        }
-    }
-
     Ok(ops)
 }
 
@@ -2158,41 +2026,41 @@ pub fn patch_koopa_guard_oam_tables(
         && rom_zelda.data[0x02CAEA] == 0x0B
     {
         // 14 frames x 2 8x8 sword tiles (hilt + blade):
-        //   F00..F03 (Down):  hand at x=0..2, y=6..8   -> X=(-2,-2), Y=(6,14) [alert Y=(8,16)]
-        //   F04..F06 (Left):  hand at x=1..4, y=3..6   -> X=(-10,-2), Y=(2,2) [stride Y=(1,1)] — NO LONGER AT BOOTS!
-        //   F07..F10 (Up):    hand at x=12..14, y=4..7 -> X=(10,10), Y=(-6,2) [lunge Y=(-10,-2)]
-        //   F11..F13 (Right): hand at x=11..14, y=3..6 -> X=(18,10), Y=(2,2) [stride Y=(1,1)] — FIRMLY IN HAND!
+        //   F00..F03 (Down):  hand at x=0..2, y=6..8   -> X=(-3,-3), Y=(9,17) [alert Y=(11,19)]
+        //   F04..F06 (Left):  hand at x=1..4, y=6..8   -> X=(-11,-3), Y=(7,7) [stride Y=(6,6)] — FIRMLY IN KOOPA HAND!
+        //   F07..F10 (Up):    hand at x=12..14, y=4..7 -> X=(11,11), Y=(-8,0) [lunge Y=(-12,-4)]
+        //   F11..F13 (Right): hand at x=11..14, y=6..8 -> X=(19,11), Y=(7,7) [stride Y=(6,6)] — FIRMLY IN KOOPA HAND!
         let wx: [(i16, i16); 14] = [
-            (-2, -2),
-            (-2, -2),
-            (-2, -2),
-            (-2, -2), // F00..F03 Down
-            (-10, -2),
-            (-10, -2),
-            (-12, -4), // F04..F06 Left
-            (10, 10),
-            (10, 10),
-            (10, 10),
-            (10, 10), // F07..F10 Up
-            (18, 10),
-            (18, 10),
-            (20, 12), // F11..F13 Right
+            (-3, -3),
+            (-4, -4),
+            (-4, -4),
+            (-4, -4), // F00..F03 Down
+            (-11, -3),
+            (-11, -3),
+            (-13, -5), // F04..F06 Left
+            (11, 11),
+            (11, 11),
+            (11, 11),
+            (11, 11), // F07..F10 Up
+            (19, 11),
+            (19, 11),
+            (21, 13), // F11..F13 Right
         ];
         let wy: [(i16, i16); 14] = [
-            (6, 14),
-            (6, 14),
-            (5, 13),
-            (8, 16), // F00..F03 Down
-            (2, 2),
-            (2, 2),
-            (1, 1), // F04..F06 Left (raised from y=8 -> y=2!)
-            (-6, 2),
-            (-5, 3),
-            (-5, 3),
-            (-10, -2), // F07..F10 Up
-            (2, 2),
-            (2, 2),
-            (1, 1), // F11..F13 Right (raised from y=8 -> y=2!)
+            (9, 17),
+            (9, 17),
+            (8, 16),
+            (11, 19), // F00..F03 Down
+            (7, 7),
+            (7, 7),
+            (6, 6), // F04..F06 Left (centered at Koopa hands y=7!)
+            (-8, 0),
+            (-7, 1),
+            (-7, 1),
+            (-12, -4), // F07..F10 Up
+            (7, 7),
+            (7, 7),
+            (6, 6), // F11..F13 Right (centered at Koopa hands y=7!)
         ];
         let wx_b: Vec<u8> = wx
             .iter()
@@ -2300,77 +2168,77 @@ pub fn patch_bowser_authentic_palettes(
 pub fn build_king_bowser_for_agahnim() -> KingBowserParts {
     // Front Idle (Left 16x32 half -> H-mirrored across x=15|16 into full menacing 32x32 SMW King Bowser!)
     let front_idle_tl = parse_3bpp_ascii([
-        "..........55.55.",
-        "..555....5225225",
-        ".51115...5222222",
-        ".51115..52225222",
-        "..5115.552222222",
-        "..57155666555222",
-        "...5566666666666",
-        "....567622226666",
-        "...5665222526666",
-        "...5651152556676",
-        "...5651555446666",
-        "..54445544444454",
-        ".544444444344444",
-        ".544345115555555",
-        "..54445115333333",
-        "...5555555555555",
+        "...555..........",
+        "..5115..........",
+        ".51115...55.55..",
+        ".51115..5225225.",
+        "..5115.522222225",
+        "..57155622222225",
+        "...5566666666665",
+        "....567666666665",
+        "...5662222256665",
+        "...5651155556665",
+        "..56515544446665",
+        ".566444444444445",
+        "5444444444445445",
+        "5444444511544445",
+        ".544434511544435",
+        "..55555555555555",
     ]);
     let front_idle_bl = parse_3bpp_ascii([
-        "...5515551555155",
-        "..56755555555555",
-        ".516665444444444",
-        ".556765333333333",
-        ".544665444444444",
-        "5445555555555555",
-        "5445155444444444",
-        "5144445333333333",
-        ".554445444444444",
-        "..55675555555555",
-        "..54446544444444",
-        "..54444533333333",
-        "..54434555555555",
-        ".51414145.......",
-        ".51111115.......",
+        "..55555555555555",
+        ".516655155155155",
+        ".516665444444445",
+        "5166665444444445",
+        "5666665444433335",
+        "5665555444444445",
+        "5651515444444445",
+        "5655555444433335",
+        ".511155444444445",
+        "..55555444444445",
+        "...5675444433335",
+        "..54444544444445",
+        "..54444555555555",
+        ".5144445........",
+        ".5111115........",
         "..555555........",
     ]);
 
     // Front Cast / Fire-Roar (Clawed arms RAISED high + dragon jaws WIDE open roaring with fiery red mouth & fangs!)
     let front_cast_tl = parse_3bpp_ascii([
-        ".55.......55.55.",
-        "51455....5225225",
-        "544515...5222222",
-        "544515..52225222",
-        ".54515.552222222",
-        ".555155666555222",
-        "..51566666666666",
-        "..54567622226666",
-        "..54565222526666",
-        "...5451152556676",
-        "...5651555446666",
-        "..54445544444454",
-        ".544444511555555",
-        ".544345152222222",
+        "...555..........",
+        "..5115...55.55..",
+        ".51115..5225225.",
+        ".51115.522222225",
+        "..51155622222225",
+        "...5566666666665",
+        "....567666666665",
+        "...5662222256665",
+        "...5651155556665",
+        "..56515544446665",
+        ".566444444444445",
+        "5444444511555555",
+        "5444445115222222",
+        ".544445152222222",
         "..54445552222222",
         "...5555555555555",
     ]);
     let front_cast_bl = parse_3bpp_ascii([
-        "...5515551555155",
-        "..56755555555555",
-        ".516665444444444",
-        ".556765333333333",
-        ".566765444444444",
-        "..51665555555555",
-        "..55675444444444",
-        "...5675333333333",
-        "...5165444444444",
-        "....555555555555",
-        "..54446544444444",
-        "..54444533333333",
-        "..54434555555555",
-        ".51414145.......",
-        ".51111115.......",
+        ".511155555555555",
+        "5144155155155155",
+        "5444455444444445",
+        "5666655444433335",
+        ".566665444444445",
+        "..56675444433335",
+        "..55675444444445",
+        "...5675444433335",
+        "...5165444444445",
+        "....555444444445",
+        "...5675444433335",
+        "..54444544444445",
+        "..54444555555555",
+        ".5144445........",
+        ".5111115........",
         "..555555........",
     ]);
 
@@ -2699,23 +2567,24 @@ pub fn build_normal_uncle_luigi() -> NormalUncleLuigiParts {
 pub fn build_mario_green_uncle_luigi_from_bank(mario_bank_4bpp: &[u8]) -> NormalUncleLuigiParts {
     let read_mario_4bpp_cell = |mx: usize, my: usize, flip_h: bool| -> [[u8; 16]; 16] {
         // Map Mario's 4bpp palette indices (0..15) -> ALTTP 3bpp Pal 6 GREEN LUIGI (0..7)!
+        // Mario 4bpp: 1=White, 2=Skin, 3=BrownHair/Boots, 6=Mustache, 7=CapBrim/ShirtShade, 8/9=Cap/Shirt, 10/11=Overalls, 14=Pupils/Outline
         const LUT_MARIO_TO_GREEN_LUIGI: [u8; 16] = [
             0, // 0: Transparent
-            1, // 1: Pure White (Gloves, Eye Sclera, Badge)
-            5, // 2: Pure Black (Outlines, Mustache, Pupils)
+            1, // 1: Pure White (Gloves, Eye Sclera, 'L' Cap Badge)
+            4, // 2: Warm Peach Skin (Face, Cheeks, Forehead, Chin)
             3, // 3: Brown (Hair, Sideburns, Boots)
-            2, // 4: Gold (Overall Buttons, Cap Shine)
-            4, // 5: Skin Highlight -> Warm Peach Skin
-            4, // 6: Warm Peach Skin
-            7, // 7: Deep Red (Cap Brim / Shirt Shade) -> Deep Luigi Forest Green!
-            7, // 8: Dark Crimson -> Deep Luigi Forest Green!
-            6, // 9: Bright Mario Red (Cap / Shirt!) -> Vibrant Luigi Emerald Green!
-            7, // 10: Deep Blue Overalls Shadow -> Deep Luigi Forest Green Overalls!
-            7, // 11: Royal Blue Overalls -> Deep Luigi Forest Green Overalls!
-            6, // 12: Sky Blue Overalls Highlight -> Vibrant Luigi Emerald Green!
-            1, // 13: White
-            4, // 14: Skin
-            5, // 15: Dark Outline
+            6, // 4: Vibrant Luigi Emerald Green (Cap highlight)
+            6, // 5: Vibrant Luigi Emerald Green (Cap shine)
+            5, // 6: Black Mustache & Glaring Pupils
+            7, // 7: Deep Luigi Forest Green (Cap Brim & Shirt Shade)
+            6, // 8: Vibrant Luigi Emerald Green (Cap & Shirt!)
+            6, // 9: Vibrant Luigi Emerald Green (Cap & Shirt!)
+            5, // 10: Deep Dark Outlines / Boot Soles
+            7, // 11: Deep Luigi Forest Green Overalls
+            7, // 12: Deep Luigi Forest Green Overalls
+            4, // 13: Skin Highlight
+            5, // 14: Black Pupils & Mouth Outline
+            5, // 15: Black Outlines
         ];
         let mut px = [[0u8; 16]; 16];
         let base = (my * 32 + mx * 2) * 32;
@@ -3497,6 +3366,92 @@ pub fn build_smw_world_map_mario_head_16x16() -> [[u8; 16]; 16] {
     ])
 }
 
+/// 4-frame sparkling SMW Super Star cursor for File Select & Game Over menus (Sheet 0x76 @ 0x088E00 cols 8..15, rows 0..1).
+/// Replaces the vanilla fluttering Great Fairy cursor with an authentic Mario Starman with twinkling eye shine and sparkles.
+/// Palettes 0/1: 5=dark outline/eyes, 1=pure white eye shine & sparkle gleam, 4=bright gold body, 3=medium gold.
+pub fn build_smw_sparkling_star_cursor_frames() -> [[[u8; 16]; 16]; 4] {
+    let f0 = parse_3bpp_ascii([
+        ".......5........",
+        "......545.......",
+        ".....54445......",
+        "....5444445.....",
+        "555554444455555.",
+        ".5444444444445..",
+        "..54514445145...",
+        "...545144515....",
+        "...5444444445...",
+        "..544444444445..",
+        ".54444444444445.",
+        "5444445544444445",
+        "544445..54444445",
+        ".5555....555555.",
+        "................",
+        "................",
+    ]);
+
+    // Frame 1: Top point sparkle gleam (cross star on top point)
+    let f1 = parse_3bpp_ascii([
+        ".......1........",
+        "......111.......",
+        ".....11411......",
+        "....5444445.....",
+        "555554444455555.",
+        ".5444444444445..",
+        "..54514445145...",
+        "...545144515....",
+        "...5444444445...",
+        "..544444444445..",
+        ".54444444444445.",
+        "5444445544444445",
+        "544445..54444445",
+        ".5555....555555.",
+        "................",
+        "................",
+    ]);
+
+    // Frame 2: Right arm sparkle twinkle
+    let f2 = parse_3bpp_ascii([
+        ".......5........",
+        "......545.......",
+        ".....54445...1..",
+        "....5444445.111.",
+        "555554444455515.",
+        ".5444444444445..",
+        "..54514445145...",
+        "...545144515....",
+        "...5444444445...",
+        "..544444444445..",
+        ".54444444444445.",
+        "5444445544444445",
+        "544445..54444445",
+        ".5555....555555.",
+        "................",
+        "................",
+    ]);
+
+    // Frame 3: Left arm sparkle twinkle + bright eye glint
+    let f3 = parse_3bpp_ascii([
+        ".......5........",
+        "......545.......",
+        "..1..54445......",
+        ".1115444445.....",
+        ".51554444455555.",
+        ".5444444444445..",
+        "..54114441145...",
+        "...541144115....",
+        "...5444444445...",
+        "..544444444445..",
+        ".54444444444445.",
+        "5444445544444445",
+        "544445..54444445",
+        ".5555....555555.",
+        "................",
+        "................",
+    ]);
+
+    [f0, f1, f2, f3]
+}
+
 /// Crisp 8x8 **Mini Mario Cap Face** for the Dungeon Mini-Map player marker (`Sheet 0xD2 (1,3)`).
 pub fn build_smw_dungeon_map_mario_8x8() -> [[u8; 8]; 8] {
     parse_3bpp_ascii_8x8([
@@ -3822,6 +3777,28 @@ pub fn patch_smw_live_weapons_087000(buf: &mut [u8]) {
         "................",
     ]);
     write_16(buf, 0xB, 0, &hammer_diag);
+
+    // 6. KAMEK'S SHOP 8x8 RED MINI SUPER MUSHROOM @ (9,2) and floating @ (9,3)
+    //    Replaces vanilla Zelda 8x8 heart!
+    //    0=transparent, 3=dark crimson outline/eyes, 4=vivid Mario red cap, 1=pure white spot/stem!
+    let mini_mush_ground = parse_3bpp_ascii_8x8([
+        "..3333..", ".341143.", "34111143", "34444443", ".333333.", ".313313.", ".311113.",
+        "..3333..",
+    ]);
+    let mini_mush_float = parse_3bpp_ascii_8x8([
+        "..3333..", ".314413.", "31144113", "34444443", ".333333.", ".313313.", ".311113.",
+        "..3333..",
+    ]);
+    write_8(buf, 9, 2, &mini_mush_ground);
+    write_8(buf, 9, 3, &mini_mush_float);
+
+    // 7. KAMEK'S SHOP 8x8 MINI YOSHI BERRY / MAGIC FLASK @ (A,2) & (A,3)
+    let mini_berry = parse_3bpp_ascii_8x8([
+        "...55...", "..555...", ".53335..", "5311335.", "5313335.", ".53335..", "..555...",
+        "........",
+    ]);
+    write_8(buf, 0xA, 2, &mini_berry);
+    write_8(buf, 0xA, 3, &mini_berry);
 }
 
 /// Patch `Sheet 0xD0` (Mario's 3 Live Shields + Book of Mudora held in Mario's hand!):

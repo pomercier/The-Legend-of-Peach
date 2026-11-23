@@ -642,6 +642,117 @@ pub const VERIFIED_SMW_EU_PAL_SHA256: &str =
     "b5be1dba3012b6811a5660fbf2981cb23cdd1e48f845a42df00f0f55b19f0392";
 pub const VERIFIED_SMW_EU_PAL_SIZE: usize = 524_288;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RomRole {
+    BaseZelda,
+    DonorSMW,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RomSupportStatus {
+    FullySupported,
+    RecognizedExperimental(&'static str),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RomCatalogEntry {
+    pub title: &'static str,
+    pub region: &'static str,
+    pub revision: &'static str,
+    pub role: RomRole,
+    pub size_bytes: usize,
+    pub sha256: &'static str,
+    pub status: RomSupportStatus,
+}
+
+/// Catalog of recognized official No-Intro ROM revisions for ALTTP and SMW.
+pub const KNOWN_ROMS: &[RomCatalogEntry] = &[
+    RomCatalogEntry {
+        title: "The Legend of Zelda: A Link to the Past",
+        region: "France",
+        revision: "Rev 1.0 (PAL)",
+        role: RomRole::BaseZelda,
+        size_bytes: 1_048_576,
+        sha256: "29a0d5812ccbb4b11bdb55d8f751a2a797b4110bf402ca8ba15eb2bf85db7b39",
+        status: RomSupportStatus::FullySupported,
+    },
+    RomCatalogEntry {
+        title: "The Legend of Zelda: A Link to the Past",
+        region: "USA",
+        revision: "Rev 1.0 (NTSC)",
+        role: RomRole::BaseZelda,
+        size_bytes: 1_048_576,
+        sha256: "608c22b8ff930c62dc2de54bcd6eba7223ad6900703600494f09d507119e0903",
+        status: RomSupportStatus::RecognizedExperimental(
+            "NTSC USA revision: dialogue engine and offset tables differ from French PAL. Use --allow-unverified to test.",
+        ),
+    },
+    RomCatalogEntry {
+        title: "The Legend of Zelda: A Link to the Past",
+        region: "Canada",
+        revision: "French (NTSC)",
+        role: RomRole::BaseZelda,
+        size_bytes: 1_048_576,
+        sha256: "9550b329437b01b6e685f0a0d57d8122a7f5a8976b0eeecbce8666504a3f2db7",
+        status: RomSupportStatus::RecognizedExperimental(
+            "Canadian French revision: experimental compatibility.",
+        ),
+    },
+    RomCatalogEntry {
+        title: "The Legend of Zelda: A Link to the Past",
+        region: "Europe",
+        revision: "Rev 1.0 (PAL)",
+        role: RomRole::BaseZelda,
+        size_bytes: 1_048_576,
+        sha256: "fa7a9b091f04cfd0d588432a685f1c24ec877d9f78fb565c4fc2ecf7ad1651b1",
+        status: RomSupportStatus::RecognizedExperimental(
+            "European English PAL revision: English script mapping required.",
+        ),
+    },
+    RomCatalogEntry {
+        title: "Super Mario World",
+        region: "Europe",
+        revision: "Rev 1.0 (PAL)",
+        role: RomRole::DonorSMW,
+        size_bytes: 524_288,
+        sha256: "b5be1dba3012b6811a5660fbf2981cb23cdd1e48f845a42df00f0f55b19f0392",
+        status: RomSupportStatus::FullySupported,
+    },
+    RomCatalogEntry {
+        title: "Super Mario World",
+        region: "USA",
+        revision: "Rev 1.0 (NTSC)",
+        role: RomRole::DonorSMW,
+        size_bytes: 524_288,
+        sha256: "cdb64e2bcbf30c453535560b94fd7474b67ab7e9d500f16f0b094605419b6685",
+        status: RomSupportStatus::RecognizedExperimental(
+            "NTSC USA donor: sprite tilesets are identical, experimental pass.",
+        ),
+    },
+    RomCatalogEntry {
+        title: "Super Mario World",
+        region: "Japan",
+        revision: "Super Mario World (NTSC)",
+        role: RomRole::DonorSMW,
+        size_bytes: 524_288,
+        sha256: "01fa8f810aa7968ff6603a152dbb50c02ec9f24fa93bc3eb2e5d95cf2333dfb1",
+        status: RomSupportStatus::RecognizedExperimental(
+            "Super Famicom Japan donor: sprite tilesets are compatible.",
+        ),
+    },
+];
+
+/// Identify a ROM from its SHA-256 digest (checking both unheadered data and 512-byte header stripped data).
+pub fn identify_known_rom(data: &[u8]) -> Option<&'static RomCatalogEntry> {
+    let unheadered = if data.len() % 1024 == 512 {
+        &data[512..]
+    } else {
+        data
+    };
+    let sha = compute_sha256_hex(unheadered);
+    KNOWN_ROMS.iter().find(|e| e.sha256 == sha)
+}
+
 /// Standard zero-dependency FIPS 180-4 SHA-256 digest.
 pub fn compute_sha256(data: &[u8]) -> [u8; 32] {
     const K: [u32; 64] = [
@@ -752,22 +863,52 @@ pub fn verify_legend_of_peach_inputs(
     let m_ok = smw.data.len() == VERIFIED_SMW_EU_PAL_SIZE && m_sha == VERIFIED_SMW_EU_PAL_SHA256;
 
     if !z_ok && !allow_unverified {
+        let detected_info = if let Some(entry) = identify_known_rom(&zelda.data) {
+            format!(
+                "\nDetected Known ROM: {} [{}] ({})\nNote: {}\n",
+                entry.title,
+                entry.region,
+                entry.revision,
+                match entry.status {
+                    RomSupportStatus::FullySupported => "Fully supported.",
+                    RomSupportStatus::RecognizedExperimental(msg) => msg,
+                }
+            )
+        } else {
+            String::new()
+        };
         return Err(format!(
             "Unsupported base ROM for The Legend of Zelda: A Link to the Past.\n\
              Expected: Legend of Zelda, The - A Link to the Past (France).sfc (PAL, Rev 1.0, unheadered 1,048,576 bytes)\n\
              Expected SHA-256: {VERIFIED_ZELDA_FR_PAL_SHA256}\n\
              Actual   SHA-256: {z_sha} ({} bytes)\n\
+             {detected_info}\
              See docs/ROM_REQUIREMENTS.md for verification instructions.",
             zelda.data.len()
         ));
     }
 
     if !m_ok && !allow_unverified {
+        let detected_info = if let Some(entry) = identify_known_rom(&smw.data) {
+            format!(
+                "\nDetected Known ROM: {} [{}] ({})\nNote: {}\n",
+                entry.title,
+                entry.region,
+                entry.revision,
+                match entry.status {
+                    RomSupportStatus::FullySupported => "Fully supported.",
+                    RomSupportStatus::RecognizedExperimental(msg) => msg,
+                }
+            )
+        } else {
+            String::new()
+        };
         return Err(format!(
             "Unsupported donor ROM for Super Mario World.\n\
              Expected: Super Mario World (Europe).sfc (PAL, Rev 1.0, unheadered 524,288 bytes)\n\
              Expected SHA-256: {VERIFIED_SMW_EU_PAL_SHA256}\n\
              Actual   SHA-256: {m_sha} ({} bytes)\n\
+             {detected_info}\
              See docs/ROM_REQUIREMENTS.md for verification instructions.",
             smw.data.len()
         ));

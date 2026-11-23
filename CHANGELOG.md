@@ -6,6 +6,44 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ---
 
+## [0.3.0] — 2026-11-22 — Definitive Mario Experience
+
+### Bug Fixes & Visual Quality
+- **Definitive King Bowser Overhaul (`mario_ui.rs`)**:
+  - Completely redesigned King Bowser for castle cell and throne room encounters into an authentic, menacing 32×32 Super Mario World sprite: curved ivory bull horns, fiery crimson-red mohawk mane, emerald green armored scaly head with forest contour, fierce red-browed eyes, broad golden snout with dark nostrils and sharp white fangs, spiked black collar with silver studs, rounded golden segmented belly plastron flanked by emerald green muscular arms with spiked black wrist cuffs and white claws, spiky green shell with white rim, and clawed yellow feet.
+  - Added full roaring front-cast animation with wide dragon jaws showing fiery throat and fangs.
+- **Koopa Guard Sword Alignment Fix (`mario_ui.rs`)**:
+  - Recalibrated sword OAM offsets (`wx = 19, 11`, `wy = 7, 7` for Right; `wx = -11, -3`, `wy = 7, 7` for Left). Swords are now held firmly and naturally in the Koopas' hands in both gameplay and cutscenes instead of floating in empty air.
+- **Authentic Luigi Twin Sprite (`mario_ui.rs`)**:
+  - Overhauled Uncle into Luigi using Mario's exact 4bpp sprite from the player bank (`0x080000`) with a corrected palette LUT into Pal 6: vibrant emerald green cap and shirt, deep forest green overalls, peach skin, black mustache and pupils, white gloves, and brown boots.
+- **Mario Overhead Carry Pose Polish (`demo.rs`)**:
+  - Eliminated the artificial detached floating glove in front of Mario's side visor in `make_carry_side_head`, restoring an authentic, clean Super Mario World side carry profile with arms naturally raised holding the block above his head.
+- **Smooth, Glitch-Free 3D Intro & Attract Mode (`mario_intro.rs`)**:
+  - Removed conflicting DMA and palette hooks that were overwriting the polyhedral engine with chopped-up noise tiles on the title screen, restoring 100% fluid native 3D polygon rendering for the iconic spinning triangles behind "THE LEGEND OF PEACH" logo and copyleft notice.
+
+### New Content & Structural Upgrades
+- **Complete Sequential 372-Message Bank $1C Repacker (`mario_intro.rs`)**:
+  - Safely repacks all 372 in-game French messages with dynamic pointer relocation, replacing remaining Zelda terminology (including "Le sorcier Bowser" → "Bowser") without clipping accents or control codes.
+- **Pyramid Room 0x00 Golden SMW Super Star Floor (`mario_bosses.rs`)**:
+  - Replaced the Triforce floor emblem with a 32×32 Golden SMW Super Star using Sheet 0x19 and Palette 3 (`0x0DF0..0x0DFF`) and room blockset repointing (`0x005D66 = 0x19`), leaving globally shared dungeon tiles (`raw:0x0E`) 100% untouched.
+- **Kamek's Shop 8×8 Mini Mushroom & Yoshi Berry (`mario_ui.rs`)**:
+  - Replaced the last vanilla 8×8 heart in Kamek's Shop (`0x087000`) with a crisp 8×8 Red Mini Super Mushroom and Yoshi Berry.
+- **Animated 4-Frame SMW Super Star Cursor (`mario_ui.rs`, `mixer.rs`)**:
+  - Replaced the file select fairy cursor with an authentic 4-frame sparkling Super Mario World Super Star cursor in Sheet 0x76 (`0x088E00`).
+- **Multi-Region Known ROM Catalog (`rom.rs`)**:
+  - Added an official catalog of 7 verified ALTTP and SMW revisions (USA NTSC, European PAL, French, German, Japanese) with detailed compatibility status.
+
+### Build & Verification (`v0.3.0`)
+- Deterministic 2 MiB LoROM build: `156` hardware patches across `17` rules (`824 ms`), `46` LZ2 sheets audited, `8` relocated in `$23..$3F` (0 overlaps).
+- **SNES Checksum / Complement:** `0x2EC1` / `0xD13E` (Valid)
+- **Output CRC32:** `0x0DC79327`
+- **Output MD5:** `2eb60aa2c2a6ef0e5ed484a839a9ad34`
+- **Output SHA-1:** `8f5bfccf94ef528059f714f9a63447e5e108157e`
+- **Output SHA-256:** `fe7390a1c4e58e219d8e6f023cc4f09ce6e7e6d5164bf1bb30b2dbf1c2828785`
+- Full test suite: `25/25` passing Rust unit and integration tests.
+
+---
+
 ## [0.2.0] — 2026-11-22 — Beyond the First Release
 
 ### Bug Fixes (Identified via Independent Phase 2 Live Audit)
