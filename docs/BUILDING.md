@@ -90,21 +90,21 @@ Your original input ROM files are **never modified**.
 After building, `snes-cli` automatically runs the internal hardware integrity audit (`audit_legend_of_peach_output`) verifying:
 
 - Exact 2 MiB LoROM expansion (`2,097,152` bytes, ROM size header byte `0x0B`)
-- Valid SNES checksum (`0x7C48`) and complement (`0x83B7`)
-- Zero patch overlaps across expanded banks `$23..$3F`
-- Single-bank 32 KiB alignment and full LC_LZ2 decompression integrity across all 48 modified graphics sheets
-- Protected world-map table integrity (`0x08A000..0x08A2FF`) and 32-frame 3D intro buffer (`$20..$22`)
+- Valid SNES checksum (`0x87FF`) and complement (`0x7800`)
+- Zero patch overlaps across expanded banks `$23..$3A` (GFX) and `$3B..$3F` (Overworld Map32)
+- Single-bank 32 KiB alignment and full LC_LZ2 decompression integrity across all 49 modified graphics sheets
+- Protected world-map table integrity (`0x08A000..0x08A2FF`) and 32-frame 3D intro + Mario 65c816 engine banks (`$20..$22`)
 
-Expected output summary for `v0.4.0`:
+Expected output summary for `v0.5.0`:
 
 ```text
-Output ROM      : build/legend_of_peach_mario_kingdom.sfc (2097152 bytes, 2 MiB LoROM)
+Output ROM      : build/legend_of_peach_v0.5.0.sfc (2097152 bytes, 2 MiB LoROM)
 Internal Title  : 'THE LEGEND OF PEACH'
-Hardware Ops    : 193 patches across 18 rules
-Bank Audit      : 48 sheets verified, 9 relocated in $23..$3F (0 overlaps)
-SNES Checksum   : 0x7C48 (Complement: 0x83B7, Valid: true)
-Output CRC32    : 0x397E3E64
-Output SHA-256  : eed0aac268c6523657ca083cc8cd40e620516757801bd69bbff38474f8b190ca
+Hardware Ops    : 220 patches across 18 rules
+Bank Audit      : 49 sheets verified, 11 relocated in $23..$3F (0 overlaps)
+SNES Checksum   : 0x87FF (Complement: 0x7800, Valid: true)
+Output CRC32    : 0x9E8F84EB
+Output SHA-256  : 93d3774f81119eb41d80b0c610d3b1bbcd1430c5f572f16b65b47b3ddd24975e
 ```
 
 You can also confirm bit-for-bit determinism yourself by running the build twice into two paths and comparing `sha256sum`.
@@ -139,4 +139,4 @@ cargo test --workspace --all-targets
 python3 scripts/check_repo_safety.py
 ```
 
-When verified local ROMs are present under `roms/`, additional end-to-end integration tests in `crates/snes-core/src/lib.rs` automatically exercise the full 177-patch fusion, OAM coordinate bounds, all 3bpp/4bpp LZ2 sheets, and hardware integrity checks.
+When verified local ROMs are present under `roms/`, additional end-to-end integration tests in `crates/snes-core/src/lib.rs` automatically exercise the full 220-patch fusion, OAM coordinate bounds, all 49 audited 3bpp/4bpp LZ2 sheets, Overworld Map32 lossless round-trip across 64 Light World screens, Bank `$1C` zero-hyphen/zero-overlap invariants across 372 messages, and hardware integrity checks.

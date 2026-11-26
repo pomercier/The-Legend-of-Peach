@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0.0",
+  "release": "v0.5.0",
+  "description": "Structured Mushroom Kingdom Overworld & Dungeon World Transformation Registry.",
+  "overworld_map32_engine": {
+    "hi_pointer_table_pc": "0x0179CF",
+    "lo_pointer_table_pc": "0x017BAF",
+    "compression": "Nintendo LC_LZ2 Big-Endian (lossless round-trip verified across all 64 Light World screens)",
+    "relocation_banks": "$3B..$3F (PC 0x1D8000..0x1FFFFF)"
+  },
+  "worlds": [
+    {
+      "world_id": 1,
+      "mario_name": "World 1 — Yoshi's Island & Mushroom Village",
+      "engine_screens": ["0x2C (Mario's House Hub)", "0x18 (Toad Town)", "0x29 (Yoshi Meadow)"],
+      "status": "redesigned_v050",
+      "json_map_file": "docs/maps/world1_yoshis_island.json",
+      "changes_verified": [
+        "Screen 0x2C courtyard redesigned via Rust Map32 editor: brown Zelda dirt replaced by seamless lush Yoshi's Island green meadow grass (0x001D), framed symmetrically by interactive SMW Turn-Blocks (0x1B76) and Smiling Bushes (0x07CC)",
+        "Mario's House red-roof Mushroom House palette (0x0DE874) & interior Golden Turn-Blocks + '!' Prize Block",
+        "Kamek's Shop (Room 0x011F) and Toad Town houses (Room 0x0103) upgraded with Royal Mushroom Crimson & Gold carpets (0x0DD932) and pixel-exact OAM-aligned Toad NPCs",
+        "Southern Yoshi's Island flower & smiling bush meadow added along row 15 with zero cliff seams"
+      ]
+    },
+    {
+      "world_id": 2,
+      "mario_name": "World 2 — Donut Plains & Chargin' Chuck Stadium",
+      "engine_screens": ["0x1E (Eastern Palace)", "0x2E"],
+      "status": "visual_and_boss_converted",
+      "changes_verified": ["6 Giant 32x32 Hopping Chargin' Chucks boss", "SMW Overworld theme & Bestiary"]
+    },
+    {
+      "world_id": 3,
+      "mario_name": "World 3 — Dry Dry Desert & Pokey Ruins",
+      "engine_screens": ["0x30 (Desert Palace)"],
+      "status": "visual_and_boss_converted",
+      "changes_verified": ["3 Giant Pokeys boss", "Monty Moles & Desert Goombas"]
+    },
+    {
+      "world_id": 4,
+      "mario_name": "World 4 — Vanilla Dome & Giant Wiggler Summit",
+      "engine_screens": ["0x03 (Death Mountain / Tower of Hera)"],
+      "status": "visual_and_boss_converted",
+      "changes_verified": ["SMW Vanilla Dome N-SPC theme", "Giant Wiggler boss", "Swoopers & Thwomps"]
+    },
+    {
+      "world_id": 5,
+      "mario_name": "World 5 — Forest of Illusion & Boo Woods",
+      "engine_screens": ["0x00 (Lost Woods)", "0x40 (Skull Woods)"],
+      "status": "visual_and_boss_converted",
+      "changes_verified": ["SMW Forest of Illusion & Ghost House themes", "Rebuilt crystal-clear Winged Iggy Koopa boss", "SMW Boos"]
+    },
+    {
+      "world_id": 6,
+      "mario_name": "World 6 — Ice Cavern & Lemmy's Circus",
+      "engine_screens": ["0x75 (Ice Palace)"],
+      "status": "visual_and_boss_converted",
+      "changes_verified": ["Lemmy Koopa with exclusive rainbow palette & bouncing circus ball", "Frost Koopas"]
+    },
+    {
+      "world_id": 7,
+      "mario_name": "World 7 — Koopa Airship & Fortress Gauntlet",
+      "engine_screens": ["0x5E (Palace of Darkness)", "0x7B (Swamp Palace)", "0x58 (Thieves' Town)", "0x70 (Misery Mire)", "0x47 (Turtle Rock)"],
+      "status": "visual_and_boss_converted",
+      "changes_verified": ["Morton Jr., Wendy O., Roy, Larry, Ludwig von Koopa bosses", "ON/OFF Switch Blocks (raw 0x0F)", "SMB3 Airship March & Underwater Waltz"]
+    },
+    {
+      "world_id": 8,
+      "mario_name": "World 8 — Valley of Bowser & Volcanic Throne",
+      "engine_screens": ["0x5B (Dark Pyramid)", "Room 0x0000 (Bowser Throne)"],
+      "status": "redesigned_v050",
+      "changes_verified": [
+        "SMW Valley of Bowser N-SPC theme & Final King Bowser Showdown theme",
+        "Carved Stone King Bowser Statues & Grimacing Thwomp Pillars (raw 0x29)",
+        "Room 0x0000 Obsidian Dark-Charcoal & Lava Volcanic Throne Room palette (0x0DE2C2) + clean emerald dais ($01:A7F0 RTS) + zero-overlap French Bowser taunt"
+      ]
+    }
+  ]
+}

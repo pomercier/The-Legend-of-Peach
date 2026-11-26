@@ -1,0 +1,64 @@
+{
+  "schema_version": "1.0.0",
+  "release": "v0.5.0",
+  "engine_bank": "$22:9000 (PC 0x111000)",
+  "wram_region": "$7E:F500..$7E:F53F (verified zero conflicting ROM references)",
+  "hooks": [
+    "PC 0x010959: JSL $07:8000 -> JSL $22:9000",
+    "PC 0x011CCA: JSL $07:8000 -> JSL $22:9000",
+    "PC 0x0125C7: JSL $07:8000 -> JSL $22:9000"
+  ],
+  "mechanics": [
+    {
+      "id": "MG-01",
+      "name": "Genuine Top-Down Mario Jumping",
+      "controls": "Press L or R shoulder button (hold for full ~22px parabolic arc; release early for short-hop)",
+      "physics": "8.8 fixed-point Z height ($F501:$F502), initial VZ = +2.56 px/frame (0x0290), gravity = -0.14 px/frame^2 (0x0024), max fall = -3.0 px/frame, 4-frame landing cooldown",
+      "rendering": "Applies altitude to native ALTTP $24/$25 post-Link_Main so Bank $0D renders Mario cleanly above his dark oval ground shadow while preserving full 8-direction movement & wall collision",
+      "sfx": "Native SPC700 SMW rising jump sweep (SFX2 0x20)",
+      "verification": "Unit-tested + Live visually verified in Mednafen snes_faust & bsnes (shadow clearly visible beneath mid-air Mario)"
+    },
+    {
+      "id": "MG-02",
+      "name": "Genuine Mario Stomp Combat",
+      "controls": "Descend from a Mario Jump (MARIO_AIRBORNE == 2, Z in 1..21px) onto a stompable enemy",
+      "vulnerability_table": "$22:9800 (256 bytes): 0x00=NPC/Boss/Immune, 0x01=Stompable (Koopas, Goombas, Buzzies, Rex, Monty Moles, Dry Bones, Cheep Cheeps), 0x02=Spiked (Spinies, Thwomps, Chain Chomps — immune to ordinary stomp, defeated by Starman)",
+      "effects": "Deals 6 HP stomp damage or instant defeat puff ($0DD0=6), awards +1 Gold Coin ($7E:F362), plays native SPC700 Mario Stomp Pop (SFX3 0x08), grants 18 frames post-stomp i-frames, bounces Mario upward (higher bounce when holding L/R!)",
+      "verification": "Unit-tested + Live visually verified in Mednafen snes_faust (16_mario_jump_stomp.png: Mario descends onto Blue Koopa Troopa -> 4-sparkle defeat puff -> upward bounce -> zero damage -> coin counter 153 -> 154 -> Red Mini-Mushroom drop)"
+    },
+    {
+      "id": "MG-03",
+      "name": "Super Mario Hammer (Sword Elimination)",
+      "controls": "Press B button for Mario Super Hammer strike",
+      "assets": "Replaced all melee sword swing frames and File Select sword in raw 0xCF, Start Menu EQUIPEMENT Lv1..Lv4 weapons (0x06F769), and native SPC700 Hammer Bonk SFX (SFX1 0x01/0x02)",
+      "verification": "Live visually verified in File Select, Start Menu, and Overworld gameplay"
+    },
+    {
+      "id": "MG-04",
+      "name": "Fire Mario Live CGRAM Transformation",
+      "controls": "Equip FLEUR DE FEU ($7E:0202 == 0x06) and press Y to throw Fireballs",
+      "effects": "Live-swaps Mario's CGRAM OBJ palette ($7E:C6E2..$7E:C6FF + $15=1) to pure white cap/shirt & blazing crimson overalls; restores Classic Mario Red/Blue automatically when unequipped",
+      "verification": "Unit-tested + Live visually verified in Mednafen snes_faust & bsnes"
+    },
+    {
+      "id": "MG-05",
+      "name": "Super Starman Invincibility",
+      "controls": "Press L + R simultaneously (consumes 0x20 Star Power from $7E:F36E)",
+      "effects": "240 frames (4 seconds) of 4-palette rainbow CGRAM flashing (Gold/Cyan/Neon Green/Magenta), full damage immunity ($037B=1), instant contact-kill on both stompable and spiked enemies, and crisp Mario Star/Coin chime (SFX2 0x2B)",
+      "verification": "Unit-tested + Live visually verified in Mednafen snes_faust & bsnes"
+    },
+    {
+      "id": "MG-06",
+      "name": "Native SPC700 Mario Sound Effects",
+      "bank": "Bank $19 resident SFX block (PC 0x0D0B70..0x0D1BFF -> ARAM $17C0..$284F)",
+      "patched_sfx": [
+        "SFX2 0x2B/0x2C: Classic B5->E6 Mario Coin chime",
+        "SFX2 0x20: SMW rising pitch-sweep Mario Jump",
+        "SFX3 0x08: Crisp rising Mario Stomp pop",
+        "SFX2 0x14/0x15: Iconic descending triple-pulse Mario Warp Pipe",
+        "SFX1 0x01/0x02: Punchy percussive Super Mario Hammer bonk"
+      ],
+      "verification": "Unit-tested byte budgets & terminators + Live Mednafen execution"
+    }
+  ]
+}

@@ -15,8 +15,11 @@ pub mod disasm_dma;
 pub mod export;
 pub mod graphics;
 pub mod mario_bosses;
+pub mod mario_engine;
 pub mod mario_intro;
+pub mod mario_map;
 pub mod mario_music;
+pub mod mario_sfx;
 pub mod mario_ui;
 pub mod mario_world;
 pub mod memory;
@@ -1155,6 +1158,8 @@ mod tests {
                 0x9A, 0x9D,
                 // Worldwide BG Tilesets (9 sheets: Dark World, Bowser's Castle, Dungeons, Bowser Statues, Toad Town Roofs)
                 0x3F, 0x0D, 0x0B, 0x0C, 0x06, 0x18, 0x19, 0x4D, 0x4C,
+                // Phase 5 Mario Super Hammer + Sparkling Super Star File Select Cursor (raw 0xCF)
+                0xCF,
             ];
             for &raw_idx in v13_raw_sheets {
                 let pc = ((target.data[raw_bk + raw_idx] as usize & 0x7F) << 15)
@@ -1246,7 +1251,7 @@ mod tests {
             let audit = super::mixer::audit_legend_of_peach_output(&zelda, &target, &session)
                 .expect("audit_legend_of_peach_output must pass");
             assert_eq!(audit.output_size_bytes, 2_097_152);
-            assert_eq!(audit.verified_raw_sheets, 48);
+            assert_eq!(audit.verified_raw_sheets, 49);
             println!(
                 "HARDWARE AUDIT PASSED: 100% COMPLIANT WITH SNES AND SUPER FAMICOM (SHA-256: {})!",
                 audit.output_sha256

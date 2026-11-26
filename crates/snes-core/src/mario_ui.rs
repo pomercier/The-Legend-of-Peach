@@ -132,10 +132,11 @@ fn patch_alttp_2bpp_sheet(
         Ok(true)
     } else {
         const EXPANDED_FREE_START: usize = 0x118000; // Reserve Banks $20..$22 (0x100000..0x117FFF) for 3D Intro Frames + Code!
+        const EXPANDED_FREE_END: usize = crate::mario_map::OW_MAP32_RELOC_START_PC; // Hard firewall: Banks $3B..$3F reserved for Map32!
         let mut cur_end = if *free_cursor < 0x100000 {
             free_end
         } else {
-            rom_z.data.len()
+            rom_z.data.len().min(EXPANDED_FREE_END)
         };
         if *free_cursor + comp.len() > cur_end {
             if rom_z.data.len() < 0x200000 {
@@ -146,10 +147,10 @@ fn patch_alttp_2bpp_sheet(
                 rom_z.header.rom_size_byte = 0x0B;
                 rom_z.header.declared_rom_size_kb = 2048;
                 *free_cursor = EXPANDED_FREE_START;
-                cur_end = rom_z.data.len();
+                cur_end = EXPANDED_FREE_END;
             } else if *free_cursor < EXPANDED_FREE_START {
                 *free_cursor = EXPANDED_FREE_START;
-                cur_end = rom_z.data.len();
+                cur_end = EXPANDED_FREE_END;
             }
         }
         let bank_rem = 0x8000 - (*free_cursor % 0x8000);
@@ -538,15 +539,17 @@ pub fn patch_mario_hud_and_start_menu(
             write_2bpp_16x16_quad(raw, 0x34, 0x35, 0x44, 0x45, &menu_cape);
             // Start Menu '?' Block Book (0xA5, 0xA6, 0xD8, 0xD9 -> local 0x25, 0x26, 0x58, 0x59)
             write_2bpp_16x16_quad(raw, 0x25, 0x26, 0x58, 0x59, &menu_qblock);
-            // Start Menu Fire/Ice Wand (0xB0, 0xB1, 0xC0, 0xC1 -> local 0x30, 0x31, 0x40, 0x41; Ice top-right 0xBE -> 0x3E)
-            write_2bpp_16x16_quad(raw, 0x30, 0x31, 0x40, 0x41, &menu_wand);
-            let mut wand_tr = [[0u8; 8]; 8];
+            // Start Menu Fire Flower & Ice Flower (0xB0, 0xB1, 0xC0, 0xC1 -> local 0x30, 0x31, 0x40, 0x41; Ice top-right 0xBE -> 0x3E)
+            // Phase 5: Replace Zelda Fire/Ice Rods with iconic SMW Fire Flower (Pal 1 Red) & Ice Flower (Pal 3 Ice Blue)!
+            let _ = &menu_wand;
+            write_2bpp_16x16_quad(raw, 0x30, 0x31, 0x40, 0x41, &menu_fireflower);
+            let mut flower_tr = [[0u8; 8]; 8];
             for y in 0..8 {
                 for x in 0..8 {
-                    wand_tr[y][x] = menu_wand[y][x + 8];
+                    flower_tr[y][x] = menu_fireflower[y][x + 8];
                 }
             }
-            write_2bpp_8x8(raw, 0x3E, &wand_tr);
+            write_2bpp_8x8(raw, 0x3E, &flower_tr);
 
             // Start Menu Equipment Big Heart -> Super Mushroom Reserve (0x84, 0x85, 0xAD, 0xAE -> local 0x04, 0x05, 0x2D, 0x2E)
             write_2bpp_8x8(raw, 0x04, &menu_mush_empty_tl);
@@ -736,12 +739,33 @@ pub fn patch_mario_hud_and_start_menu(
         "KKKKKKKKKKKKKKKK",
     ]);
 
+    // 6. Start Menu SMW Green Warp Pipe for Magic Mirror slot (uses 4 freed Zelda Sword tiles 0x64, 0x65, 0x74, 0x75 in Sheet 0x6F!)
+    //    Eliminates the HUD Bullet Bill / Bob-omb collision on Start Menu Row 4 Col 4!
+    let menu_warp_pipe = parse_ascii_16x16([
+        "KKKKKKKKKKKKKKKK",
+        "KKWWWWWWWWWWWWKK",
+        "KWGWWGGGGGGGGGWK",
+        "KWGWWGGGGGGGGGWK",
+        "KWGWWGGGGGGGGGWK",
+        "KWGWWGGGGGGGGGWK",
+        "KKWWWWWWWWWWWWKK",
+        "KKKWGWWGGGGWWKKK",
+        "KKKWGWWGGGGGWKKK",
+        "KKKWGWWGGGGGWKKK",
+        "KKKWGWWGGGGGWKKK",
+        "KKKWGWWGGGGGWKKK",
+        "KKKWGWWGGGGGWKKK",
+        "KKKWGWWGGGGGWKKK",
+        "KKKWWWWWWWWWWKKK",
+        "KKKKKKKKKKKKKKKK",
+    ]);
+
     if patch_alttp_2bpp_sheet(
         rom_zelda,
         session,
         0x6F,
         &[0xDB],
-        "Menu Équipement & Pendentifs 2bpp (Sheet 0x6F/0xDB) : Champignon, Fleur, Étoile, Casquette Mario, Yoshi, Botte Ailée",
+        "Menu Équipement & Pendentifs 2bpp (Sheet 0x6F/0xDB) : Champignon, Fleur, Étoile, Casquette Mario, Yoshi, Botte Ailée & Tuyau Warp",
         free_cursor,
         free_end,
         &|raw| {
@@ -759,6 +783,7 @@ pub fn patch_mario_hud_and_start_menu(
             write_2bpp_16x16_quad(raw, 0x29, 0x2A, 0x2B, 0x2C, &menu_wing_boot);
             write_2bpp_16x16_quad(raw, 0x33, 0x34, 0x35, 0x36, &menu_star);
             write_2bpp_16x16_quad(raw, 0x62, 0x63, 0x72, 0x73, &menu_cheep);
+            write_2bpp_16x16_quad(raw, 0x64, 0x65, 0x74, 0x75, &menu_warp_pipe);
         },
     )? {
         ops += 1;
@@ -1006,6 +1031,66 @@ pub fn patch_mario_hud_and_start_menu(
             ops += 1;
         }
 
+        // 4d. Phase 5: Start Menu Equipped Sword Lv1..Lv4 (0x06F769..0x06F788) -> SMW SUPER MARIO HAMMERS!
+        //     Eliminates the blue Zelda Sword from the Start Menu EQUIPEMENT box completely!
+        if 0x06F789 <= rom_zelda.data.len() && rom_zelda.data[0x06F769] == 0x64 {
+            let hammers_eq: Vec<u8> = vec![
+                // Lv1 Iron Super Hammer (Pal 1 Red/White): tiles 0xB6/0xB7/0xC6/0xC7
+                0xB6, 0x24, 0xB7, 0x24, 0xC6, 0x24, 0xC7, 0x24,
+                // Lv2 Golden Power Hammer (Pal 2 Gold/Black/White)
+                0xB6, 0x28, 0xB7, 0x28, 0xC6, 0x28, 0xC7, 0x28,
+                // Lv3 Crimson Fire Hammer (Pal 1 Bright Red)
+                0xB6, 0x24, 0xB7, 0x24, 0xC6, 0x24, 0xC7, 0x24,
+                // Lv4 Radiant Star Hammer (Pal 2 Blazing Gold)
+                0xB6, 0x28, 0xB7, 0x28, 0xC6, 0x28, 0xC7, 0x28,
+            ];
+            session.swap_custom_bytes(
+                rom_zelda,
+                0x06F769,
+                0x06F769,
+                hammers_eq,
+                "Menu Équipement Arme Lv1..4 (0x06F769) : Épées Zelda -> Super Marteaux SMW".into(),
+                SwapKind::CodePatch { byte_count: 32 },
+            )?;
+            ops += 1;
+            // 4e. Phase 5: Start Menu Magic Mirror (0x06F709..0x06F711) -> SMW Green Warp Pipe (0x64,0x65,0x74,0x75 Pal 7 Emerald Green `0x3C`)!
+            //     Fixes tile overlap with HUD Bullet Bill/Bob-omb (`0x86..0x89`).
+            if 0x06F711 <= rom_zelda.data.len() && rom_zelda.data[0x06F709] == 0x86 {
+                session.swap_custom_bytes(
+                    rom_zelda,
+                    0x06F709,
+                    0x06F709,
+                    vec![0x64, 0x3C, 0x65, 0x3C, 0x74, 0x3C, 0x75, 0x3C],
+                    "Menu Start Miroir Magique (0x06F709) -> Tuyau Warp Vert SMW (Pal 7, zéro collision HUD)".into(),
+                    SwapKind::CodePatch { byte_count: 8 },
+                )?;
+                ops += 1;
+            }
+            // 4f. Clean Start Menu A-button action labels ("PORTE1"/"PORTE2" -> clean "PORTE " without tiny superscript 1/2!)
+            if 0x06F895 <= rom_zelda.data.len()
+                && rom_zelda.data[0x06F87F] == 0x29
+                && rom_zelda.data[0x06F893] == 0x27
+            {
+                session.swap_custom_bytes(
+                    rom_zelda,
+                    0x06F87F,
+                    0x06F87F,
+                    vec![0xF5, 0x2C],
+                    "Menu Start Action A (0x06F87F) : 'PORTE1' -> 'PORTE '".into(),
+                    SwapKind::CodePatch { byte_count: 2 },
+                )?;
+                session.swap_custom_bytes(
+                    rom_zelda,
+                    0x06F893,
+                    0x06F893,
+                    vec![0xF5, 0x2C],
+                    "Menu Start Action A (0x06F893) : 'PORTE2' -> 'PORTE '".into(),
+                    SwapKind::CodePatch { byte_count: 2 },
+                )?;
+                ops += 2;
+            }
+        }
+
         // 5. Start Menu Item Names (exact 0x20-byte paired entries starting at 0x06F0F1..0x06F551!) -> 100% SMW Names!
         if 0x06F551 <= rom_zelda.data.len() && rom_zelda.data[0x06F241] == 0x5B {
             let mut names = rom_zelda.data[0x06F0F1..0x06F551].to_vec();
@@ -1019,14 +1104,27 @@ pub fn patch_mario_hud_and_start_menu(
             put_item(0x06F0F1, "  BILL  ", " BLASTER"); // Item 0: Bow (no arrows)
             put_item(0x06F111, "CARAPACE", "  SMW   "); // Item 1: Boomerang
             put_item(0x06F151, "BOB OMBS", "  SMW   "); // Item 3: Bombs
-            put_item(0x06F191, " FLEUR  ", " DE FEU "); // Item 5: Fire Rod
-            put_item(0x06F1B1, " FLEUR  ", "DE GLACE"); // Item 6: Ice Rod
+            put_item(0x06F171, " SUPER  ", " CHAMPI "); // Item 4: Mushroom
+            put_item(0x06F191, " FLEUR  ", " DE FEU "); // Item 5: Fire Flower (Fire Rod)
+            put_item(0x06F1B1, " FLEUR  ", "DE GLACE"); // Item 6: Ice Flower (Ice Rod)
             put_item(0x06F1D1, " BOULE  ", " DE FEU "); // Item 7: Bombos
+            put_item(0x06F1F1, " ECLAIR ", "  SMW   "); // Item 8: Ether
+            put_item(0x06F211, "  BLOC  ", "  POW   "); // Item 9: Quake -> POW Block!
             put_item(0x06F231, " FLEUR  ", " DE FEU "); // Item 10: Lantern
             put_item(0x06F251, "MARTEAU ", "  BRO   "); // Item 11: Hammer
             put_item(0x06F291, " YOSHI  ", "  SMW   "); // Item 13: Bug Net
             put_item(0x06F2B1, " GUIDE  ", " MARIO  "); // Item 14: Book of Mudora
+            put_item(0x06F2F1, "  BLOC  ", "  SMW   "); // Item 16: Cane of Somaria
+            put_item(0x06F311, " ETOILE ", "  ORBE  "); // Item 17: Cane of Byrna
             put_item(0x06F331, " PLUME  ", "DE CAPE "); // Item 18: Magic Cape
+            put_item(0x06F3B1, " SUPER  ", " CHAMPI "); // Item 22: Red Potion
+            put_item(0x06F3D1, " CHAMPI ", "  VERT  "); // Item 23: Green Potion
+            put_item(0x06F3F1, "  MAXI  ", " CHAMPI "); // Item 24: Blue Potion
+            put_item(0x06F411, " SUPER  ", " ETOILE "); // Item 25: Fairy
+            put_item(0x06F471, " POUDRE ", " KAMEK  "); // Item 28: Magic Powder
+            put_item(0x06F491, " FLUTE  ", "  WARP  "); // Item 29: Flute 1
+            put_item(0x06F4B1, " FLUTE  ", "  WARP  "); // Item 30: Flute 2
+            put_item(0x06F4D1, " TUYAU  ", "  WARP  "); // Item 31: Magic Mirror -> SMW Warp Pipe!
             put_item(0x06F4F1, "  BILL  ", " BLASTER"); // Item 32: Bow + Arrows
             put_item(0x06F511, "  MEGA  ", "  BILL  "); // Item 33: Silver Bow
             put_item(0x06F531, "  MEGA  ", "  BILL  "); // Item 34: Silver Arrows
@@ -1035,7 +1133,7 @@ pub fn patch_mario_hud_and_start_menu(
                 0x06F0F1,
                 0x06F0F1,
                 names,
-                "Menu Start Noms d'Objets (0x06F0F1) : BILL BLASTER, CARAPACE SMW, BOB OMBS, FLEUR DE FEU, MARTEAU BRO, YOSHI".into(),
+                "Menu Start Noms d'Objets (0x06F0F1) : 100% Super Mario (BILL BLASTER, FLEUR DE FEU, TUYAU WARP, BLOC POW, SUPER CHAMPI)".into(),
                 SwapKind::CodePatch { byte_count: 0x460 },
             )?;
             ops += 1;
@@ -3367,24 +3465,24 @@ pub fn build_smw_world_map_mario_head_16x16() -> [[u8; 16]; 16] {
     ])
 }
 
-/// 4-frame sparkling SMW Super Star cursor for File Select & Game Over menus (Sheet 0x76 @ 0x088E00 cols 8..15, rows 0..1).
-/// Replaces the vanilla fluttering Great Fairy cursor with an authentic Mario Starman with twinkling eye shine and sparkles.
-/// Palettes 0/1: 5=dark outline/eyes, 1=pure white eye shine & sparkle gleam, 4=bright gold body, 3=medium gold.
+/// 4-frame sparkling SMW Super Star cursor for File Select & Game Over menus (`Sheet 0xCF` `$A8/$AA` + `Sheet 0x76`).
+/// Uses color `6` = Blazing Super Star Gold (RGB 31,29,8 in File Select OBJ Pal 0 `0x30`), `5` = Dark outline/eyes,
+/// `1` = Pure white eye shine & sparkle gleam, `4` = Bright highlight.
 pub fn build_smw_sparkling_star_cursor_frames() -> [[[u8; 16]; 16]; 4] {
     let f0 = parse_3bpp_ascii([
         ".......5........",
-        "......545.......",
-        ".....54445......",
-        "....5444445.....",
-        "555554444455555.",
-        ".5444444444445..",
-        "..54514445145...",
-        "...545144515....",
-        "...5444444445...",
-        "..544444444445..",
-        ".54444444444445.",
-        "5444445544444445",
-        "544445..54444445",
+        "......565.......",
+        ".....56665......",
+        "....5666665.....",
+        "555556666655555.",
+        ".5666666666665..",
+        "..56516665165...",
+        "...565166515....",
+        "...5666666665...",
+        "..566666666665..",
+        ".56666666666665.",
+        "5666665566666665",
+        "566665..56666665",
         ".5555....555555.",
         "................",
         "................",
@@ -3394,17 +3492,17 @@ pub fn build_smw_sparkling_star_cursor_frames() -> [[[u8; 16]; 16]; 4] {
     let f1 = parse_3bpp_ascii([
         ".......1........",
         "......111.......",
-        ".....11411......",
-        "....5444445.....",
-        "555554444455555.",
-        ".5444444444445..",
-        "..54514445145...",
-        "...545144515....",
-        "...5444444445...",
-        "..544444444445..",
-        ".54444444444445.",
-        "5444445544444445",
-        "544445..54444445",
+        ".....11611......",
+        "....5666665.....",
+        "555556666655555.",
+        ".5666666666665..",
+        "..56516665165...",
+        "...565166515....",
+        "...5666666665...",
+        "..566666666665..",
+        ".56666666666665.",
+        "5666665566666665",
+        "566665..56666665",
         ".5555....555555.",
         "................",
         "................",
@@ -3413,18 +3511,18 @@ pub fn build_smw_sparkling_star_cursor_frames() -> [[[u8; 16]; 16]; 4] {
     // Frame 2: Right arm sparkle twinkle
     let f2 = parse_3bpp_ascii([
         ".......5........",
-        "......545.......",
-        ".....54445...1..",
-        "....5444445.111.",
-        "555554444455515.",
-        ".5444444444445..",
-        "..54514445145...",
-        "...545144515....",
-        "...5444444445...",
-        "..544444444445..",
-        ".54444444444445.",
-        "5444445544444445",
-        "544445..54444445",
+        "......565.......",
+        ".....56665...1..",
+        "....5666665.111.",
+        "555556666655515.",
+        ".5666666666665..",
+        "..56516665165...",
+        "...565166515....",
+        "...5666666665...",
+        "..566666666665..",
+        ".56666666666665.",
+        "5666665566666665",
+        "566665..56666665",
         ".5555....555555.",
         "................",
         "................",
@@ -3433,24 +3531,199 @@ pub fn build_smw_sparkling_star_cursor_frames() -> [[[u8; 16]; 16]; 4] {
     // Frame 3: Left arm sparkle twinkle + bright eye glint
     let f3 = parse_3bpp_ascii([
         ".......5........",
-        "......545.......",
-        "..1..54445......",
-        ".1115444445.....",
-        ".51554444455555.",
-        ".5444444444445..",
-        "..54114441145...",
-        "...541144115....",
-        "...5444444445...",
-        "..544444444445..",
-        ".54444444444445.",
-        "5444445544444445",
-        "544445..54444445",
+        "......565.......",
+        "..1..56665......",
+        ".1115666665.....",
+        ".51556666655555.",
+        ".5666666666665..",
+        "..56116661165...",
+        "...561166115....",
+        "...5666666665...",
+        "..566666666665..",
+        ".56666666666665.",
+        "5666665566666665",
+        "566665..56666665",
         ".5555....555555.",
         "................",
         "................",
     ]);
 
     [f0, f1, f2, f3]
+}
+
+/// Phase 5: Replace ALL live gameplay Zelda Sword blades & File Select Sword + Fairy Cursor
+/// inside compressed `raw 0xCF` (`Sheet 0xCF`!) with authentic **Super Mario Hammer** swings
+/// (black glossy iron mallet head + golden star band + warm wooden handle) AND the real live
+/// **2-frame Sparkling Golden SMW Super Star File Select Cursor** at cols `8..11`, rows `2..3` (`$A8`/`$AA`)!
+/// Preserves dungeon floor digits `1..8` at cols `12..15`, rows `2..3` 100% untouched!
+pub fn patch_mario_super_hammer_and_fileselect_sheet_cf(raw: &mut [u8]) {
+    // Live Sword/Hammer Palette (3bpp):
+    //   0=transparent, 1=bright white shine, 2=dark iron/black head, 3=gold star band/trim,
+    //   4=warm wood handle, 5=outline/deepest shadow, 6=mid steel highlight, 7=warm brown wood shade
+    let hammer_vert = parse_3bpp_ascii([
+        "................",
+        "....55555555....",
+        "...5226116225...",
+        "...5261111625...",
+        "...5223443225...",
+        "...5223443225...",
+        "...5222222225...",
+        "....55555555....",
+        "......5475......",
+        "......5475......",
+        "......5475......",
+        "......5475......",
+        "......5475......",
+        "......5335......",
+        "......5555......",
+        "................",
+    ]);
+
+    let hammer_horiz = parse_3bpp_ascii([
+        "................",
+        "................",
+        ".........55555..",
+        "........5226125.",
+        "........5261125.",
+        "........5234425.",
+        ".55555555234425.",
+        "534444445222225.",
+        "537777775222225.",
+        ".55555555226225.",
+        "........5222225.",
+        "........5222225.",
+        ".........55555..",
+        "................",
+        "................",
+        "................",
+    ]);
+
+    let hammer_diag_up = parse_3bpp_ascii([
+        "................",
+        ".......5555.....",
+        "......526125....",
+        ".....52611225...",
+        "....5223432225..",
+        "....5223432225..",
+        ".....52222225...",
+        "......555475....",
+        "........5475....",
+        ".......5475.....",
+        "......5475......",
+        ".....5475.......",
+        "....5335........",
+        "....555.........",
+        "................",
+        "................",
+    ]);
+
+    let hammer_diag_dn = parse_3bpp_ascii([
+        "................",
+        "................",
+        "....555.........",
+        "....5335........",
+        ".....5475.......",
+        "......5475......",
+        ".......5475.....",
+        "......555475....",
+        ".....52222225...",
+        "....5223432225..",
+        "....5223432225..",
+        ".....52611225...",
+        "......526125....",
+        ".......5555.....",
+        "................",
+        "................",
+    ]);
+
+    // 1. Replace ALL 8 sword-swing 16x16 slots in rows 0..1 (cols 0..15) with Mario Super Hammer poses!
+    //    - Cols 0..1: Vertical sword up/down (also $80/$81!)
+    //    - Cols 2..3: Diagonal swing 1
+    //    - Cols 4..5: Horizontal slash (also $84/$85 -> File Select Sword Lv1!)
+    //    - Cols 6..7: Diagonal swing 2
+    //    - Cols 8..9: Spin swing 1
+    //    - Cols 10..11: Spin swing 2
+    //    - Cols 12..13: Upright Master Sword / Hammer
+    //    - Cols 14..15: Diagonal Master Sword / Hammer
+    write_3bpp_16x16_local(raw, 0, 0, &hammer_vert);
+    write_3bpp_16x16_local(raw, 2, 0, &hammer_diag_up);
+    write_3bpp_16x16_local(raw, 4, 0, &hammer_horiz);
+    write_3bpp_16x16_local(raw, 6, 0, &hammer_diag_dn);
+    write_3bpp_16x16_local(raw, 8, 0, &hammer_diag_up);
+    write_3bpp_16x16_local(raw, 10, 0, &hammer_diag_dn);
+    write_3bpp_16x16_local(raw, 12, 0, &hammer_vert);
+    write_3bpp_16x16_local(raw, 14, 0, &hammer_diag_up);
+
+    // 2. Replace ALL 4 sword-swing 16x16 slots in rows 2..3 (cols 0..7 -> includes $A1 File Select Lv2..4 Hammer!)
+    //    Put a crisp centered 8x16 upright Mario Hammer directly inside col 1 ($A1/$B1) AND col 5 ($85/$95)
+    //    so File Select Mario raises a razor-sharp Super Mario Hammer!
+    let fs_hammer_8x16 = parse_3bpp_ascii([
+        "........55555555",
+        "........52261625",
+        "........52611125",
+        "........52344325",
+        "........52222225",
+        "........55555555",
+        "..........5475..",
+        "..........5475..",
+        "..........5475..",
+        "..........5475..",
+        "..........5475..",
+        "..........5475..",
+        "..........5475..",
+        "..........5335..",
+        "..........5555..",
+        "................",
+    ]);
+    // Keep col 0 as full vertical hammer left half and col 1 ($A1/$B1) as crisp 8x16 File Select upright Hammer!
+    let mut slot_a0 = hammer_vert;
+    for y in 0..16 {
+        for x in 8..16 {
+            slot_a0[y][x] = fs_hammer_8x16[y][x];
+        }
+    }
+    write_3bpp_16x16_local(raw, 0, 2, &slot_a0);
+    write_3bpp_16x16_local(raw, 2, 2, &hammer_diag_dn);
+    write_3bpp_16x16_local(raw, 4, 2, &hammer_horiz);
+    write_3bpp_16x16_local(raw, 6, 2, &hammer_diag_up);
+
+    // 3. CRITICAL FIX: Replace the REAL LIVE File Select Fairy Cursor at cols 8..11, rows 2..3 ($A8 & $AA)
+    //    with our 2-frame Sparkling Golden SMW Super Star! (Cols 12..15 = floor digits 1..8 STAY UNTOUCHED!)
+    let stars = build_smw_sparkling_star_cursor_frames();
+    write_3bpp_16x16_local(raw, 8, 2, &stars[0]);
+    write_3bpp_16x16_local(raw, 10, 2, &stars[1]);
+}
+
+/// Local 3bpp 16x16 writer for `mario_ui.rs` raw sheets.
+fn write_3bpp_16x16_local(raw: &mut [u8], tx: usize, ty: usize, px: &[[u8; 16]; 16]) {
+    for qy in 0..2usize {
+        for qx in 0..2usize {
+            let tidx = (ty + qy) * 16 + (tx + qx);
+            let off = tidx * 24;
+            if off + 24 > raw.len() {
+                continue;
+            }
+            for y in 0..8usize {
+                let (mut p0, mut p1, mut p2) = (0u8, 0u8, 0u8);
+                for x in 0..8usize {
+                    let c = px[qy * 8 + y][qx * 8 + x] & 7;
+                    let bit = 1u8 << (7 - x);
+                    if (c & 1) != 0 {
+                        p0 |= bit;
+                    }
+                    if (c & 2) != 0 {
+                        p1 |= bit;
+                    }
+                    if (c & 4) != 0 {
+                        p2 |= bit;
+                    }
+                }
+                raw[off + y * 2] = p0;
+                raw[off + y * 2 + 1] = p1;
+                raw[off + 16 + y] = p2;
+            }
+        }
+    }
 }
 
 /// Crisp 8x8 **Mini Mario Cap Face** for the Dungeon Mini-Map player marker (`Sheet 0xD2 (1,3)`).

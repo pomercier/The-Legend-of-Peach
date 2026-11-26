@@ -6,6 +6,48 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ---
 
+## [0.5.0] — 2026-11-26 — Super Mario Revolution
+
+### Native 65c816 Super Mario Gameplay Engine (`mario_engine.rs`, Bank `$22:9000`)
+- **Genuine Top-Down Mario Jumping (`L` or `R`)**:
+  - Hooks all 3 verified Bank `$02` callers of `Link_Main` (`PC 0x010959`, `0x011CCA`, `0x0125C7`) using collision-free WRAM `$7E:F500..$7E:F53F`.
+  - Smooth 8.8 fixed-point parabolic jump physics with variable jump height (short-hop vs. full ~22px arc), crisp dark oval ground shadow beneath Mario, full 8-direction air control, airborne hazard clearance, and automatic mode/room transition reset.
+- **Genuine Mario Stomp Combat (`$22:9800` Vulnerability Table)**:
+  - Descending onto stompable Mario enemies (Koopas, Goombas, Buzzies, Rex, Monty Moles, Dry Bones, Cheep Cheeps) deals heavy stomp damage / instant defeat puff (`$0DD0 = 6`), awards **+1 Gold Coin**, triggers post-stomp i-frames, plays the native SPC700 Mario Stomp SFX, and bounces Mario upward (extra height when holding `L`/`R`).
+  - Spiked/armored enemies (Spinies, Thwomps, Chain Chomps) are safely immune to ordinary stomps and can be defeated via Super Starman.
+- **Unified Mario Power-Up State Machine (`$22:9900` Live CGRAM Palettes)**:
+  - **Fire Mario**: Equipping `FLEUR DE FEU` (`$0202 == 0x06`) immediately live-swaps Mario's CGRAM OBJ palette into pure white cap/shirt & blazing crimson overalls while launching Fireballs.
+  - **Super Starman (`L + R`)**: Consumes Star Power from `$7E:F36E` to trigger 4 seconds of flashing 4-palette rainbow CGRAM invincibility with instant contact-kill across both regular and spiked enemies.
+
+### Native SPC700 Mario Sound Effects (`mario_sfx.rs`)
+- In-place Bank `$19` (`PC 0x0D0B70..0x0D1BFF` -> `ARAM $17C0..$284F`) native SPC700 SFX compiler delivering authentic **Mario Coin chime (`B5 -> E6`)**, **SMW rising Jump sweep**, **Mario Stomp pop**, **descending triple-pulse Warp Pipe**, and **Super Mario Hammer bonk**.
+
+### Overworld Map32 World Engine & World 1 Redesign (`mario_map.rs`)
+- Zero-dependency Rust Big-Endian LC_LZ2 Overworld Map32 JSON editor (`OverworldScreenMap::to_json_pretty` / `from_json`) verified lossless across all 64 Light World screens.
+- Redesigned **World 1 — Yoshi's Island (`Screen 0x2C`, Mario's House Hub)** relocated cleanly into LoROM Bank `$3B` (`0x1D8000+`) with an enforced compile-time memory firewall isolating GFX relocation (`$23..$3A`) from Map32 screens (`$3B..$3F`).
+
+### Complete Resolution of All 5 Visual & Dialogue Bugs
+- **File Select Overhaul (`mario_ui.rs`, `mixer.rs`)**: Fixed FR PAL player name encoding (`1. MARIO`), replaced the vanilla pink Fairy cursor (`raw 0xCF $A8/$AA`, `$0E:96B2 = 0x30`) with a 2-frame blazing **Golden SMW Super Star**, replaced Mario's blue Zelda sword with a centered upright **Super Mario Hammer**, and transformed the olive-green cobblestone backdrop (`0x0DD9AA`) into **SMW Royal Sky Blue**.
+- **Super Mario Hammer & Start Menu Revolution (`mario_ui.rs`)**: Replaced all melee sword swings (`raw 0xCF`) and Start Menu `EQUIPEMENT` weapons (`0x06F769`) with Super Mario Hammers; replaced Fire/Ice Rods (`0xB0..0xC1`) with iconic **SMW Fire & Ice Flowers**; replaced Magic Mirror (`0x06F709`) with a glossy **SMW Green Warp Pipe** (eliminating the HUD tile collision); and Mario-ized all remaining Start Menu item names (`TUYAU WARP`, `BLOC POW`, `SUPER CHAMPI`, `FLUTE WARP`, `POUDRE KAMEK`).
+- **Toad Town NPC OAM Alignment (`mario_world.rs`)**: Mapped every head and body slot of `raw 0xC2`, `0xBD`, and `0xC3` to verified vanilla ALTTP OAM layouts with upgraded pixel-exact Nintendo Toad sprites (fixing the distorted side sprite and red belly dot in Room `0x0103`), paired with **Royal Crimson Red & Gold Mario House Carpets (`0x0DD932`)** in Toad Town and Kamek's Shop.
+- **Winged Iggy Koopa Rebuild (`mario_bosses.rs`)**: Rebuilt `raw 0xAB` (`sp:38`) aligned cleanly to Mothula's OAM structure.
+- **French Dialogue Engine & Volcanic Bowser Throne (`mario_intro.rs`, `mixer.rs`)**: Fixed duplicate `0x75`/`0x76` line-break emissions (eliminating text overwrite in Bowser Room `0x0000`), eliminated 100% of hyphenated word splits across line breaks across all 372 messages (enforced by automated unit test), rewrote marquee story dialogues into a playful original Mario narrative, and converted Final Bowser Room `0x0000` (`0x0DE2C2`) into an **Obsidian Dark-Charcoal & Lava Volcanic Throne Room**.
+
+### De-Zeldafication Engineering & Persistent Registries
+- Added structured engineering registries: `docs/ROM_MEMORY.md`, `docs/WRAM_ALLOCATION.json`, `docs/ZELDA_RESIDUE_REGISTRY.json`, `docs/PATCH_DEPENDENCIES.json`, `docs/WORLD_MAP_REGISTRY.json`, `docs/MARIO_GAMEPLAY_REGISTRY.json`, `docs/FAILED_APPROACHES.md`, `docs/VISUAL_REGRESSION_REPORT.md`, `docs/NEXT_ACTIONS.md`, and `docs/maps/world1_yoshis_island.json`.
+- Reduced the measured **Zelda Residue Index** from `94.9` (`v0.4.0`) to **`19.2`** (`v0.5.0`, **−79.8%**), raising the **Mario Identity Index** from `5.1` to **`80.8`**.
+
+### Build & Verification (`v0.5.0`)
+- Deterministic 2 MiB LoROM build: `220` hardware patches across `18` rules (`~1.0 s`), `49` LZ2 sheets verified, `11` relocated in `$23..$3A` + Map32 in `$3B..$3F` (0 overlaps).
+- **SNES Checksum / Complement:** `0x87FF` / `0x7800` (Valid: `true`)
+- **Output CRC32:** `9E8F84EB`
+- **Output MD5:** `74b5e46d58efa5f0f15cfe2b30383401`
+- **Output SHA-1:** `50db6eed1ab3495d877e0701c10974df4f252dd3`
+- **Output SHA-256:** `93d3774f81119eb41d80b0c610d3b1bbcd1430c5f572f16b65b47b3ddd24975e`
+- Full test suite: `29/29` passing Rust unit and integration tests; dual-core live verification in Mednafen `snes_faust` and cycle-accurate `bsnes` (`snes`).
+
+---
+
 ## [0.4.0] — 2026-11-26 — The Mushroom Kingdom Reborn
 
 ### Visual Polish & Authentic Super Mario World Environments

@@ -1233,6 +1233,7 @@ pub fn repack_french_bank1c(
         Txt(String),
     }
 
+    // Word-boundary-safe French Mario substitutions (never corrupting Sagesse->Toadsse, Reliques->Reliquess, or emotional cœur->champi!)
     const SUBS: &[(&str, &str)] = &[
         // Sorcier / Bowser (longest phrases first!)
         ("Le sorcier Bowser", "Bowser"),
@@ -1260,57 +1261,81 @@ pub fn repack_french_bank1c(
         ("d'Ganon", "de Bowser"),
         ("Ganon", "Bowser"),
         ("GANON", "BOWSER"),
-        // Hyrule -> Champi (6 chars exact, clean French grammar!)
+        // Hyrule -> Royaume Champi
+        ("du Royaume d'Hyrule", "du Royaume Champi"),
+        ("le Royaume d'Hyrule", "le Royaume Champi"),
         ("d'Hyrule", "de Champi"),
         ("l'Hyrule", "Champi"),
         ("Hyrule", "Champi"),
         ("HYRULE", "CHAMPI"),
-        // Zelda
+        // Zelda -> Peach
         ("Zeld..", "Peach!"),
         ("Zelda", "Peach"),
         ("ZELDA", "PEACH"),
-        // Triforce / Reliques
-        ("de la Triforce", "des Reliques"),
-        ("à la Triforce", "aux Reliques"),
-        ("la Triforce a créé", "les Reliques ont créé"),
-        ("La Triforce a créé", "Les Reliques ont créé"),
-        ("la Triforce", "les Reliques"),
-        ("La Triforce", "Les Reliques"),
-        ("Triforce", "Reliques"),
-        ("le Relique", "la Relique"),
-        ("Le Relique", "La Relique"),
-        ("un Relique", "une Relique"),
-        ("du Relique", "de la Relique"),
-        ("des Relique", "des Reliques"),
-        ("Pendentifs", "Reliques"),
-        ("Pendentif", "Relique"),
-        ("pendentifs", "reliques"),
-        ("pendentif", "relique"),
-        // Excalibur -> Épée Star (NEVER self-matching!)
-        ("l'Excalibur", "l'Épée Star"),
-        ("d'Excalibur", "de l'Épée Star"),
-        ("Excalibur", "l'Épée Star"),
-        // Sahasrahla
+        // Triforce / Pendentifs -> Super Étoiles (clean singular/plural grammar!)
+        ("de la Triforce", "des Super Étoiles"),
+        ("à la Triforce", "aux Super Étoiles"),
+        ("la Triforce a créé", "les Super Étoiles ont créé"),
+        ("La Triforce a créé", "Les Super Étoiles ont créé"),
+        ("la Triforce", "la Super Étoile"),
+        ("La Triforce", "La Super Étoile"),
+        ("Triforce", "Super Étoile"),
+        ("des Pendentifs", "des Super Étoiles"),
+        ("les Pendentifs", "les Super Étoiles"),
+        ("les 3 Pendentifs", "les 3 Super Étoiles"),
+        ("trois Pendentifs", "trois Super Étoiles"),
+        ("autres Pendentifs", "autres Super Étoiles"),
+        ("le Pendentif", "l'Étoile"),
+        ("du Pendentif", "de l'Étoile"),
+        ("un Pendentif", "une Étoile"),
+        ("Pendentifs", "Super Étoiles"),
+        ("Pendentif", "Super Étoile"),
+        ("pendentifs", "Super Étoiles"),
+        ("pendentif", "Super Étoile"),
+        ("le Relique", "la Super Étoile"),
+        ("Le Relique", "La Super Étoile"),
+        ("un Relique", "une Super Étoile"),
+        ("du Relique", "de la Super Étoile"),
+        ("des Relique", "des Super Étoiles"),
+        ("Reliquess", "Super Étoiles"),
+        // Excalibur -> Super Marteau (Phase 5: eliminate sword identity!)
+        ("l'Epée du Diable", "le Super Marteau"),
+        ("l'Épée du Diable", "le Super Marteau"),
+        ("l'Excalibur", "le Super Marteau"),
+        ("d'Excalibur", "du Super Marteau"),
+        ("Excalibur", "le Super Marteau"),
+        ("cette épée", "ce marteau"),
+        ("l'épée", "le marteau"),
+        ("mon épée", "mon marteau"),
+        ("ton épée", "ton marteau"),
+        ("une épée", "un marteau"),
+        // Sahasrahla -> Papy Toad
         ("Sahasrahla", "Papy Toad"),
         ("SAHASRAHLA", "PAPY TOAD"),
-        // Cocorico
-        ("de Cocorico", "de ToadTown"),
-        ("Cocorico", "ToadTown"),
-        // Sages
+        // Cocorico -> Toad Town
+        ("de Cocorico", "de Toad Town"),
+        ("Cocorico", "Toad Town"),
+        // Sages -> Toads (protect "Sagesse" via temporary sentinel!)
+        ("Sagesse", "__SAGESSE__"),
+        ("sagesse", "__sagesse__"),
         ("7 Sages", "7 Toads"),
         ("Sept Sages", "Sept Toads"),
         ("sept Sages", "sept Toads"),
         ("des 7 Sages", "des 7 Toads"),
         ("Sages", "Toads"),
         ("sages", "Toads"),
+        ("__SAGESSE__", "Sagesse"),
+        ("__sagesse__", "sagesse"),
         // Girls / Yoshis
-        ("les 7 jeunes filles", "les 7 jeunes Yoshi"),
-        ("jeunes filles enlevées", "jeunes Yoshi enlevés"),
-        ("jeunes filles disparues", "jeunes Yoshi disparus"),
-        ("jeunes filles", "jeunes Yoshi"),
-        ("jeune fille", "jeune Yoshi"),
+        ("les 7 jeunes filles", "les 7 amis Yoshi"),
+        ("jeunes filles enlevées", "amis Yoshi enlevés"),
+        ("jeunes filles disparues", "amis Yoshi disparus"),
+        ("jeunes filles", "amis Yoshi"),
+        ("jeune fille", "ami Yoshi"),
         ("petite-fille", "petit Yoshi"),
-        // Hyliens
+        ("les avoir toutes", "les avoir tous"),
+        ("sauvées", "sauvés"),
+        // Hyliens -> Toads
         ("langue des Hyliens", "langue des Toads"),
         ("des Hyliens", "des Toads"),
         ("les Hyliens", "les Toads"),
@@ -1318,43 +1343,44 @@ pub fn repack_french_bank1c(
         ("hylien", "toad"),
         ("hylienne", "toad"),
         // Weapons & Items
-        ("l'Arc", "le Blaster"),
-        ("Arc", "Blaster"),
+        ("l'Arc", "le Bill Blaster"),
+        ("Arc", "Bill Blaster"),
         ("des Flèches d'Argent", "des Super Étoiles"),
         ("une Flèche d'Argent", "une Super Étoile"),
         ("Flèche d'Argent", "Super Étoile"),
         ("Flèches d'Argent", "Super Étoiles"),
-        ("des flèches", "des Bills"),
-        ("des Flèches", "des Bills"),
-        ("flèches", "Bills"),
-        ("Flèches", "Bills"),
-        ("flèche", "Bill"),
-        ("Flèche", "Bill"),
+        ("des flèches", "des Bullet Bills"),
+        ("des Flèches", "des Bullet Bills"),
+        ("flèches", "Bullet Bills"),
+        ("Flèches", "Bullet Bills"),
+        ("flèche", "Bullet Bill"),
+        ("Flèche", "Bullet Bill"),
         ("Boomerang Magique", "Carapace Magique"),
         ("Boomerang", "Carapace"),
         ("Livre de Mudora", "Livre Magique"),
-        ("Mudora", "Magie SMW"),
+        ("Mudora", "Magie Mario"),
         ("Palmes de Zora", "Palmes Grenouille"),
         ("Zora", "Bloup"),
-        // Currency / Hearts
+        ("Cristaux", "Oeufs Yoshi"),
+        ("Cristal", "Oeuf Yoshi"),
+        // Currency / Collectible Mushrooms (NEVER replace emotional "coeur" like "coeur d'or"!)
         ("rubis", "pièces"),
         ("Rubis", "Pièces"),
-        ("un morceau de coeur", "un fragment de champi"),
-        ("morceau de coeur", "fragment de champi"),
-        ("un fragment de coeur", "un fragment de champi"),
-        ("fragment de coeur", "fragment de champi"),
-        ("un coeur", "un champi"),
-        ("de coeur", "de champi"),
-        ("d'un coeur", "d'un champignon"),
-        ("coeur", "champi"),
-        ("cœur", "champi"),
+        ("une réserve de coeur", "un Super Champi"),
+        ("réserve de coeur", "Super Champi"),
+        ("un morceau de coeur", "un mini champi"),
+        ("morceau de coeur", "mini champi"),
+        ("un fragment de coeur", "un mini champi"),
+        ("fragment de coeur", "mini champi"),
+        ("d'un coeur", "d'un Super Champi"),
+        ("un coeur", "un Super Champi"),
         // Locations
-        ("Palais de l'Est", "Donjon de l'Est"),
-        ("Palais du Désert", "Donjon du Désert"),
-        ("Palais", "Donjon"),
-        ("Monde d'Or", "Royaume d'Or"),
-        ("Terre d'Or", "Royaume d'Or"),
-        // Cleanup any doubled words caused by substitution boundaries
+        ("Palais de l'Est", "Fort Koopa Est"),
+        ("Palais du Désert", "Fort du Désert"),
+        ("Palais", "Forteresse"),
+        ("Monde d'Or", "Royaume Étoile"),
+        ("Terre d'Or", "Royaume Étoile"),
+        // Cleanup any doubled words
         ("Bowser Bowser", "Bowser"),
         ("Bowser, Bowser", "Bowser"),
         ("le le ", "le "),
@@ -1372,9 +1398,252 @@ pub fn repack_french_bank1c(
         t
     };
 
+    // Detect whether a trailing '-' before a line break is a real French compound prefix
+    // vs a vanilla ALTTP syllable hyphenation split (e.g. "réali-" + "ser", "con-" + "trôle").
+    let is_real_compound_before_hyphen = |before: &str, after: &str| -> bool {
+        let word_before = before
+            .rsplit(|c: char| !c.is_alphabetic() && c != '\'')
+            .next()
+            .unwrap_or("")
+            .to_lowercase();
+        let word_after = after
+            .split(|c: char| !c.is_alphabetic())
+            .next()
+            .unwrap_or("")
+            .to_lowercase();
+        matches!(
+            (word_before.as_str(), word_after.as_str()),
+            ("nous", "mêmes")
+                | ("vous", "mêmes")
+                | ("moi", "même")
+                | ("toi", "même")
+                | ("lui", "même")
+                | ("elle", "même")
+                | ("alter", "ego")
+                | ("peut", "être")
+                | ("est", "ce")
+                | ("au", "dessus")
+                | ("au", "dessous")
+                | ("petit", "fils")
+                | ("petite", "fille")
+                | ("grand", "père")
+                | ("arc", "en")
+                | ("tout", "puissant")
+                | ("rendez", "vous")
+                | ("écoute", "moi")
+                | ("touche", "la")
+                | ("montre", "moi")
+                | ("donne", "moi")
+                | ("laisse", "moi")
+                | ("aide", "moi")
+                | ("sauve", "moi")
+                | ("suis", "moi")
+                | ("crois", "moi")
+                | ("dis", "moi")
+                | ("as", "tu")
+                | ("es", "tu")
+                | ("peux", "tu")
+                | ("veux", "tu")
+                | ("sais", "tu")
+                | ("vas", "tu")
+                | ("viens", "tu")
+                | ("est", "il")
+                | ("fait", "il")
+                | ("faut", "il")
+                | ("a", "t")
+                | ("3", "up")
+                | ("super", "marteau")
+        )
+    };
+
+    // Helper: format a clean, zero-hyphen, zero-duplicate-LB French Mario paragraph list!
+    // Each page in `pages` is separated by `<WAIT>` (0x7E). Strictly wraps at MAX_COLS = 28
+    // using a deterministic single-emission line_slot machine (0 -> 0x75, 1 -> 0x76, >=2 -> 0x73).
+    const MAX_COLS: usize = 28;
+    let encode_mario_story_msg =
+        |prefix_ctrl: &[u8], pages: &[&str], suffix_ctrl: &[u8]| -> Vec<u8> {
+            let mut out = Vec::new();
+            out.extend_from_slice(prefix_ctrl);
+            let mut line_slot = 0usize;
+            let emit_break = |buf: &mut Vec<u8>, slot: &mut usize| {
+                let code = match *slot {
+                    0 => 0x75,
+                    1 => 0x76,
+                    _ => 0x73,
+                };
+                buf.push(code);
+                if *slot < 2 {
+                    *slot += 1;
+                }
+            };
+            for (p_idx, page) in pages.iter().enumerate() {
+                if p_idx > 0 {
+                    out.push(0x7E); // <WAIT>
+                    emit_break(&mut out, &mut line_slot);
+                }
+                let mut cur_col = 0usize;
+                let mut line_buf = String::new();
+                let flush_line = |buf: &mut Vec<u8>, lbuf: &mut String| {
+                    if !lbuf.is_empty() {
+                        buf.extend_from_slice(&encode_dp_fr(lbuf));
+                        lbuf.clear();
+                    }
+                };
+                for tok in page.split_whitespace() {
+                    if tok == "<NAME>" {
+                        let add_len = 6 + usize::from(cur_col > 0);
+                        if cur_col > 0 && cur_col + add_len > MAX_COLS {
+                            flush_line(&mut out, &mut line_buf);
+                            emit_break(&mut out, &mut line_slot);
+                            cur_col = 0;
+                        } else if cur_col > 0 {
+                            line_buf.push(' ');
+                            cur_col += 1;
+                        }
+                        flush_line(&mut out, &mut line_buf);
+                        out.push(0x83);
+                        cur_col += 6;
+                        continue;
+                    }
+                    let wlen = tok.chars().count();
+                    let need_sp = cur_col > 0;
+                    if cur_col > 0 && cur_col + wlen + usize::from(need_sp) > MAX_COLS {
+                        flush_line(&mut out, &mut line_buf);
+                        emit_break(&mut out, &mut line_slot);
+                        line_buf.push_str(tok);
+                        cur_col = wlen;
+                    } else {
+                        if need_sp {
+                            line_buf.push(' ');
+                            cur_col += 1;
+                        }
+                        line_buf.push_str(tok);
+                        cur_col += wlen;
+                    }
+                }
+                flush_line(&mut out, &mut line_buf);
+            }
+            out.extend_from_slice(suffix_ctrl);
+            out
+        };
+
     let mut new_bank: Vec<u8> = Vec::with_capacity(0x8000);
 
-    for raw in &raw_msgs {
+    for (msg_idx, raw) in raw_msgs.iter().enumerate() {
+        // Phase 5: Original Super Mario French Story Rewrites for marquee scenes!
+        // Preserves exact ALTTP event/choice/sound control codes while delivering a genuine,
+        // playful Mario adventure with ZERO hyphenated word splits and ZERO text overlap!
+        let custom_story: Option<Vec<u8>> = match msg_idx {
+            // #12: Uncle Luigi leaving Mario's House at game start
+            12 => Some(encode_mario_story_msg(
+                &[],
+                &[
+                    "Salut Mario ! Je file inspecter les Tuyaux du Royaume Champi.",
+                    "Bowser prépare encore un mauvais coup ! Reste ici, je reviens très vite !",
+                ],
+                &[],
+            )),
+            // #13: Luigi gifting Mario his Super Hammer & Koopa Shell + teaching Jump & Stomp!
+            13 => Some(encode_mario_story_msg(
+                &[],
+                &[
+                    "Oh, <NAME> ! Bowser a volé les Super Étoiles et coupé nos Tuyaux !",
+                    "Prends mon Super Marteau et ma Carapace ! Appuie sur L ou R pour sauter et écraser les ennemis !",
+                ],
+                &[],
+            )),
+            // #17: Tutorial Toad teaching Mario Jump/Stomp/Hammer
+            17 => Some(encode_mario_story_msg(
+                &[],
+                &[
+                    "Tu veux devenir un vrai héros du Royaume Champi ?",
+                    "Saute avec L ou R pour écraser les Goombas et frappe avec B grâce à ton Super Marteau !",
+                ],
+                &[],
+            )),
+            // #30: Princess Peach opening telepathic call
+            30 => Some(encode_mario_story_msg(
+                &[0x84, 0x02, 0x7A, 0x03],
+                &[
+                    "Au secours ! Au secours ! C'est moi, la Princesse Peach !",
+                    "Bowser et ses sept Koopalings ont envahi le château et volé les Super Étoiles !",
+                    "Mario, tu es notre seul espoir ! Viens vite au château !",
+                ],
+                &[],
+            )),
+            // #31: Peach guiding Mario to the secret entrance
+            31 => Some(encode_mario_story_msg(
+                &[0x84, 0x02, 0x7A, 0x03],
+                &[
+                    "Au secours ! Je suis enfermée dans le sous-sol du château.",
+                    "Un passage secret près des buissons mène droit au donjon. Saute par-dessus les gardes !",
+                ],
+                &[],
+            )),
+            // #35: Peach escaping the dungeon cell
+            35 => Some(encode_mario_story_msg(
+                &[],
+                &[
+                    "Mario ! Quel soulagement ! Vite, filons avant que Bowser ne nous repère !",
+                    "Je connais un passage secret vers le refuge des Toads. Suis-moi !",
+                ],
+                &[],
+            )),
+            // #58: Toad Town Wanted Poster
+            58 => Some(encode_mario_story_msg(
+                &[],
+                &[
+                    "AVIS DE RECHERCHE ! Bowser a capturé Peach et nos amis Yoshi !",
+                    "Aidez Mario à retrouver les Super Étoiles !",
+                ],
+                &[],
+            )),
+            // #278: Bob-omb Shop
+            278 => Some(encode_mario_story_msg(
+                &[],
+                &[
+                    "100 pièces les 30 Bob-ombs ! Qualité supérieure du Royaume Champi !",
+                    "Des Bob-ombs toutes fraîches pour exploser les murs de Bowser !",
+                ],
+                &[],
+            )),
+            // #317: Castle Tower Bowser taunt (replaces vanilla "Bon - A la prochaine !" split!)
+            317 => Some(encode_mario_story_msg(
+                &[],
+                &[
+                    "BWAHAHAHA ! Le sceau des sept Toads est enfin brisé !",
+                    "Plus rien n'arrêtera mes sept Koopalings et mes forteresses de lave !",
+                    "Rendez-vous dans mon château, petit plombier !",
+                ],
+                &[],
+            )),
+            // #366: Final Boss King Bowser Room 0x00 speech (fixes the overlapping text bug!)
+            366 => Some(encode_mario_story_msg(
+                &[],
+                &[
+                    "BWAHAHAHA ! Jamais je n'aurais cru qu'un plombier à moustache me causerait autant de problèmes !",
+                    "Tu as vaincu mes sept Koopalings et traversé mes forteresses de lave...",
+                    "Mais jamais tu ne reprendras les Super Étoiles ! Goûte au marteau et aux flammes du Roi Bowser !",
+                ],
+                &[],
+            )),
+            // #367: Final Boss King Bowser Phase 2
+            367 => Some(encode_mario_story_msg(
+                &[],
+                &[
+                    "Grrr... Pas mal, petit plombier ! Voyons si tu résistes à mes flammes royales ! En garde !",
+                ],
+                &[],
+            )),
+            _ => None,
+        };
+
+        if let Some(custom_bytes) = custom_story {
+            new_bank.extend_from_slice(&custom_bytes);
+            new_bank.push(0x7F);
+            continue;
+        }
+
         let mut segs: Vec<MsgPart> = Vec::new();
         let mut cur_txt = String::new();
         let mut i = 0usize;
@@ -1401,7 +1670,7 @@ pub fn repack_french_bank1c(
                 i += 1;
                 continue;
             }
-            // NOTE: 0x51 is French apostrophe '\'' -> MUST stay in Txt (486 occurrences + C'est/d'Hyrule/l'Arc!)
+            // NOTE: 0x51 is French apostrophe '\'' -> MUST stay in Txt!
             if matches!(b, 0x43..=0x50 | 0x52..=0x58 | 0x6F..=0x72 | 0x7E | 0x80..=0x86 | 0x90) {
                 if !cur_txt.is_empty() {
                     segs.push(MsgPart::Txt(std::mem::take(&mut cur_txt)));
@@ -1432,8 +1701,81 @@ pub fn repack_french_bank1c(
             segs.push(MsgPart::Txt(cur_txt));
         }
 
-        // Cross-line cleanup: handle phrases split across a single LineBreak (e.g. "Le sorcier<L3>Bowser" -> "Bowser"!)
-        let mut msg_modified = raw.contains(&0xD9);
+        // Detect messages containing special menu choices, blank-line clears (0x90), or centered diagrams
+        let has_special_layout = segs.iter().any(|s| {
+            matches!(
+                s,
+                MsgPart::Ctrl(c)
+                    if !c.is_empty()
+                        && (matches!(c[0], 0x44 | 0x52..=0x58 | 0x70..=0x72 | 0x80..=0x82 | 0x85 | 0x86 | 0x90))
+            )
+        }) || segs.iter().any(|s| {
+            matches!(s, MsgPart::Txt(t) if t.trim_start().starts_with('>') || t.starts_with("   "))
+        });
+
+        // PASS 1: Eliminate ALL hyphenated word-splits across line breaks (even in choice/special messages!)
+        // e.g. "rÉali-" <LB> "ser" -> "réaliser", "con-" <LB> "trôle" -> "contrôle", "Penden-" <LB> "tifs" -> "Pendentifs"!
+        let mut had_hyphen_split = false;
+        let mut idx = 0usize;
+        while idx + 2 < segs.len() {
+            // Handle both `Txt("foo-") + LineBreak + Txt("bar")` AND `Txt("foo-") + Ctrl(0x7E) + LineBreak + Txt("bar")`!
+            if let MsgPart::Txt(a) = &segs[idx] {
+                let a_trim = a.trim_end();
+                if a_trim.ends_with('-') && a_trim.len() >= 2 {
+                    // Case A: Txt("foo-") + LB + Txt("bar")
+                    if let (MsgPart::LineBreak(_), MsgPart::Txt(b)) =
+                        (&segs[idx + 1], &segs[idx + 2])
+                    {
+                        let b_trim = b.trim_start();
+                        if !b_trim.is_empty()
+                            && b_trim.chars().next().is_some_and(|c| c.is_alphabetic())
+                            && !is_real_compound_before_hyphen(&a_trim[..a_trim.len() - 1], b_trim)
+                        {
+                            // Move the whole joined word to the next line or join into `a`
+                            let prefix = &a_trim[..a_trim.len() - 1];
+                            let (before_word, partial) = match prefix.rfind(' ') {
+                                Some(sp) => (&prefix[..sp], &prefix[sp + 1..]),
+                                None => ("", prefix),
+                            };
+                            let joined_b = format!("{partial}{b_trim}");
+                            segs[idx] = MsgPart::Txt(before_word.to_string());
+                            segs[idx + 2] = MsgPart::Txt(joined_b);
+                            had_hyphen_split = true;
+                        }
+                    }
+                    // Case B: Txt("foo-") + Ctrl(0x7E) + LB + Txt("bar")
+                    else if idx + 3 < segs.len() {
+                        if let (MsgPart::Ctrl(c), MsgPart::LineBreak(_), MsgPart::Txt(b)) =
+                            (&segs[idx + 1], &segs[idx + 2], &segs[idx + 3])
+                        {
+                            let b_trim = b.trim_start();
+                            if c.as_slice() == [0x7E]
+                                && !b_trim.is_empty()
+                                && b_trim.chars().next().is_some_and(|ch| ch.is_alphabetic())
+                                && !is_real_compound_before_hyphen(
+                                    &a_trim[..a_trim.len() - 1],
+                                    b_trim,
+                                )
+                            {
+                                let prefix = &a_trim[..a_trim.len() - 1];
+                                let (before_word, partial) = match prefix.rfind(' ') {
+                                    Some(sp) => (&prefix[..sp], &prefix[sp + 1..]),
+                                    None => ("", prefix),
+                                };
+                                let joined_b = format!("{partial}{b_trim}");
+                                segs[idx] = MsgPart::Txt(before_word.to_string());
+                                segs[idx + 3] = MsgPart::Txt(joined_b);
+                                had_hyphen_split = true;
+                            }
+                        }
+                    }
+                }
+            }
+            idx += 1;
+        }
+
+        // Cross-line cleanup: handle phrases split across a single LineBreak (e.g. "Le sorcier<L3>Bowser")
+        let mut msg_modified = had_hyphen_split || raw.contains(&0xD9);
         for idx in 0..segs.len() {
             if idx + 2 < segs.len() {
                 if let (MsgPart::Txt(a), MsgPart::LineBreak(_), MsgPart::Txt(b)) =
@@ -1454,7 +1796,6 @@ pub fn repack_french_bank1c(
                 }
             }
         }
-        // Check if ANY text segment in this message matches a Mario substitution
         if !msg_modified {
             for s in &segs {
                 if let MsgPart::Txt(t) = s {
@@ -1465,8 +1806,8 @@ pub fn repack_french_bank1c(
                 }
             }
         }
-        // For untouched vanilla messages, try lossless DP compression against the live Bank $0C dictionary
-        // (preserving exact vanilla layout & control codes!) and keep whichever encoding is strictly shorter!
+
+        // Untouched vanilla messages (no Mario subs & no hyphen splits): DP-compress verbatim!
         if !msg_modified {
             let mut opt_bytes = Vec::with_capacity(raw.len());
             for s in &segs {
@@ -1485,71 +1826,130 @@ pub fn repack_french_bank1c(
             continue;
         }
 
-        // Detect messages containing special menu choices or centered heart-piece icon diagrams
-        // (preserve their exact line structure without reflowing columns)
-        let has_special_layout = segs.iter().any(|s| {
-            matches!(
-                s,
-                MsgPart::Ctrl(c)
-                    if !c.is_empty()
-                        && (matches!(c[0], 0x52..=0x58 | 0x71 | 0x72 | 0x80..=0x82 | 0x85 | 0x86))
-            )
-        });
+        // PASS 2: For prose messages (!has_special_layout), collapse soft LineBreaks (0x73/0x75/0x76)
+        // between consecutive Txt segments so we NEVER emit duplicate 0x75 or 0x76 over drawn text!
+        let mut normalized: Vec<MsgPart> = Vec::with_capacity(segs.len());
+        if !has_special_layout {
+            let mut k = 0usize;
+            while k < segs.len() {
+                match &segs[k] {
+                    MsgPart::Txt(t) => {
+                        let sub = apply_subs(t.clone());
+                        if let Some(MsgPart::Txt(prev)) = normalized.last_mut() {
+                            if !prev.is_empty()
+                                && !sub.is_empty()
+                                && !prev.ends_with(' ')
+                                && !sub.starts_with(' ')
+                            {
+                                prev.push(' ');
+                            }
+                            prev.push_str(sub.trim_start());
+                        } else {
+                            normalized.push(MsgPart::Txt(sub));
+                        }
+                    }
+                    MsgPart::LineBreak(lb) => {
+                        if *lb == 0x74 {
+                            // Explicit screen/L1 reset — preserve!
+                            normalized.push(MsgPart::LineBreak(0x74));
+                        } else {
+                            // Soft break (0x73/0x75/0x76): if preceded by Txt and followed by Txt,
+                            // merge as space so the single-emission word wrapper controls every line break!
+                            let prev_is_txt = matches!(normalized.last(), Some(MsgPart::Txt(_)));
+                            let next_is_txt = matches!(segs.get(k + 1), Some(MsgPart::Txt(_)));
+                            if prev_is_txt && next_is_txt {
+                                if let Some(MsgPart::Txt(prev)) = normalized.last_mut() {
+                                    if !prev.is_empty() && !prev.ends_with(' ') {
+                                        prev.push(' ');
+                                    }
+                                }
+                            } else {
+                                // Break right after <WAIT> or control code -> keep as logical page break
+                                normalized.push(MsgPart::LineBreak(*lb));
+                            }
+                        }
+                    }
+                    MsgPart::Ctrl(c) => {
+                        normalized.push(MsgPart::Ctrl(c.clone()));
+                    }
+                }
+                k += 1;
+            }
+        } else {
+            for s in segs {
+                match s {
+                    MsgPart::Txt(t) => normalized.push(MsgPart::Txt(apply_subs(t))),
+                    other => normalized.push(other),
+                }
+            }
+        }
 
-        // Apply Mario substitutions + strict 24-column auto-wrapping so ZERO lines ever overflow the golden dialogue box!
-        const MAX_COLS: usize = 24;
+        // PASS 3: Emit with strict single-emission line_slot machine (0 -> 0x75, 1 -> 0x76, >=2 -> 0x73)
+        // Guarantees ZERO duplicate 0x75/0x76 overwrites and ZERO line overflows!
         let mut msg_bytes: Vec<u8> = Vec::new();
         let mut cur_col = 0usize;
-        let mut line_slot = 0usize; // 0 = L1, 1 = L2, 2 = L3, >=3 = SCR
+        let mut line_slot = 0usize; // 0 = L1, 1 = L2, 2 = L3/scrolling
 
-        let next_break_code = |slot: usize| -> u8 {
-            match slot {
+        let emit_next_break = |buf: &mut Vec<u8>, slot: &mut usize| {
+            let code = match *slot {
                 0 => 0x75, // -> Line 2
                 1 => 0x76, // -> Line 3
-                _ => 0x73, // -> Scroll 1 line
+                _ => 0x73, // -> Scroll 1 line (clears bottom line cleanly!)
+            };
+            buf.push(code);
+            if *slot < 2 {
+                *slot += 1;
             }
         };
 
-        for seg in segs {
+        for seg in normalized {
             match seg {
                 MsgPart::Ctrl(c) => {
                     if !c.is_empty() {
                         if c[0] == 0x83 {
-                            // <NAME> renders as player name (up to 6 chars, e.g. "MARIO")
                             if !has_special_layout && cur_col + 6 > MAX_COLS && cur_col > 0 {
-                                msg_bytes.push(next_break_code(line_slot));
-                                line_slot += 1;
+                                emit_next_break(&mut msg_bytes, &mut line_slot);
                                 cur_col = 0;
                             }
                             cur_col += 6;
                         } else if c[0] == 0x7E {
-                            // <WAIT> pauses box; next explicit break will scroll or reset
                             cur_col = 0;
                         }
                     }
                     msg_bytes.extend_from_slice(&c);
                 }
                 MsgPart::LineBreak(lb) => {
-                    msg_bytes.push(lb);
-                    cur_col = 0;
-                    line_slot = match lb {
-                        0x74 => 0,
-                        0x75 => 1,
-                        0x76 => 2,
-                        _ => line_slot.saturating_add(1).max(2),
-                    };
+                    if lb == 0x74 {
+                        msg_bytes.push(0x74);
+                        line_slot = 0;
+                        cur_col = 0;
+                    } else if has_special_layout {
+                        // Even in special-layout messages, NEVER emit a backwards/duplicate 0x75 or 0x76!
+                        let target_slot = match lb {
+                            0x75 => 1,
+                            0x76 => 2,
+                            _ => 3,
+                        };
+                        if target_slot > line_slot && target_slot <= 2 {
+                            msg_bytes.push(lb);
+                            line_slot = target_slot;
+                        } else {
+                            msg_bytes.push(0x73);
+                            line_slot = 2;
+                        }
+                        cur_col = 0;
+                    } else {
+                        emit_next_break(&mut msg_bytes, &mut line_slot);
+                        cur_col = 0;
+                    }
                 }
-                MsgPart::Txt(raw_t) => {
-                    let t = apply_subs(raw_t);
+                MsgPart::Txt(t) => {
                     let char_len = t.chars().count();
                     let leading_spaces = t.chars().take_while(|&c| c == ' ').count();
-                    // Never reflow intentionally indented strings (>=3 leading spaces) or already-fitting lines!
                     if has_special_layout || leading_spaces >= 3 || cur_col + char_len <= MAX_COLS {
                         msg_bytes.extend_from_slice(&encode_dp_fr(&t));
                         cur_col += char_len;
                     } else {
-                        // Wrap cleanly on word boundaries & DP-encode each full line so multi-word Bank $0C tokens
-                        // (" de ", " la ", " le ", "dans ", "est ") compress optimally!
                         let mut line_buf = String::new();
                         let mut first_word = true;
                         let starts_with_space = t.starts_with(' ');
@@ -1566,8 +1966,7 @@ pub fn repack_french_bank1c(
                                     msg_bytes.extend_from_slice(&encode_dp_fr(&line_buf));
                                     line_buf.clear();
                                 }
-                                msg_bytes.push(next_break_code(line_slot));
-                                line_slot += 1;
+                                emit_next_break(&mut msg_bytes, &mut line_slot);
                                 line_buf.push_str(word);
                                 cur_col = wlen;
                             } else {
@@ -2686,6 +3085,65 @@ mod tests {
         assert!(
             !repacked.windows(4).any(|w| w == [0x13, 0x2B, 0x22, 0x1F]),
             "Zero occurrences of 'Triforce' may remain in Bank $1C!"
+        );
+
+        // Phase 5 Strict Invariants across ALL 372 messages:
+        // 1. ZERO duplicate 0x75 or 0x76 without an intervening 0x74 screen clear (prevents text-overlap corruption!)
+        // 2. ZERO hyphenated word-splits ('-' immediately before 0x73/0x75/0x76 or 0x7E+LB)!
+        // 3. ZERO broken French substitutions ("Toadsse", "Reliquess", "ton champi")!
+        let mut cur = 0usize;
+        let mut msg_idx = 0usize;
+        let mut dup_lb_msgs = Vec::new();
+        let mut hyphen_split_msgs = Vec::new();
+        while cur < repacked.len() && repacked[cur] != 0x88 {
+            let end = repacked[cur..].iter().position(|&b| b == 0x7F).unwrap();
+            let raw = &repacked[cur..cur + end];
+            let mut seen_75 = false;
+            let mut seen_76 = false;
+            let mut i = 0usize;
+            while i < raw.len() {
+                let b = raw[i];
+                if matches!(b, 0x6F..=0x72 | 0x77..=0x7A | 0x84 | 0x87) && i + 1 < raw.len() {
+                    i += 2;
+                    continue;
+                }
+                if b == 0x74 {
+                    seen_75 = false;
+                    seen_76 = false;
+                } else if b == 0x75 {
+                    if seen_75 {
+                        dup_lb_msgs.push((msg_idx, 0x75u8));
+                    }
+                    seen_75 = true;
+                } else if b == 0x76 {
+                    if seen_76 {
+                        dup_lb_msgs.push((msg_idx, 0x76u8));
+                    }
+                    seen_76 = true;
+                } else if b == 0x40 {
+                    // '-' character: check if immediately followed by LineBreak or <WAIT>+LineBreak!
+                    let next1 = raw.get(i + 1).copied();
+                    let next2 = raw.get(i + 2).copied();
+                    if matches!(next1, Some(0x73 | 0x75 | 0x76))
+                        || (next1 == Some(0x7E) && matches!(next2, Some(0x73 | 0x75 | 0x76)))
+                    {
+                        hyphen_split_msgs.push(msg_idx);
+                    }
+                }
+                i += 1;
+            }
+            cur += end + 1;
+            msg_idx += 1;
+        }
+        assert!(
+            dup_lb_msgs.is_empty(),
+            "Found duplicate 0x75/0x76 line breaks (causes text overwrite corruption!): {:?}",
+            dup_lb_msgs
+        );
+        assert!(
+            hyphen_split_msgs.is_empty(),
+            "Found hyphenated word-splits across line breaks: {:?}",
+            hyphen_split_msgs
         );
     }
 }

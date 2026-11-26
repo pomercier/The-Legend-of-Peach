@@ -147,98 +147,199 @@ enum ToadStyle {
 }
 
 fn build_toad_head_16x16(style: ToadStyle) -> [[u8; 16]; 16] {
-    let mut g = Grid::new(16, 16);
-    let (cap_bg, spot_col) = match style {
-        ToadStyle::ToadetteFront | ToadStyle::ToadetteSide => (6, 1), // Colored cap with white spots!
-        ToadStyle::ToadsworthFront => (4, 3), // Tan/gold spotted grandpa cap!
-        ToadStyle::ShopkeeperFront => (1, 2), // White cap with crimson/accent spots!
-        _ => (1, 6),                          // Classic white cap with bold colored spots!
+    // Museum-grade pixel-exact Nintendo SMW/SMRPG Toad head (16x16),
+    // calibrated to ALTTP NPC palette: 1=White, 2=RedAccent, 3=TanShade, 4=PeachSkin,
+    // 5=DarkOutline, 6=Primary(Red/Blue/Green cap spots), 7=DarkPrimary.
+    let (cap_bg, spot_col, face_col) = match style {
+        ToadStyle::ToadetteFront | ToadStyle::ToadetteSide => (6u8, 1u8, 4u8),
+        ToadStyle::ToadsworthFront => (4u8, 3u8, 4u8),
+        ToadStyle::ShopkeeperFront => (1u8, 2u8, 4u8),
+        _ => (1u8, 6u8, 4u8),
     };
-
-    // Big iconic bulbous Toad mushroom cap (y=1..10)!
-    g.ellipse_o(8.0, 6.2, 6.8, 5.0, cap_bg, 5);
-    // Bold mushroom spots
-    match style {
-        ToadStyle::ClassicSide | ToadStyle::ToadetteSide => {
-            g.ellipse(5.0, 5.5, 2.2, 2.2, spot_col);
-            g.ellipse(11.0, 5.5, 2.0, 2.0, spot_col);
-        }
-        _ => {
-            g.ellipse(8.0, 5.2, 2.4, 2.2, spot_col);
-            g.ellipse(3.2, 6.2, 1.8, 2.0, spot_col);
-            g.ellipse(12.8, 6.2, 1.8, 2.0, spot_col);
+    let rows: [&str; 16] = match style {
+        ToadStyle::ClassicBack => [
+            "................",
+            "....55555555....",
+            "..55CCSSSSCC55..",
+            ".5CCCSSSSSSCCC5.",
+            ".5SCCSSSSSSCCS5.",
+            "5SSCCCSSSSCCCSS5",
+            "5SSCCCCCCCCCCSS5",
+            "5SCCCCCCCCCCCCS5",
+            ".5CCCCCCCCCCCC5.",
+            ".5CCC555555CCC5.",
+            "..55CCSSSSCC55..",
+            "...5CCSSSSCC5...",
+            "....55CCCC55....",
+            "......5555......",
+            "................",
+            "................",
+        ],
+        ToadStyle::ClassicSide | ToadStyle::ToadetteSide => [
+            "................",
+            "....55555555....",
+            "..55CCCSSSCC55..",
+            ".5CSSCCSSSCCSC5.",
+            ".5SSSCCSSCCCSS5.",
+            "5CSSCCCCCCCCSS5.",
+            "5CCCCCCCCCCCSS5.",
+            "5CCCCCCCCCCCC5..",
+            ".5CC5555555CC5..",
+            "..55FFFFFFFF5...",
+            "..5FFF5FFFFF5...",
+            "..5FFF5FFFFF5...",
+            "..5FFFFFFFFF5...",
+            "...5FFF2FFF5....",
+            "....55FFF55.....",
+            "......555.......",
+        ],
+        ToadStyle::ToadsworthFront => [
+            "................",
+            "....55555555....",
+            "..55CCSSSSCC55..",
+            ".5CCCSSSSSSCCC5.",
+            ".5SCCSSSSSSCCS5.",
+            "5SSCCCSSSSCCCSS5",
+            "5SSCCCCCCCCCCSS5",
+            "5SCCCCCCCCCCCCS5",
+            ".5CC55555555CC5.",
+            "..55FFFFFFFF55..",
+            "..5F115FF511F5..",
+            "..5F155FF551F5..",
+            "..5FFF1111FFF5..",
+            "...5FF1111FF5...",
+            "....55FFFF55....",
+            "......5555......",
+        ],
+        _ => [
+            "................",
+            "....55555555....",
+            "..55CCSSSSCC55..",
+            ".5CCCSSSSSSCCC5.",
+            ".5SCCSSSSSSCCS5.",
+            "5SSCCCSSSSCCCSS5",
+            "5SSCCCCCCCCCCSS5",
+            "5SCCCCCCCCCCCCS5",
+            ".5CC55555555CC5.",
+            "..55FFFFFFFF55..",
+            "..5FF5FFFF5FF5..",
+            "..5FF5FFFF5FF5..",
+            "..5FFFFFFFFFF5..",
+            "...5FFF22FFF5...",
+            "....55FFFF55....",
+            "......5555......",
+        ],
+    };
+    let mut px = [[0u8; 16]; 16];
+    for (y, row) in rows.iter().enumerate() {
+        for (x, ch) in row.bytes().take(16).enumerate() {
+            px[y][x] = match ch {
+                b'.' => 0,
+                b'C' => cap_bg,
+                b'S' => spot_col,
+                b'F' => face_col,
+                b'1' => 1,
+                b'2' => 2,
+                b'3' => 3,
+                b'5' => 5,
+                _ => 0,
+            };
         }
     }
-    // Toadette's cute twin mushroom pigtails sticking out left/right!
     if matches!(style, ToadStyle::ToadetteFront | ToadStyle::ToadetteSide) {
-        g.ellipse_o(2.0, 11.5, 2.0, 2.5, 6, 5);
-        g.set(2, 11, 1);
-        g.ellipse_o(14.0, 11.5, 2.0, 2.5, 6, 5);
-        g.set(14, 11, 1);
-    }
-
-    // Toad's cute round peach face underneath mushroom cap (y=9..15)
-    match style {
-        ToadStyle::ClassicBack => {
-            g.ellipse_o(8.0, 11.5, 4.5, 3.2, cap_bg, 5);
-            g.ellipse(8.0, 12.0, 2.0, 1.6, spot_col);
-        }
-        ToadStyle::ClassicSide | ToadStyle::ToadetteSide => {
-            g.ellipse_o(9.0, 12.0, 4.2, 3.2, 4, 5);
-            g.rect(10, 10, 2, 3, 5); // side eye
-            g.set(10, 10, 1);
-            g.set(11, 13, 3);
-        }
-        _ => {
-            g.ellipse_o(8.0, 12.2, 4.8, 3.2, 4, 5);
-            // Iconic vertical oval Toad eyes with bright gleam!
-            g.rect(5, 10, 2, 3, 5);
-            g.rect(9, 10, 2, 3, 5);
-            g.set(5, 10, 1);
-            g.set(9, 10, 1);
-            // Happy tiny smile or Toadsworth's white mustache & glasses!
-            if matches!(style, ToadStyle::ToadsworthFront) {
-                g.rect(4, 10, 3, 2, 1);
-                g.rect(9, 10, 3, 2, 1);
-                g.set(5, 11, 5);
-                g.set(10, 11, 5);
-                g.rect(5, 13, 6, 2, 1); // grandpa mustache!
-            } else {
-                g.rect(7, 13, 2, 1, 2); // cheerful smile!
+        // Adorable twin Toadette pigtails
+        for &(cx, cy) in &[(2usize, 10usize), (13, 10)] {
+            px[cy][cx] = 6;
+            px[cy + 1][cx] = 6;
+            px[cy][cx.saturating_sub(1)] = 5;
+            px[cy + 1][cx.saturating_sub(1)] = 5;
+            if cx + 1 < 16 {
+                px[cy][cx + 1] = 5;
+                px[cy + 1][cx + 1] = 5;
             }
+            px[cy.saturating_sub(1)][cx] = 5;
+            px[cy + 2][cx] = 5;
         }
     }
-    g.outline(5);
-    g.to_16x16()
+    px
 }
 
 fn build_toad_body_16x16(vest_col: u8, stride: isize, dress: bool) -> [[u8; 16]; 16] {
-    let mut g = Grid::new(16, 16);
-    // White Toad tunic/diaper + colored vest with gold trim!
-    if dress {
-        // Toadette flared skirt/vest
-        g.tri(8, 1, 2, 12, 14, 12, vest_col);
-        g.rect(6, 2, 4, 9, 1); // white front apron
-        g.rect(5, 3, 2, 5, 2);
-        g.rect(9, 3, 2, 5, 2);
+    // Crisp, pixel-exact Nintendo Toad body aligned tightly under ALTTP's +8px NPC head offset!
+    // Open Toad vest over white shirt, plump white Toad shorts (ZERO red belly dot!), tidy brown boots.
+    let rows: [&str; 16] = if dress {
+        [
+            "................",
+            ".....555555.....",
+            "...55V3113V55...",
+            "..544V3113V445..",
+            "..545V3113V545..",
+            "...55VV11VV55...",
+            "...5VVV11VVV5...",
+            "...5VVV11VVV5...",
+            "..5VVVV11VVVV5..",
+            "..511111111115..",
+            "...5555555555...",
+            "...5335..5335...",
+            "...5335..5335...",
+            "...5555..5555...",
+            "................",
+            "................",
+        ]
+    } else if stride != 0 {
+        [
+            "................",
+            ".....555555.....",
+            "...55V3113V55...",
+            "..544V3113V445..",
+            "..545V3113V545..",
+            "...55V3113V55...",
+            "...5VV3113VV5...",
+            "...5111111115...",
+            "...5111111115...",
+            "...5111551115...",
+            "..53335..5335...",
+            "..53335...5335..",
+            "..55555...5555..",
+            "................",
+            "................",
+            "................",
+        ]
     } else {
-        // Classic Toad vest + plump white pants!
-        g.ellipse_o(8.0, 6.0, 5.0, 4.5, vest_col, 5);
-        g.rect(6, 2, 4, 6, 4); // chest peeking between open vest lapels
-        g.rect(4, 2, 2, 6, vest_col);
-        g.rect(10, 2, 2, 6, vest_col);
-        g.set(5, 4, 3); // gold vest trim
-        g.set(10, 4, 3);
-        g.ellipse_o(8.0, 10.0, 5.2, 3.2, 1, 5); // plump white Toad trousers
+        [
+            "................",
+            ".....555555.....",
+            "...55V3113V55...",
+            "..544V3113V445..",
+            "..545V3113V545..",
+            "...55V3113V55...",
+            "...5VV3113VV5...",
+            "...5111111115...",
+            "...5111111115...",
+            "...5111551115...",
+            "..53335..53335..",
+            "..53335..53335..",
+            "..55555..55555..",
+            "................",
+            "................",
+            "................",
+        ]
+    };
+    let mut px = [[0u8; 16]; 16];
+    for (y, row) in rows.iter().enumerate() {
+        for (x, ch) in row.bytes().take(16).enumerate() {
+            px[y][x] = match ch {
+                b'.' => 0,
+                b'V' => vest_col,
+                b'1' => 1,
+                b'3' => 3,
+                b'4' => 4,
+                b'5' => 5,
+                _ => 0,
+            };
+        }
     }
-    // Cute waving Toad hands
-    g.ellipse_o(2.5, (6 - stride) as f32, 2.0, 2.0, 4, 5);
-    g.ellipse_o(13.5, (6 + stride) as f32, 2.0, 2.0, 4, 5);
-    // Iconic brown Toad shoes
-    g.ellipse_o((5 + stride) as f32, 13.5, 2.6, 2.0, 3, 5);
-    g.ellipse_o((11 - stride) as f32, 13.5, 2.6, 2.0, 3, 5);
-    g.outline(5);
-    g.to_16x16()
+    px
 }
 
 fn build_kamek_magikoopa_16x16(frame: usize) -> ([[u8; 16]; 16], [[u8; 16]; 16]) {
@@ -326,40 +427,44 @@ fn patch_toad_town_npcs(
     let by0 = build_baby_yoshi_cute_16x16(0);
     let by1 = build_baby_yoshi_cute_16x16(1);
 
-    // 1. Kakariko Villagers Main (sp:4F -> raw 0xC2): ALL 8 Villagers -> Toads, Toadettes & Toadsworth!
+    // 1. Kakariko Villagers Main (sp:4F -> raw 0xC2): Exact verified vanilla Head/Body cell layout!
+    //    Row 0: (0)=HeadF, (2)=HeadS, (4)=HeadF, (6)=BODY, (8)=HeadS, (10)=BODY, (12)=ToadetteF, (14)=ToadetteS
+    //    Row 2: (0)=BODY, (2)=ToadsworthF, (4)=ToadetteF, (6)=HeadB, (8)=ToadetteS, (10)=HeadF, (12)=HeadB, (14)=HeadS
     if patch_alttp_raw_sheet_pub(
         rom_z,
         sess,
         0xC2,
-        "Village Cocorico → TOAD TOWN 1/4 (sp:4F) : Toads, Toadettes & Papy Champi SMW",
+        "Village Cocorico → TOAD TOWN 1/4 (sp:4F) : Toads, Toadettes & Papy Champi SMW (layout OAM exact)",
         free_cursor,
         free_end,
         &|raw| {
-            let heads = [&th_f, &tt_f, &th_s, &tt_s, &th_b, &tw_f, &th_f, &tt_f];
-            let bodies = [&tb_1, &td_1, &tb_2, &td_2, &tb_alt, &tb_1, &tb_2, &td_1];
+            let row0 = [&th_f, &th_s, &th_f, &tb_1, &th_s, &tb_2, &tt_f, &tt_s];
+            let row2 = [&tb_1, &tw_f, &tt_f, &th_b, &tt_s, &th_f, &th_b, &th_s];
             for i in 0..8 {
-                write_3bpp_16x16_pub(raw, i * 2, 0, heads[i]);
-                write_3bpp_16x16_pub(raw, i * 2, 2, bodies[i]);
+                write_3bpp_16x16_pub(raw, i * 2, 0, row0[i]);
+                write_3bpp_16x16_pub(raw, i * 2, 2, row2[i]);
             }
         },
     )? {
         ops += 1;
     }
 
-    // 2. Kakariko Villagers 2 / Lumberjacks / Bottle Vendor (sp:4A -> raw 0xBD)
+    // 2. Kakariko Villagers 2 / Lumberjacks / Bottle Vendor (sp:4A -> raw 0xBD): Exact verified vanilla layout!
+    //    Row 0: (0)=HeadS, (2)=HeadF, (4)=ToadsworthF, (6)=HeadB, (8)=HeadF, (10)=BODY, (12)=BODY
+    //    Row 2: (0)=BODY, (2)=BODY, (4)=BODY, (6)=BODY, (8)=HeadS, (10)=BODY, (12)=ShopkeeperF
     if patch_alttp_raw_sheet_pub(
         rom_z,
         sess,
         0xBD,
-        "Village Cocorico → TOAD TOWN 2/4 (sp:4A) : Toads Bûcherons & Marchands SMW",
+        "Village Cocorico → TOAD TOWN 2/4 (sp:4A) : Toads Bûcherons & Marchands SMW (layout OAM exact)",
         free_cursor,
         free_end,
         &|raw| {
-            let heads = [&th_f, &th_s, &tw_f, &th_b, &ts_f, &tt_f, &th_s];
-            let bodies = [&tb_1, &tb_2, &tb_alt, &tb_1, &tb_2, &td_1, &tb_alt];
+            let row0 = [&th_s, &th_f, &tw_f, &th_b, &th_f, &tb_1, &tb_2];
+            let row2 = [&tb_1, &tb_2, &tb_1, &tb_2, &th_s, &tb_alt, &ts_f];
             for i in 0..7 {
-                write_3bpp_16x16_pub(raw, i * 2, 0, heads[i]);
-                write_3bpp_16x16_pub(raw, i * 2, 2, bodies[i]);
+                write_3bpp_16x16_pub(raw, i * 2, 0, row0[i]);
+                write_3bpp_16x16_pub(raw, i * 2, 2, row2[i]);
             }
         },
     )? {
@@ -424,29 +529,22 @@ fn patch_toad_town_npcs(
         ops += 1;
     }
 
-    // 5. Running Boy & Town Scouts (sp:50 -> raw 0xC3) -> Toad Runners & Toadettes!
+    // 5. Running Boy, Sweeping Lady (Room 0x0103!) & Town Scouts (sp:50 -> raw 0xC3): Exact verified vanilla layout!
+    //    Row 0: (0)=HeadF, (2)=BODY, (4)=HeadF, (6)=HeadB, (8)=HeadS, (10)=BODY_SWEEP, (12)=BODY_S1, (14)=BODY_S2
+    //    Row 2: (0)=HeadB, (2)=HeadS, (4)=BODY_W1, (6)=BODY_W2, (8)=BODY_S, (10)=BabyYoshi0, (12)=BabyYoshi1, (14)=BODY
     if patch_alttp_raw_sheet_pub(
         rom_z,
         sess,
         0xC3,
-        "Village Cocorico → TOAD TOWN 3/4 (sp:50) : Toads Coureurs & Éclaireurs SMW",
+        "Village Cocorico → TOAD TOWN 3/4 (sp:50) : Toads Aubergistes & Éclaireurs SMW (layout OAM exact)",
         free_cursor,
         free_end,
         &|raw| {
-            let heads = [
-                &th_f,
-                &th_s,
-                &flip_h_16x16_pub(&th_s),
-                &tt_f,
-                &tt_s,
-                &th_b,
-                &ts_f,
-                &tw_f,
-            ];
-            let bodies = [&tb_2, &tb_1, &tb_2, &td_2, &td_1, &tb_alt, &tb_1, &tb_2];
+            let row0 = [&tw_f, &tb_1, &th_f, &th_b, &th_s, &tb_1, &tb_2, &td_1];
+            let row2 = [&th_b, &th_s, &tb_1, &tb_2, &tb_alt, &by0, &by1, &td_2];
             for i in 0..8 {
-                write_3bpp_16x16_pub(raw, i * 2, 0, heads[i]);
-                write_3bpp_16x16_pub(raw, i * 2, 2, bodies[i]);
+                write_3bpp_16x16_pub(raw, i * 2, 0, row0[i]);
+                write_3bpp_16x16_pub(raw, i * 2, 2, row2[i]);
             }
         },
     )? {

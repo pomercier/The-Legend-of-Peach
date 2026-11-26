@@ -1925,14 +1925,14 @@ pub fn audit_legend_of_peach_output(
         }
     }
 
-    // Verify all 48 v13/v14 raw sheets decompress cleanly inside a single 32 KiB LoROM bank
+    // Verify all 49 v13/v14/v15 raw sheets decompress cleanly inside a single 32 KiB LoROM bank
     let (raw_bk, raw_hi, raw_lo) =
         find_alttp_raw_gfx_table(&built.data).ok_or("Could not locate ALTTP raw GFX table")?;
     let v13_raw_sheets: &[usize] = &[
         0xA4, 0xA3, 0xAD, 0xB1, 0xAC, 0xAB, 0xAE, 0xAF, 0xB0, 0xB2, 0xB3, 0x94, 0xB4, 0xB8, 0xA6,
         0xC2, 0xBD, 0xC0, 0xC1, 0xC3, 0xBF, 0x83, 0x85, 0x86, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x93,
         0x95, 0x96, 0x97, 0x98, 0x99, 0x9A, 0x9D, 0x3F, 0x0D, 0x0B, 0x0C, 0x06, 0x18, 0x19, 0x4D,
-        0x4C, 0x0F, 0x29,
+        0x4C, 0x0F, 0x29, 0xCF,
     ];
     for &raw_idx in v13_raw_sheets {
         let pc = ((built.data[raw_bk + raw_idx] as usize & 0x7F) << 15)
@@ -3245,6 +3245,21 @@ fn apply_rule_to_zelda(
                     )? {
                         ops += 1;
                     }
+                    // Phase 5: Replace ALL live Sword Blades & File Select Fairy Cursor ($A8/$AA) in Sheet 0xCF
+                    // with SMW Super Mario Hammer Swings + 2-Frame Sparkling Golden Super Star File Select Cursor!
+                    if patch_alttp_comp_sheet_helper(
+                        rom_zelda,
+                        session,
+                        0xCF,
+                        &format!("Marteau Super Mario & Curseur Étoile Sélection (Sheet 0xCF) ← {}:Marteau SMW & Super Étoile 2-frames", rule.donor_alias),
+                        free_cursor,
+                        free_end,
+                        &|raw| {
+                            crate::mario_ui::patch_mario_super_hammer_and_fileselect_sheet_cf(raw);
+                        },
+                    )? {
+                        ops += 1;
+                    }
                     // Dungeon Mini-Map Player Marker (Sheet 0xD2 (1,3)) -> Mini Mario Red Cap Head!
                     let dmap_mario = crate::mario_ui::build_smw_dungeon_map_mario_8x8();
                     if patch_alttp_comp_sheet_helper(
@@ -3285,6 +3300,123 @@ fn apply_rule_to_zelda(
                         },
                     )?;
                     ops += 1;
+
+                    // Phase 5 Fix: Sheet 0x78 (0x089A00) holds the LIVE File Select Fairy Cursor (cols 10..13, rows 2..3 = $AA/$AC)
+                    // AND the Big Heart Container (cols 0..1, rows 2..3 = $A0)! Replace Fairy with Sparkling SMW Super Star
+                    // and Heart Container with Giant Super Mushroom!
+                    if 0x089A00 + 0x600 <= rom_zelda.data.len() {
+                        let mut sh78 = rom_zelda.data[0x089A00..0x089A00 + 0x600].to_vec();
+                        write_3bpp_16x16(&mut sh78, 0, 2, &mush);
+                        write_3bpp_16x16(&mut sh78, 10, 2, &cursor_frames[0]);
+                        write_3bpp_16x16(&mut sh78, 12, 2, &cursor_frames[1]);
+                        session.swap_custom_bytes(
+                            rom_zelda,
+                            0x089A00,
+                            0x089A00,
+                            sh78,
+                            format!(
+                                "Curseur Écran Sélection & Réserve Vie (Sheet 0x78 @ 0x089A00) ← {}:Super Étoile 2-frames & Super Champignon",
+                                rule.donor_alias
+                            ),
+                            SwapKind::GraphicsTiles {
+                                format: TileFormat::Bpp3,
+                                tile_count: 64,
+                                smart_remapped: true,
+                            },
+                        )?;
+                        ops += 1;
+                    }
+                    // Also fix File Select cursor OAM tile indices & palette at $0E:96A6..$0E:96B5 (PC 0x0716AC..0x0716B4):
+                    // Point cursor palette from pink fairy (0x7E) to OBJ Pal 0 (0x30: color 6 = Blazing Super Star Gold!)
+                    if 0x0716B6 <= rom_zelda.data.len()
+                        && rom_zelda.data[0x0716B2] == 0xA9
+                        && rom_zelda.data[0x0716B3] == 0x7E
+                    {
+                        session.swap_custom_bytes(
+                            rom_zelda,
+                            0x0716B2,
+                            0x0716B2,
+                            vec![0xA9, 0x30], // OBJ Pal 0 (Blazing Super Star Gold RGB 31,29,8 on index 6!)
+                            "Palette Curseur Écran Sélection ($0E:96B2) -> Super Étoile Or (Pal 0)"
+                                .into(),
+                            SwapKind::CodePatch { byte_count: 2 },
+                        )?;
+                        ops += 1;
+                    }
+                    // Phase 5 File Select Background Palette Overhaul (PC 0x0DD9AA..0x0DD9B1):
+                    // Replace dull Zelda olive-green cobblestone backdrop (0x2589, 0x31EC, 0x3E4F, 0x4ED3)
+                    // with vibrant Super Mario World Royal Sky Blue!
+                    if 0x0DD9B2 <= rom_zelda.data.len()
+                        && u16::from_le_bytes([rom_zelda.data[0x0DD9AA], rom_zelda.data[0x0DD9AB]])
+                            == 0x2589
+                    {
+                        let smw_fs_bg: [u16; 4] = [0x4480, 0x5944, 0x6E29, 0x7F0E];
+                        let mut pal_bytes = Vec::with_capacity(8);
+                        for c in smw_fs_bg {
+                            pal_bytes.extend_from_slice(&c.to_le_bytes());
+                        }
+                        session.swap_custom_bytes(
+                            rom_zelda,
+                            0x0DD9AA,
+                            0x0DD9AA,
+                            pal_bytes,
+                            "Fond Écran Sélection (0x0DD9AA) : Pierre Verte Zelda -> Bleu Ciel Royal Super Mario World".into(),
+                            SwapKind::PaletteBgr555 { color_count: 4 },
+                        )?;
+                        ops += 1;
+                    }
+                    // Phase 5 Interior & Boss Arena Palettes Revolution:
+                    // 1. Kamek's Shop & Toad Town Houses Carpet (PC 0x0DD932..0x0DD939):
+                    //    Olive-green Zelda rug -> Royal Mushroom Crimson Red & Gold Toad House Carpet!
+                    if 0x0DD93A <= rom_zelda.data.len()
+                        && u16::from_le_bytes([rom_zelda.data[0x0DD932], rom_zelda.data[0x0DD933]])
+                            == 0x252B
+                    {
+                        let toad_rug: [u16; 4] = [0x104E, 0x03BF, 0x1494, 0x253B];
+                        let mut rb = Vec::with_capacity(8);
+                        for c in toad_rug {
+                            rb.extend_from_slice(&c.to_le_bytes());
+                        }
+                        session.swap_custom_bytes(
+                            rom_zelda,
+                            0x0DD932,
+                            0x0DD932,
+                            rb,
+                            "Tapis Intérieurs Boutique Kamek & Toad Town (0x0DD932) : Vert Zelda -> Tapis Royal Rouge & Or Mario".into(),
+                            SwapKind::PaletteBgr555 { color_count: 4 },
+                        )?;
+                        ops += 1;
+                    }
+                    // 2. Bowser Final Pyramid Throne Room 0x000 Floor & Walls (PC 0x0DE2C2..0x0DE2D1):
+                    //    Brown Zelda sand-stone -> Menacing Obsidian Dark-Charcoal Bowser Castle Volcanic Stone!
+                    if 0x0DE2D2 <= rom_zelda.data.len()
+                        && u16::from_le_bytes([rom_zelda.data[0x0DE2C2], rom_zelda.data[0x0DE2C3]])
+                            == 0x2DB0
+                    {
+                        let bowser_volc: [u16; 8] = [
+                            0x18C6, // Dark volcanic charcoal stone
+                            0x2529, // Mid obsidian slate
+                            0x318C, // Crisp stone highlight
+                            0x1487, // Shadow slate
+                            0x1085, // Deep castle shadow
+                            0x0C45, // Volcanic ash
+                            0x0823, // Darkest abyss
+                            0x0138, // Molten Bowser lava ember accent!
+                        ];
+                        let mut vb = Vec::with_capacity(16);
+                        for c in bowser_volc {
+                            vb.extend_from_slice(&c.to_le_bytes());
+                        }
+                        session.swap_custom_bytes(
+                            rom_zelda,
+                            0x0DE2C2,
+                            0x0DE2C2,
+                            vb,
+                            "Salle du Trône Bowser Chambre 0x00 (0x0DE2C2) : Pierre Brune Zelda -> Obsidienne & Lave Château Bowser".into(),
+                            SwapKind::PaletteBgr555 { color_count: 8 },
+                        )?;
+                        ops += 1;
+                    }
 
                     // Fixes #4, #7, #8, #10: Top-HUD Mini-Mushrooms, Yellow Coin, Bob-omb, Start Menu Relics & Boss Pendants!
                     ops += crate::mario_ui::patch_mario_hud_and_start_menu(
@@ -3397,6 +3529,7 @@ fn apply_rule_to_zelda(
         }
         "mario_music" => {
             ops += crate::mario_music::inject_mario_nspc_soundtrack(rom_zelda, session)?;
+            ops += crate::mario_sfx::patch_mario_native_sfx(rom_zelda, session)?;
         }
         "intro_title" => {
             ops += crate::mario_intro::inject_legend_of_peach_intro(
@@ -3405,6 +3538,10 @@ fn apply_rule_to_zelda(
                 free_cursor,
                 free_end,
             )?;
+            // Phase 5: Inject Native 65c816 Super Mario Gameplay Engine (Jump, Stomp, Fire Mario, Starman)
+            // + World 1 (Yoshi's Island) Overworld Map32 Geographic Redesign!
+            ops += crate::mario_engine::inject_mario_gameplay_engine(rom_zelda, session)?;
+            ops += crate::mario_map::patch_world1_yoshis_island(rom_zelda, session)?;
         }
         _ => {}
     }
@@ -3714,13 +3851,14 @@ pub(crate) fn patch_alttp_raw_sheet_pub(
         )?;
         Ok(true)
     } else {
-        // Relocate safely into clean LoROM 2MB expansion space (Bank $23..$3F, PC 0x118000..0x1FFFFF),
-        // keeping Banks $20..$22 (3D Intro) 100% untouched and never crossing a 32 KB ($8000) boundary!
+        // Relocate safely into clean LoROM 2MB expansion space (Bank $23..$3A, PC 0x118000..0x1D7FFF),
+        // keeping Banks $20..$22 (3D Intro + Mario Engine) and Banks $3B..$3F (Map32) 100% isolated!
         const EXPANDED_FREE_START: usize = 0x118000;
+        const EXPANDED_FREE_END: usize = crate::mario_map::OW_MAP32_RELOC_START_PC;
         let mut cur_end = if *free_cursor < 0x100000 {
             free_end
         } else {
-            rom_z.data.len()
+            rom_z.data.len().min(EXPANDED_FREE_END)
         };
         if *free_cursor + comp.len() > cur_end {
             if rom_z.data.len() < 0x200000 {
@@ -3731,10 +3869,10 @@ pub(crate) fn patch_alttp_raw_sheet_pub(
                 rom_z.header.rom_size_byte = 0x0B;
                 rom_z.header.declared_rom_size_kb = 2048;
                 *free_cursor = EXPANDED_FREE_START;
-                cur_end = rom_z.data.len();
+                cur_end = EXPANDED_FREE_END;
             } else if *free_cursor < EXPANDED_FREE_START {
                 *free_cursor = EXPANDED_FREE_START;
-                cur_end = rom_z.data.len();
+                cur_end = EXPANDED_FREE_END;
             }
         }
         let bank_rem = 0x8000 - (*free_cursor % 0x8000);
@@ -3839,10 +3977,11 @@ fn patch_alttp_comp_sheet_helper(
         // CRITICAL: Banks $20..$22 (PC 0x100000..0x117FFF) are RESERVED for 32 3D Intro Frames + 65816 DMA Code!
         // Therefore compressed sheet overflow MUST start at Bank $23 (PC 0x118000..0x1FFFFF = 928 KB clean space)!
         const EXPANDED_FREE_START: usize = 0x118000;
+        const EXPANDED_FREE_END: usize = crate::mario_map::OW_MAP32_RELOC_START_PC;
         let mut cur_end = if *free_cursor < 0x100000 {
             free_end
         } else {
-            rom_z.data.len()
+            rom_z.data.len().min(EXPANDED_FREE_END)
         };
         if *free_cursor + comp.len() > cur_end {
             if rom_z.data.len() < 0x200000 {
@@ -3852,11 +3991,11 @@ fn patch_alttp_comp_sheet_helper(
                 }
                 rom_z.header.rom_size_byte = 0x0B;
                 rom_z.header.declared_rom_size_kb = 2048;
-                *free_cursor = EXPANDED_FREE_START; // Bank $23:$8000 (ZERO collision with 3D Intro at $20..$22!)
-                cur_end = rom_z.data.len();
+                *free_cursor = EXPANDED_FREE_START; // Bank $23:$8000 (ZERO collision with 3D Intro at $20..$22 or Map32 at $3B..$3F!)
+                cur_end = EXPANDED_FREE_END;
             } else if *free_cursor < EXPANDED_FREE_START {
                 *free_cursor = EXPANDED_FREE_START;
-                cur_end = rom_z.data.len();
+                cur_end = EXPANDED_FREE_END;
             }
         }
         // Never allow a compressed sheet to straddle a $8000 LoROM bank boundary!

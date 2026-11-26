@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.0.0",
+  "release": "v0.5.0",
+  "description": "Directed dependency graph and memory-region ownership for all 18 canonical fusion rules and Phase 5 engine modules.",
+  "memory_firewalls": [
+    {
+      "name": "Protected ALTTP World Map Table",
+      "pc_range": "0x08A000..0x08A2FF",
+      "owner": "Vanilla ALTTP (read-only)",
+      "enforced_by": "audit_legend_of_peach_output()"
+    },
+    {
+      "name": "3D Mario Trio Intro Buffers",
+      "pc_range": "0x100000..0x10FFFF",
+      "banks": "$20..$21",
+      "owner": "mario_intro.rs",
+      "enforced_by": "audit_legend_of_peach_output()"
+    },
+    {
+      "name": "Custom 65c816 Assembly & Engine Tables",
+      "pc_range": "0x110000..0x117FFF",
+      "banks": "$22",
+      "owner": "mario_intro.rs ($22:8000..$22:81FF) + mario_engine.rs ($22:9000..$22:99FF)",
+      "enforced_by": "EXPANDED_FREE_START = 0x118000"
+    },
+    {
+      "name": "Relocated LC_LZ2 Graphics Sheets",
+      "pc_range": "0x118000..0x1D7FFF",
+      "banks": "$23..$3A",
+      "owner": "mixer.rs + mario_ui.rs + mario_world.rs + mario_bosses.rs",
+      "enforced_by": "EXPANDED_FREE_END = OW_MAP32_RELOC_START_PC (0x1D8000)"
+    },
+    {
+      "name": "Relocated Overworld Map32 Screens",
+      "pc_range": "0x1D8000..0x1FFFFF",
+      "banks": "$3B..$3F",
+      "owner": "mario_map.rs",
+      "enforced_by": "OW_MAP32_RELOC_START_PC..OW_MAP32_RELOC_END_PC + audit_legend_of_peach_output()"
+    }
+  ],
+  "modules": [
+    {
+      "module": "mario_intro.rs",
+      "depends_on": ["disasm_dma.rs", "mixer.rs (GFX tables)"],
+      "owns_regions": ["0x100000..0x1101FF", "0x065A33..0x065CAB", "0x0E0000..0x0E7FFF", "0x071C68..0x071E0F", "raw 0x3E/0x3F/0xD8"],
+      "must_run_before": ["mario_engine.rs (requires 2 MiB ROM expansion)", "mario_map.rs (requires 2 MiB ROM expansion)"]
+    },
+    {
+      "module": "mario_engine.rs",
+      "depends_on": ["mario_intro.rs (2 MiB expansion)", "mario_sfx.rs (SFX2 0x20 jump, SFX3 0x08 stomp, SFX2 0x2B star chime)"],
+      "owns_regions": ["0x111000..0x1119FF", "PC 0x010959/0x011CCA/0x0125C7 (JSL hooks)", "WRAM $7E:F500..$7E:F53F"],
+      "must_run_before": []
+    },
+    {
+      "module": "mario_map.rs",
+      "depends_on": ["mario_intro.rs (2 MiB expansion)"],
+      "owns_regions": ["0x1D8000..0x1FFFFF", "0x0179CF..0x017D8E (Map32 24-bit pointers)"],
+      "must_run_before": []
+    },
+    {
+      "module": "mario_ui.rs",
+      "depends_on": ["mixer.rs (free_cursor in $23..$3A)", "demo.rs (Mario 4bpp bank)"],
+      "owns_regions": ["raw 0x6F/0x70/0xCF/0xD0/0xD2/0xDA/0xDB/0xDC", "0x0646E8..0x0656E7", "0x06F0F1..0x06FDC1", "0x087000..0x089FFF"],
+      "must_run_before": []
+    },
+    {
+      "module": "mario_world.rs",
+      "depends_on": ["mixer.rs (free_cursor in $23..$3A)"],
+      "owns_regions": ["Toad Town NPC sheets (raw 0xBD,0xBF,0xC0,0xC1,0xC2,0xC3)", "16 SMW Bestiary sheets", "9 BG Tileset sheets"],
+      "must_run_before": []
+    },
+    {
+      "module": "mario_bosses.rs",
+      "depends_on": ["mixer.rs (free_cursor in $23..$3A)"],
+      "owns_regions": ["15 Boss sprite sheets (7 Koopalings + Giant Bowser x4 + Pokeys + Wiggler)", "0x00A7F0 (Room 0x00 RTS cleanse)", "raw 0x15/0x19"],
+      "must_run_before": []
+    },
+    {
+      "module": "mario_music.rs",
+      "depends_on": ["ALTTP Bank $19/$1A/$1B N-SPC driver"],
+      "owns_regions": ["0x0D1EF5..0x0DFBFF (19 N-SPC tracks across 25 contexts)"],
+      "must_run_before": []
+    },
+    {
+      "module": "mario_sfx.rs",
+      "depends_on": ["ALTTP Bank $19 resident SFX ARAM block ($17C0..$284F)"],
+      "owns_regions": ["In-place patches inside 0x0D0B70..0x0D1BFF (Coin, Jump, Stomp, Warp Pipe, Hammer Bonk)"],
+      "must_run_before": []
+    }
+  ]
+}

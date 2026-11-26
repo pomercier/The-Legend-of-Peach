@@ -930,68 +930,65 @@ fn patch_boss_arrghus_wendy(
 // =============================================================================
 
 fn build_iggy_winged_left_half_32x32(wing_phase: usize) -> Canvas {
-    // Left half of 64x32 Winged Iggy Koopa (x=31 is mirror axis!):
-    //   cols 0..15  = Giant Flapping SMW Paratroopa Wing + Magic Wand!
-    //   cols 16..31 = Iggy Koopa's tall wild mohawk, thick round glasses, maniacal grin & shell!
+    // Phase 5 Razor-Sharp Winged Iggy Koopa (left half of symmetric 64x32 sprite; x=31 is center mirror axis):
+    //   cols 0..14  = Distinct curved SMW Paratroopa Feather Wing with clean black contour gap at x=15!
+    //   cols 16..31 = Unmistakable Iggy Koopa: tall green/gold palm-tree hair, bold black-framed round glasses,
+    //                 wide golden Koopa snout & fangs, spiked blue/green shell & red clawed boots!
     let mut c = Canvas::new(32, 32);
 
-    // === FLANKING SCALLOPED SMW PARATROOPA FEATHER WING (x=0..16) ===
+    // === LEFT PARATROOPA WING (x=1..14, cleanly separated from Iggy's body by black contour!) ===
     if wing_phase == 0 {
-        // Sweeping feathered Paratroopa wing angled upward-outward (3 scalloped primary feathers!)
-        c.triangle(1, 3, 15, 7, 15, 16, 1);
-        c.ellipse_outline(7.0, 7.0, 5.5, 3.2, 1, 5); // top primary feather!
-        c.ellipse_outline(5.0, 12.0, 5.0, 2.8, 1, 5); // mid feather!
-        c.ellipse_outline(8.0, 16.5, 4.5, 2.5, 6, 5); // lower secondary feather!
-        c.ellipse(11.0, 11.0, 4.5, 5.0, 1);
-        c.line(4, 10, 14, 11, 5);
-        c.line(5, 15, 14, 15, 5);
-        c.line(7, 19, 14, 18, 6);
-        // Koopaling Golden Magic Wand held out!
-        c.line(5, 26, 14, 21, 4);
-        c.line(5, 27, 14, 22, 3);
-        c.ellipse_outline(4.0, 27.0, 2.8, 2.8, 4, 5);
-        c.set(4, 27, 1);
+        // Upstroke feathered Paratroopa wing
+        c.ellipse_outline(7.5, 9.0, 6.0, 3.0, 1, 5);
+        c.ellipse_outline(8.5, 13.5, 5.2, 2.6, 6, 5);
+        c.ellipse_outline(10.5, 17.5, 4.0, 2.0, 2, 5);
+        c.line(4, 11, 13, 12, 5);
+        c.line(6, 15, 13, 16, 5);
+        // Golden Magic Wand held cleanly below wing
+        c.line(6, 25, 14, 21, 4);
+        c.ellipse_outline(5.0, 26.0, 2.2, 2.2, 3, 5);
+        c.set(5, 26, 1);
     } else if wing_phase == 1 {
-        // Downstroke scalloped Paratroopa wing!
-        c.triangle(2, 10, 15, 11, 15, 22, 1);
-        c.ellipse_outline(7.0, 14.0, 5.2, 3.0, 1, 5);
-        c.ellipse_outline(6.0, 19.0, 4.8, 2.8, 6, 5);
-        c.ellipse_outline(10.0, 23.0, 4.0, 2.2, 6, 5);
-        c.line(5, 17, 14, 17, 5);
-        c.line(6, 21, 14, 21, 5);
-        c.line(6, 10, 14, 15, 4);
-        c.ellipse_outline(5.0, 9.0, 2.5, 2.5, 4, 5);
-        c.set(5, 9, 1);
+        // Downstroke feathered Paratroopa wing
+        c.ellipse_outline(7.5, 14.5, 5.8, 2.9, 1, 5);
+        c.ellipse_outline(8.5, 19.0, 5.0, 2.5, 6, 5);
+        c.ellipse_outline(11.0, 22.5, 3.6, 2.0, 2, 5);
+        c.line(4, 17, 13, 17, 5);
+        c.line(6, 21, 13, 21, 5);
+        c.line(7, 11, 14, 15, 4);
+        c.ellipse_outline(6.0, 10.0, 2.0, 2.0, 3, 5);
+        c.set(6, 10, 1);
     }
 
-    // === CENTER 32x32 IGGY KOOPA (x=16..31, H-mirrored at x=31!) ===
-    // TALL WILD CRAZY IGGY MOHAWK (sweeping tall spiky palm-tree hair!)
-    c.triangle(28, 0, 23, 8, 31, 8, 4); // tall bright tuft!
-    c.triangle(22, 2, 19, 9, 27, 9, 3); // outer wild spike!
-    c.triangle(31, 0, 27, 9, 31, 9, 1); // bright highlight spike!
-    c.line(22, 3, 25, 8, 5);
-    c.line(28, 1, 28, 7, 5);
+    // === CENTER 32x32 IGGY KOOPA (x=17..31, H-mirrored across x=31!) ===
+    // 1. Tall spiky palm-tree hair tuft (y=0..8)
+    c.triangle(28, 0, 24, 8, 31, 8, 2); // bold deep color hair base
+    c.triangle(29, 1, 26, 7, 31, 7, 6); // vibrant mid highlight
+    c.triangle(22, 3, 21, 9, 27, 8, 3); // wild side tuft
+    c.line(23, 3, 26, 8, 5);
+    c.line(28, 0, 28, 7, 5);
 
-    // Narrow eccentric Iggy face & HUGE THICK ROUND GLASSES!
-    c.ellipse_outline(31.5, 14.0, 8.5, 6.5, 4, 5);
-    // Thick black spectacle frames + bright white spiral lenses!
-    c.ellipse_outline(26.5, 13.0, 4.2, 4.0, 1, 5);
-    c.rect(26, 12, 2, 2, 5); // manic tiny pupil!
-    c.set(25, 11, 6); // glasses sheen
-    c.line(30, 13, 31, 13, 5); // glasses bridge
+    // 2. Sculpted golden Koopa head & bold black-framed round glasses (y=8..19)
+    c.ellipse_outline(31.5, 13.5, 8.2, 5.8, 4, 5);
+    // Thick black spectacle rim (x=24..30, y=9..15) — cleanly inside head silhouette!
+    c.ellipse_outline(27.0, 12.2, 3.2, 3.2, 1, 5);
+    c.rect(26, 11, 2, 2, 5); // manic dark pupil
+    c.set(26, 11, 6); // tiny lens gleam
+    c.line(30, 12, 31, 12, 5); // bridge of glasses
 
-    // Wide manic toothy grin & protruding tongue
-    c.ellipse_outline(31.5, 19.5, 8.2, 3.8, 3, 5);
-    c.rect(25, 19, 7, 2, 5);
-    c.set(26, 19, 1); // sharp tooth
-    c.set(29, 19, 1);
-    c.set(31, 20, 1);
+    // 3. Wide yellow-orange Koopa snout & toothy grin (y=16..21)
+    c.ellipse_outline(31.5, 18.2, 7.8, 3.2, 3, 5);
+    c.rect(25, 18, 7, 2, 5); // dark open mouth
+    c.set(26, 18, 1); // sharp fang L
+    c.set(29, 18, 1); // sharp fang R
 
-    // Slender Iggy Koopa shell torso & golden belly
-    c.ellipse_outline(31.5, 26.0, 9.5, 5.5, 2, 5);
-    c.ellipse(31.5, 26.0, 6.0, 4.2, 4); // golden belly
-    c.line(23, 25, 25, 25, 1); // shell white rim
-    c.ellipse_outline(25.0, 30.0, 2.8, 1.8, 3, 5); // feet
+    // 4. Distinct Koopaling armored shell & belly plastron (y=21..30)
+    c.ellipse_outline(31.5, 25.5, 9.2, 5.0, 2, 5); // dark colored shell outer
+    c.ellipse_outline(31.5, 25.8, 5.6, 3.6, 4, 5); // bright golden belly plastron
+    c.line(26, 25, 31, 25, 3); // belly segment ridge
+    c.line(26, 27, 31, 27, 3);
+    c.rect(23, 24, 2, 2, 1); // crisp shell rim highlight
+    c.ellipse_outline(25.5, 30.0, 2.8, 1.8, 3, 5); // sturdy clawed Koopa foot
 
     c.auto_outline(5, true);
     c
@@ -1007,11 +1004,15 @@ fn patch_boss_mothula_iggy(
     let f1 = build_iggy_winged_left_half_32x32(1);
     let f2 = build_iggy_winged_left_half_32x32(2); // wings tucked (center cols 16..31 -> $88/$A8)
 
-    // SMW Koopaling Magic Wand Rings (for cols 10..11, $8A/$AA)
+    // Compact, crisp SMW Koopaling Magic Sparkle Orb (never obscuring Iggy's face when fired!)
     let mut ring = Canvas::new(16, 16);
-    ring.ellipse_outline(8.0, 8.0, 6.0, 6.0, 4, 5);
-    ring.ellipse(8.0, 8.0, 4.2, 4.2, 1);
-    ring.ellipse_outline(8.0, 8.0, 2.6, 2.6, 0, 5);
+    ring.ellipse_outline(8.0, 8.0, 4.2, 4.2, 3, 5);
+    ring.ellipse(8.0, 8.0, 2.4, 2.4, 4);
+    ring.rect(7, 7, 2, 2, 1);
+    ring.set(8, 2, 1);
+    ring.set(8, 13, 1);
+    ring.set(2, 8, 1);
+    ring.set(13, 8, 1);
     let ring_tile = ring.slice_16x16(0, 0);
 
     if patch_alttp_raw_sheet_pub(
