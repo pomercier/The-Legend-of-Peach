@@ -6,6 +6,46 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ---
 
+## [0.4.0] — 2026-11-26 — The Mushroom Kingdom Reborn
+
+### Visual Polish & Authentic Super Mario World Environments
+- **Title Screen BG2 Landscape & Master Sword SMW Colors (`mario_intro.rs`)**:
+  - Live-patched Title Screen BG2 palette with authentic Super Mario World values: SMW Sparkling Blue water (`0x7A18`), SMW Sky Blue atmosphere (`0x7F0E`), Yoshi's Island Green Mountains (`0x1EE7`), Peach Castle Pink (`0x5B5E`), pure white battlement highlights (`0x7FFF`), and Golden Star blade hilt (`0x275F`).
+  - Preserved 100% fluid rotating 3D polygonal relics (Mushroom, Fire Flower, Super Star) with dual copyleft and copyright notices.
+- **Bowser Final Pyramid Arena Floor Cleanse (`mario_bosses.rs`)**:
+  - Eliminated the 4×4 residual floor square and grey stone scales in Room 0x00 by patching routine `$01:A7F0` (`0x00A7F0`) with a clean `RTS` bypass.
+  - Room 0x00 now displays an unblemished, majestic emerald green stone dais where King Bowser stands in combat, with zero Triforce residue.
+- **Dungeon ON/OFF Solid & Dotted Switch Blocks (`mario_world.rs`)**:
+  - Converted dungeon crystal switches and solid/dotted barriers in `raw:0x0F` (`0x08FC21`):
+    - Solid Red/Blue ON & OFF Switch Blocks with beveled metallic borders, corner rivets, and crisp "ON" / "OFF" text.
+    - SMW Dotted Outline Blocks for inactive states with authentic dashed borders.
+    - Mounted SMW ON/OFF Switch Block replacing the crystal switch orb.
+- **Dark World Pyramid Carved Stone Bowser Statues (`mario_world.rs`)**:
+  - Converted flanking gargoyle statues on the Dark World Pyramid exterior (`raw:0x29`, `0x0976C0`) into 32×32 Carved Stone King Bowser Statues and 16×32 Grimacing Thwomp Pillars.
+- **Item & Sprite Concordance Polish (`mixer.rs`, `mario_ui.rs`)**:
+  - Verified and finalized all shop collectibles, live weapons, carried turn blocks, message blocks, and SMW smiling bushes across sheets `0xCB`, `0xCC`, `0xCD`, `0xCE`, `0xD0`, and `0xDA`.
+
+### Expanded Native N-SPC Soundtrack (19 Tracks)
+- **6 New Native Mario Compositions (`mario_music.rs`)**:
+  - **SMW Title Screen Calypso Theme** (#1): Steel pan and bongo percussion groove for the game's title screen.
+  - **SMW Forest of Illusion Theme** (#5): Mysterious, wandering woods melody in F minor for the Lost Woods.
+  - **SMW Vanilla Dome / Cavern Theme** (#8): Subterranean echo theme with staccato harp and deep bass for Death Mountain.
+  - **SMW Star Road Celestial Waltz** (#26): Sparkling harp arpeggios and soaring flute for the Star Road Chamber.
+  - **SMB3 Airship Military March** (#27): Driving snare cadence, timpani kicks, and dramatic brass fanfares for Bowser's Tower.
+  - **SMW Underwater Waltz** (#24): Gentle 3/4 waltz for Water Dungeons and Swamp Palace.
+- Expanded native in-game music mappings to 25 distinct situations while maintaining strict single-bank N-SPC budget.
+
+### Build & Verification (`v0.4.0`)
+- Deterministic 2 MiB LoROM build: `193` hardware patches across `18` rules (`948 ms`), `48` LZ2 sheets audited, `9` relocated in `$23..$3F` (0 overlaps).
+- **SNES Checksum / Complement:** `0x7C48` / `0x83B7` (Valid: true)
+- **Output CRC32:** `397E3E64`
+- **Output MD5:** `897400efdf2b13e556109b919e2604fc`
+- **Output SHA-1:** `6bf9b8cbafae03c76c4227331c4595f42a5ae04a`
+- **Output SHA-256:** `eed0aac268c6523657ca083cc8cd40e620516757801bd69bbff38474f8b190ca`
+- Full test suite: `26/26` passing Rust unit and integration tests.
+
+---
+
 ## [0.3.0] — 2026-11-22 — Definitive Mario Experience
 
 ### Bug Fixes & Visual Quality

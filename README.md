@@ -32,7 +32,7 @@
 
 **The Legend of Peach: A Mario to the Mushroom Kingdom** is a fan-made Super Nintendo (SNES) total-conversion crossover that transforms *The Legend of Zelda: A Link to the Past* into a sprawling 16-bit *Super Mario World* action-adventure.
 
-Powered by a pure, headless **Rust** binary transformation engine, the project reads your own legally obtained original backups of *A Link to the Past* and *Super Mario World*, applies **182 verified SNES hardware patches** across graphics, 65c816 assembly, palettes, world tilesets, all 12 bosses, live French dialogue & compression dictionaries, and **13 native SPC700 N-SPC music tracks**, and outputs a **bit-for-bit deterministic 2 MiB SNES LoROM cartridge image**.
+Powered by a pure, headless **Rust** binary transformation engine, the project reads your own legally obtained original backups of *A Link to the Past* and *Super Mario World*, applies **193 verified SNES hardware patches** across graphics, 65c816 assembly, palettes, world tilesets, all 12 bosses, live French dialogue & compression dictionaries, and **19 native SPC700 N-SPC music tracks**, and outputs a **bit-for-bit deterministic 2 MiB SNES LoROM cartridge image**.
 
 > **Zero Copyrighted ROMs Included:** This repository contains **only original Rust source code, tooling, and documentation**. You must provide your own legal personal backups of both required SNES games to build the crossover locally. See [Required Original Games](#required-original-games).
 
@@ -40,7 +40,7 @@ Powered by a pure, headless **Rust** binary transformation engine, the project r
 
 ## Gameplay Showcase
 
-All screenshots below are **authentic, unretouched captures** from the locally built `v0.3.0` ROM running live in **Mednafen (`snes_faust` and cycle-accurate `bsnes`)**, integer-scaled `3×` nearest-neighbor (`768×672`) directly from native `256×224` SNES video output.
+All screenshots below are **authentic, unretouched captures** from the locally built `v0.4.0` ROM running live in **Mednafen (`snes_faust` and cycle-accurate `bsnes`)**, integer-scaled `3×` nearest-neighbor (`768×672`) directly from native `256×224` SNES video output.
 
 <table>
   <tr>
@@ -167,7 +167,7 @@ Both original ROMs below are verified locally against **No-Intro** SNES catalog 
 | **Base ROM** | *The Legend of Zelda: A Link to the Past* (`Legend of Zelda, The - A Link to the Past (France).sfc`) | France (PAL), Rev 1.0 | `1,048,576` B (1 MiB) | `29a0d5812ccbb4b11bdb55d8f751a2a797b4110bf402ca8ba15eb2bf85db7b39` |
 | **Donor ROM** | *Super Mario World* (`Super Mario World (Europe).sfc`) | Europe (PAL), Rev 1.0 | `524,288` B (512 KiB) | `b5be1dba3012b6811a5660fbf2981cb23cdd1e48f845a42df00f0f55b19f0392` |
 
-> Full verification details (SHA-1, CRC32, OS checksum commands, expected `v0.3.0` output SHA-256 `fe7390a1c4e58e219d8e6f023cc4f09ce6e7e6d5164bf1bb30b2dbf1c2828785`, and why exact revisions are strictly enforced) are documented in [`docs/ROM_REQUIREMENTS.md`](docs/ROM_REQUIREMENTS.md).
+> Full verification details (SHA-1, CRC32, OS checksum commands, expected `v0.4.0` output SHA-256 `eed0aac268c6523657ca083cc8cd40e620516757801bd69bbff38474f8b190ca`, and why exact revisions are strictly enforced) are documented in [`docs/ROM_REQUIREMENTS.md`](docs/ROM_REQUIREMENTS.md).
 
 ---
 
@@ -176,10 +176,10 @@ Both original ROMs below are verified locally against **No-Intro** SNES catalog 
 ```text
   [Zelda ALTTP (FR PAL)] ──┐
                            ├──► SHA-256 Verifier ──► Planar Tile & Palette Transcoder
-  [Super Mario World (EU)] ┘        (rom.rs)          + LC_LZ2 Compressor (46 sheets)
+  [Super Mario World (EU)] ┘        (rom.rs)          + LC_LZ2 Compressor (48 sheets)
                                                       + 65c816 3D Intro & OAM Patches
                                                       + Live FR Dictionary & Script Engine
-                                                      + Native SPC700 N-SPC Compiler (13 tracks)
+                                                      + Native SPC700 N-SPC Compiler (19 tracks)
                                                                    │
                                                                    ▼
                                                       LoROM 2 MiB Allocator ($00..$3F)
@@ -247,7 +247,7 @@ Read the full technical deep-dive — including the 2 MiB LoROM bank map, reserv
 | **Mednafen (`snes_faust`)** | **Verified** | Live-tested across title screen, Start menu, overworld, Kamek's Shop, Dark World, castles, Eastern Palace Chargin' Chucks, Castle Tower Bowser, all 7 Koopalings, Pokeys, Wiggler, and Giant King Bowser (with verified stereo SPC700 audio RMS). |
 | **Mednafen (`snes` / bsnes-accuracy)** | **Verified** | Cycle-accurate PPU/DMA/SPC700 verification of the 3D intro, title logo, Final Boss Giant King Bowser combat, dialogue, and Final Bowser N-SPC soundtrack. |
 | **bsnes / Ares / RetroArch (`bsnes`, `snes9x`)** | **Expected Compatible** | Standard 2 MiB LoROM (`0x20`, PAL 50 Hz, no enhancement chips, no MSU-1). |
-| **Real SNES / Super Famicom / FXPAK Pro** | **Architecturally Compliant (Untested on Physical Hardware)** | Strictly respects LoROM 32 KiB single-bank boundaries, valid checksum/complement (`0x2EC1` / `0xD13E`), OAM/VRAM/CGRAM/SPC700 limits, and clean DMA timing. Community physical-hardware test reports are very welcome! |
+| **Real SNES / Super Famicom / FXPAK Pro** | **Architecturally Compliant (Untested on Physical Hardware)** | Strictly respects LoROM 32 KiB single-bank boundaries, valid checksum/complement (`0x7C48` / `0x83B7`), OAM/VRAM/CGRAM/SPC700 limits, and clean DMA timing. Community physical-hardware test reports are very welcome! |
 
 ---
 

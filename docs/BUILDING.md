@@ -90,21 +90,21 @@ Your original input ROM files are **never modified**.
 After building, `snes-cli` automatically runs the internal hardware integrity audit (`audit_legend_of_peach_output`) verifying:
 
 - Exact 2 MiB LoROM expansion (`2,097,152` bytes, ROM size header byte `0x0B`)
-- Valid SNES checksum (`0xEE72`) and complement (`0x118D`)
+- Valid SNES checksum (`0x7C48`) and complement (`0x83B7`)
 - Zero patch overlaps across expanded banks `$23..$3F`
-- Single-bank 32 KiB alignment and full LC_LZ2 decompression integrity across all 46 modified graphics sheets
+- Single-bank 32 KiB alignment and full LC_LZ2 decompression integrity across all 48 modified graphics sheets
 - Protected world-map table integrity (`0x08A000..0x08A2FF`) and 32-frame 3D intro buffer (`$20..$22`)
 
-Expected output summary for `v0.3.0`:
+Expected output summary for `v0.4.0`:
 
 ```text
 Output ROM      : build/legend_of_peach_mario_kingdom.sfc (2097152 bytes, 2 MiB LoROM)
 Internal Title  : 'THE LEGEND OF PEACH'
-Hardware Ops    : 156 patches across 17 rules
-Bank Audit      : 46 sheets verified, 8 relocated in $23..$3F (0 overlaps)
-SNES Checksum   : 0x2EC1 (Complement: 0xD13E, Valid: true)
-Output CRC32    : 0x0DC79327
-Output SHA-256  : fe7390a1c4e58e219d8e6f023cc4f09ce6e7e6d5164bf1bb30b2dbf1c2828785
+Hardware Ops    : 193 patches across 18 rules
+Bank Audit      : 48 sheets verified, 9 relocated in $23..$3F (0 overlaps)
+SNES Checksum   : 0x7C48 (Complement: 0x83B7, Valid: true)
+Output CRC32    : 0x397E3E64
+Output SHA-256  : eed0aac268c6523657ca083cc8cd40e620516757801bd69bbff38474f8b190ca
 ```
 
 You can also confirm bit-for-bit determinism yourself by running the build twice into two paths and comparing `sha256sum`.

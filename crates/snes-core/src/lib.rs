@@ -921,18 +921,27 @@ mod tests {
             );
             assert_eq!(
                 &target.data[0x0012F7..0x0012FC],
-                &[0xAD, 0x0C, 0x1F, 0xF0, 0x2E],
-                "NMI 3D DMA at $00:92F7 must stay native for 100% fluid intro rendering"
+                &[0x22, 0x00, 0x80, 0x22, 0x60],
+                "NMI 3D DMA hook at $00:92F7 (32-frame 3D Mario Relics)"
             );
             assert_eq!(
                 &target.data[0x07027C..0x070281],
-                &[0xA9, 0x01, 0x8D, 0x00, 0x1F],
-                "Title Screen 3D Step at $0E:827C must stay native (zero tile noise)"
+                &[0x22, 0x80, 0x80, 0x22, 0xEA],
+                "Title Screen 3D Step hook at $0E:827C"
             );
             assert_eq!(
                 &target.data[0x070906..0x07090B],
-                &[0xA9, 0x01, 0x8D, 0x00, 0x1F],
-                "Intro Scroll 3D Step at $0E:8906 must stay native"
+                &[0x22, 0x80, 0x80, 0x22, 0xEA],
+                "Intro Scroll 3D Step hook at $0E:8906"
+            );
+            assert_eq!(
+                target.data[0x005D66], 0x17,
+                "Room 0x00 RoomBlockset slot 6 must remain vanilla 0x17 (keeps north wall intact + loads Star into $1B0..$1BF)"
+            );
+            assert_eq!(
+                &target.data[0x004008..0x00400A],
+                &0x0DB6u16.to_le_bytes(),
+                "Room 0x00 Star floor tiledata must target VRAM $1B6..$1BD (Pal 3, Slot 6 raw:0x17 row 3)"
             );
             assert_eq!(
                 target.data[0x073ABB], 0x4F,
@@ -962,21 +971,21 @@ mod tests {
                 &zelda.data[0x0E577A..0x0E57AF],
                 "Intro Screen 3 must be rewritten"
             );
+            let repacked_1c = &target.data[0x0E0000..0x0E8000];
             assert_eq!(
-                target.data[0x0E56E0], 0x7F,
-                "Intro Legend Screen 0 must preserve exact 381B terminator"
+                repacked_1c.iter().filter(|&&b| b == 0x7F).count(),
+                372,
+                "Bank $1C must contain all 372 French script messages with 0x7F terminators"
             );
-            assert_eq!(
-                target.data[0x0E5737], 0x7F,
-                "Intro Legend Screen 1 must preserve exact 87B terminator"
+            assert!(
+                repacked_1c.contains(&0x88),
+                "Bank $1C must preserve 0x88 end marker"
             );
-            assert_eq!(
-                target.data[0x0E5779], 0x7F,
-                "Intro Legend Screen 2 must preserve exact 66B terminator"
-            );
-            assert_eq!(
-                target.data[0x0E57AE], 0x7F,
-                "Intro Legend Screen 3 must preserve exact 53B terminator"
+            assert!(
+                !repacked_1c
+                    .windows(4)
+                    .any(|w| w == [0x13, 0x2B, 0x22, 0x1F]),
+                "Zero occurrences of 'Triforce' may remain in Bank $1C!"
             );
 
             // 4c. Verify ALL hardware patches (Zero Frame-0 3D corruption, Bowser Palettes, Koopa Swords, Black Bob-omb, HUD Bullet Bill, Luigi Green, Carry Z=23)
@@ -1031,8 +1040,8 @@ mod tests {
             );
             assert_eq!(
                 target.data[0x02CAEA + 16],
-                7,
-                "Koopa Left/Right sword Y must be centered at 7 (firmly in Koopa's hand!)"
+                2,
+                "Koopa Left/Right sword Y must be raised from 8 -> 2 (firmly in Koopa's hand!)"
             );
             assert_eq!(
                 target.data[0x02B16E], 12,
@@ -1091,15 +1100,12 @@ mod tests {
                 target.data[0x06FDB8], 0x28,
                 "HUD Bomb must use Pal 2 SMW Bob-omb"
             );
+            // Verify Bank $1C repacker preserves all 372 messages and eliminates Zelda terms
+            let repacked_1c = &target.data[0x0E0000..0x0E8000];
             assert_eq!(
-                target.data[0x0E74CD + 72],
-                0x7F,
-                "Heart Container dialog 1 must preserve exact 73B terminator"
-            );
-            assert_eq!(
-                target.data[0x0E7516 + 71],
-                0x7F,
-                "Heart Container dialog 2 must preserve exact 72B terminator"
+                repacked_1c.iter().filter(|&&b| b == 0x7F).count(),
+                372,
+                "Bank $1C must contain all 372 French script messages with 0x7F terminators"
             );
             // Verify N-SPC block upload headers & valid SPC $D000 song pointers
             assert_eq!(
@@ -1240,7 +1246,7 @@ mod tests {
             let audit = super::mixer::audit_legend_of_peach_output(&zelda, &target, &session)
                 .expect("audit_legend_of_peach_output must pass");
             assert_eq!(audit.output_size_bytes, 2_097_152);
-            assert_eq!(audit.verified_raw_sheets, 46);
+            assert_eq!(audit.verified_raw_sheets, 48);
             println!(
                 "HARDWARE AUDIT PASSED: 100% COMPLIANT WITH SNES AND SUPER FAMICOM (SHA-256: {})!",
                 audit.output_sha256
@@ -1287,17 +1293,42 @@ mod tests {
     fn test_room00_star_floor_and_raw0e_untouched() {
         let mut raw17 = vec![0u8; 0x600];
         super::mario_bosses::write_smw_golden_super_star_floor_tiles(&mut raw17);
-        // Rows 0..2 (tiles 0..47) must be completely untouched (zero)
+        // Rows 0..2 + Row 3 cols 0..5 (tiles 0..53) must be completely untouched (zero)
         assert!(
-            raw17[0..48 * 24].iter().all(|&b| b == 0),
-            "Rows 0..2 must remain untouched"
+            raw17[0..54 * 24].iter().all(|&b| b == 0),
+            "Rows 0..2 and Row 3 cols 0..5 must remain untouched"
         );
-        // Row 3 (tiles 48..63) holds the 16 tiles of the 32x32 SMW Super Star
-        let star_nz = raw17[48 * 24..64 * 24].iter().filter(|&&b| b != 0).count();
+        // Row 3 cols 6..13 (tiles 54..61) hold the 8 symmetric left-half tiles of the 32x32 SMW Super Star
+        let star_nz = raw17[54 * 24..62 * 24].iter().filter(|&&b| b != 0).count();
         assert!(
-            star_nz > 100,
-            "Row 3 must contain the full 32x32 SMW Super Star floor emblem"
+            star_nz > 60,
+            "Row 3 cols 6..13 must contain the 8 symmetric SMW Super Star floor tiles"
         );
+
+        let z_path = if std::path::Path::new("roms/zelda_alttp.sfc").exists() {
+            "roms/zelda_alttp.sfc"
+        } else {
+            "../../roms/zelda_alttp.sfc"
+        };
+        if let Ok(z_bytes) = std::fs::read(z_path) {
+            let mut z_rom = super::rom::SnesRom::from_bytes("zelda", &z_bytes).unwrap();
+            let mut sess = super::swapper::SwapSession::new();
+            let mut free_cursor = 0x118000;
+            let free_end = 0x200000;
+            let res = super::mixer::patch_alttp_raw_sheet_pub(
+                &mut z_rom,
+                &mut sess,
+                0x15,
+                "test",
+                &mut free_cursor,
+                free_end,
+                &|raw| {
+                    super::mario_bosses::write_smw_golden_super_star_floor_tiles(raw);
+                },
+            );
+            println!("patch_alttp_raw_sheet_pub on 0x15 result: {:?}", res);
+            assert!(res.unwrap(), "raw:0x15 MUST be successfully patched!");
+        }
     }
 
     #[test]

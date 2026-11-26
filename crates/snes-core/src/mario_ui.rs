@@ -2026,41 +2026,41 @@ pub fn patch_koopa_guard_oam_tables(
         && rom_zelda.data[0x02CAEA] == 0x0B
     {
         // 14 frames x 2 8x8 sword tiles (hilt + blade):
-        //   F00..F03 (Down):  hand at x=0..2, y=6..8   -> X=(-3,-3), Y=(9,17) [alert Y=(11,19)]
-        //   F04..F06 (Left):  hand at x=1..4, y=6..8   -> X=(-11,-3), Y=(7,7) [stride Y=(6,6)] — FIRMLY IN KOOPA HAND!
-        //   F07..F10 (Up):    hand at x=12..14, y=4..7 -> X=(11,11), Y=(-8,0) [lunge Y=(-12,-4)]
-        //   F11..F13 (Right): hand at x=11..14, y=6..8 -> X=(19,11), Y=(7,7) [stride Y=(6,6)] — FIRMLY IN KOOPA HAND!
+        //   F00..F03 (Down):  hand at x=0..2, y=6..8   -> X=(-2,-2), Y=(6,14) [alert Y=(8,16)]
+        //   F04..F06 (Left):  hand at x=1..4, y=3..6   -> X=(-10,-2), Y=(2,2) [stride Y=(1,1)] — FIRMLY IN KOOPA HAND!
+        //   F07..F10 (Up):    hand at x=12..14, y=4..7 -> X=(10,10), Y=(-6,2) [lunge Y=(-10,-2)]
+        //   F11..F13 (Right): hand at x=11..14, y=3..6 -> X=(18,10), Y=(2,2) [stride Y=(1,1)] — FIRMLY IN KOOPA HAND!
         let wx: [(i16, i16); 14] = [
-            (-3, -3),
-            (-4, -4),
-            (-4, -4),
-            (-4, -4), // F00..F03 Down
-            (-11, -3),
-            (-11, -3),
-            (-13, -5), // F04..F06 Left
-            (11, 11),
-            (11, 11),
-            (11, 11),
-            (11, 11), // F07..F10 Up
-            (19, 11),
-            (19, 11),
-            (21, 13), // F11..F13 Right
+            (-2, -2),
+            (-2, -2),
+            (-2, -2),
+            (-2, -2), // F00..F03 Down
+            (-10, -2),
+            (-10, -2),
+            (-12, -4), // F04..F06 Left
+            (10, 10),
+            (10, 10),
+            (10, 10),
+            (10, 10), // F07..F10 Up
+            (18, 10),
+            (18, 10),
+            (20, 12), // F11..F13 Right
         ];
         let wy: [(i16, i16); 14] = [
-            (9, 17),
-            (9, 17),
-            (8, 16),
-            (11, 19), // F00..F03 Down
-            (7, 7),
-            (7, 7),
-            (6, 6), // F04..F06 Left (centered at Koopa hands y=7!)
-            (-8, 0),
-            (-7, 1),
-            (-7, 1),
-            (-12, -4), // F07..F10 Up
-            (7, 7),
-            (7, 7),
-            (6, 6), // F11..F13 Right (centered at Koopa hands y=7!)
+            (6, 14),
+            (6, 14),
+            (5, 13),
+            (8, 16), // F00..F03 Down
+            (2, 2),
+            (2, 2),
+            (1, 1), // F04..F06 Left (verified live in hand!)
+            (-6, 2),
+            (-5, 3),
+            (-5, 3),
+            (-10, -2), // F07..F10 Up
+            (2, 2),
+            (2, 2),
+            (1, 1), // F11..F13 Right (verified live in hand!)
         ];
         let wx_b: Vec<u8> = wx
             .iter()
@@ -2166,38 +2166,39 @@ pub fn patch_bowser_authentic_palettes(
 /// - `3`=Amber-Gold (Belly/Snout Shade), `4`=Golden-Yellow (Broad Dragon Snout, Belly Plates, Arms/Legs),
 /// - `5`=Black (Crisp Outlines, Glaring Pupils, Spiked Collar/Cuffs), `6`=Emerald Green (Head/Shell), `7`=Forest Green!
 pub fn build_king_bowser_for_agahnim() -> KingBowserParts {
-    // Front Idle (Left 16x32 half -> H-mirrored across x=15|16 into full menacing 32x32 SMW King Bowser!)
+    // Front Idle (Left 16x32 half -> H-mirrored across x=15|16 into full menacing 32x32 SMW King Bowser!
+    // ZERO black pixels on mirror axis x=15 except collar/jawline -> 100% seamless King Bowser!)
     let front_idle_tl = parse_3bpp_ascii([
-        "...555..........",
-        "..5115..........",
-        ".51115...55.55..",
-        ".51115..5225225.",
-        "..5115.522222225",
-        "..57155622222225",
-        "...5566666666665",
-        "....567666666665",
-        "...5662222256665",
-        "...5651155556665",
-        "..56515544446665",
-        ".566444444444445",
-        "5444444444445445",
-        "5444444511544445",
-        ".544434511544435",
+        "..555.......555.",
+        ".5115......52222",
+        ".51115....522522",
+        ".51115...5222222",
+        "..5115..52222222",
+        "..57155566222222",
+        "...5566666666666",
+        "....567666666666",
+        "...5662222226666",
+        "...5651152256666",
+        "..56511555666666",
+        ".566444444444444",
+        "5444444444445444",
+        "5444444511544444",
+        ".544434511544434",
         "..55555555555555",
     ]);
     let front_idle_bl = parse_3bpp_ascii([
         "..55555555555555",
         ".516655155155155",
-        ".516665444444445",
-        "5166665444444445",
-        "5666665444433335",
-        "5665555444444445",
-        "5651515444444445",
-        "5655555444433335",
-        ".511155444444445",
-        "..55555444444445",
-        "...5675444433335",
-        "..54444544444445",
+        ".516665444444444",
+        "5166665444444444",
+        "5666665444333333",
+        "5665555444444444",
+        "5651515444444444",
+        "5655555444333333",
+        ".511155444444444",
+        "..55555444444444",
+        "...5675444333333",
+        "..54444544444444",
         "..54444555555555",
         ".5144445........",
         ".5111115........",
@@ -2206,17 +2207,17 @@ pub fn build_king_bowser_for_agahnim() -> KingBowserParts {
 
     // Front Cast / Fire-Roar (Clawed arms RAISED high + dragon jaws WIDE open roaring with fiery red mouth & fangs!)
     let front_cast_tl = parse_3bpp_ascii([
-        "...555..........",
-        "..5115...55.55..",
-        ".51115..5225225.",
-        ".51115.522222225",
-        "..51155622222225",
-        "...5566666666665",
-        "....567666666665",
-        "...5662222256665",
-        "...5651155556665",
-        "..56515544446665",
-        ".566444444444445",
+        "..555.......555.",
+        ".5115.....522222",
+        ".51115...5225222",
+        ".51115..52222222",
+        "..51155566222222",
+        "...5566666666666",
+        "....567666666666",
+        "...5662222226666",
+        "...5651152256666",
+        "..56511555666666",
+        ".566444444444444",
         "5444444511555555",
         "5444445115222222",
         ".544445152222222",
@@ -2226,16 +2227,16 @@ pub fn build_king_bowser_for_agahnim() -> KingBowserParts {
     let front_cast_bl = parse_3bpp_ascii([
         ".511155555555555",
         "5144155155155155",
-        "5444455444444445",
-        "5666655444433335",
-        ".566665444444445",
-        "..56675444433335",
-        "..55675444444445",
-        "...5675444433335",
-        "...5165444444445",
-        "....555444444445",
-        "...5675444433335",
-        "..54444544444445",
+        "5444455444444444",
+        "5666655444333333",
+        ".566665444444444",
+        "..56675444333333",
+        "..55675444444444",
+        "...5675444333333",
+        "...5165444444444",
+        "....555444444444",
+        "...5675444333333",
+        "..54444544444444",
         "..54444555555555",
         ".5144445........",
         ".5111115........",
@@ -2566,25 +2567,25 @@ pub fn build_normal_uncle_luigi() -> NormalUncleLuigiParts {
 /// - `6`=Vibrant Luigi Emerald Green (Cap & Shirt), `7`=Deep Luigi Forest Green (Cap Brim & Overalls)!
 pub fn build_mario_green_uncle_luigi_from_bank(mario_bank_4bpp: &[u8]) -> NormalUncleLuigiParts {
     let read_mario_4bpp_cell = |mx: usize, my: usize, flip_h: bool| -> [[u8; 16]; 16] {
-        // Map Mario's 4bpp palette indices (0..15) -> ALTTP 3bpp Pal 6 GREEN LUIGI (0..7)!
-        // Mario 4bpp: 1=White, 2=Skin, 3=BrownHair/Boots, 6=Mustache, 7=CapBrim/ShirtShade, 8/9=Cap/Shirt, 10/11=Overalls, 14=Pupils/Outline
+        // Map Mario's 4bpp palette indices (0..15, where 0x0DD308 starts at index 1!) -> ALTTP 3bpp Pal 6 GREEN LUIGI (0..7)!
+        // Verified exact Mario 4bpp indices: 1=White, 2=Black, 3=Brown, 4=Gold, 5/6=Skin, 7/8/9=RedCap/Shirt, 10/11/12=BlueOveralls, 14=SkinShade
         const LUT_MARIO_TO_GREEN_LUIGI: [u8; 16] = [
             0, // 0: Transparent
-            1, // 1: Pure White (Gloves, Eye Sclera, 'L' Cap Badge)
-            4, // 2: Warm Peach Skin (Face, Cheeks, Forehead, Chin)
+            1, // 1: Pure White (Gloves, Eye Sclera, Cap Badge)
+            5, // 2: Pure Black (Outlines, Mustache, Pupils)
             3, // 3: Brown (Hair, Sideburns, Boots)
-            6, // 4: Vibrant Luigi Emerald Green (Cap highlight)
-            6, // 5: Vibrant Luigi Emerald Green (Cap shine)
-            5, // 6: Black Mustache & Glaring Pupils
-            7, // 7: Deep Luigi Forest Green (Cap Brim & Shirt Shade)
-            6, // 8: Vibrant Luigi Emerald Green (Cap & Shirt!)
-            6, // 9: Vibrant Luigi Emerald Green (Cap & Shirt!)
-            5, // 10: Deep Dark Outlines / Boot Soles
-            7, // 11: Deep Luigi Forest Green Overalls
-            7, // 12: Deep Luigi Forest Green Overalls
-            4, // 13: Skin Highlight
-            5, // 14: Black Pupils & Mouth Outline
-            5, // 15: Black Outlines
+            2, // 4: Gold (Overall Buttons, Cap Shine)
+            4, // 5: Skin Highlight -> Warm Peach Skin
+            4, // 6: Warm Peach Skin (Face, Nose, Cheeks, Ears)
+            7, // 7: Deep Red (Cap Brim / Shirt Shade) -> Deep Luigi Forest Green!
+            7, // 8: Dark Crimson -> Deep Luigi Forest Green!
+            6, // 9: Bright Mario Red (Cap / Shirt!) -> Vibrant Luigi Emerald Green!
+            7, // 10: Deep Blue Overalls Shadow -> Deep Luigi Forest Green Overalls!
+            7, // 11: Royal Blue Overalls -> Deep Luigi Forest Green Overalls!
+            6, // 12: Sky Blue Overalls Highlight -> Vibrant Luigi Emerald Green!
+            1, // 13: White
+            4, // 14: Skin Shade -> Warm Peach Skin
+            5, // 15: Dark Outline
         ];
         let mut px = [[0u8; 16]; 16];
         let base = (my * 32 + mx * 2) * 32;

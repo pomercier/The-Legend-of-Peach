@@ -94,18 +94,18 @@ Applying these patches to an unverified revision would corrupt code or graphics,
 
 ## Expected Reproducible Output ROM Signature
 
-When built with release **`v0.3.0`** from the two verified ROMs above, the locally generated output ROM is **100% deterministic (bit-for-bit identical)** across machines and operating systems:
+When built with release **`v0.4.0`** from the two verified ROMs above, the locally generated output ROM is **100% deterministic (bit-for-bit identical)** across machines and operating systems:
 
-| Field | Deterministic Output Value (`v0.3.0`) |
+| Field | Deterministic Output Value (`v0.4.0`) |
 | :--- | :--- |
 | **Output Size** | `2,097,152` bytes (`2 MiB`, LoROM expanded from `1 MiB`) |
 | **Internal Header Title** | `THE LEGEND OF PEACH` |
-| **SNES Checksum / Complement** | `0x2EC1` / `0xD13E` (Valid) |
-| **CRC32** | `0DC79327` |
-| **MD5** | `2eb60aa2c2a6ef0e5ed484a839a9ad34` |
-| **SHA-1** | `8f5bfccf94ef528059f714f9a63447e5e108157e` |
-| **SHA-256** | `fe7390a1c4e58e219d8e6f023cc4f09ce6e7e6d5164bf1bb30b2dbf1c2828785` |
+| **SNES Checksum / Complement** | `0x7C48` / `0x83B7` (Valid) |
+| **CRC32** | `397E3E64` |
+| **MD5** | `897400efdf2b13e556109b919e2604fc` |
+| **SHA-1** | `6bf9b8cbafae03c76c4227331c4595f42a5ae04a` |
+| **SHA-256** | `eed0aac268c6523657ca083cc8cd40e620516757801bd69bbff38474f8b190ca` |
 
-*(Previous release `v0.2.0` SHA-256: `c700d1d2b60f50e789e2214fa8528c0c3af132ebc8af35a2f7ced5aa16735edb`, Checksum `0xEE72` / `0x118D`; `v0.1.0` SHA-256: `32540c4629c6b797f6933c7966a419fd959a3f711f36347f4348ceb2fa85b99c`.)*
+*(Previous release `v0.3.0` SHA-256: `fe7390a1c4e58e219d8e6f023cc4f09ce6e7e6d5164bf1bb30b2dbf1c2828785`, Checksum `0x2EC1` / `0xD13E`; `v0.2.0` SHA-256: `c700d1d2b60f50e789e2214fa8528c0c3af132ebc8af35a2f7ced5aa16735edb`, Checksum `0xEE72` / `0x118D`; `v0.1.0` SHA-256: `32540c4629c6b797f6933c7966a419fd959a3f711f36347f4348ceb2fa85b99c`.)*
 
 > **Never commit, upload, or share the generated ROM file.** Both `roms/` and `build/` as well as all `.sfc`/`.smc` files are ignored by `.gitignore`.

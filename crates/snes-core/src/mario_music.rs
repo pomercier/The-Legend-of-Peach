@@ -2416,6 +2416,743 @@ fn compose_smw_final_bowser_battle() -> SongSpec {
     }
 }
 
+/// 14. Super Mario World — Title Screen Calypso Theme (Steel Drums & Bongo Groove)
+fn compose_smw_title() -> SongSpec {
+    let mel: Vec<(u8, u8)> = vec![
+        (E, G4),
+        (E, C5),
+        (E, E5),
+        (Q, G5),
+        (E, E5),
+        (E, C5),
+        (Q, G4),
+        (E, A4),
+        (E, B4),
+        (H, C5),
+        (E, A4),
+        (E, C5),
+        (E, F5),
+        (Q, A5),
+        (E, F5),
+        (E, C5),
+        (Q, G4),
+        (E, B4),
+        (E, D5),
+        (H, G5),
+        (E, G4),
+        (E, C5),
+        (E, E5),
+        (Q, G5),
+        (E, E5),
+        (E, C5),
+        (Q, A4),
+        (E, C5),
+        (E, E5),
+        (H, F5),
+        (E, D5),
+        (E, E5),
+        (E, F5),
+        (E, FS5),
+        (Q, G5),
+        (Q, G4),
+        (W, C5),
+    ];
+    let bass: Vec<(u8, u8)> = vec![
+        (Q, C3),
+        (E, R),
+        (E, C3),
+        (Q, G2),
+        (Q, C3),
+        (Q, C3),
+        (E, R),
+        (E, C3),
+        (Q, G2),
+        (Q, C3),
+        (Q, F2),
+        (E, R),
+        (E, F2),
+        (Q, C3),
+        (Q, F2),
+        (Q, G2),
+        (E, R),
+        (E, G2),
+        (Q, D3),
+        (Q, G2),
+        (Q, C3),
+        (E, R),
+        (E, C3),
+        (Q, G2),
+        (Q, C3),
+        (Q, F2),
+        (E, R),
+        (E, F2),
+        (Q, C3),
+        (Q, F2),
+        (Q, G2),
+        (E, R),
+        (E, G2),
+        (Q, G2),
+        (Q, B2),
+        (W, C3),
+    ];
+    let perc: Vec<(u8, u8)> = vec![
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (W, C4),
+    ];
+    SongSpec {
+        tempo: 0x2A,
+        master_vol: 0xC0,
+        loops: true,
+        tracks: vec![
+            TrackSpec {
+                inst: INST_FLUTE,
+                vol: 0xE8,
+                pan: 0x0A,
+                qv: 0x7E,
+                notes: mel,
+            },
+            TrackSpec {
+                inst: INST_BASS,
+                vol: 0xD0,
+                pan: 0x0A,
+                qv: 0x6E,
+                notes: bass,
+            },
+            TrackSpec {
+                inst: INST_SNARE,
+                vol: 0x90,
+                pan: 0x08,
+                qv: 0x5C,
+                notes: perc,
+            },
+        ],
+    }
+}
+
+/// 15. Super Mario World — Forest of Illusion (Enigmatic Wandering Woods)
+fn compose_smw_forest_of_illusion() -> SongSpec {
+    let mel: Vec<(u8, u8)> = vec![
+        (Q, C5),
+        (E, B4),
+        (E, AS4),
+        (Q, A4),
+        (Q, GS4),
+        (H, G4),
+        (H, R),
+        (Q, DS5),
+        (E, D5),
+        (E, CS5),
+        (Q, C5),
+        (Q, B4),
+        (H, AS4),
+        (H, R),
+        (E, G4),
+        (E, AS4),
+        (E, C5),
+        (E, DS5),
+        (Q, F5),
+        (E, DS5),
+        (E, D5),
+        (H, C5),
+        (Q, AS4),
+        (Q, G4),
+        (Q, GS4),
+        (E, G4),
+        (E, F4),
+        (H, G4),
+        (W, R),
+    ];
+    let pad: Vec<(u8, u8)> = vec![
+        (W, C4),
+        (W, C4),
+        (W, DS4),
+        (W, DS4),
+        (W, C4),
+        (W, C4),
+        (W, G3),
+        (W, C4),
+    ];
+    let bass: Vec<(u8, u8)> = vec![
+        (Q, C3),
+        (Q, G2),
+        (Q, C3),
+        (Q, DS3),
+        (Q, C3),
+        (Q, G2),
+        (Q, C3),
+        (Q, G2),
+        (Q, DS3),
+        (Q, AS2),
+        (Q, DS3),
+        (Q, F3),
+        (Q, DS3),
+        (Q, AS2),
+        (Q, DS3),
+        (Q, AS2),
+        (Q, C3),
+        (Q, G2),
+        (Q, C3),
+        (Q, DS3),
+        (Q, C3),
+        (Q, G2),
+        (Q, C3),
+        (Q, G2),
+        (Q, F2),
+        (Q, C3),
+        (Q, G2),
+        (Q, D3),
+        (W, C3),
+    ];
+    SongSpec {
+        tempo: 0x1E,
+        master_vol: 0xBC,
+        loops: true,
+        tracks: vec![
+            TrackSpec {
+                inst: INST_FLUTE,
+                vol: 0xE0,
+                pan: 0x0A,
+                qv: 0x7E,
+                notes: mel,
+            },
+            TrackSpec {
+                inst: INST_STRINGS,
+                vol: 0x90,
+                pan: 0x06,
+                qv: 0x6E,
+                notes: pad,
+            },
+            TrackSpec {
+                inst: INST_BASS,
+                vol: 0xC8,
+                pan: 0x0C,
+                qv: 0x6E,
+                notes: bass,
+            },
+        ],
+    }
+}
+
+/// 16. Super Mario World — Vanilla Dome / Subterranean Cavern Echo
+fn compose_smw_vanilla_dome() -> SongSpec {
+    let drop: Vec<(u8, u8)> = vec![
+        (E, C5),
+        (E, R),
+        (Q, G4),
+        (E, DS5),
+        (E, R),
+        (Q, C5),
+        (H, R),
+        (Q, AS4),
+        (Q, R),
+        (E, C5),
+        (E, R),
+        (Q, G4),
+        (E, F5),
+        (E, R),
+        (Q, DS5),
+        (H, R),
+        (Q, D5),
+        (Q, R),
+        (E, C5),
+        (E, R),
+        (E, DS5),
+        (E, R),
+        (Q, G5),
+        (Q, F5),
+        (H, DS5),
+        (H, D5),
+        (W, C5),
+        (W, R),
+    ];
+    let bass: Vec<(u8, u8)> = vec![
+        (Q, C2),
+        (Q, R),
+        (Q, G2),
+        (Q, R),
+        (Q, C2),
+        (Q, R),
+        (Q, AS2),
+        (Q, R),
+        (Q, C2),
+        (Q, R),
+        (Q, G2),
+        (Q, R),
+        (Q, C2),
+        (Q, R),
+        (Q, D2),
+        (Q, R),
+        (Q, C2),
+        (Q, R),
+        (Q, DS2),
+        (Q, R),
+        (Q, F2),
+        (Q, R),
+        (Q, G2),
+        (Q, R),
+        (W, C2),
+        (W, R),
+    ];
+    SongSpec {
+        tempo: 0x20,
+        master_vol: 0xB0,
+        loops: true,
+        tracks: vec![
+            TrackSpec {
+                inst: INST_HARP,
+                vol: 0xE0,
+                pan: 0x08,
+                qv: 0x7E,
+                notes: drop,
+            },
+            TrackSpec {
+                inst: INST_BASS,
+                vol: 0xD0,
+                pan: 0x0B,
+                qv: 0x6E,
+                notes: bass,
+            },
+        ],
+    }
+}
+
+/// 17. Super Mario World — Star Road Celestial 3/4 Waltz
+fn compose_smw_star_road() -> SongSpec {
+    let mel: Vec<(u8, u8)> = vec![
+        (Q, C5),
+        (Q, E5),
+        (Q, G5),
+        (H, B5),
+        (Q, A5),
+        (Q, G5),
+        (Q, E5),
+        (Q, C5),
+        (H, D5),
+        (Q, R),
+        (Q, D5),
+        (Q, F5),
+        (Q, A5),
+        (H, C6),
+        (Q, B5),
+        (Q, A5),
+        (Q, F5),
+        (Q, D5),
+        (H, E5),
+        (Q, R),
+        (Q, E5),
+        (Q, G5),
+        (Q, B5),
+        (H, C6),
+        (Q, C6),
+        (Q, B5),
+        (Q, G5),
+        (Q, E5),
+        (H, F5),
+        (Q, G5),
+        (H, A5),
+        (Q, B5),
+        (H, C6),
+        (Q, R),
+    ];
+    let arp: Vec<(u8, u8)> = vec![
+        (E, C4),
+        (E, E4),
+        (E, G4),
+        (E, C5),
+        (E, G4),
+        (E, E4),
+        (E, C4),
+        (E, E4),
+        (E, G4),
+        (E, C5),
+        (E, G4),
+        (E, E4),
+        (E, D4),
+        (E, F4),
+        (E, A4),
+        (E, D5),
+        (E, A4),
+        (E, F4),
+        (E, D4),
+        (E, F4),
+        (E, A4),
+        (E, D5),
+        (E, A4),
+        (E, F4),
+        (E, E4),
+        (E, G4),
+        (E, B4),
+        (E, E5),
+        (E, B4),
+        (E, G4),
+        (E, E4),
+        (E, G4),
+        (E, B4),
+        (E, E5),
+        (E, B4),
+        (E, G4),
+        (E, F4),
+        (E, A4),
+        (E, C5),
+        (E, G4),
+        (E, B4),
+        (E, D5),
+        (H, C5),
+        (Q, R),
+    ];
+    let bass: Vec<(u8, u8)> = vec![
+        (H, C3),
+        (Q, G2),
+        (H, C3),
+        (Q, G2),
+        (H, D3),
+        (Q, A2),
+        (H, D3),
+        (Q, A2),
+        (H, E3),
+        (Q, B2),
+        (H, E3),
+        (Q, B2),
+        (H, F2),
+        (Q, G2),
+        (H, C3),
+        (Q, R),
+    ];
+    SongSpec {
+        tempo: 0x26,
+        master_vol: 0xBC,
+        loops: true,
+        tracks: vec![
+            TrackSpec {
+                inst: INST_FLUTE,
+                vol: 0xD8,
+                pan: 0x0A,
+                qv: 0x7E,
+                notes: mel,
+            },
+            TrackSpec {
+                inst: INST_HARP,
+                vol: 0xB0,
+                pan: 0x07,
+                qv: 0x6C,
+                notes: arp,
+            },
+            TrackSpec {
+                inst: INST_BASS,
+                vol: 0xC0,
+                pan: 0x0A,
+                qv: 0x6E,
+                notes: bass,
+            },
+        ],
+    }
+}
+
+/// 18. Super Mario Bros 3 — Airship Theme Dramatic Cadence
+fn compose_smb3_airship_march() -> SongSpec {
+    let mel: Vec<(u8, u8)> = vec![
+        (Q, C4),
+        (Q, DS4),
+        (Q, G4),
+        (Q, FS4),
+        (H, F4),
+        (H, DS4),
+        (Q, C4),
+        (Q, DS4),
+        (Q, G4),
+        (Q, A4),
+        (H, AS4),
+        (H, G4),
+        (Q, C5),
+        (Q, AS4),
+        (Q, GS4),
+        (Q, G4),
+        (H, F4),
+        (H, DS4),
+        (Q, D4),
+        (Q, F4),
+        (Q, DS4),
+        (Q, D4),
+        (W, C4),
+    ];
+    let brass: Vec<(u8, u8)> = vec![
+        (Q, C3),
+        (E, C3),
+        (E, C3),
+        (Q, C3),
+        (Q, C3),
+        (Q, C3),
+        (E, C3),
+        (E, C3),
+        (Q, C3),
+        (Q, C3),
+        (Q, C3),
+        (E, C3),
+        (E, C3),
+        (Q, C3),
+        (Q, C3),
+        (Q, C3),
+        (E, C3),
+        (E, C3),
+        (Q, C3),
+        (Q, C3),
+        (Q, C3),
+        (E, C3),
+        (E, C3),
+        (Q, C3),
+        (Q, C3),
+        (Q, C3),
+        (E, C3),
+        (E, C3),
+        (Q, C3),
+        (Q, C3),
+        (Q, G2),
+        (E, G2),
+        (E, G2),
+        (Q, G2),
+        (Q, G2),
+        (W, C3),
+    ];
+    let timp: Vec<(u8, u8)> = vec![
+        (Q, C3),
+        (Q, R),
+        (Q, C3),
+        (Q, C3),
+        (Q, C3),
+        (Q, R),
+        (Q, C3),
+        (Q, C3),
+        (Q, C3),
+        (Q, R),
+        (Q, C3),
+        (Q, C3),
+        (Q, C3),
+        (Q, R),
+        (Q, C3),
+        (Q, C3),
+        (Q, C3),
+        (Q, R),
+        (Q, C3),
+        (Q, C3),
+        (Q, C3),
+        (Q, R),
+        (Q, C3),
+        (Q, C3),
+        (Q, G2),
+        (Q, R),
+        (Q, G2),
+        (Q, G2),
+        (W, C3),
+    ];
+    SongSpec {
+        tempo: 0x22,
+        master_vol: 0xC4,
+        loops: true,
+        tracks: vec![
+            TrackSpec {
+                inst: INST_BRASS,
+                vol: 0xE8,
+                pan: 0x0A,
+                qv: 0x7E,
+                notes: mel,
+            },
+            TrackSpec {
+                inst: INST_BASS,
+                vol: 0xD0,
+                pan: 0x0A,
+                qv: 0x7E,
+                notes: brass,
+            },
+            TrackSpec {
+                inst: INST_TIMPANI,
+                vol: 0xB8,
+                pan: 0x0A,
+                qv: 0x6E,
+                notes: timp,
+            },
+        ],
+    }
+}
+
+/// 19. Super Mario World — Underwater Gentle 3/4 Waltz
+fn compose_smw_underwater() -> SongSpec {
+    let mel: Vec<(u8, u8)> = vec![
+        (Q, E5),
+        (H, G5),
+        (Q, F5),
+        (H, A5),
+        (Q, G5),
+        (H, C6),
+        (Q, B5),
+        (H, G5),
+        (Q, E5),
+        (H, G5),
+        (Q, F5),
+        (H, A5),
+        (Q, D5),
+        (H, F5),
+        (H, E5),
+        (Q, R),
+        (Q, C5),
+        (H, E5),
+        (Q, D5),
+        (H, F5),
+        (Q, E5),
+        (H, G5),
+        (Q, F5),
+        (H, A5),
+        (Q, G5),
+        (Q, A5),
+        (Q, B5),
+        (H, C6),
+        (Q, R),
+    ];
+    let arp: Vec<(u8, u8)> = vec![
+        (E, C4),
+        (E, G4),
+        (E, C5),
+        (E, G4),
+        (E, C4),
+        (E, G4),
+        (E, D4),
+        (E, A4),
+        (E, D5),
+        (E, A4),
+        (E, D4),
+        (E, A4),
+        (E, E4),
+        (E, C5),
+        (E, E5),
+        (E, C5),
+        (E, E4),
+        (E, C5),
+        (E, D4),
+        (E, B4),
+        (E, D5),
+        (E, B4),
+        (E, D4),
+        (E, B4),
+        (E, C4),
+        (E, G4),
+        (E, C5),
+        (E, G4),
+        (E, C4),
+        (E, G4),
+        (E, D4),
+        (E, A4),
+        (E, D5),
+        (E, A4),
+        (E, D4),
+        (E, A4),
+        (E, G4),
+        (E, B4),
+        (E, D5),
+        (H, C5),
+        (Q, R),
+    ];
+    let bass: Vec<(u8, u8)> = vec![
+        (H, C3),
+        (Q, G2),
+        (H, D3),
+        (Q, A2),
+        (H, E3),
+        (Q, C3),
+        (H, G2),
+        (Q, D3),
+        (H, C3),
+        (Q, G2),
+        (H, D3),
+        (Q, A2),
+        (H, G2),
+        (Q, G2),
+        (H, C3),
+        (Q, R),
+    ];
+    SongSpec {
+        tempo: 0x1C,
+        master_vol: 0xB4,
+        loops: true,
+        tracks: vec![
+            TrackSpec {
+                inst: INST_FLUTE,
+                vol: 0xD8,
+                pan: 0x0A,
+                qv: 0x7E,
+                notes: mel,
+            },
+            TrackSpec {
+                inst: INST_HARP,
+                vol: 0xB0,
+                pan: 0x07,
+                qv: 0x6C,
+                notes: arp,
+            },
+            TrackSpec {
+                inst: INST_BASS,
+                vol: 0xC0,
+                pan: 0x0A,
+                qv: 0x6E,
+                notes: bass,
+            },
+        ],
+    }
+}
+
 /// Inject all 100% native ALTTP N-SPC Mario soundtracks into both the Overworld Bank (`0x0D1EF5`)
 /// and the Dungeon / Indoor Bank (`0x0D8000`) while verifying headers and keeping exact SPC block sizes!
 pub fn inject_mario_nspc_soundtrack(
@@ -2439,23 +3176,27 @@ pub fn inject_mario_nspc_soundtrack(
         ]);
         if len_le == ALTTP_SPC_OVERWORLD_LEN && dst_le == SPC_BASE_ADDR {
             let ow_songs = vec![
-                compose_smw_overworld(),        // 0: SMW Overworld Main Theme
-                compose_smb_overworld(),        // 1: SMB 1-1 Main Theme (Title / Intro / Rain)
-                compose_smw_peach_sanctuary(),  // 2: SMW Peach / Fairy Theme
-                compose_mario_starman_boss(),   // 3: Mario Starman Action (Soldiers Alert)
-                compose_smw_victory_fanfare(),  // 4: SMW Course Clear (Master Sword Pull)
-                compose_smw_athletic(),         // 5: SMW Athletic Ragtime (Toad Town & Lost Woods!)
-                compose_smw_ghost_house(),      // 6: SMW Ghost House Waltz (Mystery / Bunny!)
-                compose_smw_valley_of_bowser(), // 7: NEW Phase 2 — SMW Valley of Bowser (Dark World Overworld!)
+                compose_smw_overworld(),          // 0: SMW Overworld Main Theme
+                compose_smb_overworld(),          // 1: SMB 1-1 Main Theme (Intro / Rain)
+                compose_smw_peach_sanctuary(),    // 2: SMW Peach / Fairy Theme
+                compose_mario_starman_boss(),     // 3: Mario Starman Action (Soldiers Alert)
+                compose_smw_victory_fanfare(),    // 4: SMW Course Clear (Master Sword Pull)
+                compose_smw_athletic(),           // 5: SMW Athletic Ragtime (Toad Town)
+                compose_smw_ghost_house(),        // 6: SMW Ghost House Waltz (Mystery / Bunny)
+                compose_smw_valley_of_bowser(),   // 7: SMW Valley of Bowser (Dark World Overworld)
+                compose_smw_title(),              // 8: NEW SMW Title Screen Calypso
+                compose_smw_forest_of_illusion(), // 9: NEW SMW Forest of Illusion (Lost Woods)
+                compose_smw_vanilla_dome(),       // 10: NEW SMW Vanilla Dome (Death Mountain)
             ];
             let ow_map = [
-                (1usize, 1usize), // #1 Title Screen -> SMB 1-1 Theme
+                (1usize, 8usize), // #1 Title Screen -> NEW SMW Title Calypso Theme!
                 (2, 0),           // #2 Light World Overworld -> SMW Overworld Theme!
                 (3, 1),           // #3 Intro / Rain -> SMB 1-1 Theme
                 (4, 6),           // #4 Bunny / Mystery -> SMW Ghost House Theme!
-                (5, 5),           // #5 Lost Woods -> SMW Athletic Theme!
+                (5, 9),           // #5 Lost Woods -> NEW SMW Forest of Illusion Theme!
                 (6, 1),           // #6 Legend / Story -> SMB 1-1 Theme
                 (7, 5),           // #7 Toad Town (Kakariko) -> SMW Athletic Ragtime Theme!
+                (8, 10),          // #8 Death Mountain -> NEW SMW Vanilla Dome Theme!
                 (9, 7),           // #9 Dark World Overworld -> NEW SMW Valley of Bowser Theme!
                 (10, 4),          // #10 Master Sword -> SMW Course Clear!
                 (12, 3),          // #12 Hyrule Soldiers Alert -> Mario Starman!
@@ -2472,7 +3213,7 @@ pub fn inject_mario_nspc_soundtrack(
                     ow_data_pc,
                     ow_data_pc,
                     new_ow,
-                    "Musiques N-SPC Overworld (0x0D1EF9 -> SPC $D000) : 8 thèmes SMW (Overworld, SMB 1-1, Athletic, Ghost House, Valley of Bowser, Peach, Starman, Course Clear)".into(),
+                    "Musiques N-SPC Overworld (0x0D1EF9 -> SPC $D000) : 11 thèmes SMW (Overworld, SMB 1-1, Athletic, Ghost House, Valley of Bowser, Peach, Starman, Title, Forest, Vanilla Dome, Course Clear)".into(),
                     SwapKind::CodePatch { byte_count: ALTTP_SPC_OVERWORLD_LEN },
                 )?;
                 ops += 1;
@@ -2498,8 +3239,11 @@ pub fn inject_mario_nspc_soundtrack(
                 compose_smw_koopaling_boss(), // 4: SMW Koopalings Boss Theme (All 7 Koopalings & Chargin' Chucks!)
                 compose_smw_victory_fanfare(), // 5: SMW Course Clear (Boss Victory!)
                 compose_smw_ghost_house(),    // 6: SMW Ghost House (Dark World Haunted Dungeons!)
-                compose_smw_yoshi_bonus(), // 7: NEW Phase 2 — SMW Bonus Room / Yoshi's House (Toad & Kamek Shops!)
-                compose_smw_final_bowser_battle(), // 8: NEW Phase 2 — SMW Final King Bowser Showdown!
+                compose_smw_yoshi_bonus(), // 7: SMW Bonus Room / Yoshi's House (Toad & Kamek Shops!)
+                compose_smw_final_bowser_battle(), // 8: SMW Final King Bowser Showdown!
+                compose_smw_star_road(),   // 9: NEW SMW Star Road Chamber
+                compose_smb3_airship_march(), // 10: NEW SMB3 Airship March
+                compose_smw_underwater(),  // 11: NEW SMW Underwater Waltz
             ];
             let dn_map = [
                 (16usize, 0usize), // #16 Hyrule Castle -> SMW Castle Theme!
@@ -2509,12 +3253,12 @@ pub fn inject_mario_nspc_soundtrack(
                 (20, 3),           // #20 Sanctuary (Princess Peach) -> SMW Peach Gentle Theme!
                 (21, 4),           // #21 Koopaling / Dungeon Boss -> SMW Koopalings Boss Theme!
                 (22, 6),           // #22 Dark World Dungeon -> SMW Ghost House Theme!
-                (23, 7), // #23 Toad / Kamek Shop -> NEW SMW Bonus Room / Yoshi's House Theme!
-                (24, 1), // #24 Cave / Secret -> SMB Underground Theme!
-                (25, 3), // #25 Peach Rescued -> SMW Peach Theme!
-                (26, 3), // #26 Crystal Maiden -> SMW Peach Theme!
-                (27, 0), // #27 Bowser's Castle Tower -> SMW Castle Theme!
-                (28, 8), // #28 Final Boss King Bowser -> NEW SMW Final Bowser Showdown Theme!
+                (23, 7),           // #23 Toad / Kamek Shop -> SMW Bonus Room / Yoshi's House Theme!
+                (24, 11),          // #24 Water Dungeons / Swamp Palace -> NEW SMW Underwater Waltz!
+                (25, 3),           // #25 Peach Rescued -> SMW Peach Theme!
+                (26, 9),           // #26 Crystal Maiden / Star Chamber -> NEW SMW Star Road Theme!
+                (27, 10),          // #27 Bowser's Castle Tower -> NEW SMB3 Airship March!
+                (28, 8),           // #28 Final Boss King Bowser -> SMW Final Bowser Showdown!
             ];
             if let Ok(new_dn) = build_alttp_nspc_bank(
                 &rom_zelda.data[dn_data_pc..dn_data_pc + ALTTP_SPC_DUNGEON_LEN],

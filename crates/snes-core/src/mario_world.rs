@@ -1282,6 +1282,131 @@ fn build_smw_dungeon_qblock_bg_16x16() -> [[u8; 16]; 16] {
     g.to_16x16()
 }
 
+fn build_smw_on_solid_block() -> [[u8; 16]; 16] {
+    let mut px = [[0u8; 16]; 16];
+    for y in 0..16 {
+        for x in 0..16 {
+            if x == 0 || y == 0 {
+                px[y][x] = 6;
+            } else if x == 15 || y == 15 {
+                px[y][x] = 1;
+            } else if x == 1 || y == 1 {
+                px[y][x] = 5;
+            } else if x == 14 || y == 14 {
+                px[y][x] = 2;
+            } else {
+                px[y][x] = 4;
+            }
+        }
+    }
+    for &(cx, cy) in &[(2, 2), (13, 2), (2, 13), (13, 13)] {
+        px[cy][cx] = 7;
+        px[cy + 1][cx] = 1;
+    }
+    // "ON"
+    for y in 5..=10 {
+        px[y][4] = 7;
+        px[y][7] = 7;
+    }
+    px[5][5] = 7;
+    px[5][6] = 7;
+    px[10][5] = 7;
+    px[10][6] = 7;
+    for y in 5..=10 {
+        px[y][9] = 7;
+        px[y][12] = 7;
+    }
+    px[6][10] = 7;
+    px[7][11] = 7;
+    px[8][11] = 7;
+    px[9][11] = 7;
+    px
+}
+
+fn build_smw_off_solid_block() -> [[u8; 16]; 16] {
+    let mut px = [[0u8; 16]; 16];
+    for y in 0..16 {
+        for x in 0..16 {
+            if x == 0 || y == 0 {
+                px[y][x] = 6;
+            } else if x == 15 || y == 15 {
+                px[y][x] = 1;
+            } else if x == 1 || y == 1 {
+                px[y][x] = 5;
+            } else if x == 14 || y == 14 {
+                px[y][x] = 2;
+            } else {
+                px[y][x] = 4;
+            }
+        }
+    }
+    for &(cx, cy) in &[(2, 2), (13, 2), (2, 13), (13, 13)] {
+        px[cy][cx] = 7;
+        px[cy + 1][cx] = 1;
+    }
+    // "OFF"
+    for y in 5..=10 {
+        px[y][2] = 7;
+        px[y][5] = 7;
+    }
+    px[5][3] = 7;
+    px[5][4] = 7;
+    px[10][3] = 7;
+    px[10][4] = 7;
+    for y in 5..=10 {
+        px[y][7] = 7;
+    }
+    px[5][8] = 7;
+    px[5][9] = 7;
+    px[7][8] = 7;
+    for y in 5..=10 {
+        px[y][11] = 7;
+    }
+    px[5][12] = 7;
+    px[5][13] = 7;
+    px[7][12] = 7;
+    px
+}
+
+fn build_smw_dotted_block() -> [[u8; 16]; 16] {
+    let mut px = [[0u8; 16]; 16];
+    for i in 0..16 {
+        if (i / 2) % 2 == 0 {
+            px[0][i] = 6;
+            px[1][i] = 1;
+            px[15][i] = 1;
+            px[i][0] = 6;
+            px[i][1] = 1;
+            px[i][15] = 1;
+        }
+    }
+    for &x in &[0, 1, 2, 13, 14, 15] {
+        px[0][x] = 6;
+        px[15][x] = 1;
+    }
+    for &y in &[0, 1, 2, 13, 14, 15] {
+        px[y][0] = 6;
+        px[y][15] = 1;
+    }
+    px
+}
+
+fn build_smw_crystal_switch_orb(is_off: bool) -> [[u8; 16]; 16] {
+    let base_block = if is_off {
+        build_smw_off_solid_block()
+    } else {
+        build_smw_on_solid_block()
+    };
+    let mut px = base_block;
+    // Sleek metallic pedestal mount at bottom 3 rows
+    for x in 3..13 {
+        px[13][x] = 6;
+        px[14][x] = 2;
+        px[15][x] = 1;
+    }
+    px
+}
+
 fn build_stone_bowser_statue_32x32() -> Grid {
     // Carved Stone SMW Bowser Statue (front/profile gargoyle replacement in EVERY dungeon!)
     let mut g = Grid::new(32, 32);
@@ -1579,6 +1704,58 @@ fn patch_worldwide_bg_tilesets(
         free_end,
         &|raw| {
             write_3bpp_16x16_pub(raw, 0, 0, &castle_brick);
+        },
+    )? {
+        ops += 1;
+    }
+
+    // 6. bg:0F (raw 0x0F) — DUNGEON CRYSTAL SWITCHES & SOLID/DOTTED BARRIERS -> SMW ON/OFF SWITCH BLOCKS!
+    let on_block = build_smw_on_solid_block();
+    let off_block = build_smw_off_solid_block();
+    let dot_block = build_smw_dotted_block();
+    let switch_on = build_smw_crystal_switch_orb(false);
+    let switch_off = build_smw_crystal_switch_orb(true);
+
+    if patch_alttp_raw_sheet_pub(
+        rom_z,
+        sess,
+        0x0F,
+        "Interrupteurs et Barrières de Donjons (bg:0F) ← Blocs ON/OFF Solides et Pointillés SMW",
+        free_cursor,
+        free_end,
+        &|raw| {
+            // Rows 0..1: Raised solid and lowered dotted barriers (cols 0..7)
+            write_3bpp_16x16_pub(raw, 0, 0, &on_block);
+            write_3bpp_16x16_pub(raw, 2, 0, &dot_block);
+            write_3bpp_16x16_pub(raw, 4, 0, &off_block);
+            write_3bpp_16x16_pub(raw, 6, 0, &dot_block);
+
+            // Rows 2..3: Crystal Switch orb (cols 0..3)
+            write_3bpp_16x16_pub(raw, 0, 2, &switch_on);
+            write_3bpp_16x16_pub(raw, 2, 2, &switch_off);
+        },
+    )? {
+        ops += 1;
+    }
+
+    // 7. bg:29 (raw 0x29) — DARK WORLD PYRAMID EXTERIOR -> STONE BOWSER STATUES & THWOMP PILLARS!
+    if patch_alttp_raw_sheet_pub(
+        rom_z,
+        sess,
+        0x29,
+        "Extérieur Pyramide Monde Ténèbres (bg:29) ← Statues de Pierre Roi Bowser SMW",
+        free_cursor,
+        free_end,
+        &|raw| {
+            // Flanking gargoyle statues at cols 10..13 rows 0..3 -> 32x32 Carved Stone Bowser Statue!
+            write_3bpp_16x16_pub(raw, 10, 0, &bowser_statue.slice_16x16(0, 0));
+            write_3bpp_16x16_pub(raw, 12, 0, &bowser_statue.slice_16x16(16, 0));
+            write_3bpp_16x16_pub(raw, 10, 2, &bowser_statue.slice_16x16(0, 16));
+            write_3bpp_16x16_pub(raw, 12, 2, &bowser_statue.slice_16x16(16, 16));
+
+            // Flanking pillar at cols 14..15 rows 0..3 -> 16x32 Stone Thwomp Pillar!
+            write_3bpp_16x16_pub(raw, 14, 0, &thwomp_pillar.slice_16x16(0, 0));
+            write_3bpp_16x16_pub(raw, 14, 2, &thwomp_pillar.slice_16x16(0, 16));
         },
     )? {
         ops += 1;

@@ -1923,71 +1923,71 @@ fn build_bowser_hammer_head_16x16(angle: usize) -> [[u8; 16]; 16] {
     c.slice_16x16(0, 0)
 }
 
-/// Convert 32x32 SMW Super Star pixel art into 16 8x8 3bpp tiles and write into row 3 (tiles 48..63) of Sheet 0x19.
-/// In vanilla ALTTP, row 3 of Sheet 0x19 (PC 0x092A72) is completely unused (all 16 tiles are empty).
+/// Convert symmetric 32x32 SMW Golden Super Star pixel art into its 8 unique left-half 8x8 3bpp tiles
+/// and write them into `raw:0x17` row 3, cols 6..13 (`tiles 54..61` -> VRAM `$1B6..$1BD` in Room 0x00!).
+/// Using hardware H-flip (`0x4000`) for the right half keeps rows 0..2 (north wall) and cols 0..5 untouched!
 pub fn write_smw_golden_super_star_floor_tiles(raw_17: &mut [u8]) {
     const LEFT_HALF: [&str; 32] = [
         "................", // 0
         "...............1", // 1
         "..............15", // 2
-        ".............155", // 3
+        ".............154", // 3
         "............1544", // 4
         "...........15444", // 5
         "..........154444", // 6
         ".........1544444", // 7
         "1111111115444444", // 8
-        ".155555555444444", // 9
+        ".155555554444444", // 9
         "..15444444444444", // 10
         "...1544444444444", // 11
-        "....154444455444", // 12 eye shine (5)
-        ".....15444411444", // 13 eye (1)
-        "......1544411444", // 14 eye (1)
-        ".......154411444", // 15 eye (1)
-        "......1544411444", // 16 eye (1)
+        "....154444411444", // 12 eye top
+        ".....15444415444", // 13 eye shine
+        "......1544411444", // 14 eye
+        ".......154411444", // 15 eye
+        "......1544411444", // 16 eye bottom
         ".....15444444444", // 17
         "....154444444444", // 18
         "...1544444444441", // 19
-        "..1544444444441.", // 20
-        ".1544444444441..", // 21
-        "1544444444441...", // 22
-        "154444444441....", // 23
-        "15444444431.....", // 24
-        ".1544444321.....", // 25
-        "..15444321......", // 26
-        "...154321.......", // 27
-        "....1521........", // 28
-        ".....11.........", // 29
+        "..1544444444431.", // 20
+        ".1544444444431..", // 21
+        "1544444444431...", // 22
+        "154444444331....", // 23
+        "15444443321.....", // 24
+        ".154443321......", // 25
+        "..1543321.......", // 26
+        "...15321........", // 27
+        "....121.........", // 28
+        ".....1..........", // 29
         "................", // 30
         "................", // 31
     ];
 
-    let mut star = [[0u8; 32]; 32];
+    let mut left_px = [[0u8; 16]; 32];
     for y in 0..32 {
         let l = LEFT_HALF[y].as_bytes();
         for x in 0..16 {
-            let v = match l[x] {
-                b'1' => 1,        // Black outline & pupils (Palette 3 color 1)
-                b'4' => 2,        // Bright golden yellow body (Palette 3 color 2 #F8D048)
-                b'2' | b'3' => 3, // Warm gold-orange shadow (Palette 3 color 3 #E89868)
-                b'5' => 4,        // Pure white eye shine & highlights (Palette 3 color 4 #F8F8F8)
-                _ => 0,           // Transparent emerald floor shows through
+            left_px[y][x] = match l[x] {
+                b'1' => 1,        // Dark outline & SMW pupils (Palette 3 color 1 #101018)
+                b'4' => 5,        // Bright golden yellow body (Palette 3 color 5 #F8D048)
+                b'2' | b'3' => 6, // Warm gold-orange shadow (Palette 3 color 6 #E89868)
+                b'5' => 7, // Pure white eye shine & bevel highlight (Palette 3 color 7 #F8F8F8)
+                _ => 0,    // Transparent emerald floor shows through
             };
-            star[y][x] = v;
-            star[y][31 - x] = v;
         }
     }
 
-    for star_ty in 0..4 {
-        for star_tx in 0..4 {
-            let tile_idx = star_ty * 4 + star_tx;
-            let t_base = (48 + tile_idx) * 24;
+    // Write 8 unique tiles (4 rows x 2 cols of left half) into raw:0x17 tiles 54..61 (0x36..0x3D -> VRAM $1B6..$1BD)
+    for star_ty in 0..4usize {
+        for star_tx in 0..2usize {
+            let tile_idx = 54 + star_ty * 2 + star_tx;
+            let t_base = tile_idx * 24;
             if t_base + 24 <= raw_17.len() {
                 for y in 0..8 {
                     let mut p0 = 0u8;
                     let mut p1 = 0u8;
                     let mut p2 = 0u8;
                     for x in 0..8 {
-                        let v = star[star_ty * 8 + y][star_tx * 8 + x];
+                        let v = left_px[star_ty * 8 + y][star_tx * 8 + x];
                         let bit = 7 - x;
                         p0 |= (v & 1) << bit;
                         p1 |= ((v >> 1) & 1) << bit;
@@ -2237,27 +2237,17 @@ fn patch_boss_ganon_final_king_bowser(
     }
 
     // 6. Final Bowser Pyramid (Room 0x00) Golden SMW Super Star Floor Emblem!
-    //    Replaces the vanilla Triforce floor emblem with an authentic 32x32 Golden SMW Super Star.
-    //    - Switches Room 0x00 RoomBlockset slot 3 (0x005D66) from 0x17 (stairs/railing) to 0x19 (clean sheet with 16 empty tiles on row 3!).
-    //    - Injects the 32x32 Golden SMW Super Star into row 3 of Sheet 0x19 without touching any shared dungeon tiles.
-    //    - Uses Palette 3 (0x0C00) in Room 0x00, which holds the authentic gold, orange, black, and white colors!
-    if 0x005D66 < rom_z.data.len() && rom_z.data[0x005D66] == 0x17 {
-        sess.swap_custom_bytes(
-            rom_z,
-            0x005D66,
-            0x005D66,
-            vec![0x19],
-            "Pyramide Bowser Blockset (0x005D66) : Sheet 0x19 (row 3 libre) pour Étoile SMW".into(),
-            SwapKind::CodePatch { byte_count: 1 },
-        )?;
-        ops += 1;
-    }
-
+    //    Replaces the vanilla Triforce floor emblem with a symmetric 32x32 Golden SMW Super Star!
+    //    - Room 0x00 RoomBlockset slot 6 (`0x005D66`) stays vanilla `0x17`, which loads raw sheet `0x15` (`0x092272`)
+    //      into VRAM `$180..$1BF`!
+    //    - Rows 0..2 (`$180..$1AF`) keep the north wall 100% intact; cols 6..13 of row 3 (`$1B6..$1BD`) hold the
+    //      8 unique left-half tiles of our symmetric 32x32 Golden SMW Super Star (hardware H-flipped for right half)!
+    //    - ZERO shared dungeon tiles (`raw:0x0E`) touched!
     if patch_alttp_raw_sheet_pub(
         rom_z,
         sess,
-        0x19,
-        "PYRAMIDE BOWSER (Room 0x00) ← Étoile d'Or SMW Géante 32x32 au Sol (Sheet 0x19 row 3)",
+        0x15,
+        "PYRAMIDE BOWSER (Room 0x00) ← Étoile d'Or SMW Géante 32x32 au Sol (raw:0x15 $1B6..$1BD)",
         free_cursor,
         free_end,
         &|raw| {
@@ -2267,39 +2257,69 @@ fn patch_boss_ganon_final_king_bowser(
         ops += 1;
     }
 
-    // Tiledata at PC 0x004008: 16 words column-major pointing to Palette 3 (0x0C00), VRAM tiles 0x1F0..0x1FF
+    // Tiledata at PC 0x004008..0x004088: 16 words column-major pointing to Palette 3 (0x0C00), VRAM tiles $1B6..$1BD (H-mirrored right half)!
     let star_td_bytes: Vec<u8> = [
-        0x0DF0u16, 0x0DF4, 0x0DF8, 0x0DFC, // Col 0
-        0x0DF1, 0x0DF5, 0x0DF9, 0x0DFD, // Col 1
-        0x0DF2, 0x0DF6, 0x0DFA, 0x0DFE, // Col 2
-        0x0DF3, 0x0DF7, 0x0DFB, 0x0DFF, // Col 3
+        0x0DB6u16, 0x0DB8, 0x0DBA, 0x0DBC, // Col 0 (left-outer)
+        0x0DB7, 0x0DB9, 0x0DBB, 0x0DBD, // Col 1 (left-inner)
+        0x4DB7, 0x4DB9, 0x4DBB, 0x4DBD, // Col 2 (H-flipped left-inner!)
+        0x4DB6, 0x4DB8, 0x4DBA, 0x4DBC, // Col 3 (H-flipped left-outer!)
     ]
     .iter()
     .flat_map(|w| w.to_le_bytes())
     .collect();
 
-    if 0x004008 + 32 <= rom_z.data.len() {
-        sess.swap_custom_bytes(
-            rom_z,
-            0x004008,
-            0x004008,
-            star_td_bytes,
-            "Pyramide Bowser Sol : Tiledata 4x4 Étoile SMW (0x004008)".into(),
-            SwapKind::CodePatch { byte_count: 32 },
-        )?;
-        ops += 1;
+    for &td_addr in &[0x004008usize, 0x004028, 0x004048, 0x004068] {
+        if td_addr + 32 <= rom_z.data.len() {
+            sess.swap_custom_bytes(
+                rom_z,
+                td_addr,
+                td_addr,
+                star_td_bytes.clone(),
+                format!("Pyramide Bowser Sol : Tiledata 4x4 Étoile SMW (0x{td_addr:06X})"),
+                SwapKind::CodePatch { byte_count: 32 },
+            )?;
+            ops += 1;
+        }
     }
 
-    // Centering routine at PC 0x00A7F0:
-    // LDA $08 : CLC : ADC #$00FE : TAY : JMP $97ED + 15 NOPs
-    let star_routine: Vec<u8> = vec![
-        0xA5, 0x08, // LDA $08
-        0x18, // CLC
-        0x69, 0xFE, 0x00, // ADC #$00FE
-        0xA8, // TAY
-        0x4C, 0xED, 0x97, // JMP $97ED
-        0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA, 0xEA,
-    ];
+    // Eliminate any residual Triforce tiles in the 96-word Room 0x00 floor table at PC 0x002E80..0x002F40!
+    // Replaces all occurrences of $098B, $099B, $498B, $499B with seamless emerald floor tiles ($18CA..$18DB)!
+    if 0x002F40 <= rom_z.data.len() {
+        let mut floor_tbl = rom_z.data[0x002E80..0x002F40].to_vec();
+        let mut modified = false;
+        for i in (0..floor_tbl.len()).step_by(2) {
+            let w = floor_tbl[i] as u16 | ((floor_tbl[i + 1] as u16) << 8);
+            let repl = match w {
+                0x098B => Some(0x18CAu16),
+                0x099B => Some(0x18DAu16),
+                0x498B => Some(0x18CBu16),
+                0x499B => Some(0x18DBu16),
+                _ => None,
+            };
+            if let Some(rw) = repl {
+                let bytes = rw.to_le_bytes();
+                floor_tbl[i] = bytes[0];
+                floor_tbl[i + 1] = bytes[1];
+                modified = true;
+            }
+        }
+        if modified {
+            sess.swap_custom_bytes(
+                rom_z,
+                0x002E80,
+                0x002E80,
+                floor_tbl,
+                "Pyramide Bowser Sol : Élimination Tuiles Triforce Table 0x002E80 (Remplacement Émeraude)".into(),
+                SwapKind::CodePatch { byte_count: 192 },
+            )?;
+            ops += 1;
+        }
+    }
+
+    // Routine at PC 0x00A7F0:
+    // In vanilla ALTTP, this routine blits the 4x4 center emblem.
+    // By placing RTS (0x60), the 4x4 center square is cleanly bypassed!
+    let star_routine: Vec<u8> = vec![0x60; 25];
 
     if 0x00A7F0 + 25 <= rom_z.data.len() {
         sess.swap_custom_bytes(
