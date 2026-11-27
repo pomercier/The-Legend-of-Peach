@@ -1607,6 +1607,15 @@ pub fn repack_french_bank1c(
                 ],
                 &[],
             )),
+            // #316: Castle Tower Bowser Altar intro
+            316 => Some(encode_mario_story_msg(
+                &[],
+                &[
+                    "BWAHAHAHA ! Enfin tu arrives, Mario !",
+                    "Tu es trop tard pour sauver la Princesse Peach !",
+                ],
+                &[],
+            )),
             // #317: Castle Tower Bowser taunt (replaces vanilla "Bon - A la prochaine !" split!)
             317 => Some(encode_mario_story_msg(
                 &[],
@@ -1614,6 +1623,23 @@ pub fn repack_french_bank1c(
                     "BWAHAHAHA ! Le sceau des sept Toads est enfin brisé !",
                     "Plus rien n'arrêtera mes sept Koopalings et mes forteresses de lave !",
                     "Rendez-vous dans mon château, petit plombier !",
+                ],
+                &[],
+            )),
+            // #318: Castle Tower Bowser Boss Room 0x020 opening taunt (replaces Zelda medieval "occire"!)
+            318 => Some(encode_mario_story_msg(
+                &[],
+                &[
+                    "BWAHAHAHA ! Tu oses défier le grand Roi Bowser dans sa tour ?",
+                    "Goûte à ma magie Koopa, petit plombier !",
+                ],
+                &[],
+            )),
+            // #319: Castle Tower Bowser defeat line (replaces Zelda "Héros"!)
+            319 => Some(encode_mario_story_msg(
+                &[],
+                &[
+                    "Grrr... Pas mal, Mario ! Mais je t'emporte dans mon Royaume de Lave !",
                 ],
                 &[],
             )),

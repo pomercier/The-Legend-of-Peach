@@ -2192,13 +2192,99 @@ fn apply_rule_to_zelda(
                             write_3bpp_16x16(raw, 4, 2, &kp.body_back_1);
                             write_3bpp_16x16(raw, 6, 2, &kp.body_back_2);
                             // Explicitly blank 0x4D (13,0) used by OAM slots 1..3 + unused vanilla overhangs/shields
-                            // (Preserves Sword tiles at (14,2),(15,2),(14,3),(15,3)!)
                             for &(bx, by) in &[
                                 (10, 0), (10, 1), (11, 0), (11, 1), (12, 0), (12, 1),
                                 (13, 0), (13, 1), (8, 2), (8, 3), (13, 2), (13, 3),
                             ] {
                                 write_3bpp_8x8(raw, bx, by, &blank8);
                             }
+                            // v0.7.0 (ZRI-016 ELIMINATED!): Replace ALL Koopa Guard medieval Zelda swords & spears
+                            // in raw 0xBA (`$6B/$7B` vert @ (11,2)/(11,3), `$6C/$7C` horiz @ (12,2)/(12,3),
+                            // `$6E/$7E/$6F/$7F` spear guards @ cols 14..15 rows 2..3) with authentic
+                            // SMW Hammer Bro Hammers (glossy black iron head + white shine + wooden handle)
+                            // and SMW Spiked Koopa Clubs!
+                            let parse8 = |rows: [&str; 8]| -> [[u8; 8]; 8] {
+                                let mut px = [[0u8; 8]; 8];
+                                for (y, r) in rows.iter().enumerate() {
+                                    for (x, ch) in r.bytes().take(8).enumerate() {
+                                        px[y][x] = if ch == b'.' { 0 } else { ch - b'0' };
+                                    }
+                                }
+                                px
+                            };
+                            // Vertical SMW Hammer Head (`$6B` at (11,2) — outer striking end!)
+                            let h_vert_head = parse8([
+                                ".555555.",
+                                "55115555",
+                                "51155555",
+                                "55555555",
+                                "55555555",
+                                ".555555.",
+                                "..5435..",
+                                "..5435..",
+                            ]);
+                            // Vertical Wooden Handle (`$7B` at (11,3) — gripped in Koopa hand!)
+                            let h_vert_handle = parse8([
+                                "..5435..",
+                                "..5435..",
+                                "..5435..",
+                                "..5435..",
+                                "..5435..",
+                                "..5335..",
+                                "...55...",
+                                "........",
+                            ]);
+                            // Horizontal SMW Hammer Head (`$6C` at (12,2) — outer striking end!)
+                            let h_horiz_head = parse8([
+                                ".55555..",
+                                "5511555.",
+                                "51155555",
+                                "55555435",
+                                "55555435",
+                                "55555555",
+                                ".55555..",
+                                "........",
+                            ]);
+                            // Horizontal Wooden Handle (`$7C` at (12,3) — gripped in Koopa hand!)
+                            let h_horiz_handle = parse8([
+                                "........",
+                                "........",
+                                "555555..",
+                                "4444435.",
+                                "3333335.",
+                                "555555..",
+                                "........",
+                                "........",
+                            ]);
+                            // Spiked Koopa Club Head (`$6E` vert / `$6F` horiz — for Elite Red/Green Spear Koopas!)
+                            let club_vert_head = parse8([
+                                "...1....",
+                                ".15551..",
+                                "5551555.",
+                                "5515555.",
+                                "5555555.",
+                                ".15551..",
+                                "..5435..",
+                                "..5435..",
+                            ]);
+                            let club_horiz_head = parse8([
+                                "..1..1..",
+                                ".55555..",
+                                "15155555",
+                                "55555435",
+                                "55555435",
+                                "15555555",
+                                ".55555..",
+                                "..1..1..",
+                            ]);
+                            write_3bpp_8x8(raw, 11, 2, &h_vert_head);
+                            write_3bpp_8x8(raw, 11, 3, &h_vert_handle);
+                            write_3bpp_8x8(raw, 12, 2, &h_horiz_head);
+                            write_3bpp_8x8(raw, 12, 3, &h_horiz_handle);
+                            write_3bpp_8x8(raw, 14, 2, &club_vert_head);
+                            write_3bpp_8x8(raw, 14, 3, &h_vert_handle);
+                            write_3bpp_8x8(raw, 15, 2, &club_horiz_head);
+                            write_3bpp_8x8(raw, 15, 3, &h_horiz_handle);
                         },
                     )? {
                         ops += 1;
@@ -3532,10 +3618,12 @@ fn apply_rule_to_zelda(
                 free_cursor,
                 free_end,
             )?;
-            // Phase 5: Inject Native 65c816 Super Mario Gameplay Engine (Jump, Stomp, Fire Mario, Starman)
-            // + World 1 (Yoshi's Island) Overworld Map32 Geographic Redesign!
+            // Phase 5/7: Inject Native 65c816 Super Mario Gameplay Engine (Jump, Stomp, Fire Mario, Starman)
+            // + Systemic 128-Screen Mushroom Kingdom & Bowser Volcanic Kingdom Overworld Transformation!
             ops += crate::mario_engine::inject_mario_gameplay_engine(rom_zelda, session)?;
-            ops += crate::mario_map::patch_world1_yoshis_island(rom_zelda, session)?;
+            let (map_ops, _world_rep) =
+                crate::mario_map::patch_all_mushroom_kingdom_overworld(rom_zelda, session)?;
+            ops += map_ops;
         }
         _ => {}
     }

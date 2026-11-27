@@ -1496,5 +1496,42 @@ mod tests {
         assert_eq!(&target.data[0x0E9AF5..0x0E9AF8], &[0xEA, 0xEA, 0xEA]);
         assert_eq!(target.data[0x0E969A + 25], 0xF1);
         assert_eq!(target.data[0x0E969A + 26], 0xF1);
+
+        // v0.7.0 INVARIANTS:
+        // 1. All 160 Overworld screens decode losslessly in the built ROM (including relocated LW + DW in $3B..$3F)
+        for sid in 0u8..160u8 {
+            let scr = super::mario_map::read_overworld_screen(&target.data, sid, "v070", "Check")
+                .unwrap_or_else(|| {
+                    panic!("Overworld screen 0x{sid:02X} corrupted in v0.7.0 build!")
+                });
+            assert_eq!(scr.tiles.len(), 256);
+        }
+        // 2. Koopa Guard raw 0xBA sword tiles (11,2)/(11,3)/(12,2)/(12,3) transformed into SMW Hammer Bro Hammers!
+        let (van_ba, _, _) = super::mixer::load_alttp_3bpp_sheet(&z_bytes, 0xBA).unwrap();
+        let (blt_ba, _, _) = super::mixer::load_alttp_3bpp_sheet(&target.data, 0xBA).unwrap();
+        for &(tx, ty) in &[
+            (11usize, 2usize),
+            (11, 3),
+            (12, 2),
+            (12, 3),
+            (14, 2),
+            (15, 2),
+        ] {
+            let off = (ty * 16 + tx) * 24;
+            assert_ne!(
+                &blt_ba[off..off + 24],
+                &van_ba[off..off + 24],
+                "Koopa Guard weapon tile ({tx},{ty}) in raw 0xBA must be transformed into SMW Hammer/Club!"
+            );
+        }
+        // 3. Dark World Bowser Volcanic Kingdom palettes active at 0x0DE70E & 0x0DE79A (distinct from vanilla olive!)
+        assert_ne!(
+            &target.data[0x0DE70E..0x0DE71C],
+            &z_bytes[0x0DE70E..0x0DE71C]
+        );
+        assert_ne!(
+            &target.data[0x0DE79A..0x0DE7A8],
+            &z_bytes[0x0DE79A..0x0DE7A8]
+        );
     }
 }

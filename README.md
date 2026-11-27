@@ -7,7 +7,7 @@
 </p>
 
 <h1 align="center">THE LEGEND OF PEACH</h1>
-<h3 align="center">A Mario to the Mushroom Kingdom — v0.6.0 Super Mario World Authenticity</h3>
+<h3 align="center">A Mario to the Mushroom Kingdom — v0.7.0 Mushroom Kingdom: World Transformation</h3>
 
 <p align="center">
   <strong>Two legendary SNES worlds. One genuine Super Mario action-adventure built on native 65c816 hardware.</strong>
@@ -30,21 +30,31 @@
 
 ---
 
-**The Legend of Peach: A Mario to the Mushroom Kingdom** transforms *The Legend of Zelda: A Link to the Past* into a genuine top-down **Super Mario** SNES action-adventure — complete with native 65c816 **Mario Jumping**, **Mario Stomp Combat**, **Super Mario Hammer**, **Fire Mario live palette transformation**, **Super Starman rainbow invincibility**, **native SPC700 Mario Sound Effects**, **19 native N-SPC Mario musical tracks**, redesigned **World 1 Yoshi's Island** Map32 geography, and all **12 Super Mario World bosses**.
+**The Legend of Peach: A Mario to the Mushroom Kingdom** transforms *The Legend of Zelda: A Link to the Past* into a genuine top-down **Super Mario** SNES action-adventure — complete with native 65c816 **Mario Jumping**, **Mario Stomp Combat**, **Super Mario Hammer**, **Fire Mario live palette transformation**, **Super Starman rainbow invincibility**, **native SPC700 Mario Sound Effects**, **19 native N-SPC Mario musical tracks**, **108/128 systematically transformed Light & Dark World Overworld screens** (plus **Bowser's Obsidian Lava Citadel & Volcanic Kingdom**), **Koopa Hammer Bro Guards** (zero medieval Zelda swords), and **all 12/12 Super Mario World bosses + all 16/16 Mario gameplay states** live-verified on dual SNES emulator cores.
 
-Powered by a pure, headless **Rust** binary transformation engine, the project reads your own legally obtained original backups of *A Link to the Past* and *Super Mario World*, applies **230 verified SNES hardware patches** across **18 rules** (`49` audited compressed graphics sheets, all `303` player DMA poses remapped cleanly in Bank `$00`/`$0D`/`$10`, custom 65c816 gameplay assembly in Bank `$22`, Map32 world screens with terrain grammar validation in Bank `$3B`, rewritten zero-hyphen 372-message French narrative, 19 native N-SPC musical themes across 25 contexts, and native SPC700 Mario SFX), and outputs a **bit-for-bit deterministic 2 MiB SNES LoROM cartridge image**.
+Powered by a pure, headless **Rust** binary transformation engine, the project reads your own legally obtained original backups of *A Link to the Past* and *Super Mario World*, applies **661 verified SNES hardware patches** across **18 rules** (`49` audited compressed graphics sheets, all `303` player DMA poses remapped cleanly in Bank `$00`/`$0D`/`$10`, custom 65c816 gameplay assembly in Bank `$22`, `108` relocated Map32 world screens across Banks `$3B..$3F` verified against hardware `$00:FBD9` collision & terrain grammar with `0` overlaps, rewritten zero-hyphen 372-message French narrative including Castle Bowser dialogues, 19 native N-SPC musical themes across 25 contexts, and native SPC700 Mario SFX), and outputs a **bit-for-bit deterministic 2 MiB SNES LoROM cartridge image**.
 
 > **Zero Copyrighted ROMs Included:** This repository contains **only original Rust source code, tooling, and documentation**. You must provide your own legal personal backups of both required SNES games to build the crossover locally. See [Required Original Games](#required-original-games).
 
 ---
 
-## Gameplay Showcase (`v0.6.0 — Super Mario World Authenticity`)
+## Gameplay Showcase (`v0.7.0 — Mushroom Kingdom: World Transformation`)
 
-All screenshots below are **100% authentic, unretouched live captures** from the locally built `v0.6.0` ROM (`SHA-256: 2004714a...`) running in **Mednafen (`snes_faust` and cycle-accurate `snes` / bsnes)**, integer-scaled `3×` nearest-neighbor (`768×672`) directly from native `256×224` SNES video output.
+All screenshots below are **100% authentic, unretouched live captures** from the locally built deterministic `v0.7.0` ROM (`SHA-256: f975131b...dfee`) running in **Mednafen (`snes_faust` and cycle-accurate `snes` / bsnes)**.
 
 <p align="center">
-  <img src="docs/media/screenshots/21_v060_before_after_7bugs.png" alt="Before vs After comparison of all 7 blocking visual bugs fixed in v0.6.0" width="92%" /><br />
-  <sub><strong><code>v0.6.0</code> Visual Authenticity Proof Plate (Before vs. After)</strong> — All 7 visual regressions resolved structurally and verified live on Mednafen <code>snes_faust</code> and cycle-accurate <code>bsnes</code>.</sub>
+  <img src="docs/media/screenshots/20_v070_all_12_bosses_gallery.png" alt="All 12 Super Mario World bosses live verified in their real arenas in v0.7.0" width="95%" /><br />
+  <sub><strong>All 12 / 12 Bosses Live Verified in Real Arenas (<code>v0.7.0</code>)</strong> — Chargin' Chucks, 3 Giant Pokeys, Giant Wiggler, Castle Tower Bowser (with new Mario dialogue), Morton Jr., Wendy O., Winged Iggy (v0.6.0 guard), Roy Koopa (live Maiden sunlight transform), Lemmy, Larry, Ludwig, and Final King Bowser (cycle-accurate <code>bsnes</code>).</sub>
+</p>
+
+<p align="center">
+  <img src="docs/media/screenshots/21_v070_world_transformation_gallery.png" alt="Transformed Light World and Dark World Bowser Volcanic Kingdom and Obsidian Citadel in v0.7.0" width="95%" /><br />
+  <sub><strong>Mushroom Kingdom &amp; Bowser's Volcanic Kingdom (<code>108 / 128</code> Overworld Screens Transformed)</strong> — Yoshi's Island (<code>bsnes</code>), Koopa Hammer Bro Guards (zero medieval swords), Lake Hylia Cheep-Cheep Swim, Witch's Hut Kamek, <strong>Bowser's Obsidian Citadel (<code>0x5B</code>)</strong> on both <code>snes_faust</code> and <code>bsnes</code>, 16-bit Toad, and Royal Blue Kamek Shop.</sub>
+</p>
+
+<p align="center">
+  <img src="docs/media/screenshots/22_v070_mario_16_states_gallery.png" alt="All 16 Mario gameplay states live verified in v0.7.0" width="95%" /><br />
+  <sub><strong>All 16 / 16 Mario Gameplay States Live Verified (<code>VISUAL_PASS</code>)</strong> — Including all 6 previously un-emulated states closed in <code>v0.7.0</code>: Heavy Lift &amp; Carry, Throw, Lake Hylia Deep Water Swim &amp; Dive, Sanctuary Push Block, Buzzblob Electric Shock X-Ray, Pitfall Drop (<code>-1F</code>), and KO Spin / KO Flat.</sub>
 </p>
 
 <table>

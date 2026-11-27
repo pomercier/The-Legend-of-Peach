@@ -1,7 +1,8 @@
 {
-  "schema_version": "1.0.0",
-  "release": "v0.6.0",
-  "description": "Directed dependency graph and memory-region ownership for all 18 canonical fusion rules, Bank $00/$0D/$10 Mario pose architecture, and Phase 5/6 engine modules.",
+  "schema_version": "1.1.0",
+  "release": "v0.7.0",
+  "rom_sha256": "f975131b5eaeee99ee7215ae636a380946ddc48832d3e7be95a11ab5d344dfee",
+  "description": "Directed dependency graph and memory-region ownership for all 18 canonical fusion rules (661 patches, 225 relocated blocks, 0 overlaps) in v0.7.0.",
   "memory_firewalls": [
     {
       "name": "Protected ALTTP World Map Table",
@@ -31,7 +32,7 @@
       "enforced_by": "EXPANDED_FREE_END = OW_MAP32_RELOC_START_PC (0x1D8000)"
     },
     {
-      "name": "Relocated Overworld Map32 Screens",
+      "name": "Relocated Overworld Map32 Screens (108 LW+DW screens, 216 streams)",
       "pc_range": "0x1D8000..0x1FFFFF",
       "banks": "$3B..$3F",
       "owner": "mario_map.rs",
@@ -42,7 +43,7 @@
     {
       "module": "mario_intro.rs",
       "depends_on": ["disasm_dma.rs", "mixer.rs (GFX tables)"],
-      "owns_regions": ["0x100000..0x1101FF", "0x065A33..0x065CAB", "0x0E0000..0x0E7FFF", "0x071C68..0x071E0F", "raw 0x3E/0x3F/0xD8"],
+      "owns_regions": ["0x100000..0x1101FF", "0x065A33..0x065CAB", "0x0E0000..0x0E7FFF (372 French messages incl. #316/#318/#319 Bowser)", "0x071C68..0x071E0F", "raw 0x3E/0x3F/0xD8"],
       "must_run_before": ["mario_engine.rs (requires 2 MiB ROM expansion)", "mario_map.rs (requires 2 MiB ROM expansion)"]
     },
     {
@@ -53,8 +54,8 @@
     },
     {
       "module": "mario_map.rs",
-      "depends_on": ["mario_intro.rs (2 MiB expansion)"],
-      "owns_regions": ["0x1D8000..0x1FFFFF", "0x0179CF..0x017D8E (Map32 24-bit pointers)"],
+      "depends_on": ["mario_intro.rs (2 MiB expansion)", "hardware TileAttr $00:FBD9 (PC 0x007BD9)"],
+      "owns_regions": ["0x1D8000..0x1FFFFF (108 transformed LW+DW screens)", "0x0179CF..0x017D8E (Map32 24-bit pointers)"],
       "must_run_before": []
     },
     {
@@ -66,7 +67,13 @@
     {
       "module": "mario_world.rs",
       "depends_on": ["mixer.rs (free_cursor in $23..$3A)"],
-      "owns_regions": ["Toad Town NPC sheets (raw 0xBD,0xBF,0xC0,0xC1,0xC2,0xC3)", "16 SMW Bestiary sheets", "9 BG Tileset sheets"],
+      "owns_regions": ["Toad Town NPC sheets (raw 0xBD,0xBF,0xC0,0xC1,0xC2,0xC3)", "16 SMW Bestiary sheets", "9 BG Tileset sheets", "DW Volcanic Palettes 0x0DE70E / 0x0DE79A / 0x0DEB36"],
+      "must_run_before": []
+    },
+    {
+      "module": "mixer.rs (Koopa Hammer Bro Guard Weapons)",
+      "depends_on": ["free_cursor in $23..$3A"],
+      "owns_regions": ["raw 0xBA weapon tiles (11,2)/(11,3)/(12,2)/(12,3)/(14..15,2..3)"],
       "must_run_before": []
     },
     {

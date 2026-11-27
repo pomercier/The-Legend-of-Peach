@@ -2032,6 +2032,114 @@ fn patch_worldwide_bg_tilesets(
         ops += 1;
     }
 
+    // 8. v0.7.0 — DISTINCT DARK WORLD ARTISTIC IDENTITY ("BOWSER'S CONQUERED VOLCANIC KINGDOM"!)
+    //    Transforms Dark World Main Overworld Palette (`OWMainPal[1]` @ 0x0DE70E, 70B) and
+    //    Dark World Death Mountain (`OWMainPal[3]` @ 0x0DE79A, 70B) from muddy olive-brown into an
+    //    unmistakable SMW Valley of Bowser Volcanic Indigo-Obsidian, Deep Crimson-Plum Turf, Charcoal
+    //    Basalt Cliffs, and Glowing Magma-Amber stone highlights — completely distinct from Light World!
+    let rgb555 = |r: u16, g: u16, b: u16| -> u16 { (r >> 3) | ((g >> 3) << 5) | ((b >> 3) << 10) };
+    if 0x0DE70E + 70 <= rom_z.data.len() {
+        let mut dw_main = rom_z.data[0x0DE70E..0x0DE70E + 70].to_vec();
+        let set_c = |buf: &mut [u8], idx: usize, col: u16| {
+            let b = col.to_le_bytes();
+            buf[idx * 2] = b[0];
+            buf[idx * 2 + 1] = b[1];
+        };
+        set_c(&mut dw_main, 0, rgb555(32, 24, 48)); // obsidian outline
+        set_c(&mut dw_main, 1, rgb555(56, 40, 72)); // volcanic basalt shadow
+        set_c(&mut dw_main, 2, rgb555(88, 60, 96)); // basalt mid cliff
+        set_c(&mut dw_main, 3, rgb555(128, 88, 112)); // basalt top rim
+        set_c(&mut dw_main, 4, rgb555(96, 48, 88)); // conquered dark-plum turf shade
+        set_c(&mut dw_main, 5, rgb555(144, 72, 104)); // conquered volcanic rose-plum turf
+        set_c(&mut dw_main, 6, rgb555(192, 120, 72)); // volcanic magma-ochre ledge highlight
+        set_c(&mut dw_main, 7, rgb555(32, 24, 48));
+        set_c(&mut dw_main, 8, rgb555(64, 44, 68));
+        set_c(&mut dw_main, 9, rgb555(104, 64, 72));
+        set_c(&mut dw_main, 10, rgb555(144, 88, 72));
+        set_c(&mut dw_main, 11, rgb555(176, 96, 56)); // volcanic rust path
+        set_c(&mut dw_main, 12, rgb555(216, 136, 64)); // magma-amber path highlight
+        set_c(&mut dw_main, 13, rgb555(184, 112, 64));
+        sess.swap_custom_bytes(
+            rom_z,
+            0x0DE70E,
+            0x0DE70E,
+            dw_main,
+            "Monde des Ténèbres → ROYAUME VOLCANIQUE DE BOWSER (OWMainPal[1] @ 0x0DE70E) : Obsidienne, Pourpre & Magma SMW".into(),
+            crate::swapper::SwapKind::PaletteBgr555 { color_count: 35 },
+        )?;
+        ops += 1;
+    }
+    if 0x0DE79A + 70 <= rom_z.data.len() {
+        let mut dw_dm = rom_z.data[0x0DE79A..0x0DE79A + 70].to_vec();
+        let set_c = |buf: &mut [u8], idx: usize, col: u16| {
+            let b = col.to_le_bytes();
+            buf[idx * 2] = b[0];
+            buf[idx * 2 + 1] = b[1];
+        };
+        set_c(&mut dw_dm, 0, rgb555(24, 16, 32)); // volcanic ash black
+        set_c(&mut dw_dm, 1, rgb555(64, 32, 48)); // charred crimson basalt
+        set_c(&mut dw_dm, 2, rgb555(104, 48, 56)); // dark magma rock
+        set_c(&mut dw_dm, 3, rgb555(152, 72, 56)); // glowing lava ridge
+        set_c(&mut dw_dm, 4, rgb555(112, 40, 48)); // volcanic peak ground
+        set_c(&mut dw_dm, 5, rgb555(168, 64, 48)); // ember-lit ash ground
+        set_c(&mut dw_dm, 6, rgb555(232, 128, 48)); // bright magma lava highlight
+        sess.swap_custom_bytes(
+            rom_z,
+            0x0DE79A,
+            0x0DE79A,
+            dw_dm,
+            "Montagne Ténèbres → PICS DE LAVE DE BOWSER (OWMainPal[3] @ 0x0DE79A) : Basalte Noir & Lave SMW".into(),
+            crate::swapper::SwapKind::PaletteBgr555 { color_count: 35 },
+        )?;
+        ops += 1;
+    }
+    // Dark World Pyramid of Power (`0x5B`, `0x5C`, `0x63` -> `OWAuxPal[17]` @ 0x0DEB36, 42 bytes = 21 colors):
+    // Transform Zelda's golden-sand Egyptian Pyramid into BOWSER'S OBSIDIAN LAVA CITADEL!
+    //   Row 0 (0..6): Volcanic magma sky & glowing ember crest highlights
+    //   Row 1 (7..13): Dark obsidian masonry bricks + shadowed purple-slate stone
+    //   Row 2 (14..20): Charred basalt steps, lava-amber trim & Bowser fortress relief!
+    if 0x0DEB36 + 42 <= rom_z.data.len() {
+        let mut dw_pyr = rom_z.data[0x0DEB36..0x0DEB36 + 42].to_vec();
+        let set_c = |buf: &mut [u8], idx: usize, col: u16| {
+            let b = col.to_le_bytes();
+            buf[idx * 2] = b[0];
+            buf[idx * 2 + 1] = b[1];
+        };
+        // Row 0: Volcanic citadel highlights & ember trim
+        set_c(&mut dw_pyr, 0, rgb555(120, 40, 56));
+        set_c(&mut dw_pyr, 1, rgb555(176, 64, 48));
+        set_c(&mut dw_pyr, 2, rgb555(224, 112, 56));
+        set_c(&mut dw_pyr, 3, rgb555(248, 192, 96));
+        set_c(&mut dw_pyr, 4, rgb555(32, 24, 48));
+        set_c(&mut dw_pyr, 5, rgb555(32, 24, 48));
+        set_c(&mut dw_pyr, 6, rgb555(112, 32, 80));
+        // Row 1: Obsidian fortress bricks & Bowser indigo-slate shadow
+        set_c(&mut dw_pyr, 7, rgb555(32, 24, 40));
+        set_c(&mut dw_pyr, 8, rgb555(64, 48, 72));
+        set_c(&mut dw_pyr, 9, rgb555(96, 72, 104));
+        set_c(&mut dw_pyr, 10, rgb555(136, 104, 136));
+        set_c(&mut dw_pyr, 11, rgb555(144, 128, 176));
+        set_c(&mut dw_pyr, 12, rgb555(184, 160, 208));
+        set_c(&mut dw_pyr, 13, rgb555(112, 104, 152));
+        // Row 2: Charred volcanic stonework + glowing crimson-gold Bowser trim
+        set_c(&mut dw_pyr, 14, rgb555(40, 28, 44));
+        set_c(&mut dw_pyr, 15, rgb555(80, 52, 68));
+        set_c(&mut dw_pyr, 16, rgb555(120, 76, 84));
+        set_c(&mut dw_pyr, 17, rgb555(160, 104, 96));
+        set_c(&mut dw_pyr, 18, rgb555(200, 144, 104));
+        set_c(&mut dw_pyr, 19, rgb555(96, 56, 64));
+        set_c(&mut dw_pyr, 20, rgb555(64, 36, 48));
+        sess.swap_custom_bytes(
+            rom_z,
+            0x0DEB36,
+            0x0DEB36,
+            dw_pyr,
+            "Pyramide Ténèbres → CITADELLE D'OBSIDIENNE DE BOWSER (OWAuxPal[17] @ 0x0DEB36) : Pierre Volcanique & Lave SMW".into(),
+            crate::swapper::SwapKind::PaletteBgr555 { color_count: 21 },
+        )?;
+        ops += 1;
+    }
+
     Ok(ops)
 }
 

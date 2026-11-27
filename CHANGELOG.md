@@ -6,6 +6,35 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ---
 
+## [0.7.0] — 2026-11-27 — Mushroom Kingdom: World Transformation
+
+### Full ROM World Discovery & Systemic 108/128 Overworld Transformation (`mario_map.rs`)
+- **Complete Binary Inventory (`docs/WORLD_CONNECTIVITY_REPORT.md`, `docs/ENEMY_BEHAVIOR_REGISTRY.json`)**: Extracted all `160/160` Overworld screens (`64` Light World + `64` Dark World + `32` Special), all `296/296` Underworld room headers (`PC 0x0274A2`), all `247` populated room sprite lists (`PC 0x04D653`, `210` unique placed sprite IDs), `133` entrance links (`PC 0x014895`), and the exact 512-byte Overworld hardware collision table `TileAttr` at `PC 0x007BD9` (`$00:FBD9`).
+- **Systemic Multi-Biome Overworld Transformation (`56/64` LW + `52/64` DW = `108/128` screens, `322` Map32 tiles):**
+  - Classified all `160` screens into 15 Mario Light/Dark/Special biomes (`OverworldBiome`), enriching pure walkable grass (`0x001D`, `TileAttr 0x48`), forest/courtyard floors (`0x0106`, `TileAttr 0x00`), desert/swamp sand (`0x05E5`, `TileAttr 0x08`), and aquatic sea tiles (`0x0E90`, `TileAttr 0x00`) plus strictly 3×3-open-interior liftable SMW Turn-Blocks (`0x06C7`) and Smiling Bushes (`0x07CC`).
+  - Guarded by automated unit test `test_v070_all_128_overworld_screens_collision_grammar_and_borders`: **`0` grammar violations, `0` hardware collision regressions, `0` cross-screen border breaks across all 224 cardinal edges**.
+- **Distinct Dark World Artistic Identity — Bowser's Volcanic Kingdom & Obsidian Citadel (`mario_world.rs`):**
+  - Overhauled Dark World main palettes (`OWMainPal[1]` @ `0x0DE70E` & `OWMainPal[3]` @ `0x0DE79A`) from muddy olive-brown to volcanic indigo-obsidian basalt, crimson-plum turf, and glowing magma-amber ridges.
+  - Transformed Dark World Pyramid (`Screen 0x5B/0x5C/0x63`, `OWAuxPal[17]` @ `0x0DEB36`) from golden Egyptian sandstone into **Bowser's Obsidian Lava Citadel** with carved stone Bowser Statues and volcanic magma sunset skies (verified identically on `snes_faust` and cycle-accurate `bsnes`).
+
+### Zelda Residue Elimination (`ZRI` Reduced from `19.2` -> `13.2`, `MII` Raised to `86.8`)
+- **Koopa Guard Weapon Conversion (`mixer.rs`, `ZRI-016` Resolved):** Replaced all 8 medieval Zelda sword & spear tiles in compressed sprite sheet `raw 0xBA` (`$6B/$7B`, `$6C/$7C`, `$6E/$7E/$6F/$7F`) with authentic **SMW Hammer Bro Hammers** and **SMW Spiked Koopa Clubs** (verified live in Overworld combat).
+- **Castle Tower King Bowser French Dialogues (`mario_intro.rs`):** Replaced vanilla Agahnim medieval French messages `#316`, `#318` (removing `"occire"`), and `#319` (removing `"Héros"`) with playful King Bowser dialogue (`"BWAHAHAHA ! Tu oses défier le grand Roi Bowser dans sa tour ?"`), verified live in Room `0x020`.
+
+### 100% Live `VISUAL_PASS` Across All 12/12 Bosses & All 16/16 Mario States (`scripts/qa_engine_v070.py`)
+- **Next-Gen Parallel QA Engine & Persistent Local SQLite DB:** Built reusable multi-worker Mednafen (`snes_faust` + cycle-accurate `snes`/bsnes) harness recording temporal metrics, contact sheets, and historical runs into local SQLite (`23/23 VISUAL_PASS`, `94` logged historical runs).
+- **All 12 / 12 Bosses Live Verified in Real Arenas (`docs/BOSS_VISUAL_REPORT.md`):** Chargin' Chucks (`0x0C8`), 3 Giant Pokeys (`0x033`), Giant Wiggler (`0x007`), Castle Tower Bowser (`0x020`), Morton (`0x05A`), Wendy (`0x006`), Winged Iggy (`0x029`, `v0.6.0` guard), Roy Koopa (`0x0AC`, live Maiden sunlight transformation via `$7E:F3CC=0x06` & Room `0x065` bit `0x0100`), Lemmy (`0x0DE`, Fire Mario melting ice), Larry (`0x090`), Ludwig (`0x0A4`), and Final Boss King Bowser (`0x000` on cycle-accurate `bsnes`).
+- **All 16 / 16 Mario States Live Verified (`docs/GAMEPLAY_COVERAGE_REPORT.md`):** Closed all 6 previously un-emulated states from `v0.6.0` — Heavy Lift & Carry (4-dir), Prop Throw, Lake Hylia Deep Water Swim (4-dir) & Dive alongside SMW Cheep-Cheep, Sanctuary Push Block, Buzzblob Electric Shock X-Ray (`$5D=0x13` + PPU mosaic), Pitfall Drop (`-1F`), and KO Spin / KO Flat.
+- Preserved 100% of all 7 `v0.6.0` blocking fixes with zero regressions.
+
+### Build & Verification (`v0.7.0`)
+- Deterministic 2 MiB LoROM build (dual independent runs bit-identical via `cmp` + `sha256sum`): `661` hardware patches across `18` rules, `49` LZ2 sheets verified, `225` relocated blocks in `$23..$3F` (`0` overlaps), `32/32` passing Rust tests, `0` clippy warnings.
+- **SNES Checksum / Complement:** `0x1285` / `0xED7A` (Valid: `true`)
+- **Output CRC32:** `F5545171`
+- **Output SHA-256:** `f975131b5eaeee99ee7215ae636a380946ddc48832d3e7be95a11ab5d344dfee`
+
+---
+
 ## [0.6.0] — 2026-11-27 — Super Mario World Authenticity
 
 ### Complete Structural Resolution of All 7 Blocking Visual Defects
