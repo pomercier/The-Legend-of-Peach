@@ -2910,13 +2910,176 @@ pub fn inject_legend_of_peach_intro(
     ops += repack_french_bank1c(rom_zelda, session)?;
 
     // -------------------------------------------------------------------------
-    // G. TITLE SCREEN BG2 LANDSCAPE & MASTER SWORD PALETTES (v0.4.0):
-    //    - Water (0x0DE83E): 0x4608 -> SMW Sparkling Blue 0x7A18
-    //    - Sky (0x0DE844 & 0x0DE856): 0x7ED4 -> SMW Sky Blue 0x7F0E (RGB 112, 192, 248)
-    //    - Mountains (0x0DE84C): 0x7A72 -> Yoshi's Island Green Hill 0x1EE7 (RGB 56, 184, 56)
-    //    - Peach's Castle (0x0DE85A): 0x4AB6 -> Peach Castle Pink 0x5B5E
-    //    - Peach's Castle Highlights (0x0DE85C): 0x6FBE -> Pure White 0x7FFF
-    //    - Master Sword Hilt (0x0DD444): 0x7273 -> Golden Star Blade 0x275F
+    // G. v0.9.0 — ELIMINATE TITLE SCREEN MASTER SWORD (`raw 0xA5` = SP[0x32], ZRI-009 -> 0!):
+    //    Replace ALL 10 16x16 OAM Master Sword sprites (`0x00..0x0E`, `0x20`, `0x22`)
+    //    in compressed sprite sheet `raw 0xA5` (`PC 0x0B3CAD`) with an authentic Nintendo 16-bit
+    //    **ROYAL PRINCESS PEACH GOLDEN STAR-SCEPTER & SUPER STAR CROWN**!
+    //    (Preserves sparkle tiles in rows 2-3 cols 4..15 100% untouched!)
+    //    Exact Title OBJ Pal 0 indices:
+    //      0=Transparent, 1=Pearlescent Light Silver, 2=Bright SMW Gold, 3=Ruby Red Jewel,
+    //      4=Warm Amber Gold, 5=Deep Navy Outline, 6=Royal Sapphire Jewel, 7=Pure White Specular!
+    // -------------------------------------------------------------------------
+    let parse_16x16_3bpp = |rows: [&str; 16]| -> [[u8; 16]; 16] {
+        let mut g = [[0u8; 16]; 16];
+        for (y, r) in rows.iter().enumerate() {
+            for (x, b) in r.bytes().take(16).enumerate() {
+                if (b'1'..=b'7').contains(&b) {
+                    g[y][x] = b - b'0';
+                }
+            }
+        }
+        g
+    };
+    // spr[0] (0x00, top finial): Gleaming 16x16 SMW Golden Super Star with cute vertical eyes!
+    let scep_star = parse_16x16_3bpp([
+        ".......55.......",
+        "......5725......",
+        "......5725......",
+        ".....572245.....",
+        ".55555722455555.",
+        "5772222222244445",
+        ".57225722524445.",
+        "..522572252445..",
+        "...5257225245...",
+        "...5222222445...",
+        "..572222222445..",
+        "..572225522445..",
+        ".572255..554445.",
+        ".5255......5545.",
+        "..5..........5..",
+        ".....555555.....",
+    ]);
+    // spr[1] (0x02): Princess Peach's Royal Golden Crown (3 peaks, ruby center & sapphire sides)!
+    let scep_crown = parse_16x16_3bpp([
+        ".....555555.....",
+        "55..57222245..55",
+        "575.57233245.545",
+        "5725573732455245",
+        "5722572332452245",
+        "5722222222222445",
+        "5766223732266445",
+        "5761223332261445",
+        "5722222222222445",
+        "5577777777777755",
+        "5722244224422245",
+        ".55555555555555.",
+        "..572237322445..",
+        "..572233322445..",
+        "...5572222455...",
+        "...5722772445...",
+    ]);
+    // spr[2] (0x20, left) & spr[3] (0x22, right): Feathered SMW Paratroopa Royal Wings!
+    let scep_wing_l = parse_16x16_3bpp([
+        "....55555.......",
+        "..5577777555....",
+        ".5777111777755..",
+        "5771111111777255",
+        "5711155511172245",
+        ".555577711172445",
+        "..57771111772445",
+        "..57115511722445",
+        "...555771172445.",
+        "....5771172245..",
+        "....571172445...",
+        ".....5577245....",
+        ".......5555.....",
+        "................",
+        "................",
+        "................",
+    ]);
+    let mut scep_wing_r = [[0u8; 16]; 16];
+    for y in 0..16 {
+        for x in 0..16 {
+            scep_wing_r[y][x] = scep_wing_l[y][15 - x];
+        }
+    }
+    // spr[4] (0x04): Jeweled Royal Scepter Collar & Star Emblem Hub!
+    let scep_collar = parse_16x16_3bpp([
+        "..555722224555..",
+        ".57222373222445.",
+        "5722663336622445",
+        "5726162226162445",
+        ".55222272222455.",
+        "..557222224455..",
+        "...5555555555...",
+        "....57277245....",
+        "....57177145....",
+        "....57177145....",
+        "....57277245....",
+        "...5722772245...",
+        "...5555555555...",
+        "....57177145....",
+        "....57177145....",
+        "....57177145....",
+    ]);
+    // spr[5..8] (0x06, 0x08, 0x0A, 0x0C): Ornate Golden-Pearl Royal Mario Goal Pole / Scepter Shaft!
+    let scep_shaft = parse_16x16_3bpp([
+        "....57177145....",
+        "....57177145....",
+        "....57177145....",
+        "....57177145....",
+        "....57177145....",
+        "...5572772455...",
+        "...5722772245...",
+        "...5572442455...",
+        "....57177145....",
+        "....57177145....",
+        "....57177145....",
+        "....57177145....",
+        "....57177145....",
+        "....57177145....",
+        "....57177145....",
+        "....57177145....",
+    ]);
+    // spr[9] (0x0E): Rounded Royal Golden Orb Finial (NO sword blade tip!)
+    let scep_orb = parse_16x16_3bpp([
+        "....57177145....",
+        "....57177145....",
+        "...5572772455...",
+        "..572227722245..",
+        ".57227777222445.",
+        ".57277222224445.",
+        ".57272233224445.",
+        ".57222373224445.",
+        ".57222333224445.",
+        "..572222222445..",
+        "..552222224455..",
+        "...5572224455...",
+        "....55224455....",
+        ".....555555.....",
+        "................",
+        "................",
+    ]);
+    if crate::mixer::patch_alttp_raw_sheet_pub(
+        rom_zelda,
+        session,
+        0xA5,
+        "Écran-Titre Sceptre Royal & Couronne Princesse Peach (raw 0xA5 / SP[0x32], ZRI-009 éliminé) : Étoile SMW + Couronne + Ailes + Sceptre d'Or",
+        free_cursor,
+        free_end,
+        &|raw| {
+            crate::mixer::write_3bpp_16x16_pub(raw, 0, 0, &scep_star);
+            crate::mixer::write_3bpp_16x16_pub(raw, 2, 0, &scep_crown);
+            crate::mixer::write_3bpp_16x16_pub(raw, 4, 0, &scep_collar);
+            crate::mixer::write_3bpp_16x16_pub(raw, 6, 0, &scep_shaft);
+            crate::mixer::write_3bpp_16x16_pub(raw, 8, 0, &scep_shaft);
+            crate::mixer::write_3bpp_16x16_pub(raw, 10, 0, &scep_shaft);
+            crate::mixer::write_3bpp_16x16_pub(raw, 12, 0, &scep_shaft);
+            crate::mixer::write_3bpp_16x16_pub(raw, 14, 0, &scep_orb);
+            crate::mixer::write_3bpp_16x16_pub(raw, 0, 2, &scep_wing_l);
+            crate::mixer::write_3bpp_16x16_pub(raw, 2, 2, &scep_wing_r);
+        },
+    )? {
+        ops += 1;
+    }
+
+    // -------------------------------------------------------------------------
+    // H. TITLE SCREEN BG2 LANDSCAPE & ROYAL SCEPTER PALETTES:
+    //    - Water (0x0DE83E): SMW Sparkling Blue 0x7A18
+    //    - Sky (0x0DE844 & 0x0DE856): SMW Sky Blue 0x7F0E
+    //    - Mountains (0x0DE84C): Yoshi's Island Green Hill 0x1EE7
+    //    - Peach's Castle (0x0DE85A/0x0DE85C): Peach Castle Pink 0x5B5E & White 0x7FFF
+    //    - Royal Scepter Sapphire & Gold (0x0DD43A / 0x0DD444): Royal Peach Blue & Star Gold!
     // -------------------------------------------------------------------------
     for (addr, color_u16, label) in [
         (
@@ -2950,9 +3113,14 @@ pub fn inject_legend_of_peach_intro(
             "Écran-Titre BG2 Château : Blanc Pur (0x7FFF)",
         ),
         (
+            0x0DD43Ausize,
+            0x7544u16,
+            "Écran-Titre Sceptre Royal : Saphir Princesse Peach (0x7544)",
+        ),
+        (
             0x0DD444usize,
-            0x275Fu16,
-            "Écran-Titre Épée : Garde Dorée Étoile SMW (0x275F)",
+            0x039Fu16,
+            "Écran-Titre Sceptre Royal : Or Étoile SMW (0x039F)",
         ),
     ] {
         if addr + 2 <= rom_zelda.data.len() {

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "project": "The Legend of Peach: A Mario to the Mushroom Kingdom",
-  "target_milestone": "v0.8.0 \u2014 Super Mario Universe Revolution",
+  "target_milestone": "v0.9.0 \u2014 The Ultimate Mario Adventure",
   "dominant_art_reference": "Super Mario World (SNES, 1990)",
   "complementary_references": [
     "Super Mario RPG: Legend of the Seven Stars (SNES, 1996)",
@@ -10,13 +10,11 @@
   ],
   "status_taxonomy": [
     "IMPLEMENTED_VISUAL_PASS",
-    "IMPLEMENTED_V080_IN_PROGRESS",
     "PARTIALLY_IMPLEMENTED",
-    "PLANNED_V090",
     "PLANNED_V100"
   ],
   "summary_counts": {
-    "total_registered_elements": 72,
+    "total_registered_elements": 76,
     "categories": 12
   },
   "elements": [
@@ -1570,8 +1568,84 @@
       "priority": "P0",
       "implementation_status": "PLANNED_V100",
       "validation_status": "NOT_TESTED"
+    },
+    {
+      "id": "MU-073",
+      "name": "Royal Princess Peach Golden Star-Scepter & Super Star Crown (Title Screen)",
+      "category": "Presentation & Title",
+      "reference_game": "Super Mario World / Super Mario RPG",
+      "original_function": "Iconic Mario royal emblem replacing Zelda Master Sword on Title Screen",
+      "top_down_adaptation": "All 10 16x16 OAM Master Sword sprites in raw 0xA5 (SP[0x32]) replaced by SMW Super Star finial, Princess Peach Crown, Paratroopa Wings, Golden Scepter & Orb tip (0 sword pixels, bsnes VISUAL_PASS)",
+      "ludic_value": 4,
+      "artistic_value": 5,
+      "snes_feasibility": "Native LZ2",
+      "cpu_cost": "Zero",
+      "rom_cost": "1 relocated sheet ($23..$3A)",
+      "wram_vram_cost": "Native OAM",
+      "dependencies": ["mario_intro.rs"],
+      "regression_risk": "Low",
+      "priority": "P0",
+      "implementation_status": "IMPLEMENTED",
+      "validation_status": "VISUAL_PASS"
+    },
+    {
+      "id": "MU-074",
+      "name": "Physical 3D Glossy Green SMW Overworld Warp Pipes & GP Secret Bonus",
+      "category": "World Landmarks & Travel",
+      "reference_game": "Super Mario World",
+      "original_function": "Signature 3D green Warp Pipes standing across Mushroom Kingdom hubs",
+      "top_down_adaptation": "Map16 0x21B (raw 0x3E/0x3F Pal 6 Emerald) + Map32 0x02D4 at Screen 0x2C (r09, c07) & curated LW/DW hubs + Mario_CheckWarpPipe Ground Pound reward (+5 Coins, Full Star Power, native Warp Pipe SFX)",
+      "ludic_value": 5,
+      "artistic_value": 5,
+      "snes_feasibility": "Native 65c816 + Map32",
+      "cpu_cost": "~40 cyc/f",
+      "rom_cost": "In-place GFX + Bank $22/$3B",
+      "wram_vram_cost": "Zero extra WRAM",
+      "dependencies": ["mario_ui.rs", "mario_map.rs", "mario_engine.rs"],
+      "regression_risk": "Low",
+      "priority": "P0",
+      "implementation_status": "IMPLEMENTED",
+      "validation_status": "VISUAL_PASS"
+    },
+    {
+      "id": "MU-075",
+      "name": "Complete 8/8 Bespoke Koopaling & King Bowser Dungeon Fortresses",
+      "category": "Dungeon Architecture",
+      "reference_game": "Super Mario World / SMB3",
+      "original_function": "Distinct world-themed fortresses for every Koopaling and King Bowser",
+      "top_down_adaptation": "All 8 major dungeons overhauled via ROM-verified $07:FA90 DungPal[1,4,5,8,9,10,12,13] (Wendy Coral Sea, Lemmy Star-Ice, Larry Chocolate Pyramid, Morton Volcanic, Iggy Ghost House, Roy Midnight Castle, Ludwig Mech, Bowser Obsidian Keep)",
+      "ludic_value": 4,
+      "artistic_value": 5,
+      "snes_feasibility": "Native CGRAM",
+      "cpu_cost": "Zero",
+      "rom_cost": "In-place Bank $1B palettes",
+      "wram_vram_cost": "Native CGRAM",
+      "dependencies": ["mario_world.rs"],
+      "regression_risk": "Low",
+      "priority": "P0",
+      "implementation_status": "IMPLEMENTED",
+      "validation_status": "VISUAL_PASS"
+    },
+    {
+      "id": "MU-076",
+      "name": "65c816 Boss Ground Pound Stagger & Coin/Star Synergy (Class 0x05)",
+      "category": "Boss Combat",
+      "reference_game": "Super Mario World / Yoshi's Island",
+      "original_function": "Tactile Mario Ground Pound stagger and coin shower feedback against every Boss",
+      "top_down_adaptation": "All 12 Boss IDs tagged class 0x05 in $22:B000: Ground Pound triggers boss recoil flash ($0EA0), arena shake ($011A), +3 Coins & safe -2 HP chip; Mario_UpdateBossCombat awards +2 Coins + +4 Star Power on damage hits (24f debounce $7E:F51B)",
+      "ludic_value": 5,
+      "artistic_value": 4,
+      "snes_feasibility": "Native 65c816",
+      "cpu_cost": "~110 cyc/f",
+      "rom_cost": "Bank $22",
+      "wram_vram_cost": "1 B WRAM ($7E:F51B)",
+      "dependencies": ["mario_engine.rs"],
+      "regression_risk": "Low (multi-phase script safe)",
+      "priority": "P0",
+      "implementation_status": "IMPLEMENTED",
+      "validation_status": "VISUAL_PASS"
     }
   ],
-  "rom_sha256_v080": "2270d55f8f4d09a164a939213531be80e4237a94488f535749708801ba925fd8",
-  "release": "v0.8.0 \u2014 Super Mario Universe Revolution"
+  "rom_sha256_v090": "5546dfaec62b98dc8c91bbbc58a7b16df6de91b9d8e6f0d56a1b7f1b36693fbd",
+  "release": "v0.9.0 \u2014 The Ultimate Mario Adventure"
 }

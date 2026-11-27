@@ -1820,9 +1820,10 @@ fn patch_worldwide_bg_tilesets(
         let (tb_t, tb_b) = split_left(&tb);
         let (msg_t, msg_b) = split_left(&msg);
 
+        let (pipe_t, pipe_b) = crate::mario_ui::build_smw_ow_warp_pipe_half_8x16();
         if patch_alttp_raw_sheet_pub(
             rom_z, sess, 0x3F,
-            "Monde des Ténèbres Décors (bg:3F) ← Buissons Hantés SMW, Blocs Turn/Crâne & Message Blocks",
+            "Monde des Ténèbres Décors (bg:3F) ← Tuyaux Warp Bowser (0x21B), Buissons Hantés SMW, Blocs Turn/Crâne & Message Blocks",
             free_cursor, free_end,
             &|raw| {
                 write_3bpp_8x8_pub(raw, 0, 0, &hbush_top); // Haunted Smiling Bush 1
@@ -1831,10 +1832,12 @@ fn patch_worldwide_bg_tilesets(
                 write_3bpp_8x8_pub(raw, 3, 1, &hbush_bot);
                 write_3bpp_8x8_pub(raw, 2, 0, &msg_t);     // Dark World Sign -> SMW Message Block!
                 write_3bpp_8x8_pub(raw, 2, 1, &msg_b);
-                write_3bpp_8x8_pub(raw, 2, 2, &tb_t);      // Liftable Rock -> SMW Turn-Block!
+                write_3bpp_8x8_pub(raw, 2, 2, &tb_t);      // Liftable Rock (m16 0x20F) -> SMW Turn-Block!
                 write_3bpp_8x8_pub(raw, 2, 3, &tb_b);
-                write_3bpp_8x8_pub(raw, 0, 2, &skull_top); // Heavy Rock -> Bowser Castle Skull Block!
-                write_3bpp_8x8_pub(raw, 0, 3, &skull_bot);
+                write_3bpp_8x8_pub(raw, 0, 2, &pipe_t);    // Dark World Portal Pillar (m16 0x21B) -> Physical Bowser Warp Pipe!
+                write_3bpp_8x8_pub(raw, 0, 3, &pipe_b);
+                write_3bpp_8x8_pub(raw, 3, 2, &skull_top); // Heavy Rock (m16 0x239) -> Bowser Castle Skull Block!
+                write_3bpp_8x8_pub(raw, 3, 3, &skull_bot);
             },
         )? { ops += 1; }
     }
@@ -2284,6 +2287,179 @@ fn patch_worldwide_bg_tilesets(
             rgb555(136, 112, 120),
         ],
         "Forteresse Mécanique de Ludwig (DungPal[12] @ 0x0DDFA4) : Acier Forgé, Bronze & Rivets de Lave SMW",
+    )?;
+
+    // 10. v0.9.0 — COMPLETE ALL 5 REMAINING KOOPALING FORTRESS ARCHITECTURES (8/8 DUNGEONS BESPOKE SMW!):
+    //     Verified directly from FR PAL ALTTP Palette Set Table `$07:FA90` (`$01:B609`):
+    //     - DungPal[1]  (0x0DD7E8, Wendy's Coral Sea Palace, Room 0x006): SMW Turquoise Coral & Deep Azure Floor
+    //     - DungPal[4]  (0x0DDA04, Lemmy's Star-Ice Circus Fortress, Room 0x0DE): Sparkling Glacial Frost-Cyan & Star Ice
+    //     - DungPal[5]  (0x0DDAB8, Larry's Chocolate Desert Pyramid, Room 0x033): Warm SMW Sandstone & Golden Trim
+    //     - DungPal[10] (0x0DDE3C, Roy's Midnight Koopa Castle, Room 0x0AC): Dark Obsidian-Slate & Royal Plum-Gold
+    //     - DungPal[13] (0x0DE058, Bowser's Obsidian Lava Keep, Room 0x00D): Heavy Bowser Castle Slate & Magma Gold
+    ops += patch_dung_fortress(
+        rom_z,
+        sess,
+        0x0DD7E8, // DungPal[1]: Wendy's Coral Sea Palace (Swamp Palace, Room 0x006)
+        [
+            rgb555(24, 48, 72),    // deep sea coral shadow
+            rgb555(40, 88, 128),   // oceanic stone wall
+            rgb555(64, 136, 168),  // SMW turquoise reef stone
+            rgb555(104, 184, 208), // sunlit aqua masonry
+            rgb555(168, 232, 240), // sea-foam specular edge
+            rgb555(176, 104, 120), // pink coral accent trim!
+            rgb555(136, 72, 96),   // deep coral trim
+        ],
+        [
+            rgb555(24, 48, 72),    // deep azure tile border
+            rgb555(40, 80, 120),   // submerged stone dark
+            rgb555(56, 112, 152),  // aquatic tile mid
+            rgb555(80, 144, 184),  // bright water floor
+            rgb555(36, 72, 112),   // tile seam
+            rgb555(112, 176, 208), // water caustic highlight
+            rgb555(152, 96, 112),  // warm coral accent
+        ],
+        [
+            rgb555(24, 48, 72),
+            rgb555(48, 96, 136),
+            rgb555(72, 144, 176),
+            rgb555(112, 192, 216),
+            rgb555(184, 240, 248),
+            rgb555(184, 112, 128),
+            rgb555(136, 72, 96),
+        ],
+        "Palais Corallien de Wendy (DungPal[1] @ 0x0DD7E8) : Turquoise Marin, Azur & Corail SMW",
+    )?;
+    ops += patch_dung_fortress(
+        rom_z,
+        sess,
+        0x0DDA04, // DungPal[4]: Lemmy's Star-Ice Circus Fortress (Ice Palace, Room 0x0DE)
+        [
+            rgb555(32, 56, 104),   // deep glacial sapphire
+            rgb555(56, 104, 192),  // crystal ice brick
+            rgb555(96, 176, 240),  // electric SMW ice-cyan
+            rgb555(168, 232, 248), // sparkling frost bevel
+            rgb555(248, 248, 248), // pure snow glare
+            rgb555(120, 144, 224), // periwinkle star-ice trim
+            rgb555(88, 112, 192),  // cool shadow trim
+        ],
+        [
+            rgb555(32, 56, 104),   // ice tile outline
+            rgb555(64, 112, 184),  // frosted ice floor dark
+            rgb555(96, 152, 216),  // smooth glacier tile
+            rgb555(136, 192, 240), // gleaming skating floor
+            rgb555(48, 88, 168),   // ice crack seam
+            rgb555(176, 224, 248), // frost shimmer
+            rgb555(80, 128, 200),  // mid crystal floor
+        ],
+        [
+            rgb555(32, 56, 104),
+            rgb555(64, 112, 200),
+            rgb555(112, 184, 248),
+            rgb555(240, 248, 248),
+            rgb555(248, 136, 72), // warm circus star torch accent
+            rgb555(144, 144, 248),
+            rgb555(192, 208, 248),
+        ],
+        "Forteresse de Glace de Lemmy (DungPal[4] @ 0x0DDA04) : Cristal Glaciaire & Étoile SMW",
+    )?;
+    ops += patch_dung_fortress(
+        rom_z,
+        sess,
+        0x0DDAB8, // DungPal[5]: Larry's Sun-Baked Desert Pyramid (Desert Palace, Room 0x033)
+        [
+            rgb555(64, 40, 28),    // deep terracotta outline
+            rgb555(120, 72, 44),   // SMW Chocolate Island clay
+            rgb555(168, 104, 56),  // sun-baked sandstone brick
+            rgb555(216, 152, 80),  // golden pyramid stone
+            rgb555(248, 208, 128), // sunlit desert gold rim
+            rgb555(160, 120, 64),  // warm ochre trim
+            rgb555(120, 88, 48),   // shadow ochre trim
+        ],
+        [
+            rgb555(56, 40, 28),   // sand tile seam
+            rgb555(104, 76, 48),  // warm chocolate tile
+            rgb555(136, 96, 60),  // sandstone floor
+            rgb555(168, 124, 72), // sunlit temple sand
+            rgb555(192, 136, 72), // golden inlaid border
+            rgb555(152, 112, 64), // carved stone mid
+            rgb555(112, 80, 52),  // floor shadow
+        ],
+        [
+            rgb555(64, 40, 28),
+            rgb555(128, 80, 48),
+            rgb555(176, 112, 60),
+            rgb555(224, 160, 88),
+            rgb555(248, 216, 136),
+            rgb555(144, 208, 96), // oasis emerald jewel trim
+            rgb555(80, 152, 64),
+        ],
+        "Pyramide Solaire de Larry (DungPal[5] @ 0x0DDAB8) : Grès Chocolate Island & Or SMW",
+    )?;
+    ops += patch_dung_fortress(
+        rom_z,
+        sess,
+        0x0DDE3C, // DungPal[10]: Roy's Midnight Koopa Castle (Thieves' Town, Room 0x0AC)
+        [
+            rgb555(36, 28, 48),    // midnight slate outline
+            rgb555(72, 56, 96),    // dark Koopa castle brick
+            rgb555(104, 80, 136),  // royal slate masonry
+            rgb555(144, 112, 176), // lit violet-steel stone
+            rgb555(208, 184, 232), // moonlit edge
+            rgb555(184, 80, 136),  // Roy Koopa hot-magenta trim!
+            rgb555(128, 56, 96),   // deep magenta accent
+        ],
+        [
+            rgb555(36, 28, 48),   // castle tile seam
+            rgb555(64, 52, 84),   // midnight floor dark
+            rgb555(84, 68, 112),  // slate floor mid
+            rgb555(108, 88, 136), // lit castle stone
+            rgb555(152, 104, 80), // brass grate inlay
+            rgb555(120, 96, 148), // floor shimmer
+            rgb555(96, 72, 116),  // shadow tile
+        ],
+        [
+            rgb555(36, 28, 48),
+            rgb555(80, 60, 104),
+            rgb555(112, 88, 144),
+            rgb555(152, 120, 184),
+            rgb555(216, 192, 240),
+            rgb555(192, 88, 144),
+            rgb555(136, 60, 104),
+        ],
+        "Château Nocturne de Roy (DungPal[10] @ 0x0DDE3C) : Ardoise Koopa & Magenta Royal SMW",
+    )?;
+    ops += patch_dung_fortress(
+        rom_z,
+        sess,
+        0x0DE058, // DungPal[13]: Bowser's Obsidian Lava Keep (Ganon's Tower, Room 0x00D)
+        [
+            rgb555(28, 20, 28),    // obsidian black mortar
+            rgb555(72, 40, 52),    // dark crimson castle stone
+            rgb555(112, 64, 64),   // heavy Bowser fortress brick
+            rgb555(168, 104, 76),  // torchlit magma stone
+            rgb555(232, 176, 104), // molten gold crest
+            rgb555(120, 88, 96),   // iron battlement trim
+            rgb555(88, 64, 72),    // steel shadow
+        ],
+        [
+            rgb555(32, 24, 32),  // obsidian floor outline
+            rgb555(64, 48, 60),  // dark citadel tile
+            rgb555(88, 64, 76),  // Bowser keep floor
+            rgb555(112, 84, 92), // ember-lit stone floor
+            rgb555(136, 56, 48), // glowing lava grate crack!
+            rgb555(144, 96, 84), // warm torchlight reflection
+            rgb555(72, 56, 68),  // mid obsidian shade
+        ],
+        [
+            rgb555(28, 20, 28),
+            rgb555(80, 44, 56),
+            rgb555(128, 72, 68),
+            rgb555(184, 120, 84),
+            rgb555(240, 192, 112),
+            rgb555(96, 192, 72), // Bowser emerald jewel accent
+            rgb555(64, 136, 52),
+        ],
+        "Donjon d'Obsidienne de Bowser (DungPal[13] @ 0x0DE058) : Pierre Noire, Or & Lave SMW",
     )?;
 
     Ok(ops)

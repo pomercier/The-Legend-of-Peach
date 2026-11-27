@@ -1925,14 +1925,14 @@ pub fn audit_legend_of_peach_output(
         }
     }
 
-    // Verify all 49 v13/v14/v15 raw sheets decompress cleanly inside a single 32 KiB LoROM bank
+    // Verify all 51 v13/v14/v15/v0.9.0 raw sheets decompress cleanly inside a single 32 KiB LoROM bank
     let (raw_bk, raw_hi, raw_lo) =
         find_alttp_raw_gfx_table(&built.data).ok_or("Could not locate ALTTP raw GFX table")?;
     let v13_raw_sheets: &[usize] = &[
         0xA4, 0xA3, 0xAD, 0xB1, 0xAC, 0xAB, 0xAE, 0xAF, 0xB0, 0xB2, 0xB3, 0x94, 0xB4, 0xB8, 0xA6,
         0xC2, 0xBD, 0xC0, 0xC1, 0xC3, 0xBF, 0x83, 0x85, 0x86, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x93,
         0x95, 0x96, 0x97, 0x98, 0x99, 0x9A, 0x9D, 0x3F, 0x0D, 0x0B, 0x0C, 0x06, 0x18, 0x19, 0x4D,
-        0x4C, 0x0F, 0x29, 0xCF,
+        0x4C, 0x0F, 0x29, 0xCF, 0xA5, 0x3E,
     ];
     for &raw_idx in v13_raw_sheets {
         let pc = ((built.data[raw_bk + raw_idx] as usize & 0x7F) << 15)
@@ -3576,19 +3576,22 @@ fn apply_rule_to_zelda(
                 let (msg_top, msg_bot) = crate::mario_ui::build_smw_message_block_half_8x16();
                 let (bush_top, bush_bot) = crate::mario_ui::build_smw_smiling_bush_half_8x16();
                 let (brick_top, brick_bot) = crate::mario_ui::build_smw_ow_brick_block_half_8x16();
+                let (pipe_top, pipe_bot) = crate::mario_ui::build_smw_ow_warp_pipe_half_8x16();
                 let (flw_top, flw_bot) = crate::mario_ui::build_smw_ow_smiling_flowers_8x16();
                 if patch_alttp_comp_sheet_helper(
                     rom_zelda,
                     session,
                     0x3C,
-                    &format!("Overworld Props (Sheet 0x3C) ← {}:Blocs Tournants, Briques, Blocs Message, Buissons Souriants & Fleurs SMW", rule.donor_alias),
+                    &format!("Overworld Props (Sheet 0x3C) ← {}:Tuyaux Warp Verts SMW (0x21B), Blocs Tournants, Briques, Blocs Message, Buissons & Fleurs SMW", rule.donor_alias),
                     free_cursor,
                     free_end,
                     &|raw| {
-                        write_3bpp_8x8(raw, 2, 2, &top);       // Liftable Rock -> SMW Mint-Green Turn-Block
+                        write_3bpp_8x8(raw, 2, 2, &top);       // Liftable Rock (m16 0x20F) -> SMW Mint-Green Turn-Block
                         write_3bpp_8x8(raw, 2, 3, &bot);
-                        write_3bpp_8x8(raw, 0, 2, &brick_top); // Heavy Dark Rock -> SMW Classic Brick Block!
-                        write_3bpp_8x8(raw, 0, 3, &brick_bot);
+                        write_3bpp_8x8(raw, 0, 2, &pipe_top);  // Green Pillar/Portal (m16 0x21B, Pal 6) -> Physical 3D SMW Green Warp Pipe!
+                        write_3bpp_8x8(raw, 0, 3, &pipe_bot);
+                        write_3bpp_8x8(raw, 3, 2, &brick_top); // Heavy Dark Rock (m16 0x239) -> SMW Classic Brick Block!
+                        write_3bpp_8x8(raw, 3, 3, &brick_bot);
                         write_3bpp_8x8(raw, 1, 2, &flw_top);   // Grass Decorative Flowers -> SMW Daisy/Smiling Flowers!
                         write_3bpp_8x8(raw, 1, 3, &flw_bot);
                         write_3bpp_8x8(raw, 2, 0, &msg_top);   // Wooden Signpost -> SMW Message Block!

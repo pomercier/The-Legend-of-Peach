@@ -1,8 +1,8 @@
 {
-  "schema_version": "1.2.0",
-  "release": "v0.8.0",
-  "rom_sha256": "2270d55f8f4d09a164a939213531be80e4237a94488f535749708801ba925fd8",
-  "description": "Directed dependency graph and memory-region ownership for all 18 canonical fusion rules (664 patches, 225 relocated blocks, 0 overlaps) in v0.8.0.",
+  "schema_version": "1.3.0",
+  "release": "v0.9.0",
+  "rom_sha256": "5546dfaec62b98dc8c91bbbc58a7b16df6de91b9d8e6f0d56a1b7f1b36693fbd",
+  "description": "Directed dependency graph and memory-region ownership for all 18 canonical fusion rules (671 patches, 51 audited LZ2 sheets, 226 relocated blocks, 0 overlaps) in v0.9.0.",
   "memory_firewalls": [
     {
       "name": "Protected ALTTP World Map Table",
@@ -21,18 +21,18 @@
       "name": "Custom 65c816 Super Mario Universe Engine & Tables",
       "pc_range": "0x110000..0x117FFF",
       "banks": "$22",
-      "owner": "mario_intro.rs ($22:8000..$22:81FF) + mario_engine.rs ($22:9000..$22:AFFF code, $22:B000 256B Behavior Table, $22:B100 270B 9-Palette Table)",
+      "owner": "mario_intro.rs ($22:8000..$22:81FF) + mario_engine.rs ($22:9000..$22:AFFF code, $22:B000 256B Behavior/Boss Table, $22:B100 270B 9-Palette Table)",
       "enforced_by": "EXPANDED_FREE_START = 0x118000"
     },
     {
       "name": "Relocated LC_LZ2 Graphics Sheets",
       "pc_range": "0x118000..0x1D7FFF",
       "banks": "$23..$3A",
-      "owner": "mixer.rs + mario_ui.rs + mario_world.rs + mario_bosses.rs",
+      "owner": "mixer.rs + mario_intro.rs (raw 0xA5 Royal Peach Scepter) + mario_ui.rs + mario_world.rs (raw 0x3E/0x3F Warp Pipes) + mario_bosses.rs",
       "enforced_by": "EXPANDED_FREE_END = OW_MAP32_RELOC_START_PC (0x1D8000)"
     },
     {
-      "name": "Relocated Overworld Map32 Screens (108 LW+DW screens, 216 streams)",
+      "name": "Relocated Overworld Map32 Screens (108 LW+DW screens, 216 streams including Physical SMW Warp Pipes 0x02D4)",
       "pc_range": "0x1D8000..0x1FFFFF",
       "banks": "$3B..$3F",
       "owner": "mario_map.rs",
@@ -42,32 +42,32 @@
   "modules": [
     {
       "module": "mario_intro.rs",
-      "depends_on": ["disasm_dma.rs", "mixer.rs (GFX tables)"],
-      "owns_regions": ["0x100000..0x1101FF", "0x065A33..0x065CAB", "0x0E0000..0x0E7FFF (372 French messages)", "0x071C68..0x071E0F", "raw 0x3E/0x3F/0xD8"],
+      "depends_on": ["disasm_dma.rs", "mixer.rs (GFX tables & free_cursor)"],
+      "owns_regions": ["0x100000..0x1101FF", "0x065A33..0x065CAB", "0x0E0000..0x0E7FFF (372 French messages)", "0x071C68..0x071E0F", "raw 0xA5 (SP[0x32] Title Royal Peach Star-Scepter)", "0x0DD43A/0x0DD444 (Scepter Sapphire/Gold)"],
       "must_run_before": ["mario_engine.rs", "mario_map.rs"]
     },
     {
       "module": "mario_engine.rs",
-      "depends_on": ["mario_intro.rs (2 MiB expansion)", "mario_sfx.rs (Jump/Stomp/Coin/Switch/Thud SFX)", "ALTTP hardware Submodule $16 ($7E:C172)"],
-      "owns_regions": ["0x111000..0x1132FF ($22:9000..$22:B2FF)", "PC 0x010959/0x011CCA/0x0125C7 (3 Bank $02 JSL hooks)", "WRAM $7E:F500..$7E:F53F (64 B)"],
+      "depends_on": ["mario_intro.rs (2 MiB expansion)", "mario_sfx.rs (Jump/Stomp/Coin/WarpPipe/Switch/Thud SFX)", "ALTTP hardware Submodule $16 ($7E:C172)"],
+      "owns_regions": ["0x111000..0x1132FF ($22:9000..$22:B2FF)", "PC 0x010959/0x011CCA/0x0125C7 (3 Bank $02 JSL hooks)", "WRAM $7E:F500..$7E:F53F (64 B including W_BOSS_HIT_CD $7E:F51B)"],
       "must_run_before": []
     },
     {
       "module": "mario_map.rs",
       "depends_on": ["mario_intro.rs (2 MiB expansion)", "hardware TileAttr $00:FBD9 (PC 0x007BD9)"],
-      "owns_regions": ["0x1D8000..0x1FFFFF (108 transformed LW+DW screens)", "0x0179CF..0x017D8E (Map32 24-bit pointers)"],
+      "owns_regions": ["0x1D8000..0x1FFFFF (108 transformed LW+DW screens + Physical SMW Warp Pipe 0x02D4 at Screen 0x2C r09 c07 & curated hubs)", "0x0179CF..0x017D8E (Map32 24-bit pointers)"],
       "must_run_before": []
     },
     {
       "module": "mario_ui.rs",
       "depends_on": ["mixer.rs (free_cursor in $23..$3A)", "demo.rs (Mario 4bpp bank)"],
-      "owns_regions": ["raw 0x6F/0x70/0xCF/0xD0/0xD2/0xDA/0xDB/0xDC", "0x0646E8..0x0656E7", "0x06F0F1..0x06FDC1", "0x087000..0x089FFF"],
+      "owns_regions": ["raw 0x6F/0x70/0xCF/0xD0/0xD2/0xDA/0xDB/0xDC", "build_smw_ow_warp_pipe_half_8x16() for raw 0x3E/0x3F", "0x0646E8..0x0656E7", "0x06F0F1..0x06FDC1", "0x087000..0x089FFF"],
       "must_run_before": []
     },
     {
       "module": "mario_world.rs",
       "depends_on": ["mixer.rs (free_cursor in $23..$3A)", "ROM Palette Set Table $07:FA90"],
-      "owns_regions": ["Toad Town NPC sheets", "16 SMW Bestiary sheets", "9 BG Tileset sheets", "DW Volcanic Palettes 0x0DE70E/0x0DE79A/0x0DEB36", "Koopaling Fortresses DungPal[8]@0x0DDCD4, DungPal[9]@0x0DDD88, DungPal[12]@0x0DDFA4"],
+      "owns_regions": ["Toad Town NPC sheets", "16 SMW Bestiary sheets", "9 BG Tileset sheets (incl. raw 0x3F DW Bowser Warp Pipe)", "DW Volcanic Palettes 0x0DE70E/0x0DE79A/0x0DEB36", "ALL 8 Koopaling/Bowser Fortresses DungPal[1,4,5,8,9,10,12,13]"],
       "must_run_before": []
     },
     {

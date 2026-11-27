@@ -106,10 +106,11 @@ const W_SHELL_KICK_CD: u16 = 0xF515; // Post-stomp grace frames before kick
 const W_SHELL_TMP_X: u16 = 0xF516; // Scratch shell X lo for bowling check
 const W_SHELL_TMP_Y: u16 = 0xF517; // Scratch shell Y lo for bowling check
 
-// Yoshi Companion & Balanced Starman state (`$7E:F518..$7E:F51F`)
+// Yoshi Companion, Boss Combat & Balanced Starman state (`$7E:F518..$7E:F51F`)
 const W_YOSHI_ACTIVE: u16 = 0xF518; // 0=On Foot, 1=Riding Yoshi Companion!
 const W_YOSHI_FLUTTER: u16 = 0xF519; // Remaining Flutter Jump frames in current jump
 const W_YOSHI_LAST_HP: u16 = 0xF51A; // Last observed Mario HP ($7E:F36D) for 1-hit Yoshi shield
+const W_BOSS_HIT_CD: u16 = 0xF51B; // v0.9.0 Boss Hit Coin & Star-Power synergy debounce timer
 const W_STAR_DRAIN_CTR: u16 = 0xF51C; // Starman Star-Power drain prescaler (drains every 6 frames)
 const W_GP_IMPACT: u16 = 0xF51D; // 1 = Ground Pound just impacted this frame
 const W_TMP_A: u16 = 0xF51E; // Scratch A
@@ -336,6 +337,29 @@ pub fn build_mario_stomp_table() -> [u8; 256] {
     // 4. Authentic SMW Boo Family (Orientation-Freeze AI: freezes when watched, creeps when ignored!)
     t[0x19] = 0x04; // Overworld Graveyard Poe -> SMW Boo!
     t[0x8B] = 0x04; // Haunted Mansion / Skull Woods Ghost -> SMW Ghost House Boo!
+
+    // 5. v0.9.0 — All 12 Mario & Koopaling Boss Encounters (Ground Pound Boss Stagger + Hit Coin/Star Synergy!)
+    //    Protected from ordinary jump-stomps so multi-phase boss scripts never break, while Mario Ground Pound
+    //    staggers bosses with arena shake + +3 Coins + safe 2 HP chip, and every boss hit refills Coins & Star Power!
+    const MARIO_BOSSES: &[u8] = &[
+        0x09, // Moldorm -> Giant Wiggler
+        0x53, // Armos Knight -> Giant Chargin' Chucks
+        0x54, // Lanmolas -> 3 Giant Pokeys
+        0x7A, // Agahnim -> Castle Tower King Bowser
+        0x88, // Mothula -> Winged Iggy Koopa
+        0x8C, // Arrghus -> Wendy O. Koopa
+        0x92, // Helmasaur King -> Morton Koopa Jr.
+        0xA2, // Kholdstare -> Lemmy Koopa
+        0xBD, // Vitreous -> Larry Koopa
+        0xCB, // Trinexx Body -> Ludwig Mech Bowser
+        0xCC, // Trinexx Fire Head -> Ludwig Dino Torch
+        0xCD, // Trinexx Ice Head -> Ludwig Frost Koopa
+        0xCE, // Blind -> Roy Koopa
+        0xD6, // Ganon -> Final Boss King Bowser!
+    ];
+    for &id in MARIO_BOSSES {
+        t[id as usize] = 0x05;
+    }
 
     t
 }
@@ -570,9 +594,11 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.jsr("Mario_UpdateYoshi");
     a.jsr("Mario_UpdateJump");
     a.jsr("Mario_CheckGroundPoundShockwave");
+    a.jsr("Mario_CheckWarpPipe");
     a.jsr("Mario_CheckStomp");
     a.jsr("Mario_UpdateKoopaShell");
     a.jsr("Mario_UpdateBoos");
+    a.jsr("Mario_UpdateBossCombat");
     a.jsr("Mario_UpdatePowerUps");
 
     a.label("hook_exit");
@@ -1055,7 +1081,45 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.imm8(0xC9, 0x60);
     a.branch(0xB0, "gp_sw_next_j");
 
-    // GROUND POUND DIRECT HIT! Deal 10 armor-piercing damage or instant KO puff + +2 Coins!
+    // GROUND POUND DIRECT HIT!
+    // Check if target is a Boss (class 0x05 in Y / W_TMP_A? Re-read table quickly or save Y!)
+    // Actually we already know class in Y before X/Y bbox check if we save it, or check $22:B000[$0E20,X] == 5!
+    a.op(0x8A); // TXA
+    a.op(0x48); // PHA
+    a.abs(0xBD, 0x0E20);
+    a.op(0xAA);
+    a.long(0xBF, MARIO_ENGINE_BANK, STOMP_TABLE_ADDR);
+    a.op(0xA8); // TAY (class)
+    a.op(0x68); // PLA
+    a.op(0xAA); // TAX
+    a.op(0x98); // TYA
+    a.imm8(0xC9, 0x05); // Boss Encounter Class (0x05)?
+    a.branch(0xD0, "gp_sw_normal_enemy");
+
+    // v0.9.0 BOSS GROUND POUND STAGGER & COIN SHOWER!
+    // Staggers boss ($0EA0 = 0x16), shakes fortress ($011A = 0x12), awards +3 Coins & +8 Star Power,
+    // and safely chips 2 HP ONLY if boss HP >= 4 (preserving multi-phase boss scripts 100% safely!).
+    a.imm8(0xA9, 0x16);
+    a.abs(0x9D, 0x0EA0);
+    a.imm8(0xA9, 0x12);
+    a.abs(0x8D, 0x011A);
+    a.abs(0xBD, 0x0E50);
+    a.imm8(0xC9, 0x04);
+    a.branch(0x90, "gp_boss_reward");
+    a.op(0x38);
+    a.imm8(0xE9, 0x02);
+    a.abs(0x9D, 0x0E50);
+    a.label("gp_boss_reward");
+    a.imm8(0xA9, 0x2B);
+    a.abs(0x8D, 0x012E); // Mario Coin Chime!
+    a.imm8(0xA9, 0x03);
+    a.jsr("Mario_AddCoinsAndStar");
+    a.imm8(0xA9, 0x18);
+    a.abs(0x8D, W_BOSS_HIT_CD);
+    a.jmp("gp_sw_next");
+
+    a.label("gp_sw_normal_enemy");
+    // Deal 10 armor-piercing damage or instant KO puff + +2 Coins!
     a.op(0x38);
     a.abs(0xBD, 0x0E50);
     a.imm8(0xE9, 0x0A);
@@ -1079,6 +1143,45 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.branch(0x30, "gp_sw_exit");
     a.jmp("gp_sw_loop");
     a.label("gp_sw_exit");
+    a.op(0x60);
+
+    // =========================================================================
+    // SUBROUTINE: Mario_CheckWarpPipe (v0.9.0)
+    // Interactive Overworld Physical SMW Green Warp Pipe on World 1 Yoshi's Island (Screen 0x2C, r09 c07)!
+    // Ground Pounding right beside the Green Warp Pipe (`X = $08C4..$08FF, Y = $0B10..$0B5F` on $8A == 0x2C)
+    // triggers the native SPC700 Descending Warp Pipe SFX ($012E=0x15), +5 Secret Bonus Coins, & Full Star Power!
+    // =========================================================================
+    a.label("Mario_CheckWarpPipe");
+    a.abs(0xAD, W_GP_IMPACT);
+    a.branch(0xF0, "pipe_rts");
+    a.dp(0xA5, 0x10);
+    a.imm8(0xC9, 0x09); // Overworld Mode only!
+    a.branch(0xD0, "pipe_rts");
+    a.dp(0xA5, 0x8A);
+    a.imm8(0xC9, 0x2C); // World 1 Mario's House Green Warp Pipe (0x2C, r09 c07 -> X=0x08E0, Y=0x0B30)!
+    a.branch(0xD0, "pipe_rts");
+    a.dp(0xA5, 0x23);
+    a.imm8(0xC9, 0x08); // X_hi == 0x08 (left half of Screen 0x2C, cols 0..7)
+    a.branch(0xD0, "pipe_rts");
+    a.dp(0xA5, 0x21);
+    a.imm8(0xC9, 0x0B); // Y_hi == 0x0B (lower half of Screen 0x2C, rows 8..15)
+    a.branch(0xD0, "pipe_rts");
+    a.dp(0xA5, 0x22);
+    a.imm8(0xC9, 0xC4); // X_lo >= 0xC4 (right beside Green Warp Pipe at 0xE0, never at doorway 0xB8!)
+    a.branch(0x90, "pipe_rts");
+    a.dp(0xA5, 0x20);
+    a.imm8(0xC9, 0x10); // Y_lo >= 0x10
+    a.branch(0x90, "pipe_rts");
+    a.imm8(0xC9, 0x60); // Y_lo < 0x60
+    a.branch(0xB0, "pipe_rts");
+    // TRIGGER PHYSICAL SMW GREEN WARP PIPE REWARD & SFX!
+    a.imm8(0xA9, 0x15);
+    a.abs(0x8D, 0x012E); // Authentic Native SPC700 SMW Descending Warp Pipe Triple-Pulse SFX!
+    a.imm8(0xA9, 0x80);
+    a.abs(0x8D, 0xF36E); // Refill Star Power to 100% FULL!
+    a.imm8(0xA9, 0x05);
+    a.jsr("Mario_AddCoinsAndStar"); // +5 Warp Pipe Bonus Gold Coins!
+    a.label("pipe_rts");
     a.op(0x60);
 
     // =========================================================================
@@ -1142,6 +1245,11 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.jmp("spr_next");
 
     a.label("spr_vuln_nonzero");
+    // Boss Encounter Class (0x05): NEVER ordinary-stomp-killed (handled by Ground Pound Stagger & Boss Combat!)
+    a.imm8(0xC9, 0x05);
+    a.branch(0xD0, "spr_not_boss");
+    a.jmp("spr_next");
+    a.label("spr_not_boss");
     // Spiked (2): ONLY Starman or Ground Pound Slam (4) can defeat!
     a.imm8(0xC9, 0x02);
     a.branch(0xD0, "check_bbox");
@@ -1464,10 +1572,12 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.abs(0xB9, 0x0DD0); // LDA $0DD0, Y
     a.imm8(0xC9, 0x09);
     a.branch(0xD0, "bowl_next");
-    // Check vulnerability table != 0 (can bowl Goombas, Koopas, Spinies, Boos!)
+    // Check vulnerability table != 0 and != 5 (can bowl Goombas, Koopas, Spinies, Boos — never insta-KO Bosses!)
     a.abs(0xB9, 0x0E20);
     a.op(0xAA);
     a.long(0xBF, MARIO_ENGINE_BANK, STOMP_TABLE_ADDR);
+    a.branch(0xF0, "bowl_next");
+    a.imm8(0xC9, 0x05);
     a.branch(0xF0, "bowl_next");
     // Proximity |Y.x - shell.x| < 18 && |Y.y - shell.y| < 18
     a.op(0x38);
@@ -1615,6 +1725,57 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.branch(0x30, "boo_exit");
     a.jmp("boo_loop");
     a.label("boo_exit");
+    a.op(0x60);
+
+    // =========================================================================
+    // SUBROUTINE: Mario_UpdateBossCombat (v0.9.0)
+    // Authentic Mario Boss Arena Feedback Loop:
+    //   Whenever ANY active Koopaling or King Bowser (class 0x05) takes damage ($0EA0,X >= 4)
+    //   while W_BOSS_HIT_CD == 0, award +2 Gold Coins ($7E:F360) + +4 Star Power ($7E:F36E) + Coin Chime!
+    // =========================================================================
+    a.label("Mario_UpdateBossCombat");
+    a.abs(0xAD, W_BOSS_HIT_CD);
+    a.branch(0xF0, "boss_scan_go");
+    a.abs(0xCE, W_BOSS_HIT_CD);
+    a.op(0x60);
+
+    a.label("boss_scan_go");
+    a.dp(0xA5, 0x10);
+    a.imm8(0xC9, 0x07); // Dungeon / Boss Arena Mode only
+    a.branch(0xD0, "boss_exit");
+    a.imm8(0xA2, 0x0F);
+    a.label("boss_loop");
+    a.abs(0xBD, 0x0DD0);
+    a.imm8(0xC9, 0x09);
+    a.branch(0xD0, "boss_next");
+    a.abs(0xBD, 0x0EA0); // Damage recoil flash timer >= 4?
+    a.imm8(0xC9, 0x04);
+    a.branch(0x90, "boss_next");
+    // Check if sprite is Boss Class (0x05)!
+    a.op(0x8A);
+    a.op(0x48);
+    a.abs(0xBD, 0x0E20);
+    a.op(0xAA);
+    a.long(0xBF, MARIO_ENGINE_BANK, STOMP_TABLE_ADDR);
+    a.op(0xA8);
+    a.op(0x68);
+    a.op(0xAA);
+    a.op(0x98);
+    a.imm8(0xC9, 0x05);
+    a.branch(0xD0, "boss_next");
+    // BOSS HIT CONFIRMED -> Mario Coin & Star-Power Synergy!
+    a.imm8(0xA9, 0x18); // 24-frame debounce
+    a.abs(0x8D, W_BOSS_HIT_CD);
+    a.imm8(0xA9, 0x2B);
+    a.abs(0x8D, 0x012E); // Mario Coin Chime!
+    a.imm8(0xA9, 0x02);
+    a.jsr("Mario_AddCoinsAndStar");
+    a.op(0x60);
+
+    a.label("boss_next");
+    a.op(0xCA);
+    a.branch(0x10, "boss_loop");
+    a.label("boss_exit");
     a.op(0x60);
 
     // =========================================================================
@@ -1916,7 +2077,15 @@ mod tests {
             "Goomba must be standard stompable (class 1)"
         );
         assert_eq!(stomp[0x98], 2, "Thwomp must be armored/spiked (class 2)");
-        assert_eq!(stomp[0xCE], 0, "Bosses/NPCs must not be stomped (class 0)");
+        assert_eq!(
+            stomp[0xD6], 5,
+            "Final Boss King Bowser must be Boss Encounter Class (5)"
+        );
+        assert_eq!(
+            stomp[0x92], 5,
+            "Morton Koopa must be Boss Encounter Class (5)"
+        );
+        assert_eq!(stomp[0x35], 0, "Toad NPC must not be targeted (class 0)");
 
         let pals = build_mario_powerup_palettes();
         assert_eq!(

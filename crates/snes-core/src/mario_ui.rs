@@ -3315,6 +3315,43 @@ pub fn build_smw_smiling_bush_16x16() -> [[u8; 16]; 16] {
     out
 }
 
+/// Build the LEFT half (8x16 = top `(0,2)` & bottom `(0,3)` on `Sheet 0x3C`, H-mirrored by ALTTP!)
+/// of an iconic **3D Glossy Super Mario World Emerald-Green Warp Pipe** (`m16 = 0x21B`, `m32 = 0x02D4`)!
+/// Uses `Sheet 0x3C` Pal 6 (Yoshi's Island Emerald Green):
+///   `1`=Dark pipe outline & hollow lip shadow, `5`=Deepest forest green shadow, `2`=Dark curved shade,
+///   `6`=Vibrant SMW Emerald Green body, `3`=Bright lime cylinder highlight, `4`=Pure white specular gloss!
+/// H-mirrored across `x = 7 | 8` to render a crisp 16x16 rimmed SMW Warp Pipe on lush Overworld grass!
+pub fn build_smw_ow_warp_pipe_half_8x16() -> ([[u8; 8]; 8], [[u8; 8]; 8]) {
+    let top_rows: [&str; 8] = [
+        "11111111", // Top lip crisp dark outline
+        "15263451", // Rim lip bevel -> dark hollow opening toward pipe center!
+        "15263115", // Hollow dark mouth interior framed by glossy green lip!
+        "15263436", // Thick glossy SMW Warp Pipe collar
+        "15263436", // Thick glossy SMW Warp Pipe collar
+        "11111111", // Crisp dark rim underside divider line
+        ".1555555", // Drop shadow cast beneath overhanging pipe lip
+        ".1526343", // Cylindrical vertical pipe shaft
+    ];
+    let bot_rows: [&str; 8] = [
+        ".1526343", // Cylindrical vertical pipe shaft (white gloss + lime + emerald + deep green!)
+        ".1526343", ".1526343", ".1526343", ".1526343", ".1526343",
+        ".1111111", // Crisp ground contact base rim on Yoshi's Island grass
+        "........", // Pure meadow grass peeks cleanly underneath!
+    ];
+    let parse8 = |rs: [&str; 8]| -> [[u8; 8]; 8] {
+        let mut g = [[0u8; 8]; 8];
+        for (y, r) in rs.iter().enumerate() {
+            for (x, b) in r.bytes().enumerate() {
+                if (b'1'..=b'7').contains(&b) {
+                    g[y][x] = b - b'0';
+                }
+            }
+        }
+        g
+    };
+    (parse8(top_rows), parse8(bot_rows))
+}
+
 /// Iconic **Snow-White Super Mushroom Polka-Dot** tile (8x8) on Mario's Red Mushroom House Roof (`Sheet 0x44 (11,3)`)!
 /// Uses `Aux 0` colors: `5`=deep crimson roof shade, `6`=vibrant Super Mario red roof, `7`=pure snow-white mushroom spot!
 pub fn build_smw_mushroom_roof_spot_8x8() -> [[u8; 8]; 8] {

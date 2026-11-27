@@ -1251,7 +1251,7 @@ mod tests {
             let audit = super::mixer::audit_legend_of_peach_output(&zelda, &target, &session)
                 .expect("audit_legend_of_peach_output must pass");
             assert_eq!(audit.output_size_bytes, 2_097_152);
-            assert_eq!(audit.verified_raw_sheets, 49);
+            assert_eq!(audit.verified_raw_sheets, 51);
             println!(
                 "HARDWARE AUDIT PASSED: 100% COMPLIANT WITH SNES AND SUPER FAMICOM (SHA-256: {})!",
                 audit.output_sha256
@@ -1555,18 +1555,70 @@ mod tests {
             4,
             "Ghost House Boo (0x8B) must use Orientation-Freeze AI (class 4) in built ROM"
         );
-        // 2. Distinct Koopaling Dungeon Fortress architectural palettes active (verified via $07:FA90 -> DungPal[8/9/12])
+        // 2. ALL 8 Distinct Koopaling & King Bowser Dungeon Fortress architectural palettes active (verified via $07:FA90 -> DungPal[1,4,5,8,9,10,12,13])
+        for &dung_pal_pc in &[
+            0x0DD7E8usize, // DungPal[1]  Wendy's Coral Sea Palace
+            0x0DDA04,      // DungPal[4]  Lemmy's Star-Ice Circus Fortress
+            0x0DDAB8,      // DungPal[5]  Larry's Sun-Baked Chocolate Desert Pyramid
+            0x0DDCD4,      // DungPal[8]  Morton's Red-Brick Koopa Fortress
+            0x0DDD88,      // DungPal[9]  Iggy's Indigo Boo Ghost House
+            0x0DDE3C,      // DungPal[10] Roy's Midnight Koopa Castle
+            0x0DDFA4,      // DungPal[12] Ludwig's Industrial Airship Mech Keep
+            0x0DE058,      // DungPal[13] King Bowser's Obsidian & Lava Keep
+        ] {
+            assert_ne!(
+                &target.data[dung_pal_pc..dung_pal_pc + 14],
+                &z_bytes[dung_pal_pc..dung_pal_pc + 14],
+                "Koopaling/Bowser Fortress DungPal at 0x{dung_pal_pc:06X} must be patched!"
+            );
+        }
+
+        // v0.9.0 INVARIANTS (The Ultimate Mario Adventure — ZRI-009, ZRI-017, ZRI-008, ZRI-019):
+        // 1. Title Screen Royal Princess Peach Star-Scepter (raw 0xA5 = SP[0x32] = load_alttp sheet 0xA3) replaces Master Sword blade cleanly!
+        let (van_a5, _, _) = super::mixer::load_alttp_3bpp_sheet(&z_bytes, 0xA3).unwrap();
+        let (blt_a5, _, _) = super::mixer::load_alttp_3bpp_sheet(&target.data, 0xA3).unwrap();
+        assert_eq!(blt_a5.len(), 0x600);
         assert_ne!(
-            &target.data[0x0DDCD4..0x0DDCE2],
-            &z_bytes[0x0DDCD4..0x0DDCE2]
+            &blt_a5[0..16 * 24],
+            &van_a5[0..16 * 24],
+            "Title Screen raw 0xA5 (SP[0x32]) Master Sword must be replaced by Royal Peach Star-Scepter!"
         );
-        assert_ne!(
-            &target.data[0x0DDD88..0x0DDD96],
-            &z_bytes[0x0DDD88..0x0DDD96]
+        // Preserve untouched Title Screen sparkle tiles at rows 2-3 cols 4..15!
+        assert_eq!(
+            &blt_a5[(2 * 16 + 4) * 24..(2 * 16 + 16) * 24],
+            &van_a5[(2 * 16 + 4) * 24..(2 * 16 + 16) * 24],
+            "Title Screen sparkle tiles in raw 0xA5 row 2 cols 4..15 must remain intact!"
         );
+        // 2. Physical Overworld SMW Green Warp Pipe in Light World (sheet 0x3C = raw 0x3E) & Dark World (raw 0x3F = sheet 0x3D) + Screen 0x2C (9,7)!
+        let (van_3c, _, _) = super::mixer::load_alttp_3bpp_sheet(&z_bytes, 0x3C).unwrap();
+        let (blt_3c, _, _) = super::mixer::load_alttp_3bpp_sheet(&target.data, 0x3C).unwrap();
         assert_ne!(
-            &target.data[0x0DDFA4..0x0DDFB2],
-            &z_bytes[0x0DDFA4..0x0DDFB2]
+            &blt_3c[32 * 24..33 * 24],
+            &van_3c[32 * 24..33 * 24],
+            "Light World sheet 0x3C (raw 0x3E) (0,2) must contain Physical 3D Green SMW Warp Pipe!"
+        );
+        let (van_3f, _, _) = super::mixer::load_alttp_3bpp_sheet(&z_bytes, 0x3D).unwrap();
+        let (blt_3f, _, _) = super::mixer::load_alttp_3bpp_sheet(&target.data, 0x3D).unwrap();
+        assert_ne!(
+            &blt_3f[32 * 24..33 * 24],
+            &van_3f[32 * 24..33 * 24],
+            "Dark World raw 0x3F (sheet 0x3D) (0,2) must contain Physical 3D Bowser Warp Pipe!"
+        );
+        assert_eq!(
+            edit2c.tiles[9 * 16 + 7],
+            0x02D4,
+            "Screen 0x2C (r09, c07) must hold Physical SMW Green Warp Pipe Map32 0x02D4!"
+        );
+        // 3. Boss Combat Synergy Class (0x05) active for King Bowser (0xD6) & Morton Koopa (0x92)!
+        assert_eq!(
+            target.data[super::mario_engine::STOMP_TABLE_PC + 0xD6],
+            5,
+            "King Bowser (0xD6) must use Boss Combat Class (5) in built ROM"
+        );
+        assert_eq!(
+            target.data[super::mario_engine::STOMP_TABLE_PC + 0x92],
+            5,
+            "Morton Koopa (0x92) must use Boss Combat Class (5) in built ROM"
         );
     }
 }

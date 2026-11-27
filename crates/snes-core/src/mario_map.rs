@@ -603,6 +603,14 @@ pub fn classify_map16_grammar(m16: u16) -> Map16Grammar {
             east: Grass,
             collision: LiftableProp,
         },
+        // Physical SMW 3D Green Warp Pipe sitting flush on pure grass (v0.9.0 ZRI-017 eliminated!)
+        0x21B => Map16Grammar {
+            north: Grass,
+            south: Grass,
+            west: Grass,
+            east: Grass,
+            collision: SolidOrSpecial,
+        },
         // Southern jumpable cliff top border (MUST sit directly above 0x520 SouthCliffWall!)
         0x16C => Map16Grammar {
             north: Grass,
@@ -780,19 +788,18 @@ pub fn patch_world1_yoshis_island(
         grid[r * 16 + c] = tile;
     };
 
-    // 1. Seamless Yoshi's Island Courtyard (Screen 0x2C, Mario's House Hub — BUG 03 FIXED!):
+    // 1. Seamless Yoshi's Island Courtyard (Screen 0x2C, Mario's House Hub — BUG 03 FIXED + v0.9.0 Green Warp Pipe!):
     //    - r08 c05..c06: Lush walkable Yoshi's Island grass directly outside Mario's House door (0x001D)
-    //    - r09 c04, c07: Interactive SMW Turn-Block pairs on PURE GREEN GRASS (0x06C7 -> 20F,20F / 034,034)!
-    //                    (Replaces v0.5.0's buggy 0x1B76 which leaked brown cliff tops 0x16C into row 9!)
+    //    - r09 c04:      Interactive SMW Turn-Block pair on PURE GREEN GRASS (0x06C7 -> 20F,20F / 034,034)!
     //    - r09 c05..c06: Clean walkable green meadow corridor straight south (0x001D)
+    //    - r09 c07:      Physical 3D Glossy Green SMW Warp Pipe on PURE GREEN GRASS (0x02D4 -> 034,034 / 21B,034)!
     //    - r10 c05:      Pure green meadow above unbroken south cliff top (0x0208 -> 034,034 / 16C,16C)!
-    //                    (Replaces vanilla 0x1B76's orphaned brown dirt triangle 0x0AD/0x0AC between Turn-Blocks!)
     set(&mut scr2c.tiles, 8, 5, 0x001D);
     set(&mut scr2c.tiles, 8, 6, 0x001D);
     set(&mut scr2c.tiles, 9, 4, 0x06C7); // Pure grass + 2 SMW Turn-Blocks (ZERO cliff top strip!)
     set(&mut scr2c.tiles, 9, 5, 0x001D);
     set(&mut scr2c.tiles, 9, 6, 0x001D);
-    set(&mut scr2c.tiles, 9, 7, 0x06C7); // Pure grass + 2 SMW Turn-Blocks (ZERO cliff top strip!)
+    set(&mut scr2c.tiles, 9, 7, 0x02D4); // v0.9.0 Physical 3D Glossy Green SMW Warp Pipe (ZRI-017 eliminated!)
     set(&mut scr2c.tiles, 10, 5, 0x0208); // Pure grass + continuous cliff top 16C (ZERO brown dirt triangle!)
 
     // 2. Southern Yoshi's Island Meadow (row 15, 100% pure-grass props — replaces buggy dirt-edge 0x06A0!)
@@ -837,7 +844,7 @@ pub fn build_transformed_overworld_screen(
     let mut edited = orig.clone();
 
     if screen_id == 0x2C {
-        // Preserve exact v0.6.0 visually verified World 1 Yoshi's Island Courtyard (0 BUG 03 regression!)
+        // Preserve exact v0.6.0 visually verified World 1 Yoshi's Island Courtyard + v0.9.0 Physical Green Warp Pipe!
         let set = |grid: &mut [u16], r: usize, c: usize, tile: u16| {
             grid[r * 16 + c] = tile;
         };
@@ -846,7 +853,7 @@ pub fn build_transformed_overworld_screen(
         set(&mut edited.tiles, 9, 4, 0x06C7);
         set(&mut edited.tiles, 9, 5, 0x001D);
         set(&mut edited.tiles, 9, 6, 0x001D);
-        set(&mut edited.tiles, 9, 7, 0x06C7);
+        set(&mut edited.tiles, 9, 7, 0x02D4);
         set(&mut edited.tiles, 10, 5, 0x0208);
         set(&mut edited.tiles, 15, 4, 0x07CC);
         set(&mut edited.tiles, 15, 11, 0x07CC);
@@ -883,6 +890,11 @@ pub fn build_transformed_overworld_screen(
         }
 
         let mut props_placed = 0usize;
+        let mut pipe_placed = false;
+        let is_warp_pipe_hub = matches!(
+            screen_id,
+            0x13 | 0x18 | 0x1E | 0x2B | 0x35 | 0x58 | 0x5B | 0x5E | 0x6C | 0x75
+        );
         let mut grass_candidates: Vec<(usize, usize)> = Vec::new();
         let mut grass_edited = 0usize;
 
@@ -905,6 +917,15 @@ pub fn build_transformed_overworld_screen(
 
                 if t == 0x001D {
                     grass_candidates.push((r, c));
+                    // v0.9.0: Place 1 Physical 3D SMW Green/Bowser Warp Pipe (`0x02D4`) inside an open 3x3 grass clearing
+                    // on curated Light & Dark World Overworld Hubs (ZRI-017 eliminated — zero corridor blocking!)
+                    if is_warp_pipe_hub && !pipe_placed && is_open_center[r][c] {
+                        edited.tiles[r * 16 + c] = 0x02D4;
+                        pipe_placed = true;
+                        props_placed += 1;
+                        grass_edited += 1;
+                        continue;
+                    }
                     // Place up to 2 well-spaced liftable SMW Turn-Block / Smiling Bush landmarks inside wide open clearings
                     // (never on adjacent cells, never blocking any corridor since all 8 surrounding 32x32 tiles remain pure grass!)
                     if is_open_center[r][c]
@@ -1028,6 +1049,13 @@ pub fn patch_all_mushroom_kingdom_overworld(
             if sid != 0x2C {
                 for k in 0..256 {
                     if orig.tiles[k] != edited.tiles[k] {
+                        let r_k = k / 16;
+                        let c_k = k % 16;
+                        let is_open_3x3 = (2..14).contains(&r_k)
+                            && (2..14).contains(&c_k)
+                            && (r_k - 1..=r_k + 1).all(|rr| {
+                                (c_k - 1..=c_k + 1).all(|cc| orig.tiles[rr * 16 + cc] == 0x001D)
+                            });
                         let oq = decode_map32_quads(&orig_snapshot, orig.tiles[k]);
                         let eq = decode_map32_quads(&orig_snapshot, edited.tiles[k]);
                         if let (Some(oq), Some(eq)) = (oq, eq) {
@@ -1038,7 +1066,10 @@ pub fn patch_all_mushroom_kingdom_overworld(
                                 let grass_to_prop =
                                     is_pure_walkable_grass_m16(&orig_snapshot, oq[q])
                                         && is_walkable_or_liftable_m16(&orig_snapshot, eq[q]);
-                                if !identical && !grass_to_prop {
+                                let grass_to_warp_pipe = is_open_3x3
+                                    && is_pure_walkable_grass_m16(&orig_snapshot, oq[q])
+                                    && eq[q] == 0x21B;
+                                if !identical && !grass_to_prop && !grass_to_warp_pipe {
                                     coll_ok = false;
                                 }
                             }
@@ -1182,6 +1213,10 @@ mod tests {
         assert_eq!(
             decode_map32_quads(&rom_bytes, 0x07CC),
             Some([0x036, 0x036, 0x034, 0x034])
+        );
+        assert_eq!(
+            decode_map32_quads(&rom_bytes, 0x02D4),
+            Some([0x034, 0x034, 0x21B, 0x034])
         );
 
         let orig = read_overworld_screen(&rom_bytes, 0x2C, "W1", "Orig").unwrap();

@@ -6,6 +6,39 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ---
 
+## [0.9.0] — 2026-11-27 — The Ultimate Mario Adventure
+
+### Pillar 1 — Title Screen Master Sword 100% Eliminated (`mario_intro.rs`, `ZRI-009: 10 -> 0`)
+- Disassembled ALTTP's Title Screen Master Sword OAM routine (`$0E:BE1A..$0E:BF84`, 10 `16×16` sprites `0x00..0x0E, 0x20, 0x22`, `attr = 0x21` OBJ Pal 0) and pinpointed its exact compressed sprite sheet in FR PAL ROM: **`raw 0xA5` (`SP[0x32]`, PC `0x0B3CAD`)**.
+- Replaced all 10 Master Sword sprites (while preserving the original sparkle tiles in rows 2–3 cols `4..15` bit-identical!) with an authentic 16-bit **Royal Princess Peach Golden Star-Scepter & Super Star Crown**: gleaming SMW Super Star finial (`0x00`), Princess Peach's jeweled golden crown (`0x02`), feathered SMW Paratroopa royal wings (`0x20`/`0x22`), jeweled royal scepter collar (`0x04`), ornate golden-pearl scepter shaft (`0x06..0x0C`), and rounded golden orb finial (`0x0E` — zero sword blade/tip!). Tuned Title OBJ Pal 0 Sapphire (`0x0DD43A = 0x7544`) & Star Gold (`0x0DD444 = 0x039F`). Visually verified live on cycle-accurate `bsnes` (`docs/media/screenshots/01_title_screen.png`).
+
+### Pillar 2 — Physical 3D Glossy Green SMW Overworld Warp Pipes (`mario_ui.rs`, `mixer.rs`, `mario_world.rs`, `mario_map.rs`, `mario_engine.rs`, `ZRI-017: 10 -> 0`)
+- Crafted 3D glossy emerald-green SMW Warp Pipe graphics (`build_smw_ow_warp_pipe_half_8x16`) with rimmed lip, dark hollow mouth, white specular shine, and curved shading into slot `(0,2)/(0,3)` (`m16 = 0x21B`, Pal 6 Emerald Green, solid `TileAttr = 0x27`) of both Light World (`raw 0x3E` / sheet `0x3C`) and Dark World (`raw 0x3F`) Overworld prop sheets, relocating Heavy Rock Brick/Skull Blocks cleanly to `(3,2)/(3,3)` (`m16 = 0x239`).
+- Placed Physical SMW Green Warp Pipe **`m32 = 0x02D4`** (`[0x034, 0x034, 0x21B, 0x034]`) directly in **World 1 Yoshi's Island Mario's House Front Yard (`Screen 0x2C r09 c07`)** and inside strictly verified open 3×3 `0x001D` clearings on curated Light & Dark World Overworld Hubs (`0` grammar violations, `0` collision regressions, `0` border breaks across all 128 screens).
+- Added **`Mario_CheckWarpPipe`** (`$22:9000`): Ground Pounding beside Mario's Front-Yard Green Warp Pipe (`$8A == 0x2C`, `$23 == 0x08`, `$21 == 0x0B`, `X_lo >= 0xC4`, `Y_lo in 0x10..0x5F`) triggers the native SPC700 **Descending Warp Pipe Triple-Pulse SFX (`$012E = 0x15`)**, refills Star Power to 100% (`$7E:F36E = 0x80`), and awards **`+5` Secret Bonus Gold Coins** (visually verified rolling `250 -> 255 -> 260`).
+
+### Pillar 3 — Complete 8 / 8 Bespoke Koopaling & King Bowser Fortress Palettes (`mario_world.rs`, `ZRI-008: 4 -> 0`)
+- Completed ROM-disassembly-verified (`$07:FA90`) architectural wall & floor overhauls for ALL 5 remaining major dungeons (joining Morton `[8]`, Iggy `[9]`, and Ludwig `[12]` -> **8/8 bespoke SMW Fortresses!**):
+  - **`DungPal[1]` (`0x0DD7E8`, Room `0x006`):** Wendy's Turquoise & Coral Sea Palace.
+  - **`DungPal[4]` (`0x0DDA04`, Room `0x0DE`):** Lemmy's Glacial Frost-Cyan Star-Ice Circus Fortress.
+  - **`DungPal[5]` (`0x0DDAB8`, Room `0x033`):** Larry's Sun-Baked SMW Chocolate Island Desert Pyramid.
+  - **`DungPal[10]` (`0x0DDE3C`, Room `0x0AC`):** Roy's Midnight Violet-Slate & Magenta Koopa Castle.
+  - **`DungPal[13]` (`0x0DE058`, Room `0x00C`/`0x00D`):** King Bowser's Obsidian & Lava Keep.
+
+### Pillar 4 — 65c816 Boss Combat Mechanics (`mario_engine.rs`, `ZRI-019: 2 -> 0`)
+- Added **Boss Encounter Class `0x05`** in `$22:B000` covering all 12 Boss sprite IDs (`0x09, 0x53, 0x54, 0x7A, 0x88, 0x8C, 0x92, 0xA2, 0xBD, 0xCB, 0xCC, 0xCD, 0xCE, 0xD6`), safely excluded from instant stomp/shell-bowling KOs so multi-phase boss scripts never break.
+- Added **Boss Ground Pound Stagger & Coin Shower** inside `Mario_CheckGroundPoundShockwave` (`$0EA0 = 0x16` recoil flash, `$011A = 0x12` fortress shake, `+3` Gold Coins & `+6` Star Power, safe `-2` HP chip only if `HP >= 4`) and **`Mario_UpdateBossCombat`** (`W_BOSS_HIT_CD = $7E:F51B`, awarding `+2` Gold Coins + `+4` Star Power + Mario Coin Chime on every boss damage recoil, 24-frame debounce) — visually verified live on Morton (`0x05A`), Wendy (`0x006`, `250 -> 268`), Pokeys (`0x033`, `250 -> 261`), and cycle-accurate `bsnes` Final King Bowser (`0x000`, `250 -> 263`).
+
+### Transparent Quality Scores, Dual-Emulator QA & Build Verification (`v0.9.0`)
+- **Mario Identity Score raised to `98.1%`** (up from `91.8%` in `v0.8.0`), **Perceptible Zelda Residue reduced to `1.9%`** (`8 / 416` honest remaining weight), and **Gameplay Depth Score raised to `97.5%`** ([`docs/QUALITY_SCORES.json`](docs/QUALITY_SCORES.json)).
+- Built **`scripts/qa_engine_v090.py`** verifying **10/10 live scenarios (`VISUAL_PASS`)** on `snes_faust` (8) and cycle-accurate `bsnes` (2), updating the 33-table Mega SQLite DB (`980+` rows). Pixel inspection caught and resolved 1 Pass-1 index mismatch (`raw 0x32` -> `raw 0xA5`) before release.
+- Deterministic 2 MiB LoROM build (dual independent runs bit-identical via `cmp` + `sha256sum`): `671` hardware patches across `18` rules (`~2.6 s`), `51` LZ2 sheets audited (including `raw 0xA5` & `raw 0x3E`), `226` relocated blocks in `$23..$3F` (`0` overlaps), `32/32` passing Rust tests, `0` clippy warnings, `0` repo safety leaks.
+- **SNES Checksum / Complement:** `0xBC86` / `0x4379` (Valid: `true`)
+- **Output CRC32:** `261F4214`
+- **Output SHA-256:** `5546dfaec62b98dc8c91bbbc58a7b16df6de91b9d8e6f0d56a1b7f1b36693fbd`
+
+---
+
 ## [0.8.0] — 2026-11-27 — Super Mario Universe Revolution
 
 ### Native 65c816 Super Mario Universe Engine (`mario_engine.rs`, Bank `$22:9000..$22:B2FF`, WRAM `$7E:F500..$7E:F53F`)
