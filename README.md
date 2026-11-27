@@ -7,7 +7,7 @@
 </p>
 
 <h1 align="center">THE LEGEND OF PEACH</h1>
-<h3 align="center">A Mario to the Mushroom Kingdom — v0.7.0 Mushroom Kingdom: World Transformation</h3>
+<h3 align="center">A Mario to the Mushroom Kingdom — v0.8.0 Super Mario Universe Revolution</h3>
 
 <p align="center">
   <strong>Two legendary SNES worlds. One genuine Super Mario action-adventure built on native 65c816 hardware.</strong>
@@ -30,17 +30,22 @@
 
 ---
 
-**The Legend of Peach: A Mario to the Mushroom Kingdom** transforms *The Legend of Zelda: A Link to the Past* into a genuine top-down **Super Mario** SNES action-adventure — complete with native 65c816 **Mario Jumping**, **Mario Stomp Combat**, **Super Mario Hammer**, **Fire Mario live palette transformation**, **Super Starman rainbow invincibility**, **native SPC700 Mario Sound Effects**, **19 native N-SPC Mario musical tracks**, **108/128 systematically transformed Light & Dark World Overworld screens** (plus **Bowser's Obsidian Lava Citadel & Volcanic Kingdom**), **Koopa Hammer Bro Guards** (zero medieval Zelda swords), and **all 12/12 Super Mario World bosses + all 16/16 Mario gameplay states** live-verified on dual SNES emulator cores.
+**The Legend of Peach: A Mario to the Mushroom Kingdom** transforms *The Legend of Zelda: A Link to the Past* into a genuine top-down **Super Mario** SNES action-adventure — complete with native 65c816 **Mario Jumping**, **Ground Pound with live hardware Dungeon ON/OFF Block Flipping**, **Koopa Shell Retract, Kick & Wall-Ricochet Bowling**, **SMW Boo Orientation-Freeze AI**, a **6-Form Live Power-Up State Machine** (**Classic, Fire Mario, Ice Mario, Cape Mario Slow-Descent Glide, Playable Yoshi Companion with Flutter Jump & SMW 1-Hit Damage Shield, and Resource-Balanced Super Starman**), **Turn-Block Coin Rewards**, **Distinct Koopaling Fortress Palettes** (Morton's Volcanic Fortress, Iggy's Indigo SMW Ghost House, Ludwig's Molten Mech Fortress), **108/128 systematically transformed Overworld screens**, **19 native SPC700 Mario music tracks + native Mario SFX**, and **all 12/12 Super Mario World bosses** live-verified on dual SNES emulator cores (`Mario Identity Score: 91.8%`, `Perceptible Zelda Residue: 8.2%`).
 
-Powered by a pure, headless **Rust** binary transformation engine, the project reads your own legally obtained original backups of *A Link to the Past* and *Super Mario World*, applies **661 verified SNES hardware patches** across **18 rules** (`49` audited compressed graphics sheets, all `303` player DMA poses remapped cleanly in Bank `$00`/`$0D`/`$10`, custom 65c816 gameplay assembly in Bank `$22`, `108` relocated Map32 world screens across Banks `$3B..$3F` verified against hardware `$00:FBD9` collision & terrain grammar with `0` overlaps, rewritten zero-hyphen 372-message French narrative including Castle Bowser dialogues, 19 native N-SPC musical themes across 25 contexts, and native SPC700 Mario SFX), and outputs a **bit-for-bit deterministic 2 MiB SNES LoROM cartridge image**.
+Powered by a pure, headless **Rust** binary transformation engine, the project reads your own legally obtained original backups of *A Link to the Past* and *Super Mario World*, applies **664 verified SNES hardware patches** across **18 rules** (`49` audited compressed graphics sheets, all `303` player DMA poses remapped cleanly in Bank `$00`/`$0D`/`$10`, custom 65c816 Super Mario Universe Engine in Bank `$22:9000..$22:B2FF`, `108` relocated Map32 world screens across Banks `$3B..$3F` verified against hardware `$00:FBD9` collision & terrain grammar with `0` overlaps, rewritten zero-hyphen 372-message French narrative, 19 native N-SPC musical themes across 25 contexts, and native SPC700 Mario SFX), and outputs a **bit-for-bit deterministic 2 MiB SNES LoROM cartridge image** (`SHA-256: 2270d55f8f4d09a164a939213531be80e4237a94488f535749708801ba925fd8`, Checksum `0x1B55 / 0xE4AA`).
 
 > **Zero Copyrighted ROMs Included:** This repository contains **only original Rust source code, tooling, and documentation**. You must provide your own legal personal backups of both required SNES games to build the crossover locally. See [Required Original Games](#required-original-games).
 
 ---
 
-## Gameplay Showcase (`v0.7.0 — Mushroom Kingdom: World Transformation`)
+## Gameplay Showcase (`v0.8.0 — Super Mario Universe Revolution`)
 
-All screenshots below are **100% authentic, unretouched live captures** from the locally built deterministic `v0.7.0` ROM (`SHA-256: f975131b...dfee`) running in **Mednafen (`snes_faust` and cycle-accurate `snes` / bsnes)**.
+All screenshots below are **100% authentic, unretouched live captures** from the locally built deterministic `v0.8.0` ROM (`SHA-256: 2270d55f...5fd8`) running in **Mednafen (`snes_faust` and cycle-accurate `snes` / bsnes)**.
+
+<p align="center">
+  <img src="docs/media/screenshots/23_v080_mario_revolution_mechanics_gallery.png" alt="All 12 v0.8.0 Super Mario Universe Revolution mechanics, power-ups, Yoshi shield, Boo AI, Koopa Shell ricochet, and Koopaling Fortresses live verified" width="95%" /><br />
+  <sub><strong>Super Mario Universe Revolution (<code>v0.8.0</code> — <code>12 / 12 VISUAL_PASS</code>)</strong> — Ground Pound live hardware ON/OFF Block Flip (<code>0x077</code>), Koopa Shell Retract, Kick &amp; Dual Wall Ricochet (<code>0x081</code>), SMW Boo Orientation-Freeze AI in Iggy's Indigo Ghost House (<code>0x059</code>), Electric Frost-Cyan Ice Mario, Golden Cape Mario Slow-Descent Glide, Playable Yoshi Companion Mount &amp; 1-Hit Damage Shield (<code>14/14</code> full hearts!), Balanced Starman drain, Turn-Block Coin Throw (<code>250 -&gt; 251</code>), Morton/Iggy/Ludwig Fortresses, and cycle-accurate <code>bsnes</code> King Bowser parity.</sub>
+</p>
 
 <p align="center">
   <img src="docs/media/screenshots/20_v070_all_12_bosses_gallery.png" alt="All 12 Super Mario World bosses live verified in their real arenas in v0.7.0" width="95%" /><br />
@@ -114,17 +119,19 @@ All screenshots below are **100% authentic, unretouched live captures** from the
 
 ## Key Features
 
-### Native 65c816 Super Mario Gameplay Engine (`mario_engine.rs`, Bank `$22:9000`)
-- **Genuine Top-Down Mario Jumping (`L` or `R`):** Full 8.8 fixed-point parabolic jump physics with variable height (short-hop or ~22px full arc), crisp dark oval ground shadow underneath Mario, 8-direction air control, airborne hazard clearance, and automatic safe reset on room/mode transitions.
-- **Genuine Mario Stomp Combat (`$22:9800` Vulnerability Table):** Descending onto stompable enemies (Koopas, Goombas, Buzzies, Rex, Monty Moles, Dry Bones, Cheep Cheeps) deals stomp damage or triggers a classic defeat puff, awards **+1 Gold Coin**, grants post-stomp i-frames, plays the Mario Stomp pop SFX, and bounces Mario upward (extra height when holding `L`/`R`). Spiked/armored enemies (Spinies, Thwomps, Chain Chomps) safely resist ordinary stomps.
-- **Super Mario Hammer (`B`):** Replaces melee sword swings, File Select sword, and Start Menu `EQUIPEMENT` weapons with a glossy black-iron & wooden-handle Super Mario Hammer.
-- **Unified Power-Up State Machine (`$22:9900` Live CGRAM Palettes):** Equipping `FLEUR DE FEU` live-swaps Mario into pure white-cap, blazing crimson-overalls **Fire Mario**; pressing `L + R` consumes Star Power to activate 4-palette flashing rainbow **Super Starman** invincibility with instant contact-kill.
+### Native 65c816 Super Mario Universe Engine (`mario_engine.rs`, Bank `$22:9000..$22:B2FF`)
+- **Variable Mario Jump (`L`/`R`), Cape Slow-Descent Glide & Yoshi Flutter Jump:** 8.8 fixed-point parabolic jump physics with crisp ground shadow, `-0.75 px/f` slow-descent glide with **Cape Mario** (`PLUME DE CAPE`), and 16-frame **Yoshi's Island Flutter Jump** while riding Yoshi.
+- **Authentic Mario Ground Pound & Hardware ON/OFF Block Flip:** Tap `Down` mid-air (`Z >= 7 px`) for a 6-frame stall -> `-5 px/f` slam -> hardware screen shake (`$011A`), armored enemy break (`+2` Coins), and **live hardware Dungeon ON/OFF Crystal Switch flipping (`$7E:C172 ^= 1`, Submodule `$16`)** visually verified toggling Room `0x077` `RED <-> BLUE`.
+- **Real Koopa Shell Retract, Kick & Dual Wall-Ricochet Bowling (`$22:B000` class `0x03`):** First stomp retracts Koopa Troopas / Hammer Bros / Buzzy Beetles into a Stunned Shell (`+1` Coin) -> walking into it kicks it at `±3 px/f`, ricocheting cleanly off walls and bowling through enemies (`+2` Coins).
+- **Authentic SMW Boo Orientation-Freeze AI (`$22:B000` class `0x04`):** Overworld (`0x19`) & Ghost House (`0x8B`) Boos freeze motionless when Mario faces them and creep stealthily toward Mario when he turns his back!
+- **6-Form Live CGRAM Power-Up State Machine (`$22:B100`, 270 B) + Playable Yoshi Companion:** Classic Mario, **Fire Mario** (`0x06`), **Ice Mario** (`0x07`, Electric Frost-Cyan + Ice Stomp Shatter), **Cape Mario** (`0x13`, SMW Golden Trim + Glide), **Playable Yoshi Companion** (`0x0E` `FILET YOSHI`, Emerald Saddle, Higher Jump, Flutter Jump & **SMW 1-Hit Damage Shield** absorbing 100% HP loss!), and **Resource-Balanced Super Starman (`L + R`)** with continuous Star-Power drain.
+- **Turn-Block / Bush Throw Coin Reward & Super Mario Hammer (`B`):** Throwing lifted Smiling Bushes / Turn-Blocks awards `+1` Gold Coin (`$7E:F360`) + `+4` Star Power + Coin Chime.
 
-### World, Cast, Bosses & French Narrative Overhaul
-- **Structured Rust Map32 Overworld Editor (`mario_map.rs`):** Lossless Big-Endian LC_LZ2 JSON editor verified across all 64 Light World screens, featuring redesigned **World 1 — Yoshi's Island (`Screen 0x2C`)** relocated cleanly into LoROM Bank `$3B` ([`docs/maps/world1_yoshis_island.json`](docs/maps/world1_yoshis_island.json)).
+### World, Fortresses, Cast, Bosses & Transparent Scoring
+- **108 / 128 Transformed Overworld Screens + Distinct Koopaling Fortresses (`mario_map.rs`, `mario_world.rs`):** `56/64` Light World + `52/64` Dark World Bowser Volcanic Kingdom screens (`0` seams/collision breaks), **Bowser's Obsidian Lava Citadel (`0x5B`)**, plus ROM-verified (`$07:FA90`) architectural palettes for **Morton's Volcanic Fortress (`DungPal[8]`)**, **Iggy's Indigo SMW Ghost House (`DungPal[9]`)**, and **Ludwig's Molten Mech Fortress (`DungPal[12]`)**.
 - **Complete 100% Super Mario World Boss Roster (All 12 Bosses):** 6 Giant Chargin' Chucks, 3 Giant Pokeys, Giant Wiggler, Castle Tower King Bowser, all 7 Koopalings (Morton Jr., Wendy O., rebuilt Winged Iggy, Roy, Lemmy, Larry, Ludwig), and 4-sheet Final Boss **Giant King Bowser** in an Obsidian Volcanic Throne Room.
-- **Zero-Overlap, Zero-Hyphen French Story (`mario_intro.rs`):** Live-patched Bank `$0C` compression dictionary plus deterministic single-emission Bank `$1C` 372-message repacker (verified by unit tests: `0` duplicate line breaks, `0` hyphenated word splits) with original playful Mario story rewrites.
-- **De-Zeldafication Tracking:** Measured **Zelda Residue Index** reduced from `94.9` (`v0.4.0`) to **`19.2`** (`v0.5.0`, **−79.8%**), raising the **Mario Identity Index** to **`80.8`** ([`docs/ZELDA_RESIDUE_REGISTRY.json`](docs/ZELDA_RESIDUE_REGISTRY.json)).
+- **Zero-Overlap, Zero-Hyphen French Story (`mario_intro.rs`):** 372-message deterministic French narrative (`0` duplicate line breaks, `0` hyphenated word splits).
+- **Mario Universe Bible & Transparent Quality Scores:** `72` cataloged Mario elements ([`docs/MARIO_UNIVERSE_REGISTRY.json`](docs/MARIO_UNIVERSE_REGISTRY.json)) and multi-dimensional auditable scoring ([`docs/QUALITY_SCORES.json`](docs/QUALITY_SCORES.json)): **Perceptible Zelda Residue** reduced from `94.9%` (`v0.4.0`) -> `19.2%` (`v0.5.0`) -> `13.2%` (`v0.7.0`) -> **`8.2%`** (`v0.8.0`), raising **Mario Identity Score** to **`91.8%`**!
 
 ### Native SNES Hardware Audio (19 N-SPC Tracks + Native Mario SFX — No MSU-1)
 - **19 Native SPC700 N-SPC Musical Tracks across 25 Contexts (`mario_music.rs`):** SMW Title Calypso, Overworld, Athletic, Forest of Illusion, Vanilla Dome, Star Road Waltz, Valley of Bowser, Bonus Room / Yoshi's House, Underwater Waltz, Ghost House, Castle, SMB 1-1 / 1-2 Underground, SMB3 Airship March, Koopalings Boss, Final King Bowser Battle, Peach Sanctuary, Starman, and Course Clear Fanfare.
@@ -186,7 +193,7 @@ Both original ROMs below are verified locally against **No-Intro** SNES catalog 
 | **Base ROM** | *The Legend of Zelda: A Link to the Past* (`Legend of Zelda, The - A Link to the Past (France).sfc`) | France (PAL), Rev 1.0 | `1,048,576` B (1 MiB) | `29a0d5812ccbb4b11bdb55d8f751a2a797b4110bf402ca8ba15eb2bf85db7b39` |
 | **Donor ROM** | *Super Mario World* (`Super Mario World (Europe).sfc`) | Europe (PAL), Rev 1.0 | `524,288` B (512 KiB) | `b5be1dba3012b6811a5660fbf2981cb23cdd1e48f845a42df00f0f55b19f0392` |
 
-> Full verification details (expected `v0.6.0` output SHA-256 `2004714a74f35fbf6c6c581f25b86d0b40d6729dd38c089f65e7b69e68a202ca`, Checksum `0xC419` / `0x3BE6`, CRC32 `D5E69FF4`) are documented in [`docs/ROM_REQUIREMENTS.md`](docs/ROM_REQUIREMENTS.md).
+> Full verification details (expected `v0.8.0` output SHA-256 `2270d55f8f4d09a164a939213531be80e4237a94488f535749708801ba925fd8`, Checksum `0x1B55` / `0xE4AA`, CRC32 `113947D1`) are documented in [`docs/ROM_REQUIREMENTS.md`](docs/ROM_REQUIREMENTS.md) and [`docs/QUALITY_SCORES.json`](docs/QUALITY_SCORES.json).
 
 ---
 
@@ -255,21 +262,21 @@ Read the full technical deep-dive in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.
 
 | Target | Status | Notes |
 | :--- | :--- | :--- |
-| **Mednafen (`snes_faust`)** | **Verified** | Live-tested on `v0.6.0` (`2004714a...`) across World 1 Koopa contact (`12 fps`), Fire Mario 4-dir cast, seamless Screen `0x2C` terrain, Royal Blue Kamek Shop, 16-bit Toad Room `0x0103`, Sanctuary, Winged Iggy Koopa (anchored Paratroopa wings), and Final King Bowser. |
-| **Mednafen (`snes` / bsnes-accuracy)** | **Verified** | Cycle-accurate PPU/DMA/65c816/SPC700 verification of World 1 Screen `0x2C` terrain, Start Menu, Fire Mario, Starman Jump, and Final King Bowser Room `0x0000` + French dialogue + combat. |
+| **Mednafen (`snes_faust`)** | **Verified (`VISUAL_PASS`)** | Live-tested on `v0.8.0` (`2270d55f...5fd8`) across 11/12 revolution scenarios (Ground Pound ON/OFF flip, Koopa Shell Kick & Dual Ricochet, SMW Boo Orientation-Freeze AI, Ice Mario, Cape Glide, Yoshi Mount & 1-Hit Shield, Balanced Starman, Turn-Block Coin Reward, Morton/Iggy/Ludwig Fortresses) + full `v0.7.0` 12/12 Boss & 16/16 State suites. |
+| **Mednafen (`snes` / bsnes-accuracy)** | **Verified (`VISUAL_PASS`)** | Cycle-accurate PPU/DMA/65c816/SPC700 verification of Final King Bowser Room `0x0000` + Fire Mario + Ground Pound + French dialogue (`0` divergence vs `snes_faust`). |
 | **Standalone bsnes / Ares / Snes9x / RetroArch** | **Not Tested Locally** | Standard 2 MiB LoROM (`0x20`, PAL 50 Hz, no enhancement chips, no MSU-1). Expected compatible; see [`docs/HARDWARE_VALIDATION.md`](docs/HARDWARE_VALIDATION.md). |
-| **Real SNES / Super Famicom / FXPAK Pro** | **Architecturally Compliant (Untested on Physical Hardware)** | Strictly respects LoROM 32 KiB single-bank boundaries, valid checksum/complement (`0xC419` / `0x3BE6`), OAM/VRAM/CGRAM/SPC700 limits, and clean DMA timing. Community physical-hardware test reports are welcome! |
+| **Real SNES / Super Famicom / FXPAK Pro** | **Architecturally Compliant (`NOT_TESTED` on Physical Hardware)** | Strictly respects LoROM 32 KiB single-bank boundaries, valid checksum/complement (`0x1B55` / `0xE4AA`), `< 1.7%` CPU budget, OAM/VRAM/CGRAM/SPC700 limits, and clean DMA timing. Never claimed as `HARDWARE_PASS` without a physical console run. |
 
 ---
 
-## Roadmap (`v0.7.0+`)
+## Roadmap (`v0.9.0 — The Ultimate Mario Adventure`)
 
-See [`docs/NEXT_ACTIONS.md`](docs/NEXT_ACTIONS.md) for the complete backlog:
+See [`docs/NEXT_ACTIONS.md`](docs/NEXT_ACTIONS.md) and [`docs/QUALITY_SCORES.json`](docs/QUALITY_SCORES.json) for the complete backlog:
 
-- [ ] **Multi-World Map32 Redesign & Warp Pipe Entrances:** Extend `mario_map.rs` to Toad Town, Yoshi's Meadow, and Valley of Bowser with visual Overworld Warp Pipes.
-- [ ] **Koopa Guard Weapon Overhaul & Title Screen BG2:** Replace Koopa guard blades with Hammer Bro hammers and remove the Title Screen Master Sword BG2 silhouette.
-- [ ] **Custom Boss AI & Rideable Yoshi Mount:** Expand Bank `$22` (`$22:C000..$22:FFFF`) with dedicated Koopaling/Bowser AI patterns and a rideable Yoshi mount (`$7E:F510..$7E:F51F`).
-- [ ] **Multi-Region & Physical Hardware Testing:** Add verified USA (NTSC 60 Hz) offset profiles and test on real SNES / FXPAK Pro consoles.
+- [ ] **Title Screen BG2 Cleanse (`ZRI-009`):** Replace the residual BG2 Master Sword silhouette with an authentic SMW Castle / Peach Crown crest.
+- [ ] **Physical Overworld Warp Pipe Entrances (`ZRI-017`):** Sculpt physical Map32 Green SMW Warp Pipes into key Light & Dark World portals.
+- [ ] **Custom 65c816 Boss Phase AI (`ZRI-019`):** Add Mario-specific Koopaling & King Bowser attack phases and coin/star drops.
+- [ ] **Multi-Emulator & Physical SNES Validation (`v1.0.0`):** Validate on real unmodified PAL 50 Hz SNES + FXPAK Pro, standalone `ares`/`Snes9x`, and study USA NTSC 60 Hz support.
 
 ---
 

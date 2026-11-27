@@ -1,38 +1,39 @@
-# Hardware Performance & Resource Budget Report — v0.7.0
+# Hardware Performance & Resource Budget Report — v0.8.0
 
 **Target Hardware:** Unmodified Physical SNES / Super Famicom (2 MiB LoROM, 65c816 @ 2.68/3.58 MHz, PPU, SPC700, 128 KiB WRAM, 64 KiB VRAM, 512+32 B OAM, 512 B CGRAM, 64 KiB ARAM, 8 KiB SRAM)  
-**ROM Built:** `build/legend_of_peach_v0.7.0.sfc` (`2,097,152` bytes, SHA-256 `f975131b5eaeee99ee7215ae636a380946ddc48832d3e7be95a11ab5d344dfee`)
+**ROM Built:** `build/legend_of_peach_v0.8.0.sfc` (`2,097,152` bytes, SHA-256 `2270d55f8f4d09a164a939213531be80e4237a94488f535749708801ba925fd8`, Checksum `0x1B55 / 0xE4AA`)
 
 ---
 
 ## 1. ROM Bank Utilization (2 MiB LoROM — Strict 32 KiB Bank Boundaries)
 
-| Region | LoROM Banks | PC Range | Capacity | v0.6.0 Used | v0.7.0 Used | Headroom | Status |
+| Region | LoROM Banks | PC Range | Capacity | v0.7.0 Used | v0.8.0 Used | Headroom | Status |
 |---|---|---|---:|---:|---:|---:|---|
-| Base ALTTP Core + Audio + Dialogues | `$00..$1F` | `0x000000..0x0FFFFF` | 1,048,576 B | In-place | In-place (`0x08A000..0x08A2FF` untouched) | Protected | `STATIC_PASS` |
+| Base ALTTP Core + Audio + Dialogues | `$00..$1F` | `0x000000..0x0FFFFF` | 1,048,576 B | In-place | In-place (`0x08A000..0x08A2FF` untouched; `DungPal[8/9/12]` patched) | Protected | `STATIC_PASS` |
 | 3D Mario Trio Intro Buffers | `$20..$21` | `0x100000..0x10FFFF` | 65,536 B | ~65 KiB | ~65 KiB | Reserved | `STATIC_PASS` |
-| Custom 65c816 Mario Engine & Tables | `$22` | `0x110000..0x117FFF` | 32,768 B | 2,560 B | 2,560 B (`$22:8000..$22:99FF`) | **30,208 B free** | `STATIC_PASS` |
-| Relocated LC_LZ2 Graphics Sheets | `$23..$3A` | `0x118000..0x1D7FFF` | 786,432 B | ~17 KiB (11 sheets) | ~17.5 KiB (11 sheets) | **>768 KiB free** | `STATIC_PASS` |
-| Relocated Overworld Map32 Streams | `$3B..$3F` | `0x1D8000..0x1FFFFF` | 163,840 B | ~460 B (1 screen) | **~48.5 KiB (108 screens, 216 streams)** | **~115 KiB free** | `STATIC_PASS` |
+| Custom 65c816 Mario Engine & Tables | `$22` | `0x110000..0x117FFF` | 32,768 B | 2,560 B | **~2,520 B** (`$22:8000` intro + `$22:9000` ~1.5 KiB engine + `$22:B000` 256 B table + `$22:B100` 270 B 9-palettes) | **~30,248 B free** | `STATIC_PASS` |
+| Relocated LC_LZ2 Graphics Sheets | `$23..$3A` | `0x118000..0x1D7FFF` | 786,432 B | ~17.5 KiB | ~17.5 KiB (`11` relocated sheets) | **>768 KiB free** | `STATIC_PASS` |
+| Relocated Overworld Map32 Streams | `$3B..$3F` | `0x1D8000..0x1FFFFF` | 163,840 B | ~48.5 KiB | ~48.5 KiB (`108` screens, `216` streams) | **~115 KiB free** | `STATIC_PASS` |
 
-**Memory Overlap Audit:** `0` overlaps across all `661` hardware patches and `225` relocated blocks (`audit_legend_of_peach_output()` enforced at build time).
+**Memory Overlap Audit:** `0` overlaps across all `664` hardware patches and `225` relocated blocks (`audit_legend_of_peach_output()` enforced at build time).
 
 ---
 
-## 2. CPU, VBlank, DMA, OAM & WRAM Budgets
+## 2. CPU, VBlank, DMA, OAM & WRAM Budgets (`v0.8.0`)
 
 | Subsystem | Hardware Limit (PAL 50 Hz) | Measured / Analytical Usage | Safety Margin |
 |---|---|---|---|
-| **65c816 Mario Engine (`$22:9000`)** | ~71,000 cycles / frame | ~220 cycles grounded; ~580 cycles airborne + 16-slot stomp scan | `< 0.85%` of frame budget |
-| **VBlank Palette Swap (Fire/Starman)** | ~2,600 B DMA / VBlank (PAL) | 30 B WRAM CGRAM buffer (`$7E:C6E2..$7E:C6FF`, `$15 = 1`) via vanilla NMI | `0` extra DMA channels |
-| **WRAM Allocation** | 128 KiB (`$7E..$7F`) | `14` bytes active in verified free block `$7E:F500..$7E:F50D` (`$7E:F50E..$7E:F53F` reserved for `v0.8.0`) | `50` bytes free in block |
-| **OAM Entries / Scanline** | 128 sprites / frame, 32 / scanline | Preserves native ALTTP OAM slot budgets; Winged Iggy (`0x029`) & Final Bowser (`0x000`) verified zero tile overflow in `bsnes` | `VISUAL_PASS` (`bsnes`) |
-| **SPC700 ARAM** | 64 KiB | 19 N-SPC tracks + 5 resident Mario SFX patches fit strictly inside vanilla bank allocations (`$D000..$FCBF` & `$17C0..$284F`) | `STATIC_PASS` |
-| **SRAM Save File** | 8 KiB (`0x2000` B) | 100% vanilla-compatible save checksum (`0x5A5A` complement) | `DYNAMIC_PASS` |
+| **65c816 Engine Idle Frame (`$22:9000`)** | ~71,000 cycles / frame | ~210 cycles (grounded fast-path: mode/area gate + Yoshi/Jump/Boo/PowerUp checks) | **`0.30%`** of frame budget |
+| **65c816 Engine Worst-Case Frame** | ~71,000 cycles / frame | ~1,180 cycles (simultaneous Ground Pound 16-slot shockwave + active Koopa Shell bowling scan + 3 active Ghost House Boos + 30 B CGRAM refresh) | **`1.66%`** of frame budget |
+| **Live 6-Form CGRAM Palette Swap** | ~2,600 B DMA / VBlank (PAL) | 30 B WRAM CGRAM copy (`$7E:C6E2..$7E:C6FF`, `$15 = 1`) on form change or every 8th frame for non-Classic forms (~180 cycles = `0.25%`) | `0` extra DMA channels |
+| **Dungeon ON/OFF Switch Flip** | Native ALTTP VBlank DMA | Delegates 100% to ALTTP hardware Submodule `$16` (`$7E:C172 ^= 1 ; $11 = $16`) | `0` custom VBlank risk |
+| **WRAM Allocation** | 128 KiB (`$7E..$7F`) | `64` bytes in verified conflict-free block `$7E:F500..$7E:F53F` (Ground Pound, Koopa Shell, Yoshi Companion, Balanced Starman, 16-slot Boo freeze anchors) | `0` conflicts |
+| **OAM Entries / Scanline** | 128 sprites / frame, 32 / scanline | Zero extra OAM tiles spawned; Koopa Shell reuses original enemy slot `X`, Yoshi/Ice/Cape/Fire swap live CGRAM | `VISUAL_PASS` (`bsnes`) |
+| **SPC700 ARAM & SRAM** | 64 KiB ARAM / 8 KiB SRAM | 19 N-SPC tracks + 5 resident SFX in-place; 100% vanilla-compatible SRAM (`0x5A5A` checksum) | `STATIC_PASS` |
 
 ---
 
-## 3. PAL 50 Hz vs. NTSC 60 Hz Compatibility Analysis
+## 3. PAL 50 Hz vs. NTSC 60 Hz Assessment
 
-- **Current Target (`FR PAL` base ROM):** Runs natively at **50 Hz PAL** (312 scanlines, generous ~68-line VBlank window). Every single capture in `v0.7.0` (`23/23` scenarios on `snes_faust` and cycle-accurate `snes`/bsnes) executes cleanly with zero VBlank overrun or screen tearing.
-- **NTSC 60 Hz Considerations (`v0.8.0+` Study):** Running a PAL-timed ROM at 60 Hz shortens VBlank from ~68 to ~38 scanlines and speeds up 65c816 tick loops by 20% (while SPC700 music pitch/tempo remains unaffected because the SPC700 has its own independent 24.576 MHz crystal). Because our Bank `$22` Mario engine adds `< 0.9%` CPU overhead and `0` custom VBlank DMA transfers, it is architecturally 60 Hz-safe; full NTSC USA base-ROM support requires remapping base ALTTP pointer tables (tracked for future milestones without breaking the verified FR PAL build).
+- **Verified Target (`FR PAL` 50 Hz):** All `12/12` `v0.8.0` scenarios (plus `23/23` `v0.7.0` scenarios) run cleanly with zero slowdown, zero VBlank overrun, and crisp SPC700 audio on `snes_faust` and cycle-accurate `bsnes`.
+- **NTSC 60 Hz Headroom:** Even under tighter 60 Hz timing (~59,500 cycles/frame), worst-case `v0.8.0` 65c816 execution (~1,180 cycles = `< 2.0%`) leaves >98% CPU margin and uses `0` custom VBlank DMA channels.

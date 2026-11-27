@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0.0",
+  "project": "The Legend of Peach: A Mario to the Mushroom Kingdom",
+  "release": "v0.8.0 — Super Mario Universe Revolution",
+  "rom_sha256": "2270d55f8f4d09a164a939213531be80e4237a94488f535749708801ba925fd8",
+  "rom_checksum": "0x1B55 / 0xE4AA (Valid: true)",
+  "rom_crc32": "113947D1",
+  "scoring_policy": "Every metric exposes its exact formula, numerator, denominator, validation tier, and remaining honest gaps. Physical SNES hardware is NEVER assumed passed without real console execution.",
+  "dimensions": {
+    "mario_identity_score": {
+      "score_pct": 91.8,
+      "formula": "100 - perceptible_zelda_residue_score",
+      "evolution": {
+        "v0.4.0": 5.1,
+        "v0.5.0": 80.8,
+        "v0.6.0": 80.8,
+        "v0.7.0": 86.8,
+        "v0.8.0": 91.8
+      },
+      "sub_scores": {
+        "player_feel_and_physics": { "score_pct": 96.0, "evidence": "Variable Jump, Ground Pound + ON/OFF flip, Multi-Stomp Combo, Cape Glide, Yoshi Flutter + 1-Hit Shield, Balanced Starman, Turn-Block Coin Throw (all VISUAL_PASS)" },
+        "enemy_and_boss_mario_ai": { "score_pct": 88.0, "evidence": "Koopa Shell Retract/Kick/Dual Wall Ricochet/Bowling, SMW Boo Orientation-Freeze AI (0x19 & 0x8B), 12/12 Boss visual conversions; custom boss phase AI slated for v0.9.0" },
+        "world_and_fortress_art": { "score_pct": 89.0, "evidence": "108/128 LW+DW Map32 Overworld screens, Bowser Volcanic Kingdom & Obsidian Citadel (0x5B), Morton Volcanic / Iggy Indigo Ghost House / Ludwig Molten Mech Fortresses (DungPal[8/9/12]); physical Overworld Warp Pipes & Title BG2 sword silhouette remain for v0.9.0" },
+        "narrative_audio_and_ui": { "score_pct": 94.0, "evidence": "372 French Mario dialogues (0 hyphens/overlaps), 19 native N-SPC Mario tracks across 25 contexts, 5 native SPC700 Mario SFX, 6-form Power-Up HUD & Start Menu" }
+      }
+    },
+    "perceptible_zelda_residue_score": {
+      "score_pct": 8.2,
+      "formula": "100 * sum(unresolved_weights) / sum(all_audited_weights) = 100 * 34 / 416",
+      "numerator_unresolved_weight": 34,
+      "denominator_total_weight": 416,
+      "evolution": {
+        "v0.4.0": 94.9,
+        "v0.5.0": 19.2,
+        "v0.6.0": 19.2,
+        "v0.7.0": 13.2,
+        "v0.8.0": 8.2
+      },
+      "remaining_honest_residues": [
+        { "id": "ZRI-009", "weight": 10, "item": "Title Screen BG2 Master Sword silhouette (deferred to v0.9.0)" },
+        { "id": "ZRI-017", "weight": 10, "item": "Physical Overworld Warp Pipe entrances & network (deferred to v0.9.0)" },
+        { "id": "ZRI-007", "weight": 4, "item": "20/128 steep cliff/mountain Overworld screens untouched by Map32 surface enrichment" },
+        { "id": "ZRI-008", "weight": 4, "item": "Secondary dungeon palettes beyond Morton/Iggy/Ludwig/Bowser" },
+        { "id": "ZRI-014", "weight": 4, "item": "Minor vanilla HUD counter frame pixels" },
+        { "id": "ZRI-019", "weight": 2, "item": "Custom 65c816 Koopaling/Bowser behavioral phase scripting (v0.9.0)" }
+      ]
+    },
+    "gameplay_depth_score": {
+      "score_pct": 87.5,
+      "formula": "Weighted completion of 8 core Super Mario adventure pillars (7.0 / 8.0 pillars LIVE VISUAL_PASS)",
+      "pillars": {
+        "movement_verticality": { "status": "VISUAL_PASS", "score": 1.0, "features": ["Variable Jump", "Ground Pound", "Cape Slow-Descent Glide", "Yoshi Flutter Jump"] },
+        "powerup_state_machine": { "status": "VISUAL_PASS", "score": 1.0, "features": ["Classic", "Fire Mario", "Ice Mario + Ice Shatter", "Cape Mario", "Yoshi Rider", "Resource-Balanced Starman"] },
+        "enemy_mario_behaviors": { "status": "VISUAL_PASS", "score": 1.0, "features": ["Goomba Stomp Combo", "Koopa Shell Retract/Kick/Ricochet/Bowling", "SMW Boo Orientation-Freeze AI", "Spiked/Armored Ground-Pound Break"] },
+        "interactive_world_blocks": { "status": "VISUAL_PASS", "score": 1.0, "features": ["Ground Pound ON/OFF Hardware Switch Submodule $16", "Turn-Block / Bush Throw Coin & Star-Power Reward", "SMW ? Blocks"] },
+        "companion_system": { "status": "VISUAL_PASS", "score": 1.0, "features": ["Playable Yoshi Mount (FILET YOSHI 0x0E)", "Emerald Saddle", "Higher Jump & Flutter", "SMW 1-Hit Damage Shield"] },
+        "dungeon_and_world_identity": { "status": "VISUAL_PASS", "score": 0.85, "features": ["108/128 Overworld Screens", "Bowser Obsidian Citadel", "Morton/Iggy/Ludwig Distinct Fortresses"] },
+        "boss_encounters": { "status": "VISUAL_PASS", "score": 0.75, "features": ["12/12 Bosses visually converted & live-verified", "Custom Boss AI patterns queued for v0.9.0"] },
+        "warp_network_and_secrets": { "status": "PARTIAL", "score": 0.40, "features": ["Warp Flute/Pipe Menu active", "Physical Overworld Warp Pipe entrances queued for v0.9.0"] }
+      }
+    },
+    "technical_quality_metrics": {
+      "rom_size_bytes": 2097152,
+      "rom_mapping": "2 MiB LoROM (0x20, Stock SNES, 0 enhancement chips, 0 MSU-1, 0 overclock)",
+      "deterministic_bit_identical": true,
+      "hardware_ops": 664,
+      "relocated_blocks": 225,
+      "memory_overlaps": 0,
+      "single_bank_32kib_violations": 0,
+      "wram_used_bytes": 64,
+      "wram_range": "$7E:F500..$7E:F53F (0 vanilla conflicts)",
+      "cpu_budget_idle_pct_pal50": 0.30,
+      "cpu_budget_worst_case_pct_pal50": 1.66,
+      "rust_tests_passed": 32,
+      "rust_tests_failed": 0,
+      "clippy_warnings": 0,
+      "repo_safety_leaks": 0
+    },
+    "test_coverage_matrix": {
+      "static_pass": {
+        "rust_workspace_tests": "32/32",
+        "overworld_screens_decoded": "160/160",
+        "overworld_grammar_collision_borders_audited": "128/128 (108 transformed, 0 violations)",
+        "bank10_player_poses_audited": "303/303",
+        "compressed_lz2_sheets_audited": "49/49",
+        "french_dialogues_audited": "372/372"
+      },
+      "dynamic_and_visual_pass": {
+        "v080_revolution_scenarios": "12/12 VISUAL_PASS (11 snes_faust + 1 cycle-accurate bsnes)",
+        "v070_boss_roster_scenarios": "12/12 VISUAL_PASS",
+        "v070_mario_states_scenarios": "16/16 VISUAL_PASS",
+        "v060_blocking_bugs_non_regression": "7/7 VISUAL_PASS (0 regressions)",
+        "mega_sqlite_db_tables_populated": "33/33 (640 rows, exported to JSON + CSV)"
+      },
+      "hardware_pass": {
+        "physical_snes_fxpak_pro": "0/1 NOT_TESTED (no physical console attached to build host; never claimed)"
+      },
+      "emulators_not_installed_locally": ["Standalone bsnes GUI", "Ares", "Snes9x", "Mesen 2"]
+    }
+  }
+}

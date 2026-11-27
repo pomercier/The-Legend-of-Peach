@@ -1533,5 +1533,40 @@ mod tests {
             &target.data[0x0DE79A..0x0DE7A8],
             &z_bytes[0x0DE79A..0x0DE7A8]
         );
+        assert_ne!(
+            &target.data[0x0DEB36..0x0DEB60],
+            &z_bytes[0x0DEB36..0x0DEB60]
+        );
+
+        // v0.8.0 INVARIANTS (Super Mario Universe Revolution):
+        // 1. 65c816 Mario Universe Engine ($22:9000), 256B Behavior Table ($22:B000), 9 Live Palettes ($22:B100)
+        assert_eq!(
+            target.data[super::mario_engine::STOMP_TABLE_PC + 0x41],
+            3,
+            "Blue Koopa must be Shell-Kickable (class 3) in built ROM"
+        );
+        assert_eq!(
+            target.data[super::mario_engine::STOMP_TABLE_PC + 0x19],
+            4,
+            "Overworld Boo (Poe 0x19) must use Orientation-Freeze AI (class 4) in built ROM"
+        );
+        assert_eq!(
+            target.data[super::mario_engine::STOMP_TABLE_PC + 0x8B],
+            4,
+            "Ghost House Boo (0x8B) must use Orientation-Freeze AI (class 4) in built ROM"
+        );
+        // 2. Distinct Koopaling Dungeon Fortress architectural palettes active (verified via $07:FA90 -> DungPal[8/9/12])
+        assert_ne!(
+            &target.data[0x0DDCD4..0x0DDCE2],
+            &z_bytes[0x0DDCD4..0x0DDCE2]
+        );
+        assert_ne!(
+            &target.data[0x0DDD88..0x0DDD96],
+            &z_bytes[0x0DDD88..0x0DDD96]
+        );
+        assert_ne!(
+            &target.data[0x0DDFA4..0x0DDFB2],
+            &z_bytes[0x0DDFA4..0x0DDFB2]
+        );
     }
 }

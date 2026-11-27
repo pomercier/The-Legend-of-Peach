@@ -1,6 +1,7 @@
 {
-  "schema_version": "1.2.0",
-  "project": "The Legend of Peach — v0.7.0: Mushroom Kingdom World Transformation",
+  "schema_version": "1.3.0",
+  "project": "The Legend of Peach — v0.8.0: Super Mario Universe Revolution",
+  "rom_sha256": "2270d55f8f4d09a164a939213531be80e4237a94488f535749708801ba925fd8",
   "scoring_rubric": {
     "recognizability_scale": "1 (barely noticeable engine artifact) to 5 (instantly unmistakable Zelda icon/mechanic)",
     "exposure_frequency_scale": "1 (rare late-game corner) to 5 (seen every minute / opening screen / core loop)",
@@ -12,35 +13,36 @@
     "v040": { "total_weight": 391, "unresolved_weight": 371, "zri": 94.9, "mii": 5.1 },
     "v050": { "total_weight": 391, "unresolved_weight": 75, "zri": 19.2, "mii": 80.8 },
     "v060": { "total_weight": 391, "unresolved_weight": 75, "zri": 19.2, "mii": 80.8, "note": "7 blocking visual/OAM/terrain bugs fixed; 303/303 Mario poses audited" },
-    "v070": {
+    "v070": { "total_weight": 416, "unresolved_weight": 55, "zri": 13.2, "mii": 86.8, "note": "108/128 OW screens, Bowser Obsidian Citadel, Koopa Hammer Bro weapons, 12/12 Bosses + 16/16 States VISUAL_PASS" },
+    "v080": {
       "total_weight": 416,
-      "unresolved_weight": 55,
-      "zri": 13.2,
-      "mii": 86.8,
-      "honest_assessment": "v0.7.0 eliminates Koopa Guard medieval swords/spears (ZRI-016 -> 0), transforms 108/128 Overworld screens across Light & Dark Worlds (ZRI-007 12 -> 4), overhauls the Dark World into Bowser's Volcanic Kingdom + Obsidian Citadel (ZRI-021 added & resolved 25 -> 0), replaces Castle Tower Bowser's medieval 'occire' dialogue (#316/#318/#319), and achieves 12/12 Bosses + 16/16 Mario States live VISUAL_PASS. Honest remaining residue slated for v0.8.0 Super Mario Universe Revolution: behavioral Mario enemies (Shell Kick, Boo orientation-freeze), Ground Pound & Cape/Ice power-ups, playable Yoshi companion (ZRI-020), physical Overworld Warp Pipe entrances (ZRI-017), Dungeon fortress architecture (ZRI-008), Title BG2 sword silhouette (ZRI-009), and custom Boss behavioral AI (ZRI-019)."
+      "unresolved_weight": 34,
+      "zri": 8.2,
+      "mii": 91.8,
+      "honest_assessment": "v0.8.0 eliminates ZRI-020 (Playable Yoshi Companion Mount + Flutter + 1-Hit Shield -> 0), reduces ZRI-019 (Enemy Mario AI 8 -> 2 via Koopa Shell Retract/Kick/Dual Wall Ricochet/Bowling + SMW Boo Orientation-Freeze AI + Ground Pound ON/OFF hardware flip), reduces ZRI-008 (Dungeon Fortress Architecture 10 -> 4 via ROM-verified DungPal[8/9/12] for Morton Volcanic, Iggy Indigo Ghost House, and Ludwig Molten Mech Fortresses), and adds Ice Mario, Cape Mario Glide, Resource-Balanced Starman, and Turn-Block Throw Coin rewards (all 12/12 VISUAL_PASS on final ROM). Honest remaining 34 weight slated for v0.9.0: Title BG2 sword silhouette (10), physical Overworld Warp Pipe entrances (10), remaining 20/128 cliff OW screens (4), secondary dungeon palettes (4), minor HUD frame pixels (4), and custom boss behavioral phase AI (2)."
     }
   },
   "residues": [
-    { "id": "ZRI-001", "category": "Mechanics", "location": "Core Player Loop ($22:9000 Mario Jump)", "item_weight": 25, "unresolved_weight_v070": 0, "status": "VISUAL_PASS" },
-    { "id": "ZRI-002", "category": "Combat", "location": "Mario Stomp Combat ($22:9800)", "item_weight": 25, "unresolved_weight_v070": 0, "status": "VISUAL_PASS" },
-    { "id": "ZRI-003", "category": "Combat & Presentation", "location": "Super Mario Hammer (raw 0xCF, File Select, Start Menu)", "item_weight": 25, "unresolved_weight_v070": 0, "status": "VISUAL_PASS" },
-    { "id": "ZRI-004", "category": "Power-Up System", "location": "Fire Mario & Super Starman Live CGRAM ($22:9900)", "item_weight": 20, "unresolved_weight_v070": 0, "status": "VISUAL_PASS" },
-    { "id": "ZRI-005", "category": "UI & Cursor", "location": "Mario File Select & Super Star Cursor", "item_weight": 25, "unresolved_weight_v070": 0, "status": "VISUAL_PASS" },
-    { "id": "ZRI-006", "category": "Narrative & Dialogue", "location": "Bank $1C 372 French messages + #316/#318/#319 Castle Bowser", "item_weight": 25, "unresolved_weight_v070": 0, "status": "VISUAL_PASS" },
-    { "id": "ZRI-007", "category": "World Geography", "location": "Overworld Map32 Screens (108/128 LW+DW transformed, 0 seams/collision breaks)", "item_weight": 25, "unresolved_weight_v070": 4, "status": "PARTIAL_VISUAL_PASS_V070" },
-    { "id": "ZRI-008", "category": "Interior & Dungeon Architecture", "location": "Toad Houses + Kamek Shop + Dungeon Fortress Walls", "item_weight": 25, "unresolved_weight_v070": 10, "status": "PARTIAL_V080_QUEUE" },
-    { "id": "ZRI-009", "category": "Title Screen", "location": "Title Screen BG2 Master Sword Silhouette", "item_weight": 25, "unresolved_weight_v070": 10, "status": "PARTIAL_V080_QUEUE" },
-    { "id": "ZRI-010", "category": "Audio SFX", "location": "Native SPC700 Coin/Jump/Stomp/Pipe/Hammer SFX", "item_weight": 20, "unresolved_weight_v070": 0, "status": "STATIC_PASS" },
-    { "id": "ZRI-011", "category": "NPC Sprites", "location": "16-bit Toads (0x0103) & Royal Blue Kamek (0x011F)", "item_weight": 12, "unresolved_weight_v070": 0, "status": "VISUAL_PASS" },
-    { "id": "ZRI-012", "category": "Boss Sprites", "location": "All 12 Bosses including Anchored Winged Iggy (0x029)", "item_weight": 8, "unresolved_weight_v070": 0, "status": "VISUAL_PASS" },
-    { "id": "ZRI-013", "category": "Shop Visuals", "location": "Kamek Shop Digits 150/10/50 & Mario Items", "item_weight": 16, "unresolved_weight_v070": 0, "status": "VISUAL_PASS" },
-    { "id": "ZRI-014", "category": "HUD & Menus", "location": "Mario Start Menu, Fire/Ice Flowers, 7 Yoshi Eggs, Super Mushroom Lives", "item_weight": 20, "unresolved_weight_v070": 4, "status": "PARTIAL_VISUAL_PASS" },
-    { "id": "ZRI-015", "category": "Boss Arena", "location": "Volcanic Bowser Throne Room 0x0000 (bsnes verified)", "item_weight": 12, "unresolved_weight_v070": 0, "status": "VISUAL_PASS" },
-    { "id": "ZRI-016", "category": "Enemy Equipment", "location": "Koopa Guard Weapons (raw 0xBA) -> SMW Hammer Bro Hammers & Spiked Clubs", "item_weight": 12, "unresolved_weight_v070": 0, "status": "VISUAL_PASS" },
-    { "id": "ZRI-017", "category": "World Travel", "location": "Physical Overworld Warp Pipe Entrances & Network", "item_weight": 16, "unresolved_weight_v070": 10, "status": "PARTIAL_V080_QUEUE" },
-    { "id": "ZRI-018", "category": "Interactive Objects", "location": "Turn-Blocks, ? Blocks, ON/OFF Blocks, Coin SFX", "item_weight": 12, "unresolved_weight_v070": 0, "status": "VISUAL_PASS" },
-    { "id": "ZRI-019", "category": "Boss & Enemy Behavioral AI", "location": "Custom 65c816 Koopa Shell Kick, Boo Freeze, Boss Patterns", "item_weight": 8, "unresolved_weight_v070": 8, "status": "V080_QUEUE" },
-    { "id": "ZRI-020", "category": "Companion / Mount", "location": "Playable Yoshi Companion System ($7E:F510..$7E:F52F)", "item_weight": 9, "unresolved_weight_v070": 9, "status": "V080_QUEUE" },
-    { "id": "ZRI-021", "category": "Dark World Identity", "location": "Bowser's Volcanic Kingdom (0x0DE70E, 0x0DE79A) + Obsidian Citadel (0x0DEB36, 0x5B)", "item_weight": 25, "unresolved_weight_v070": 0, "status": "VISUAL_PASS" }
+    { "id": "ZRI-001", "category": "Mechanics", "location": "Core Player Loop ($22:9000 Mario Jump, Ground Pound, Cape Glide, Yoshi Flutter)", "item_weight": 25, "unresolved_weight_v080": 0, "status": "VISUAL_PASS" },
+    { "id": "ZRI-002", "category": "Combat", "location": "Mario Stomp Combo, Ground Pound Armor Break & Ice Stomp Shatter ($22:B000)", "item_weight": 25, "unresolved_weight_v080": 0, "status": "VISUAL_PASS" },
+    { "id": "ZRI-003", "category": "Combat & Presentation", "location": "Super Mario Hammer (raw 0xCF, File Select, Start Menu)", "item_weight": 25, "unresolved_weight_v080": 0, "status": "VISUAL_PASS" },
+    { "id": "ZRI-004", "category": "Power-Up System", "location": "6-Form Live CGRAM State Machine: Classic, Fire, Ice, Cape, Yoshi Rider & Balanced Starman ($22:B100)", "item_weight": 20, "unresolved_weight_v080": 0, "status": "VISUAL_PASS" },
+    { "id": "ZRI-005", "category": "UI & Cursor", "location": "Mario File Select & Super Star Cursor", "item_weight": 25, "unresolved_weight_v080": 0, "status": "VISUAL_PASS" },
+    { "id": "ZRI-006", "category": "Narrative & Dialogue", "location": "Bank $1C 372 French messages + #316/#318/#319 Castle Bowser", "item_weight": 25, "unresolved_weight_v080": 0, "status": "VISUAL_PASS" },
+    { "id": "ZRI-007", "category": "World Geography", "location": "Overworld Map32 Screens (108/128 LW+DW transformed, 0 seams/collision breaks)", "item_weight": 25, "unresolved_weight_v080": 4, "status": "PARTIAL_VISUAL_PASS" },
+    { "id": "ZRI-008", "category": "Interior & Dungeon Architecture", "location": "Toad Houses + Kamek Shop + Morton/Iggy/Ludwig Fortresses (DungPal[8/9/12] VISUAL_PASS)", "item_weight": 25, "unresolved_weight_v080": 4, "status": "PARTIAL_VISUAL_PASS_V080" },
+    { "id": "ZRI-009", "category": "Title Screen", "location": "Title Screen BG2 Master Sword Silhouette", "item_weight": 25, "unresolved_weight_v080": 10, "status": "V090_QUEUE" },
+    { "id": "ZRI-010", "category": "Audio SFX", "location": "Native SPC700 Coin/Jump/Stomp/Pipe/Hammer SFX", "item_weight": 20, "unresolved_weight_v080": 0, "status": "STATIC_PASS" },
+    { "id": "ZRI-011", "category": "NPC Sprites", "location": "16-bit Toads (0x0103) & Royal Blue Kamek (0x011F)", "item_weight": 12, "unresolved_weight_v080": 0, "status": "VISUAL_PASS" },
+    { "id": "ZRI-012", "category": "Boss Sprites", "location": "All 12 Bosses including Anchored Winged Iggy (0x029)", "item_weight": 8, "unresolved_weight_v080": 0, "status": "VISUAL_PASS" },
+    { "id": "ZRI-013", "category": "Shop Visuals", "location": "Kamek Shop Digits 150/10/50 & Mario Items", "item_weight": 16, "unresolved_weight_v080": 0, "status": "VISUAL_PASS" },
+    { "id": "ZRI-014", "category": "HUD & Menus", "location": "Mario Start Menu, Fire/Ice Flowers, 7 Yoshi Eggs, Super Mushroom Lives", "item_weight": 20, "unresolved_weight_v080": 4, "status": "PARTIAL_VISUAL_PASS" },
+    { "id": "ZRI-015", "category": "Boss Arena", "location": "Volcanic Bowser Throne Room 0x0000 (bsnes verified)", "item_weight": 12, "unresolved_weight_v080": 0, "status": "VISUAL_PASS" },
+    { "id": "ZRI-016", "category": "Enemy Equipment", "location": "Koopa Guard Weapons (raw 0xBA) -> SMW Hammer Bro Hammers & Spiked Clubs", "item_weight": 12, "unresolved_weight_v080": 0, "status": "VISUAL_PASS" },
+    { "id": "ZRI-017", "category": "World Travel", "location": "Physical Overworld Warp Pipe Entrances & Network", "item_weight": 16, "unresolved_weight_v080": 10, "status": "V090_QUEUE" },
+    { "id": "ZRI-018", "category": "Interactive Objects", "location": "Ground Pound ON/OFF Hardware Flip ($11=$16) + Turn-Block Throw Coin Reward ($7E:F360)", "item_weight": 12, "unresolved_weight_v080": 0, "status": "VISUAL_PASS" },
+    { "id": "ZRI-019", "category": "Boss & Enemy Behavioral AI", "location": "Koopa Shell Kick/Ricochet/Bowling + SMW Boo Freeze AI (VISUAL_PASS); Custom Boss Phase AI (v0.9.0)", "item_weight": 8, "unresolved_weight_v080": 2, "status": "PARTIAL_VISUAL_PASS_V080" },
+    { "id": "ZRI-020", "category": "Companion / Mount", "location": "Playable Yoshi Companion ($7E:F518, FILET YOSHI 0x0E, Emerald Saddle, Flutter Jump & 1-Hit Shield)", "item_weight": 9, "unresolved_weight_v080": 0, "status": "VISUAL_PASS" },
+    { "id": "ZRI-021", "category": "Dark World Identity", "location": "Bowser's Volcanic Kingdom (0x0DE70E, 0x0DE79A) + Obsidian Citadel (0x0DEB36, 0x5B)", "item_weight": 25, "unresolved_weight_v080": 0, "status": "VISUAL_PASS" }
   ]
 }

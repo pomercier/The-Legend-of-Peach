@@ -1,58 +1,57 @@
 {
-  "schema_version": "1.2.0",
-  "release": "v0.7.0",
-  "rom_sha256": "f975131b5eaeee99ee7215ae636a380946ddc48832d3e7be95a11ab5d344dfee",
-  "rom_checksum": "0x1285",
-  "rom_complement": "0xED7A",
-  "rom_crc32": "F5545171",
+  "schema_version": "1.3.0",
+  "release": "v0.8.0",
+  "rom_sha256": "2270d55f8f4d09a164a939213531be80e4237a94488f535749708801ba925fd8",
+  "rom_checksum": "0x1B55",
+  "rom_complement": "0xE4AA",
+  "rom_crc32": "113947D1",
   "rust_automated_tests": {
     "passed": 32,
     "failed": 0,
     "ignored": 0,
     "clippy_warnings": 0,
     "determinism_verified": true,
-    "hardware_ops": 661,
+    "hardware_ops": 664,
     "relocated_blocks": 225,
     "memory_overlaps": 0
   },
   "blocking_bugs_v060_non_regression": {
     "total_reported": 7,
-    "preserved_and_verified_v070": 7,
+    "preserved_and_verified_v080": 7,
     "regressions": 0
+  },
+  "v080_revolution_live_qa": {
+    "harness": "scripts/qa_engine_v080.py",
+    "mega_sqlite_tables_populated": "33/33 (640 rows, exported to local JSON + CSV)",
+    "executed": 12,
+    "visual_pass": 12,
+    "failed": 0,
+    "pass_1_bugs_caught_and_resolved": 5,
+    "scenarios": [
+      "v080_01_ground_pound_onoff (Room 0x077 live hardware Submodule $16 Red<->Blue ON/OFF flip)",
+      "v080_02_koopa_shell_kick (Room 0x081 Stomp +1 Coin -> Kick -> Dual Wall Ricochet)",
+      "v080_03_boo_freeze_ai (Room 0x059 3 Ghost House Boos freeze f004..f008, creep f009..f014)",
+      "v080_04_ice_mario (Electric Frost-Cyan live CGRAM + Ice cast)",
+      "v080_05_cape_mario_glide (SMW Golden Cape live CGRAM + slow-descent glide)",
+      "v080_06_yoshi_companion_shield (Emerald Saddle mount + Flutter + 14/14 HP 1-Hit Shield + clean remount)",
+      "v080_07_balanced_starman (Rainbow cycle + continuous Star-Power drain + +1 Coin KO)",
+      "v080_08_turnblock_coin_reward (Smiling Bush lift & throw -> Coins 250->251)",
+      "v080_09_morton_lava_fortress (DungPal[8] @ 0x0DDCD4 Volcanic Basalt Fortress)",
+      "v080_10_iggy_ghost_house (DungPal[9] @ 0x0DDD88 Indigo SMW Ghost House + BUG 06 guard)",
+      "v080_11_ludwig_mech_fortress (DungPal[12] @ 0x0DDFA4 Molten Mech Fortress)",
+      "v080_12_bsnes_final_bowser_gp (Cycle-accurate bsnes Fire Mario vs King Bowser + BUG 07 guard)"
+    ]
   },
   "coverage_denominators_honest": {
     "overworld_screens_discovered_and_decoded": { "verified": 160, "total": 160, "status": "STATIC_PASS" },
-    "light_world_screens_audited": { "verified": 64, "total": 64, "status": "STATIC_PASS" },
-    "light_world_screens_map32_transformed": { "verified": 56, "total": 64, "remaining_cliff_wall_only": 8, "grammar_violations": 0, "collision_regressions": 0, "border_breaks": 0, "status": "STATIC_PASS" },
-    "dark_world_screens_audited": { "verified": 64, "total": 64, "status": "STATIC_PASS" },
+    "light_world_screens_map32_transformed": { "verified": 56, "total": 64, "grammar_violations": 0, "collision_regressions": 0, "border_breaks": 0, "status": "STATIC_PASS" },
     "dark_world_screens_map32_transformed": { "verified": 52, "total": 64, "palette_overhaul_all_64": true, "obsidian_citadel_0x5b": true, "status": "VISUAL_PASS" },
     "underworld_rooms_discovered_and_inventoried": { "verified": 296, "total": 296, "populated_rooms": 247, "unique_placed_sprite_ids": 210, "status": "AUDITED" },
     "player_poses_bank10_structural_audit": { "verified": 303, "total": 303, "status": "STATIC_PASS" },
-    "player_states_live_emulated_and_visually_verified": {
-      "verified": 16,
-      "total": 16,
-      "states": [
-        "idle_walk_4dir", "jump_shadow", "stomp_bounce", "super_hammer",
-        "fire_mario_4dir", "super_starman_rainbow", "pause_menu_yoshis", "hurt_recoil",
-        "heavy_lift_carry_4dir", "throw_prop", "deep_water_swim_4dir", "underwater_dive",
-        "push_block", "electric_shock_xray", "pitfall_fall_drop", "ko_spin_and_ko_flat"
-      ],
-      "status": "VISUAL_PASS"
-    },
-    "bosses_live_emulated_and_visually_verified": {
-      "verified": 12,
-      "total": 12,
-      "bosses": [
-        "0x0C8 Chargin' Chucks", "0x033 3 Giant Pokeys", "0x007 Giant Wiggler",
-        "0x020 Castle Tower Bowser", "0x05A Morton Koopa Jr.", "0x006 Wendy O. Koopa",
-        "0x029 Winged Iggy Koopa", "0x0AC Roy Koopa", "0x0DE Lemmy Koopa",
-        "0x090 Larry Koopa", "0x0A4 Ludwig von Koopa", "0x000 Final King Bowser (bsnes)"
-      ],
-      "status": "VISUAL_PASS"
-    },
+    "player_states_live_emulated_and_visually_verified": { "verified": 22, "total": 22, "note": "16 v0.7.0 states + 6 new v0.8.0 states (Ground Pound, Ice Mario, Cape Glide, Yoshi Mount/Flutter/Shield, Balanced Starman, Turn-Block Coin Throw)", "status": "VISUAL_PASS" },
+    "bosses_live_emulated_and_visually_verified": { "verified": 12, "total": 12, "status": "VISUAL_PASS" },
     "compressed_gfx_sheets_audited": { "verified": 49, "total": 49, "relocated": 11, "status": "STATIC_PASS" },
     "french_dialogue_messages_verified": { "verified": 372, "total": 372, "duplicate_linebreaks": 0, "hyphenated_splits": 0, "status": "STATIC_PASS" },
-    "mednafen_qa_scenarios_sqlite": { "executed": 23, "visual_pass": 23, "failed": 0, "dual_core_bsnes_scenarios": 3 },
     "hardware_emulators": {
       "tested": ["Mednafen 1.32.1 (snes_faust)", "Mednafen 1.32.1 (snes / bsnes-accuracy)"],
       "not_tested_locally": ["Standalone bsnes GUI", "Ares", "Snes9x", "Mesen 2", "Physical SNES / Super Famicom / FXPAK Pro"]

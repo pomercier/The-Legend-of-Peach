@@ -1,8 +1,8 @@
 {
-  "schema_version": "1.1.0",
-  "release": "v0.7.0",
-  "rom_sha256": "f975131b5eaeee99ee7215ae636a380946ddc48832d3e7be95a11ab5d344dfee",
-  "description": "Directed dependency graph and memory-region ownership for all 18 canonical fusion rules (661 patches, 225 relocated blocks, 0 overlaps) in v0.7.0.",
+  "schema_version": "1.2.0",
+  "release": "v0.8.0",
+  "rom_sha256": "2270d55f8f4d09a164a939213531be80e4237a94488f535749708801ba925fd8",
+  "description": "Directed dependency graph and memory-region ownership for all 18 canonical fusion rules (664 patches, 225 relocated blocks, 0 overlaps) in v0.8.0.",
   "memory_firewalls": [
     {
       "name": "Protected ALTTP World Map Table",
@@ -18,10 +18,10 @@
       "enforced_by": "audit_legend_of_peach_output()"
     },
     {
-      "name": "Custom 65c816 Assembly & Engine Tables",
+      "name": "Custom 65c816 Super Mario Universe Engine & Tables",
       "pc_range": "0x110000..0x117FFF",
       "banks": "$22",
-      "owner": "mario_intro.rs ($22:8000..$22:81FF) + mario_engine.rs ($22:9000..$22:99FF)",
+      "owner": "mario_intro.rs ($22:8000..$22:81FF) + mario_engine.rs ($22:9000..$22:AFFF code, $22:B000 256B Behavior Table, $22:B100 270B 9-Palette Table)",
       "enforced_by": "EXPANDED_FREE_START = 0x118000"
     },
     {
@@ -43,13 +43,13 @@
     {
       "module": "mario_intro.rs",
       "depends_on": ["disasm_dma.rs", "mixer.rs (GFX tables)"],
-      "owns_regions": ["0x100000..0x1101FF", "0x065A33..0x065CAB", "0x0E0000..0x0E7FFF (372 French messages incl. #316/#318/#319 Bowser)", "0x071C68..0x071E0F", "raw 0x3E/0x3F/0xD8"],
-      "must_run_before": ["mario_engine.rs (requires 2 MiB ROM expansion)", "mario_map.rs (requires 2 MiB ROM expansion)"]
+      "owns_regions": ["0x100000..0x1101FF", "0x065A33..0x065CAB", "0x0E0000..0x0E7FFF (372 French messages)", "0x071C68..0x071E0F", "raw 0x3E/0x3F/0xD8"],
+      "must_run_before": ["mario_engine.rs", "mario_map.rs"]
     },
     {
       "module": "mario_engine.rs",
-      "depends_on": ["mario_intro.rs (2 MiB expansion)", "mario_sfx.rs (SFX2 0x20 jump, SFX3 0x08 stomp, SFX2 0x2B star chime)"],
-      "owns_regions": ["0x111000..0x1119FF", "PC 0x010959/0x011CCA/0x0125C7 (JSL hooks)", "WRAM $7E:F500..$7E:F53F"],
+      "depends_on": ["mario_intro.rs (2 MiB expansion)", "mario_sfx.rs (Jump/Stomp/Coin/Switch/Thud SFX)", "ALTTP hardware Submodule $16 ($7E:C172)"],
+      "owns_regions": ["0x111000..0x1132FF ($22:9000..$22:B2FF)", "PC 0x010959/0x011CCA/0x0125C7 (3 Bank $02 JSL hooks)", "WRAM $7E:F500..$7E:F53F (64 B)"],
       "must_run_before": []
     },
     {
@@ -66,20 +66,14 @@
     },
     {
       "module": "mario_world.rs",
-      "depends_on": ["mixer.rs (free_cursor in $23..$3A)"],
-      "owns_regions": ["Toad Town NPC sheets (raw 0xBD,0xBF,0xC0,0xC1,0xC2,0xC3)", "16 SMW Bestiary sheets", "9 BG Tileset sheets", "DW Volcanic Palettes 0x0DE70E / 0x0DE79A / 0x0DEB36"],
-      "must_run_before": []
-    },
-    {
-      "module": "mixer.rs (Koopa Hammer Bro Guard Weapons)",
-      "depends_on": ["free_cursor in $23..$3A"],
-      "owns_regions": ["raw 0xBA weapon tiles (11,2)/(11,3)/(12,2)/(12,3)/(14..15,2..3)"],
+      "depends_on": ["mixer.rs (free_cursor in $23..$3A)", "ROM Palette Set Table $07:FA90"],
+      "owns_regions": ["Toad Town NPC sheets", "16 SMW Bestiary sheets", "9 BG Tileset sheets", "DW Volcanic Palettes 0x0DE70E/0x0DE79A/0x0DEB36", "Koopaling Fortresses DungPal[8]@0x0DDCD4, DungPal[9]@0x0DDD88, DungPal[12]@0x0DDFA4"],
       "must_run_before": []
     },
     {
       "module": "mario_bosses.rs",
       "depends_on": ["mixer.rs (free_cursor in $23..$3A)"],
-      "owns_regions": ["15 Boss sprite sheets (7 Koopalings + Giant Bowser x4 + Pokeys + Wiggler)", "0x00A7F0 (Room 0x00 RTS cleanse)", "raw 0x15/0x19"],
+      "owns_regions": ["15 Boss sprite sheets (7 Koopalings + Giant Bowser x4 + Pokeys + Wiggler)", "0x00A7F0", "raw 0x15/0x19"],
       "must_run_before": []
     },
     {

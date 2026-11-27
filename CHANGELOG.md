@@ -6,6 +6,42 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ---
 
+## [0.8.0] — 2026-11-27 — Super Mario Universe Revolution
+
+### Native 65c816 Super Mario Universe Engine (`mario_engine.rs`, Bank `$22:9000..$22:B2FF`, WRAM `$7E:F500..$7E:F53F`)
+- **Authentic Mario Ground Pound & Hardware ON/OFF Switch Flip:**
+  - Press `Down` while airborne (`Z >= 7 px`) to execute a 6-frame dramatic mid-air stall (`W_AIRBORNE = 3`) followed by a `-5.0 px/frame` vertical slam (`W_AIRBORNE = 4`).
+  - Impact triggers SNES hardware screen shake (`$011A = 0x0E`), heavy thud SFX (`$012F = 0x0C`), a 48px armor-piercing shockwave cracking Spiked/Armored enemies (`class 2`) for `+2` Gold Coins (`$7E:F360`) & `+4` Star Power, AND **flips nearby Dungeon SMW ON/OFF Crystal Switches (`$0E20 == 0x1E`, `<= 64px`, guarded once-per-impact via `W_TMP_B`) by invoking ALTTP's native hardware Submodule `$16` (`$7E:C172 ^= 1`, `$11 = 0x16`)** — visually verified flipping the entire Room `0x077` ON/OFF block matrix `RED <-> BLUE`!
+- **Real Koopa Shell Retract, Kick & Wall-Ricochet Bowling Engine (`STOMP_TABLE` class `0x03`):**
+  - First stomp on Koopa Troopas / Hammer Bros / Buzzy Beetles (`0x13/0x26/0x41..0x4B/0x8D/0x8E`) retracts them into a **Stunned Koopa Shell** (`W_SHELL_STATE = 1`), awards `+1` Coin (`$7E:F360`), and bounces Mario upward.
+  - Walking into the stunned shell kicks it at `±3 px/frame` along Mario's facing direction (`$2F`), **ricocheting cleanly off walls/boundaries** (`[0x18..0xE4]`, `[0x20..0xD8]`) and **bowling through other active enemies** for instant KOs & `+2` Bonus Coins (visually verified in Room `0x081` with live `+1` Coin increment and dual wall ricochet!).
+- **Authentic SMW Boo Orientation-Freeze AI (`STOMP_TABLE` class `0x04` — Overworld `0x19` & Ghost House `0x8B`):**
+  - Compares Mario's facing vector (`$2F`) against each active Boo every frame using 16-slot WRAM coordinate anchors (`$7E:F520..$7E:F53F`): Boos shyly **freeze motionless** when Mario faces them and **creep stealthily toward Mario** the instant he turns his back (visually verified across 3 simultaneous Boos in Room `0x059`!).
+- **6-Form Live CGRAM Power-Up State Machine (`$22:B100`, 9 BGR555 Palettes = 270 B) + Playable Yoshi Companion:**
+  - `0` **Classic Super Mario**, `1` **Fire Mario** (`$0202 == 0x06`), `2` **Ice Mario** (`$0202 == 0x07` `FLEUR DE GLACE`: Electric Frost-Cyan / Glacier-Blue CGRAM + **Ice Stomp Shatter** bonus `+3` Coins on frozen `$0DD0 == 0x0B` enemies), `3` **Cape Mario** (`$0202 == 0x13` `PLUME DE CAPE`: Blazing SMW Golden Cape CGRAM + `-0.75 px/frame` **Mid-Air Slow-Descent Glide** while holding `L`/`R`), `4` **Playable Yoshi Companion** (`$0202 == 0x0E` `FILET YOSHI`: Vibrant SMW Yoshi Emerald Saddle & Orange Boots, higher jump `+2.78 px/f`, 16-frame **Yoshi's Island Flutter Jump**, and **SMW 1-Hit Damage Absorption Shield** restoring Mario's full HP `$7E:F36D` on enemy contact with 60-frame Classic escape before auto-remount!), and `5..8` **Resource-Balanced Super Starman (`L + R`)** continuously draining Star Power (`-1` every 6 frames from `$7E:F36E`, ending cleanly on depletion).
+  - Protected across all Overworld/interior/warp transitions via `W_PAL_DIRTY` and an 8-frame non-Classic CGRAM guard.
+- **Interactive Turn-Block / Bush Throw Reward & Multi-Stomp Combos:**
+  - Throwing any lifted Smiling Bush or Turn-Block (`$0308` transitioning `1 -> 0`) increments Target Coins (`$7E:F360/$F361`, verified `250 -> 251`), refills `+4` Star Power, and plays the Mario Coin Chime (`$012E = 0x2B`).
+
+### Distinct Koopaling Dungeon Fortress Architecture (`mario_world.rs`, Verified via ROM `$07:FA90`)
+- Disassembled `$01:B609` -> `$07:FA90` (`PaletteSet` -> `DungPal` index) and transformed walls & main floors of three signature Koopaling Fortresses while preserving sprite/torch/switch readability:
+  - **Morton's Volcanic Basalt Fortress (`DungPal[8]` @ `0x0DDCD4`, Room `0x05A`):** Charred volcanic basalt walls, glowing magma-amber mortar, and dark obsidian floor.
+  - **Iggy & Big Boo's SMW Ghost House (`DungPal[9]` @ `0x0DDD88`, Rooms `0x029` & `0x059`):** Spooky deep SMW Ghost House indigo-violet timber walls and moonlit lavender parquet floor.
+  - **Ludwig's Molten Mech Fortress (`DungPal[12]` @ `0x0DDFA4`, Room `0x0A4`):** Forged steel, riveted bronze plating, and ember-iron floor.
+
+### Mario Universe Bible, Transparent Multi-Dimensional Quality Scores & 33-Table Mega QA DB
+- Created **`docs/MARIO_UNIVERSE_REGISTRY.json`** (`72` Mario elements across `12` categories) and **`docs/QUALITY_SCORES.json`** documenting transparent scores: **Mario Identity Score `91.8%`** (up from `86.8%` in `v0.7.0`), **Perceptible Zelda Residue Score `8.2%`** (`34 / 416` remaining honest weight), and **Gameplay Depth Score `87.5%`**.
+- Built **`scripts/qa_engine_v080.py`** with a **33-table normalized Mega SQLite Validation Database** (`33/33` tables populated, `640` rows, local JSON + CSV export) verifying **12/12 `v0.8.0` live Mednafen scenarios (`VISUAL_PASS`)** across `snes_faust` and cycle-accurate `snes` (`bsnes`) — catching and fixing 5 real hardware bugs between Pass 1 and Pass 2.
+- Preserved 100% of all 7 `v0.6.0` fixes and all `v0.7.0` world/boss/state achievements with zero regressions.
+
+### Build & Verification (`v0.8.0`)
+- Deterministic 2 MiB LoROM build (dual independent runs bit-identical via `cmp` + `sha256sum`): `664` hardware patches across `18` rules (`~2.6 s`), `49` LZ2 sheets verified, `225` relocated blocks in `$23..$3F` (`0` overlaps), `32/32` passing Rust tests, `0` clippy warnings, `0` repo safety leaks.
+- **SNES Checksum / Complement:** `0x1B55` / `0xE4AA` (Valid: `true`)
+- **Output CRC32:** `113947D1`
+- **Output SHA-256:** `2270d55f8f4d09a164a939213531be80e4237a94488f535749708801ba925fd8`
+
+---
+
 ## [0.7.0] — 2026-11-27 — Mushroom Kingdom: World Transformation
 
 ### Full ROM World Discovery & Systemic 108/128 Overworld Transformation (`mario_map.rs`)

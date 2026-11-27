@@ -2140,6 +2140,152 @@ fn patch_worldwide_bg_tilesets(
         ops += 1;
     }
 
+    // 9. v0.8.0 — DISTINCT KOOPALING FORTRESS ARCHITECTURAL PALETTES (verified via $07:FA90 -> DungPal @ 0x0DD734):
+    //    Each DungPal entry is 180 B (6 rows × 15 BGR555 colors):
+    //      Row 0 (+0x00, 0..6 & 8..14): Main Fortress Walls & Door Stonework
+    //      Row 1 (+0x1E, 8..14):       Main Dungeon Floor Tiles
+    //      Row 2 (+0x3C, 0..6 & 8..14): Secondary Walls, Pillars & Shadow Trim
+    //    (Rows 4 & 5 stay 100% untouched so red/blue ON/OFF switches, torches & sprites stay razor-sharp!)
+    //    - DungPal[8]  (0x0DDCD4, Morton's Lava Fortress / Palace of Darkness, Room 0x05A): Volcanic Basalt & Magma Amber
+    //    - DungPal[9]  (0x0DDD88, Iggy's SMW Ghost House / Skull Woods, Room 0x029 & 0x059): Spooky Indigo-Plum Timber & Moonlit Floor
+    //    - DungPal[12] (0x0DDFA4, Ludwig's Molten Mech Fortress / Turtle Rock, Room 0x0A4): Industrial Iron-Bronze & Lava Rivets
+    let patch_dung_fortress = |rom: &mut SnesRom,
+                               sess: &mut SwapSession,
+                               base_pc: usize,
+                               wall_ramp: [u16; 7],
+                               floor_ramp: [u16; 7],
+                               trim_ramp: [u16; 7],
+                               desc: &str|
+     -> Result<usize, RomError> {
+        if base_pc + 90 <= rom.data.len() {
+            let mut buf = rom.data[base_pc..base_pc + 90].to_vec();
+            let put7 = |slice: &mut [u8], off: usize, cols: [u16; 7]| {
+                for (i, c) in cols.iter().enumerate() {
+                    let b = c.to_le_bytes();
+                    slice[off + i * 2] = b[0];
+                    slice[off + i * 2 + 1] = b[1];
+                }
+            };
+            // Row 0 (+0x00): Upper walls (0..6) & doorway masonry (8..14 -> +16)
+            put7(&mut buf, 0x00, wall_ramp);
+            put7(&mut buf, 0x10, wall_ramp);
+            // Row 1 (+0x1E): Preserve 0..6 (statues/torches), recolor 8..14 (+0x1E+16 = 0x2E) MAIN FLOOR!
+            put7(&mut buf, 0x2E, floor_ramp);
+            // Row 2 (+0x3C): Secondary wall trim (0..6) & lower floor shadow border (8..14 -> +0x4C)
+            put7(&mut buf, 0x3C, trim_ramp);
+            put7(&mut buf, 0x4C, floor_ramp);
+            sess.swap_custom_bytes(
+                rom,
+                base_pc,
+                base_pc,
+                buf,
+                desc.into(),
+                crate::swapper::SwapKind::PaletteBgr555 { color_count: 45 },
+            )?;
+            return Ok(1);
+        }
+        Ok(0)
+    };
+    ops += patch_dung_fortress(
+        rom_z,
+        sess,
+        0x0DDCD4, // DungPal[8]: Morton's Lava Fortress (Palace of Darkness, Room 0x05A)
+        [
+            rgb555(40, 24, 32),   // deep volcanic basalt
+            rgb555(80, 44, 48),   // dark magma brick
+            rgb555(128, 64, 52),  // warm volcanic stone
+            rgb555(184, 96, 60),  // ember-lit brick face
+            rgb555(232, 144, 72), // glowing molten amber highlight
+            rgb555(136, 80, 56),  // basalt trim
+            rgb555(104, 56, 48),  // mortar accent
+        ],
+        [
+            rgb555(48, 28, 36),   // obsidian floor outline
+            rgb555(72, 40, 48),   // dark volcanic tile
+            rgb555(96, 52, 56),   // charred slate tile
+            rgb555(120, 68, 60),  // ember-warm basalt floor
+            rgb555(88, 48, 52),   // tile seam
+            rgb555(152, 88, 64),  // magma floor highlight
+            rgb555(112, 60, 56),  // mid floor shade
+        ],
+        [
+            rgb555(40, 24, 32),
+            rgb555(88, 48, 48),
+            rgb555(144, 72, 52),
+            rgb555(200, 112, 64),
+            rgb555(240, 168, 80),
+            rgb555(224, 152, 64),
+            rgb555(152, 88, 48),
+        ],
+        "Forteresse Volcanique de Morton (DungPal[8] @ 0x0DDCD4) : Basalte, Obsidienne & Ambre de Lave SMW",
+    )?;
+    ops += patch_dung_fortress(
+        rom_z,
+        sess,
+        0x0DDD88, // DungPal[9]: Iggy & Big Boo Haunted Ghost House (Skull Woods, Room 0x029 & 0x059)
+        [
+            rgb555(32, 24, 56),   // midnight ghost house shadow
+            rgb555(64, 48, 96),   // spooky indigo timber
+            rgb555(96, 72, 136),  // haunted violet planks
+            rgb555(136, 104, 176),// moonlit lavender wood
+            rgb555(184, 152, 224),// ghostly crest highlight
+            rgb555(104, 80, 144), // violet trim
+            rgb555(80, 64, 112),  // haunted frame
+        ],
+        [
+            rgb555(40, 32, 64),   // spooky parquet outline
+            rgb555(64, 56, 104),  // indigo ghost floor dark
+            rgb555(80, 72, 128),  // indigo ghost floor mid
+            rgb555(104, 96, 152), // moonlit ghost parquet
+            rgb555(56, 48, 96),   // wood plank seam
+            rgb555(120, 112, 168),// floor shimmer
+            rgb555(88, 72, 128),  // mid shade
+        ],
+        [
+            rgb555(32, 24, 56),
+            rgb555(64, 48, 96),
+            rgb555(104, 80, 144),
+            rgb555(144, 112, 184),
+            rgb555(192, 168, 232),
+            rgb555(120, 96, 160),
+            rgb555(88, 64, 120),
+        ],
+        "Maison Fantôme Big Boo & Iggy (DungPal[9] @ 0x0DDD88) : Bois Hanté Indigo & Parquet Lunaire SMW Ghost House",
+    )?;
+    ops += patch_dung_fortress(
+        rom_z,
+        sess,
+        0x0DDFA4, // DungPal[12]: Ludwig's Molten Mech Fortress (Turtle Rock, Room 0x0A4)
+        [
+            rgb555(32, 32, 44),   // dark forged iron
+            rgb555(72, 56, 56),   // industrial gunmetal
+            rgb555(120, 88, 64),  // riveted bronze armor
+            rgb555(176, 128, 72), // gleaming mech brass
+            rgb555(232, 184, 96), // golden steel sheen
+            rgb555(144, 96, 64),  // copper pipe
+            rgb555(104, 72, 56),  // iron trim
+        ],
+        [
+            rgb555(40, 36, 48),   // steel grate outline
+            rgb555(72, 60, 64),   // dark iron plating
+            rgb555(96, 76, 72),   // riveted bronze floor
+            rgb555(128, 96, 80),  // molten copper floor
+            rgb555(64, 52, 56),   // floor seam
+            rgb555(152, 112, 84), // metallic glint
+            rgb555(104, 80, 72),  // mid steel shade
+        ],
+        [
+            rgb555(232, 200, 128),
+            rgb555(168, 120, 64),
+            rgb555(208, 152, 72),
+            rgb555(248, 200, 96),
+            rgb555(56, 48, 60),
+            rgb555(96, 80, 96),
+            rgb555(136, 112, 120),
+        ],
+        "Forteresse Mécanique de Ludwig (DungPal[12] @ 0x0DDFA4) : Acier Forgé, Bronze & Rivets de Lave SMW",
+    )?;
+
     Ok(ops)
 }
 
