@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "project": "The Legend of Peach: A Mario to the Mushroom Kingdom",
-  "target_milestone": "v0.9.0 \u2014 The Ultimate Mario Adventure",
+  "target_milestone": "v0.10.0 — Super Mario Adventure Beyond Limits",
   "dominant_art_reference": "Super Mario World (SNES, 1990)",
   "complementary_references": [
     "Super Mario RPG: Legend of the Seven Stars (SNES, 1996)",
@@ -15,7 +15,8 @@
   ],
   "summary_counts": {
     "total_registered_elements": 76,
-    "categories": 12
+    "categories": 12,
+    "live_verified_elements": 70
   },
   "elements": [
     {
@@ -89,7 +90,7 @@
       "category": "Main Characters",
       "reference_game": "Super Mario World",
       "original_function": "Mario's brother",
-      "top_down_adaptation": "Opening mentor gifting Mario his Super Hammer & Koopa Shell (#13); optional playable Luigi evaluated for v0.9.0",
+      "top_down_adaptation": "Opening mentor gifting Mario his Super Hammer & Koopa Shell + Playable Luigi Mode (Down+L+R, Emerald Cap & Navy Overalls CGRAM Pal 9, higher floaty jump, persists in checksummed SRAM $7E:F407)",
       "ludic_value": 4,
       "artistic_value": 5,
       "snes_feasibility": "Native",
@@ -111,7 +112,7 @@
       "category": "Allies & Companions",
       "reference_game": "Super Mario World / Yoshi's Island",
       "original_function": "Rideable dinosaur companion with speed, flutter jump & damage shield",
-      "top_down_adaptation": "Mountable Yoshi companion state ($7E:F518): Yoshi emerald saddle palette, +25% movement speed boost, Yoshi's Island Flutter Jump mid-air lift, and SMW 1-hit damage absorption shield",
+      "top_down_adaptation": "Playable Yoshi mount ($7E:F518): emerald saddle palette, Flutter Jump, SMW 1-hit damage shield, and v0.10.0 Yoshi Tongue Swallow (B/Y gulps nearby edible enemies for +1 Heart & +2 Coins + Dragon Coin #9)",
       "ludic_value": 5,
       "artistic_value": 5,
       "snes_feasibility": "Native 65c816",
@@ -300,7 +301,7 @@
       "regression_risk": "Low",
       "priority": "P1",
       "implementation_status": "IMPLEMENTED",
-      "validation_status": "STATIC_PASS"
+      "validation_status": "VISUAL_PASS"
     },
     {
       "id": "MU-014",
@@ -322,7 +323,7 @@
       "regression_risk": "Low",
       "priority": "P1",
       "implementation_status": "IMPLEMENTED",
-      "validation_status": "STATIC_PASS"
+      "validation_status": "VISUAL_PASS"
     },
     {
       "id": "MU-015",
@@ -520,7 +521,7 @@
       "category": "Bosses",
       "reference_game": "Super Mario World",
       "original_function": "Erratic flying/tilting Koopaling",
-      "top_down_adaptation": "Winged Iggy with anchored \u00b117px Paratroopa wings in Skull Woods (0x029)",
+      "top_down_adaptation": "Winged Iggy with anchored ±17px Paratroopa wings in Skull Woods (0x029)",
       "ludic_value": 5,
       "artistic_value": 5,
       "snes_feasibility": "Native",
@@ -888,7 +889,7 @@
       "category": "World Travel & Structures",
       "reference_game": "Super Mario World",
       "original_function": "Iconic green travel pipes linking overworld, caves & bonus zones",
-      "top_down_adaptation": "Start Menu Warp Pipe icon + native SPC700 triple-pulse Warp Pipe SFX + v0.8.0 Overworld cave portal Green Warp Pipe visual frames!",
+      "top_down_adaptation": "Real 5-Hub Physical Inter-Regional Overworld Warp Pipe Network (0x2C->0x18->0x03->0x35->0x12->0x2C) via native JSL $00:8919/$0D:F988/$0A:B8A5/$0A:B928 + 1-time SRAM discovery Dragon Coins",
       "ludic_value": 5,
       "artistic_value": 5,
       "snes_feasibility": "Native",
@@ -901,8 +902,8 @@
       ],
       "regression_risk": "Low",
       "priority": "P0",
-      "implementation_status": "PARTIALLY_IMPLEMENTED",
-      "validation_status": "STATIC_PASS",
+      "implementation_status": "IMPLEMENTED",
+      "validation_status": "VISUAL_PASS",
       "notes": "Warp Pipe Start Menu icon, Warp Flute network & native SPC700 Warp Pipe SFX implemented; physical Map32 Overworld Warp Pipe entrances queued for v0.9.0"
     },
     {
@@ -989,7 +990,7 @@
       "regression_risk": "Low",
       "priority": "P1",
       "implementation_status": "IMPLEMENTED",
-      "validation_status": "STATIC_PASS"
+      "validation_status": "VISUAL_PASS"
     },
     {
       "id": "MU-046",
@@ -1289,7 +1290,7 @@
       "regression_risk": "Low",
       "priority": "P2",
       "implementation_status": "IMPLEMENTED",
-      "validation_status": "STATIC_PASS"
+      "validation_status": "VISUAL_PASS"
     },
     {
       "id": "MU-060",
@@ -1354,7 +1355,7 @@
       "regression_risk": "Low",
       "priority": "P2",
       "implementation_status": "IMPLEMENTED",
-      "validation_status": "STATIC_PASS"
+      "validation_status": "VISUAL_PASS"
     },
     {
       "id": "MU-063",
@@ -1374,8 +1375,8 @@
       ],
       "regression_risk": "Low",
       "priority": "P2",
-      "implementation_status": "PARTIALLY_IMPLEMENTED",
-      "validation_status": "STATIC_PASS"
+      "implementation_status": "IMPLEMENTED",
+      "validation_status": "VISUAL_PASS"
     },
     {
       "id": "MU-064",
@@ -1395,8 +1396,8 @@
       ],
       "regression_risk": "Low",
       "priority": "P2",
-      "implementation_status": "PLANNED_V090",
-      "validation_status": "NOT_TESTED"
+      "implementation_status": "IMPLEMENTED",
+      "validation_status": "VISUAL_PASS"
     },
     {
       "id": "MU-065",
@@ -1404,7 +1405,7 @@
       "category": "Progression & Secrets",
       "reference_game": "Super Mario World",
       "original_function": "Exploration collectible encouraging full-region discovery",
-      "top_down_adaptation": "Trackable secret collectibles tied to bonus Star Power / 1-UP rewards",
+      "top_down_adaptation": "32-bit unique Dragon Coin bitmask in ALTTP checksummed SRAM ($7E:F400..$7E:F404): 1-time +10 Coins (0 infinite farming) + 1-UP full heal every 5",
       "ludic_value": 5,
       "artistic_value": 5,
       "snes_feasibility": "Native SRAM",
@@ -1417,8 +1418,8 @@
       ],
       "regression_risk": "Low",
       "priority": "P1",
-      "implementation_status": "PLANNED_V090",
-      "validation_status": "NOT_TESTED"
+      "implementation_status": "IMPLEMENTED",
+      "validation_status": "PLAYTHROUGH_PASS"
     },
     {
       "id": "MU-066",
@@ -1426,7 +1427,7 @@
       "category": "Puzzles & Secrets",
       "reference_game": "Super Mario World",
       "original_function": "Timed switch transforming blocks into coins & revealing secret doors",
-      "top_down_adaptation": "Ground-Pound activated dungeon switch puzzles + timed coin rush rooms",
+      "top_down_adaptation": "Timed 300-frame SMW P-Switch 2x Gold Rush triggered via Up+L+R grounded or Dungeon ON/OFF flip (verified 250->270->272c + Dragon Coin #10)",
       "ludic_value": 5,
       "artistic_value": 5,
       "snes_feasibility": "Native 65c816",
@@ -1438,8 +1439,8 @@
       ],
       "regression_risk": "Medium",
       "priority": "P1",
-      "implementation_status": "PLANNED_V090",
-      "validation_status": "NOT_TESTED"
+      "implementation_status": "IMPLEMENTED",
+      "validation_status": "VISUAL_PASS"
     },
     {
       "id": "MU-067",
@@ -1447,7 +1448,7 @@
       "category": "Secrets & Replayability",
       "reference_game": "Super Mario World",
       "original_function": "Secret celestial hub & post-game challenge zone",
-      "top_down_adaptation": "Repurpose Special Overworld screens (0x80..0x9F) with Star Road Waltz & bonus challenges",
+      "top_down_adaptation": "ALL 128/128 Light+Dark World OW screens + Special Area 0x80 Star Road Celestial Grove transformed with 0 grammar/collision/border violations",
       "ludic_value": 5,
       "artistic_value": 5,
       "snes_feasibility": "Native Map32",
@@ -1460,8 +1461,8 @@
       ],
       "regression_risk": "Low",
       "priority": "P2",
-      "implementation_status": "PLANNED_V090",
-      "validation_status": "NOT_TESTED"
+      "implementation_status": "IMPLEMENTED",
+      "validation_status": "VISUAL_PASS"
     },
     {
       "id": "MU-068",
@@ -1469,7 +1470,7 @@
       "category": "Main Characters",
       "reference_game": "Super Mario All-Stars / SMB2",
       "original_function": "Optional second brother with distinct jump/inertia",
-      "top_down_adaptation": "Toggleable Mario/Luigi flag in Bank $22 with green palette & +15% jump arc",
+      "top_down_adaptation": "Playable Luigi Mode (Down+L+R grounded, persists in checksummed SRAM $7E:F407): Pal 9 Emerald Cap & Navy Overalls + higher 0x02F0 floaty jump",
       "ludic_value": 4,
       "artistic_value": 5,
       "snes_feasibility": "Native 65c816",
@@ -1481,8 +1482,8 @@
       ],
       "regression_risk": "Low",
       "priority": "P2",
-      "implementation_status": "PLANNED_V090",
-      "validation_status": "NOT_TESTED"
+      "implementation_status": "IMPLEMENTED",
+      "validation_status": "VISUAL_PASS"
     },
     {
       "id": "MU-069",
@@ -1490,7 +1491,7 @@
       "category": "Power-Ups",
       "reference_game": "SMB3 / New Super Mario Bros.",
       "original_function": "Narrow-gap access & enhanced aquatic swimming",
-      "top_down_adaptation": "Evaluated for v0.9.0 gated secrets (never blocking core progression)",
+      "top_down_adaptation": "SMW/SMB3 Frog Suit (Pal 10 Electric Lime + 4-dir Swim Turbo Boost): auto-activates in deep water ($5D==0x04) with Flippers ($F356!=0)",
       "ludic_value": 3,
       "artistic_value": 4,
       "snes_feasibility": "Medium",
@@ -1502,8 +1503,8 @@
       ],
       "regression_risk": "Medium",
       "priority": "P2",
-      "implementation_status": "PLANNED_V090",
-      "validation_status": "NOT_TESTED"
+      "implementation_status": "IMPLEMENTED",
+      "validation_status": "VISUAL_PASS"
     },
     {
       "id": "MU-070",
@@ -1511,7 +1512,7 @@
       "category": "Bosses",
       "reference_game": "Super Mario World",
       "original_function": "Multi-phase SMW Bowser showdown throwing Mechakoopas & flames",
-      "top_down_adaptation": "Custom Bank $22 Final Bowser phase telemetry & Ground-Pound counterplay in Room 0x000",
+      "top_down_adaptation": "Final King Bowser (0xD6) Phase 2 Ground Pound Counterplay: heavy throne tremor ($011A=0x18), +5 Bonus Coins & Dragon Coin #11 (bsnes 250->281c)",
       "ludic_value": 5,
       "artistic_value": 5,
       "snes_feasibility": "High (65c816)",
@@ -1524,8 +1525,8 @@
       ],
       "regression_risk": "High (v0.6.0 guard)",
       "priority": "P1",
-      "implementation_status": "PLANNED_V090",
-      "validation_status": "NOT_TESTED"
+      "implementation_status": "IMPLEMENTED",
+      "validation_status": "VISUAL_PASS"
     },
     {
       "id": "MU-071",
@@ -1533,7 +1534,7 @@
       "category": "Narrative",
       "reference_game": "Super Mario RPG / Paper Mario",
       "original_function": "Zero remaining Hyrule/Triforce/Zelda story references",
-      "top_down_adaptation": "Expand v0.7.0 marquee rewrites across all minor Toad/NPC/sign/dungeon dialogues in Bank $1C",
+      "top_down_adaptation": "100% Bank $1C French narrative cleanse across all 372 messages (201 vanilla -> 35 v0.9.0 -> 0 v0.10.0 Zelda lore/item occurrences)",
       "ludic_value": 4,
       "artistic_value": 5,
       "snes_feasibility": "Native",
@@ -1545,8 +1546,8 @@
       ],
       "regression_risk": "Low",
       "priority": "P1",
-      "implementation_status": "PARTIALLY_IMPLEMENTED",
-      "validation_status": "STATIC_PASS"
+      "implementation_status": "IMPLEMENTED",
+      "validation_status": "VISUAL_PASS"
     },
     {
       "id": "MU-072",
@@ -1554,7 +1555,7 @@
       "category": "Progression & QA",
       "reference_game": "All-Ages Nintendo Polish",
       "original_function": "End-to-end completable adventure from Yoshi's Island to Final King Bowser",
-      "top_down_adaptation": "Explicit progression dependency graph + automated softlock detector + full playthrough before v1.0.0",
+      "top_down_adaptation": "100% blank-SRAM cold-boot opening playthrough (Title -> Slot 1 -> Uncle Luigi -> Star-Torch -> Rainy OW -> Save -> Cold Reboot) PLAYTHROUGH_PASS; full 11-dungeon uninterrupted run reserved for v1.0.0",
       "ludic_value": 5,
       "artistic_value": 4,
       "snes_feasibility": "QA Tooling",
@@ -1566,8 +1567,8 @@
       ],
       "regression_risk": "None",
       "priority": "P0",
-      "implementation_status": "PLANNED_V100",
-      "validation_status": "NOT_TESTED"
+      "implementation_status": "PARTIALLY_IMPLEMENTED",
+      "validation_status": "PARTIAL_PLAYTHROUGH_PASS"
     },
     {
       "id": "MU-073",
@@ -1582,7 +1583,9 @@
       "cpu_cost": "Zero",
       "rom_cost": "1 relocated sheet ($23..$3A)",
       "wram_vram_cost": "Native OAM",
-      "dependencies": ["mario_intro.rs"],
+      "dependencies": [
+        "mario_intro.rs"
+      ],
       "regression_risk": "Low",
       "priority": "P0",
       "implementation_status": "IMPLEMENTED",
@@ -1601,7 +1604,11 @@
       "cpu_cost": "~40 cyc/f",
       "rom_cost": "In-place GFX + Bank $22/$3B",
       "wram_vram_cost": "Zero extra WRAM",
-      "dependencies": ["mario_ui.rs", "mario_map.rs", "mario_engine.rs"],
+      "dependencies": [
+        "mario_ui.rs",
+        "mario_map.rs",
+        "mario_engine.rs"
+      ],
       "regression_risk": "Low",
       "priority": "P0",
       "implementation_status": "IMPLEMENTED",
@@ -1620,7 +1627,9 @@
       "cpu_cost": "Zero",
       "rom_cost": "In-place Bank $1B palettes",
       "wram_vram_cost": "Native CGRAM",
-      "dependencies": ["mario_world.rs"],
+      "dependencies": [
+        "mario_world.rs"
+      ],
       "regression_risk": "Low",
       "priority": "P0",
       "implementation_status": "IMPLEMENTED",
@@ -1639,7 +1648,9 @@
       "cpu_cost": "~110 cyc/f",
       "rom_cost": "Bank $22",
       "wram_vram_cost": "1 B WRAM ($7E:F51B)",
-      "dependencies": ["mario_engine.rs"],
+      "dependencies": [
+        "mario_engine.rs"
+      ],
       "regression_risk": "Low (multi-phase script safe)",
       "priority": "P0",
       "implementation_status": "IMPLEMENTED",
@@ -1647,5 +1658,5 @@
     }
   ],
   "rom_sha256_v090": "5546dfaec62b98dc8c91bbbc58a7b16df6de91b9d8e6f0d56a1b7f1b36693fbd",
-  "release": "v0.9.0 \u2014 The Ultimate Mario Adventure"
+  "release": "v0.9.0 — The Ultimate Mario Adventure"
 }

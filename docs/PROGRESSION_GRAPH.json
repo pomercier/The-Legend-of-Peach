@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "release": "v0.10.0",
+  "project": "The Legend of Peach: A Mario to the Mushroom Kingdom",
+  "softlock_safety_guarantees": [
+    "All 128/128 Overworld Map32 edits pass exact $00:FBD9 hardware TileAttr invariance and 224-edge cross-screen border checks.",
+    "All 5 Overworld Warp Pipe Hubs require Ground Pound proximity on walkable solid/shoal tiles and enforce an 80-frame anti-retrigger cooldown.",
+    "Warp Pipe discovery Dragon Coins are stored in 1-time checksummed SRAM bitmask ($7E:F400) — zero infinite currency/magic farming.",
+    "Boss Encounter Class 0x05 excludes all 12 bosses from instant stomp/shell KOs so vanilla multi-phase scripts and key drops never softlock."
+  ],
+  "overworld_warp_pipe_network": {
+    "hardware_loader": "JSL $00:8919 -> JSL $0D:F988 -> JSL $0A:B8A5 ($1AF0 slot) -> JSL $0A:B928 -> NMI $17=4 full tilemap DMA",
+    "hubs": [
+      { "hub_id": 0, "name": "World 1 — Yoshi's Island (Mario's House)", "area_id": "0x2C", "pipe_cell": "0x2C (r09,c07)", "target_hub_id": 1, "target_slot": 2, "dragon_coin_bit": 0, "status": "VISUAL_PASS (faust+bsnes)" },
+      { "hub_id": 1, "name": "Toad Town Weathervane Plaza", "area_id": "0x18", "pipe_cell": "0x19 (r12,c03)", "target_hub_id": 2, "target_slot": 0, "dragon_coin_bit": 1, "status": "VISUAL_PASS (faust+bsnes)" },
+      { "hub_id": 2, "name": "Vanilla Dome Terracotta Mountain", "area_id": "0x03", "pipe_cell": "0x0B (r10,c05)", "target_hub_id": 3, "target_slot": 9, "dragon_coin_bit": 3, "status": "VISUAL_PASS (faust+bsnes)" },
+      { "hub_id": 3, "name": "Lake Cheep-Cheep (Frog Suit Zone)", "area_id": "0x35", "pipe_cell": "0x3E (r04,c07)", "target_hub_id": 4, "target_slot": 13, "dragon_coin_bit": 2, "status": "VISUAL_PASS (faust)" },
+      { "hub_id": 4, "name": "Forest of Illusion", "area_id": "0x12", "pipe_cell": "0x12 (r06,c05)", "target_hub_id": 0, "target_slot": 3, "dragon_coin_bit": 4, "status": "STATIC_PASS" }
+    ]
+  },
+  "campaign_acts": [
+    { "act": 0, "name": "Opening Rain Prologue & Star-Torch", "rooms": ["0x104", "0x2C", "0x055", "0x061"], "validation": "PLAYTHROUGH_PASS (blank SRAM -> chest -> rainy OW -> save -> cold reboot)" },
+    { "act": 1, "name": "Light World 3 Relics (Chargin' Chucks, 3 Giant Pokeys, Giant Wiggler)", "fortress_palettes": ["DungPal[5]"], "validation": "VISUAL_PASS (individual arenas)" },
+    { "act": 2, "name": "Peach's Castle Tower — Bowser Clash", "room": "0x020", "validation": "VISUAL_PASS" },
+    { "act": 3, "name": "Bowser's Volcanic Kingdom — 7 Koopalings & 7 Yoshi Eggs", "fortress_palettes": ["DungPal[1]", "DungPal[4]", "DungPal[8]", "DungPal[9]", "DungPal[10]", "DungPal[12]"], "validation": "VISUAL_PASS (all 7 Koopalings & 7 fortresses)" },
+    { "act": 4, "name": "King Bowser's Obsidian Keep & Final Throne", "rooms": ["0x00C", "0x000"], "fortress_palettes": ["DungPal[13]"], "validation": "VISUAL_PASS (cycle-accurate bsnes, Phase 2 Counterplay verified)" }
+  ]
+}

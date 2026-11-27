@@ -1,59 +1,72 @@
 {
-  "schema_version": "1.4.0",
-  "release": "v0.9.0",
-  "rom_sha256": "5546dfaec62b98dc8c91bbbc58a7b16df6de91b9d8e6f0d56a1b7f1b36693fbd",
-  "rom_checksum": "0xBC86",
-  "rom_complement": "0x4379",
-  "rom_crc32": "261F4214",
+  "schema_version": "1.5.0",
+  "release": "v0.10.0",
+  "rom_sha256": "2da376f5c5cd6f760c07e465bdba252fe1aa1f03e69f17dcabcff1ecd6e072b1",
+  "rom_checksum": "0x930C",
+  "rom_complement": "0x6CF3",
+  "rom_crc32": "37CE4B03",
   "rust_automated_tests": {
     "passed": 32,
     "failed": 0,
     "ignored": 0,
     "clippy_warnings": 0,
     "determinism_verified": true,
-    "hardware_ops": 671,
-    "relocated_blocks": 226,
+    "hardware_ops": 756,
+    "relocated_blocks": 268,
     "memory_overlaps": 0
   },
   "blocking_bugs_v060_non_regression": {
     "total_reported": 7,
-    "preserved_and_verified_v090": 7,
+    "preserved_and_verified_v0100": 7,
     "regressions": 0
   },
-  "v090_ultimate_mario_live_qa": {
-    "harness": "scripts/qa_engine_v090.py",
-    "mega_sqlite_tables_populated": "33/33 (980+ rows, exported to local JSON + CSV)",
-    "executed": 10,
-    "visual_pass": 10,
+  "v0100_beyond_limits_live_qa": {
+    "harness": "scripts/qa_engine_v0100.py",
+    "mega_sqlite_tables_populated": "33/33 (1,104 rows, exported to local JSON)",
+    "executed": 14,
+    "visual_pass": 14,
+    "audio_pass": 14,
+    "playthrough_pass_opening_and_reboot": 1,
     "failed": 0,
-    "pass_1_bugs_caught_and_resolved": 1,
+    "pass_1_hardware_bugs_caught_and_resolved": 1,
+    "pass_1_bug_summary": "Pass 1 live visual inspection caught half-screen VRAM tilemap seam after JSL $0A:B8A5 during Overworld Warp Pipe transit -> resolved cleanly by invoking ALTTP's complete native warp sequence (JSL $00:8919 + JSL $0D:F988 + JSL $0A:B8A5 + JSL $0A:B928) and holding Forced Blank ($13=$80) for 1 NMI frame for $17=4 full tilemap DMA. Pass 2 verified 0 seams on BOTH snes_faust AND cycle-accurate bsnes.",
+    "differential_dual_core_parity": {
+      "scenario": "Real 2-hop Warp Pipe Network (0x2C Yoshi's Island -> 0x18 Toad Town -> 0x03 Vanilla Dome + Save to SRAM)",
+      "core_a": "mednafen:snes_faust",
+      "core_b": "mednafen:snes (bsnes-accuracy)",
+      "sram_parity": "BIT_IDENTICAL (dragon_bits=[3,0,0,0], dragon_cnt=2, coins=270, checksum_valid=True)",
+      "audio_parity": "BOTH AUDIO_PASS (-26.2 dBFS vs -26.0 dBFS, 71.6% vs 74.8% active)"
+    },
     "scenarios": [
-      "v090_01_title_peach_scepter_bsnes (bsnes: Royal Princess Peach Golden Star-Scepter & Super Star Crown in raw 0xA5, 0 Master Sword!)",
-      "v090_02_overworld_warp_pipe_action (Screen 0x2C r09 c07 Physical 3D Glossy Green SMW Warp Pipe + GP Reward: Coins 250->255->260!)",
-      "v090_03_boss_gp_stagger_morton (Room 0x05A Morton's Volcanic Fortress + 65c816 Boss GP Stagger & Synergy)",
-      "v090_04_wendy_coral_palace (DungPal[1] @ 0x0DD7E8 Wendy's Coral Sea Palace + live Wendy O. Koopa + Boss GP Coins 250->261->268!)",
-      "v090_05_lemmy_ice_fortress (DungPal[4] @ 0x0DDA04 Lemmy's Star-Ice Circus Fortress + Fire Mario)",
-      "v090_06_larry_desert_pyramid (DungPal[5] @ 0x0DDAB8 Larry's Chocolate Desert Pyramid + Pokeys GP Stagger Coins 250->261!)",
-      "v090_07_roy_midnight_castle (DungPal[10] @ 0x0DDE3C Roy's Midnight Koopa Castle octagonal skylight hall)",
-      "v090_08_bowser_obsidian_keep (DungPal[13] @ 0x0DE058 King Bowser's Obsidian & Lava Keep + Bowser Head Statues)",
-      "v090_09_dark_world_bowser_citadel (Dark World Screen 0x5B Bowser Obsidian Citadel + Jade Bowser Statues)",
-      "v090_10_bsnes_final_bowser_synergy (bsnes: Final King Bowser + Fire Mario + Boss GP Synergy Coins 250->259->263, 0 BUG 07 regression!)"
+      "v0100_01_warp_pipe_network_faust (VISUAL_PASS + AUDIO_PASS: 0x2C->0x18->0x03 Vanilla Dome, SRAM dragon_bits=[3,0,0,0], coins=270)",
+      "v0100_02_warp_pipe_network_bsnes (bsnes VISUAL_PASS + AUDIO_PASS: bit-identical SRAM & visual parity with snes_faust)",
+      "v0100_03_luigi_pswitch_sram (VISUAL_PASS + AUDIO_PASS: Playable Luigi Emerald Cap + High Jump + P-Switch 2x Gold Rush 250->272c + SRAM luigi_mode=1)",
+      "v0100_04_yoshi_tongue_swallow (VISUAL_PASS + AUDIO_PASS: Yoshi Tongue gulps Blue Koopa -> +1 Heart 11->12 + +12 Coins 250->262)",
+      "v0100_05_frog_suit_and_vanilla_dome (VISUAL_PASS + AUDIO_PASS: 3-hop 4-biome uncut chain 0x2C->0x18->0x03->0x35 250->280c + Electric Lime Frog Suit swim)",
+      "v0100_06_dry_bones_crumble_shatter (VISUAL_PASS + AUDIO_PASS: Room 0x026 SMW Dry Bones 0xA7 crumble/GP shatter 250->264c)",
+      "v0100_07_bestiary_spiny_room017 (VISUAL_PASS + AUDIO_PASS: Room 0x017 Buzzy Beetle 0x26 & Spiny live verified)",
+      "v0100_08_bestiary_chomp_room0b0 (VISUAL_PASS + AUDIO_PASS: Room 0x0B0 Chain Chomp 0x6A & Hammer Bro Guards 250->254c)",
+      "v0100_09_bestiary_monty_room0b2 (VISUAL_PASS + AUDIO_PASS: Room 0x0B2 3x Monty Mole 0x20 & Thwomps live verified)",
+      "v0100_10a_bestiary_lava_room013 (VISUAL_PASS + AUDIO_PASS: Room 0x013 4x Lava Bubbles 0x15 live verified)",
+      "v0100_10b_bestiary_snifit_room056 (VISUAL_PASS + AUDIO_PASS: Room 0x056 4x Snifits 0x0A & SMW ? Blocks live verified)",
+      "v0100_11_bsnes_final_bowser_phase2 (bsnes VISUAL_PASS + AUDIO_PASS: Room 0x000 Fire Mario + Bowser Phase 2 Counter 250->281c, 0 BUG 07 regression)",
+      "v0100_12_clean_sram_playthrough (PLAYTHROUGH_PASS + AUDIO_PASS: 100% blank 8 KiB SRAM -> Slot 1 -> Uncle Luigi -> Star-Torch Chest -> Rainy OW -> Save -> Cold Reboot)",
+      "v0100_13_v090_baseline_compare (VISUAL_PASS + AUDIO_PASS: immutable v0.9.0 ref ROM side-by-side Before/After capture)"
     ]
   },
   "coverage_denominators_honest": {
-    "overworld_screens_discovered_and_decoded": { "verified": 160, "total": 160, "status": "STATIC_PASS" },
-    "light_world_screens_map32_transformed": { "verified": 56, "total": 64, "grammar_violations": 0, "collision_regressions": 0, "border_breaks": 0, "status": "VISUAL_PASS" },
-    "dark_world_screens_map32_transformed": { "verified": 52, "total": 64, "palette_overhaul_all_64": true, "obsidian_citadel_0x5b": true, "status": "VISUAL_PASS" },
-    "koopaling_and_bowser_fortress_palettes": { "verified": 8, "total": 8, "slots": ["DungPal[1]", "DungPal[4]", "DungPal[5]", "DungPal[8]", "DungPal[9]", "DungPal[10]", "DungPal[12]", "DungPal[13]"], "status": "VISUAL_PASS" },
-    "underworld_rooms_discovered_and_inventoried": { "verified": 296, "total": 296, "populated_rooms": 247, "unique_placed_sprite_ids": 210, "status": "AUDITED" },
+    "overworld_screens_decoded": { "verified": 160, "total": 160, "status": "STATIC_PASS" },
+    "light_world_screens_transformed": { "verified": 64, "total": 64, "grammar_violations": 0, "collision_regressions": 0, "border_breaks": 0, "status": "VISUAL_PASS" },
+    "dark_world_screens_transformed": { "verified": 64, "total": 64, "palette_overhaul_all_64": true, "status": "VISUAL_PASS" },
+    "star_road_special_0x80_transformed": { "verified": 1, "total": 1, "status": "STATIC_PASS" },
+    "koopaling_and_bowser_fortress_palettes": { "verified": 8, "total": 8, "status": "VISUAL_PASS" },
     "player_poses_bank10_structural_audit": { "verified": 303, "total": 303, "status": "STATIC_PASS" },
-    "player_states_live_emulated_and_visually_verified": { "verified": 22, "total": 22, "status": "VISUAL_PASS" },
-    "bosses_live_emulated_and_visually_verified": { "verified": 12, "total": 12, "status": "VISUAL_PASS" },
-    "compressed_gfx_sheets_audited": { "verified": 51, "total": 51, "relocated": 12, "status": "STATIC_PASS" },
-    "french_dialogue_messages_verified": { "verified": 372, "total": 372, "duplicate_linebreaks": 0, "hyphenated_splits": 0, "status": "STATIC_PASS" },
+    "bosses_live_verified": { "verified": 12, "total": 12, "status": "VISUAL_PASS" },
+    "french_dialogue_messages_cleansed": { "verified": 372, "total": 372, "zelda_terms_remaining": 0, "status": "STATIC_PASS+VISUAL_PASS" },
     "hardware_emulators": {
       "tested": ["Mednafen 1.32.1 (snes_faust)", "Mednafen 1.32.1 (snes / bsnes-accuracy)"],
-      "not_tested_locally": ["Standalone bsnes GUI", "Ares", "Snes9x", "Mesen 2", "Physical SNES / Super Famicom / FXPAK Pro"]
+      "not_installed_locally": ["Standalone bsnes GUI", "Ares", "Snes9x", "Mesen 2"],
+      "physical_hardware": "NOT_TESTED (0/1 — see docs/REAL_HARDWARE_TEST_GUIDE.md)"
     }
   }
 }

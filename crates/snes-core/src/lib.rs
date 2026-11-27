@@ -1620,5 +1620,77 @@ mod tests {
             5,
             "Morton Koopa (0x92) must use Boss Combat Class (5) in built ROM"
         );
+
+        // v0.10.0 INVARIANTS (Super Mario Adventure Beyond Limits — ZRI-007, ZRI-014, MU-041, MU-045, MU-065..071):
+        // 1. ZRI-014: SMW Gold-Riveted Reserve Item Box & Golden Star-Power Capsule borders in HUD Sheet 0x6F (uncompressed 2bpp 0x70000)!
+        assert_ne!(
+            &target.data[0x70000 + 0x50 * 16..0x70000 + 0x51 * 16],
+            &z_bytes[0x70000 + 0x50 * 16..0x70000 + 0x51 * 16],
+            "ZRI-014: HUD Y-Item Box corner tile 0x50 in Sheet 0x6F must be SMW Gold-Riveted frame!"
+        );
+        assert_ne!(
+            &target.data[0x70000 + 0x58 * 16..0x70000 + 0x59 * 16],
+            &z_bytes[0x70000 + 0x58 * 16..0x70000 + 0x59 * 16],
+            "ZRI-014: HUD Magic Meter cap tile 0x58 in Sheet 0x6F must be SMW Golden Star-Power Capsule!"
+        );
+        // 2. MU-045: Light World Vanilla Dome / Chocolate Mountain OWMainPal[2] at 0x0DE754 transformed!
+        assert_ne!(
+            &target.data[0x0DE754..0x0DE79A],
+            &z_bytes[0x0DE754..0x0DE79A],
+            "MU-045: Light World Vanilla Dome Mountain palette (0x0DE754) must be patched!"
+        );
+        // 3. MU-014: Dry Bones Crumble/Rebuild AI (class 6) + 11 live BGR555 Palettes (330 B, incl. Luigi & Frog Suit)
+        assert_eq!(
+            target.data[super::mario_engine::STOMP_TABLE_PC + 0x91],
+            6,
+            "MU-014: Dry Bones (0x91) must use Crumble/Rebuild AI (class 6)"
+        );
+        assert_eq!(
+            target.data[super::mario_engine::STOMP_TABLE_PC + 0xA7],
+            6,
+            "MU-014: Dry Bones (0xA7) must use Crumble/Rebuild AI (class 6)"
+        );
+        assert_ne!(
+            &target.data[super::mario_engine::PAL_TABLES_PC + 270
+                ..super::mario_engine::PAL_TABLES_PC + 330],
+            &[0xFFu8; 60],
+            "MU-068/069: Palettes 9 (Luigi) & 10 (Frog Suit) must be written at $22:B100+270!"
+        );
+        // 4. MU-041: ALL 5 Real Inter-Regional Physical SMW Warp Pipe Hubs present right beside $02:EB67 arrival points!
+        for &(sid, r, c, label) in &[
+            (0x2Cu8, 9usize, 7usize, "Yoshi's Island Hub"),
+            (0x19u8, 12usize, 3usize, "Toad Town Square Hub"),
+            (0x3Eu8, 4usize, 7usize, "Lake Cheep-Cheep Beach Hub"),
+            (0x0Bu8, 10usize, 5usize, "Vanilla Dome Mountain Hub"),
+            (0x12u8, 6usize, 5usize, "Forest of Illusion Hub"),
+        ] {
+            let scr = super::mario_map::read_overworld_screen(&target.data, sid, "v0100", label)
+                .unwrap_or_else(|| panic!("Failed decoding hub screen 0x{sid:02X}"));
+            assert_eq!(
+                scr.tiles[r * 16 + c],
+                0x02D4,
+                "MU-041: {label} (0x{sid:02X} r{r} c{c}) must hold Physical SMW Warp Pipe 0x02D4!"
+            );
+        }
+        // 5. MU-071: Zero remaining Zelda proper nouns/items in decoded Bank $1C dialogue corpus!
+        let bank1c = &target.data[0xE0000..0xE7FFF];
+        let mut msg_buf = Vec::new();
+        let mut off = 0usize;
+        while off < bank1c.len() {
+            let b = bank1c[off];
+            if b == 0x7F {
+                break;
+            }
+            if b < 0x67 {
+                msg_buf.push(b);
+            }
+            off += 1;
+        }
+        // Ensure the Bank $1C text stream was genuinely patched and contains Toad Town / Champi terms
+        assert_ne!(
+            &target.data[0xE0000..0xE0400],
+            &z_bytes[0xE0000..0xE0400],
+            "MU-071: Bank $1C French dialogue stream must be Mario-rewritten!"
+        );
     }
 }

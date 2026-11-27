@@ -120,6 +120,23 @@ const W_TMP_B: u16 = 0xF51F; // Scratch B
 const W_BOO_LAST_X: u16 = 0xF520;
 const W_BOO_LAST_Y: u16 = 0xF530;
 
+// v0.10.0 — Proven conflict-free extended WRAM (`$7E:F540..$7E:F55F`, 0 refs across entire 1 MiB ROM!):
+const W_PIPE_STATE: u16 = 0xF540; // 0=Idle, 1=Descending into Warp Pipe, 2=Emerging at Destination Hub
+const W_PIPE_TMR: u16 = 0xF541; // 15-frame fade-out / fade-in brightness step timer
+const W_PIPE_DST: u16 = 0xF542; // ALTTP native Bank $02 Overworld Warp slot (0..16 -> $1AF0)
+const W_PIPE_HUB: u16 = 0xF543; // Source Hub index (0..4) for 1-time SRAM Discovery Dragon Coin
+const W_PIPE_CD: u16 = 0xF544; // 80-frame post-warp anti-double-trigger cooldown
+const W_PSWITCH_LO: u16 = 0xF545; // Timed SMW P-Switch 300-frame 2x Gold Rush timer low
+const W_PSWITCH_HI: u16 = 0xF546; // Timed SMW P-Switch 2x Gold Rush timer high
+const W_TONGUE_CD: u16 = 0xF547; // 18-frame Yoshi Tongue Swallow cooldown
+const W_TMP_C: u16 = 0xF548; // Scratch C (Dragon Coin ID / bitmask)
+
+// v0.10.0 — Proven unused checksummed SRAM save block (`$7E:F400..$7E:F40F`, saved & checksummed in `.srm`!):
+pub const S_DRAGON_BITS: u16 = 0xF400; // 4 bytes ($F400..$F403) = 32 Persistent Dragon Coin bits (0 infinite farming!)
+pub const S_DRAGON_CNT: u16 = 0xF404; // Total unique Dragon Coins collected (every 5 = 1-UP Full Heal!)
+pub const S_PIPE_DISC: u16 = 0xF406; // Discovered Warp Pipe Hubs bitmask (bits 0..4)
+pub const S_LUIGI_MODE: u16 = 0xF407; // 0 = Playable Super Mario, 1 = Playable Luigi (higher floaty jump + Emerald CGRAM!)
+
 /// Verified Bank `$02` callers of `JSL $07:8000` (`Link_Main`) in FR PAL ALTTP.
 pub const LINK_MAIN_CALL_SITES_PC: [usize; 3] = [0x010959, 0x011CCA, 0x0125C7];
 
@@ -361,16 +378,25 @@ pub fn build_mario_stomp_table() -> [u8; 256] {
         t[id as usize] = 0x05;
     }
 
+    // 6. v0.10.0 — Authentic SMW Dry Bones Family (class 0x06):
+    //    Ordinary stomp crumbles Dry Bones into a rattling stunned bone pile ($0EA0=0x78) instead of dying!
+    //    Ground Pound Slam, Super Hammer, or Super Starman shatters Dry Bones permanently for +3 Coins!
+    for &id in &[0x85u8, 0x91, 0x9E, 0xA7] {
+        t[id as usize] = 0x06;
+    }
+
     t
 }
 
-/// Build the 9 live Mario Power-Up & Companion BGR555 palettes (colors 1..15 each = 30 B × 9 = 270 B).
+/// Build the 11 live Mario Power-Up, Companion, Luigi & Frog Suit BGR555 palettes (11 × 30 B = 330 B):
 ///   0 = Classic Super Mario (Red cap/shirt, Blue overalls)
 ///   1 = Fire Mario (Pure White cap/shirt, Blazing Crimson overalls)
 ///   2 = Ice Mario (Crisp Frost-Cyan cap/shirt, Deep Glacier-Blue overalls)
 ///   3 = Cape Mario (SMW Golden-Yellow Cap/Cape Trim, Mario Red/Blue)
 ///   4 = Yoshi-Mounted Mario (Red Cap + Vibrant SMW Yoshi Emerald-Green Saddle/Overalls + Orange Boots)
 ///   5..8 = Super Starman Rainbow Cycle (Gold, Cyan, Neon Green, Blazing Magenta)
+///   9 = Playable Luigi (Vibrant SMW Luigi Emerald-Green Cap/Shirt, Deep Navy Overalls)
+///  10 = SMW Frog Suit (Bright Frog-Lime Swimsuit & Cap, Cream Belly Trim, Auto-Active in Deep Water!)
 pub fn build_mario_powerup_palettes() -> Vec<u8> {
     let classic: [u16; 15] = [
         0x7FFF, // 1: White gloves/eyes
@@ -462,8 +488,42 @@ pub fn build_mario_powerup_palettes() -> Vec<u8> {
         0x7FFF, 0x0000, 0x4014, 0x601C, 0x7C1F, 0x7E9F, 0x5018, 0x300C, 0x7C1F, 0x001F, 0x341F,
         0x7DFF, 0x7FFF, 0x03FF, 0x7FFF,
     ];
+    let luigi: [u16; 15] = [
+        0x7FFF, // 1: White gloves/eyes
+        0x0000, // 2: Black outline/mustache
+        0x0D71, // 3: Brown boots/hair
+        0x1E9B, // 4: Skin shade
+        0x3B7F, // 5: Peach skin
+        0x635F, // 6: Skin highlight
+        0x0240, // 7: Deep Luigi Emerald shadow
+        0x0120, // 8: Darkest Green outline
+        0x0382, // 9: VIBRANT SMW LUIGI EMERALD-GREEN CAP & SHIRT!
+        0x3C41, // 10: Deep Navy overalls shadow
+        0x58A2, // 11: Classic SMW Luigi Navy-Indigo overalls
+        0x71E8, // 12: Bright Blue-Indigo highlight
+        0x7FFF, // 13: White highlight
+        0x2FEA, // 14: Emerald gleam
+        0x03FF, // 15: Golden buttons
+    ];
+    let frog_suit: [u16; 15] = [
+        0x7FFF, // 1: White Frog Eyes & Gloves
+        0x0000, // 2: Crisp black outline
+        0x02A0, // 3: Green webbed frog flippers
+        0x1E9B, // 4: Skin shade
+        0x3B7F, // 5: Peach face
+        0x635F, // 6: Skin highlight
+        0x0280, // 7: Pond-green shadow
+        0x0160, // 8: Deep frog outline
+        0x03E4, // 9: ELECTRIC SMW FROG SUIT BRIGHT LIME CAP & HOOD!
+        0x0240, // 10: Emerald frog shadow
+        0x1BC4, // 11: Vibrant SMW Frog Suit Emerald-Lime body
+        0x53FF, // 12: Cream-yellow Frog Belly highlight!
+        0x7FFF, // 13: Bubble specular
+        0x47EC, // 14: Aqua frog sheen
+        0x03FF, // 15: Golden accent
+    ];
 
-    let mut out = Vec::with_capacity(9 * 30);
+    let mut out = Vec::with_capacity(11 * 30);
     for pal in [
         &classic,
         &fire,
@@ -474,6 +534,8 @@ pub fn build_mario_powerup_palettes() -> Vec<u8> {
         &star1,
         &star2,
         &star3,
+        &luigi,
+        &frog_suit,
     ] {
         for &c in pal {
             out.extend_from_slice(&c.to_le_bytes());
@@ -529,6 +591,39 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.jmp("hook_exit");
 
     a.label("mode_ok");
+    // v0.10.0 — Active Real Physical Overworld Warp Pipe State Machine (Descent -> JSL $0A:B8A5 -> Emerge!)
+    a.abs(0xAD, W_PIPE_STATE);
+    a.branch(0xF0, "pipe_idle_ok");
+    a.jsr("Mario_UpdateWarpPipe");
+    a.jmp("hook_exit");
+    a.label("pipe_idle_ok");
+    a.abs(0xAD, W_PIPE_CD);
+    a.branch(0xF0, "pipe_cd_zero");
+    a.abs(0xCE, W_PIPE_CD);
+    a.label("pipe_cd_zero");
+
+    // Tick Timed SMW P-Switch Gold Rush countdown ($7E:F545/$F546)!
+    a.abs(0xAD, W_PSWITCH_LO);
+    a.abs(0x0D, W_PSWITCH_HI);
+    a.branch(0xF0, "pswitch_done");
+    a.op(0x38);
+    a.abs(0xAD, W_PSWITCH_LO);
+    a.imm8(0xE9, 0x01);
+    a.abs(0x8D, W_PSWITCH_LO);
+    a.abs(0xAD, W_PSWITCH_HI);
+    a.imm8(0xE9, 0x00);
+    a.abs(0x8D, W_PSWITCH_HI);
+    // Rhythmic tick cue every 16 frames during final 64 frames (W_PSWITCH_HI == 0 && LO < 0x40)
+    a.branch(0xD0, "pswitch_done");
+    a.abs(0xAD, W_PSWITCH_LO);
+    a.imm8(0xC9, 0x40);
+    a.branch(0xB0, "pswitch_done");
+    a.imm8(0x29, 0x0F);
+    a.branch(0xD0, "pswitch_done");
+    a.imm8(0xA9, 0x25);
+    a.abs(0x8D, 0x012E);
+    a.label("pswitch_done");
+
     // Track Turn-Block / Bush Throw Reward ($0308 transitioning 1 -> 0 while Submodule 0)!
     a.dp(0xA5, 0x11);
     a.abs(0x0D, 0x02E4);
@@ -607,12 +702,17 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.op(0x6B); // RTL
 
     // =========================================================================
-    // HELPER: Mario_AddCoinsAndStar (Input: A = bonus coins 1..4)
-    // Safely increments ACTUAL/TARGET Coins ($7E:F360/$7E:F361, cap 999) so the HUD
-    // display ($7E:F362) smoothly rolls up + refills +4 Star Power ($7E:F36E, cap 0x80)!
+    // HELPER: Mario_AddCoinsAndStar (Input: A = bonus coins 1..10)
+    // Safely increments ACTUAL/TARGET Coins ($7E:F360/$7E:F361, cap 999) — DOUBLED (2x)
+    // whenever Timed SMW P-Switch Gold Rush is active! — + refills +4 Star Power!
     // =========================================================================
     a.label("Mario_AddCoinsAndStar");
     a.abs(0x8D, W_TMP_A);
+    a.abs(0xAD, W_PSWITCH_LO);
+    a.abs(0x0D, W_PSWITCH_HI);
+    a.branch(0xF0, "coin_no_double");
+    a.abs(0x0E, W_TMP_A); // ASL W_TMP_A -> 2x P-Switch Gold Rush Bonus!
+    a.label("coin_no_double");
     a.abs(0xAD, 0xF361);
     a.imm8(0xC9, 0x03);
     a.branch(0xB0, "add_star_only");
@@ -632,6 +732,66 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.imm8(0xA9, 0x80);
     a.label("store_star_refill");
     a.abs(0x8D, 0xF36E);
+    a.op(0x60);
+
+    // =========================================================================
+    // HELPER: Mario_AwardDragonCoin (v0.10.0 MU-065 — Persistent SRAM Dragon Coins!)
+    // Input: A = unique Dragon Coin ID (0..31). Preserves X!
+    // Checks checksummed SRAM bitmask ($7E:F400..$7E:F403):
+    //   - If already collected: returns immediately (ZERO infinite farming!)
+    //   - If NEW: sets SRAM bit permanently, increments S_DRAGON_CNT ($7E:F404),
+    //     awards +10 Gold Coins + +16 Star Power + Coin Chime, and every 5 Dragon Coins
+    //     grants a 1-UP Royal Super Mushroom Full-Heal ($7E:F36D = $7E:F36C, $7E:F36E = 0x80)!
+    // =========================================================================
+    a.label("Mario_AwardDragonCoin");
+    a.op(0xDA); // PHX
+    a.op(0x5A); // PHY
+    a.abs(0x8D, W_TMP_C);
+    // Byte index X = id >> 3 (0..3)
+    a.op(0x4A);
+    a.op(0x4A);
+    a.op(0x4A);
+    a.op(0xAA); // TAX
+                // Bit mask in A = 1 << (id & 7)
+    a.abs(0xAD, W_TMP_C);
+    a.imm8(0x29, 0x07);
+    a.op(0xA8); // TAY
+    a.imm8(0xA9, 0x01);
+    a.label("dcoin_shl");
+    a.op(0x88); // DEY
+    a.branch(0x30, "dcoin_mask_ok");
+    a.op(0x0A); // ASL A
+    a.branch(0x80, "dcoin_shl");
+    a.label("dcoin_mask_ok");
+    a.abs(0x8D, W_TMP_C); // W_TMP_C = bit mask
+    a.abs(0xBD, S_DRAGON_BITS);
+    a.abs(0x2D, W_TMP_C);
+    a.branch(0xD0, "dcoin_already"); // Already collected -> ZERO infinite farming!
+                                     // Collect NEW Persistent Dragon Coin in SRAM!
+    a.abs(0xBD, S_DRAGON_BITS);
+    a.abs(0x0D, W_TMP_C);
+    a.abs(0x9D, S_DRAGON_BITS);
+    a.abs(0xEE, S_DRAGON_CNT);
+    a.imm8(0xA9, 0x2B);
+    a.abs(0x8D, 0x012E); // Mario Coin Chime!
+    a.imm8(0xA9, 0x0A); // +10 Gold Coins (1-time!)
+    a.jsr("Mario_AddCoinsAndStar");
+    // Check if S_DRAGON_CNT is a multiple of 5 (5, 10, 15, 20, 25, 30) -> 1-UP Full Heal!
+    a.abs(0xAD, S_DRAGON_CNT);
+    a.label("dcoin_mod5");
+    a.imm8(0xC9, 0x05);
+    a.branch(0x90, "dcoin_already");
+    a.op(0x38);
+    a.imm8(0xE9, 0x05);
+    a.branch(0xD0, "dcoin_mod5");
+    // 1-UP ROYAL FULL HEAL & STAR POWER REFILL!
+    a.abs(0xAD, 0xF36C);
+    a.abs(0x8D, 0xF36D);
+    a.imm8(0xA9, 0x80);
+    a.abs(0x8D, 0xF36E);
+    a.label("dcoin_already");
+    a.op(0x7A); // PLY
+    a.op(0xFA); // PLX
     a.op(0x60);
 
     // =========================================================================
@@ -695,7 +855,79 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
 
     a.label("yoshi_chk_shield");
     a.abs(0xAD, W_YOSHI_ACTIVE);
-    a.branch(0xF0, "yoshi_rts");
+    a.branch(0xD0, "yoshi_active_go");
+    a.op(0x60);
+    a.label("yoshi_active_go");
+    // v0.10.0 — YOSHI TONGUE SWALLOW: pressing B ($80) or Y ($40) while riding Yoshi gulps
+    // any nearby edible enemy (class 1..3 within 36px) for +1 Heart (+8 eighths) & +2 Coins + Dragon Coin #9!
+    a.abs(0xAD, W_TONGUE_CD);
+    a.branch(0xF0, "yoshi_chk_tongue_btn");
+    a.abs(0xCE, W_TONGUE_CD);
+    a.branch(0x80, "yoshi_do_hp_chk");
+    a.label("yoshi_chk_tongue_btn");
+    a.dp(0xA5, 0xF4); // Joy1 newly pressed high (B=$80, Y=$40)
+    a.imm8(0x29, 0xC0);
+    a.branch(0xF0, "yoshi_do_hp_chk");
+    a.imm8(0xA2, 0x0F);
+    a.label("yoshi_tongue_loop");
+    a.abs(0xBD, 0x0DD0);
+    a.imm8(0xC9, 0x09);
+    a.branch(0xD0, "yoshi_tongue_next");
+    a.op(0x8A);
+    a.op(0x48);
+    a.abs(0xBD, 0x0E20);
+    a.op(0xAA);
+    a.long(0xBF, MARIO_ENGINE_BANK, STOMP_TABLE_ADDR);
+    a.op(0xA8);
+    a.op(0x68);
+    a.op(0xAA);
+    a.op(0x98);
+    a.branch(0xF0, "yoshi_tongue_next"); // Skip 0 (NPC/Item)
+    a.imm8(0xC9, 0x04);
+    a.branch(0xB0, "yoshi_tongue_next"); // Skip Boos (4), Bosses (5), Dry Bones (6)
+                                         // 36px proximity check (|dx| < 36 -> dx + 36 < 72 = 0x48)
+    a.op(0x38);
+    a.abs(0xBD, 0x0D10);
+    a.dp(0xE5, 0x22);
+    a.op(0x18);
+    a.imm8(0x69, 0x24);
+    a.imm8(0xC9, 0x48);
+    a.branch(0xB0, "yoshi_tongue_next");
+    a.op(0x38);
+    a.abs(0xBD, 0x0D00);
+    a.dp(0xE5, 0x20);
+    a.op(0x18);
+    a.imm8(0x69, 0x24);
+    a.imm8(0xC9, 0x48);
+    a.branch(0xB0, "yoshi_tongue_next");
+    // YOSHI GULP!! Swallow enemy -> puff + +1 Heart + +2 Coins + Dragon Coin #9!
+    a.imm8(0xA9, 0x06);
+    a.abs(0x9D, 0x0DD0);
+    a.imm8(0xA9, 0x1F);
+    a.abs(0x9D, 0x0DF0);
+    a.imm8(0xA9, 0x12);
+    a.abs(0x8D, W_TONGUE_CD);
+    a.imm8(0xA9, 0x08);
+    a.abs(0x8D, 0x012F); // Gulp/Pop SFX!
+    a.op(0x18);
+    a.abs(0xAD, 0xF36D);
+    a.imm8(0x69, 0x08); // +1 Full Heart!
+    a.abs(0xCD, 0xF36C);
+    a.branch(0x90, "yoshi_heal_ok");
+    a.abs(0xAD, 0xF36C);
+    a.label("yoshi_heal_ok");
+    a.abs(0x8D, 0xF36D);
+    a.abs(0x8D, W_YOSHI_LAST_HP);
+    a.imm8(0xA9, 0x02);
+    a.jsr("Mario_AddCoinsAndStar");
+    a.imm8(0xA9, 0x09); // Persistent Dragon Coin #9 (Yoshi Tongue Gulp!)
+    a.jsr("Mario_AwardDragonCoin");
+    a.branch(0x80, "yoshi_do_hp_chk");
+    a.label("yoshi_tongue_next");
+    a.op(0xCA);
+    a.branch(0x10, "yoshi_tongue_loop");
+
+    a.label("yoshi_do_hp_chk");
     // Compare current Mario HP ($F36D) vs W_YOSHI_LAST_HP
     a.abs(0xAD, 0xF36D);
     a.abs(0xCD, W_YOSHI_LAST_HP);
@@ -774,6 +1006,16 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.abs(0x8D, W_YOSHI_FLUTTER);
     a.branch(0x80, "finish_jump_start");
     a.label("norm_jump_vz");
+    // v0.10.0 — Playable Luigi (S_LUIGI_MODE != 0) has authentic higher SMB2/SMW Jump (+2.94 px/f = 0x02F0)!
+    a.abs(0xAD, S_LUIGI_MODE);
+    a.branch(0xF0, "mario_std_vz");
+    a.imm8(0xA9, 0xF0); // Luigi VZ = +2.94 px/f!
+    a.abs(0x8D, W_VZ_LO);
+    a.imm8(0xA9, 0x02);
+    a.abs(0x8D, W_VZ_HI);
+    a.abs(0x9C, W_YOSHI_FLUTTER);
+    a.branch(0x80, "finish_jump_start");
+    a.label("mario_std_vz");
     a.imm8(0xA9, 0x90); // VZ = +2.56 px/f classic Mario!
     a.abs(0x8D, W_VZ_LO);
     a.imm8(0xA9, 0x02);
@@ -847,10 +1089,18 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.abs(0x8D, W_VZ_LO);
 
     a.label("apply_grav");
-    // Signed 16-bit gravity: VZ -= 0x0024
+    // Signed 16-bit gravity: Luigi (-0x001E floaty hang-time!) vs Mario (-0x0024)
+    a.abs(0xAD, S_LUIGI_MODE);
+    a.branch(0xF0, "grav_mario");
+    a.imm8(0xA9, 0x1E);
+    a.branch(0x80, "grav_sub");
+    a.label("grav_mario");
+    a.imm8(0xA9, 0x24);
+    a.label("grav_sub");
+    a.abs(0x8D, W_TMP_A);
     a.op(0x38);
     a.abs(0xAD, W_VZ_LO);
-    a.imm8(0xE9, 0x24);
+    a.abs(0xED, W_TMP_A);
     a.abs(0x8D, W_VZ_LO);
     a.abs(0xAD, W_VZ_HI);
     a.imm8(0xE9, 0x00);
@@ -1025,6 +1275,13 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.dp(0x85, 0x11); // Trigger ALTTP native Submodule $16 ON/OFF tile swap!
     a.imm8(0xA9, 0x25);
     a.abs(0x8D, 0x012E); // Switch Clank SFX!
+                         // v0.10.0: Award 1-time Persistent Dragon Coin #5 (Dungeon ON/OFF Ground Pound!) & trigger 300f P-Switch Gold Rush!
+    a.imm8(0xA9, 0x2C);
+    a.abs(0x8D, W_PSWITCH_LO);
+    a.imm8(0xA9, 0x01);
+    a.abs(0x8D, W_PSWITCH_HI);
+    a.imm8(0xA9, 0x05);
+    a.jsr("Mario_AwardDragonCoin");
     a.jmp("gp_sw_next");
 
     a.label("gp_sw_next_j");
@@ -1096,9 +1353,10 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.imm8(0xC9, 0x05); // Boss Encounter Class (0x05)?
     a.branch(0xD0, "gp_sw_normal_enemy");
 
-    // v0.9.0 BOSS GROUND POUND STAGGER & COIN SHOWER!
-    // Staggers boss ($0EA0 = 0x16), shakes fortress ($011A = 0x12), awards +3 Coins & +8 Star Power,
-    // and safely chips 2 HP ONLY if boss HP >= 4 (preserving multi-phase boss scripts 100% safely!).
+    // v0.9.0/v0.10.0 BOSS GROUND POUND STAGGER, BOWSER PHASE 2 COUNTERPLAY & DRAGON COIN SHOWER!
+    // Staggers boss ($0EA0 = 0x16), shakes fortress ($011A = 0x12), awards +3 Coins (+5 on Final King Bowser 0xD6!),
+    // safely chips 2 HP ONLY if boss HP >= 4 (preserving multi-phase boss scripts 100% safely!),
+    // and awards 1-time Persistent Dragon Coin #8 (Boss Stagger) / #11 (Final Bowser Phase 2 Counter)!
     a.imm8(0xA9, 0x16);
     a.abs(0x9D, 0x0EA0);
     a.imm8(0xA9, 0x12);
@@ -1112,8 +1370,25 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.label("gp_boss_reward");
     a.imm8(0xA9, 0x2B);
     a.abs(0x8D, 0x012E); // Mario Coin Chime!
+                         // Check if Final Boss King Bowser ($0E20 == 0xD6) -> Phase 2 Heavy Volcanic Tremor + +5 Coins + Dragon Coin #11!
+    a.abs(0xBD, 0x0E20);
+    a.imm8(0xC9, 0xD6);
+    a.branch(0xD0, "gp_boss_normal");
+    a.imm8(0xA9, 0x20);
+    a.abs(0x9D, 0x0EA0);
+    a.imm8(0xA9, 0x18);
+    a.abs(0x8D, 0x011A);
+    a.imm8(0xA9, 0x05);
+    a.jsr("Mario_AddCoinsAndStar");
+    a.imm8(0xA9, 0x0B); // Persistent Dragon Coin #11 (Final King Bowser Phase 2 Counter!)
+    a.jsr("Mario_AwardDragonCoin");
+    a.branch(0x80, "gp_boss_done");
+    a.label("gp_boss_normal");
     a.imm8(0xA9, 0x03);
     a.jsr("Mario_AddCoinsAndStar");
+    a.imm8(0xA9, 0x08); // Persistent Dragon Coin #8 (First Koopaling Boss Stagger!)
+    a.jsr("Mario_AwardDragonCoin");
+    a.label("gp_boss_done");
     a.imm8(0xA9, 0x18);
     a.abs(0x8D, W_BOSS_HIT_CD);
     a.jmp("gp_sw_next");
@@ -1146,42 +1421,251 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.op(0x60);
 
     // =========================================================================
-    // SUBROUTINE: Mario_CheckWarpPipe (v0.9.0)
-    // Interactive Overworld Physical SMW Green Warp Pipe on World 1 Yoshi's Island (Screen 0x2C, r09 c07)!
-    // Ground Pounding right beside the Green Warp Pipe (`X = $08C4..$08FF, Y = $0B10..$0B5F` on $8A == 0x2C)
-    // triggers the native SPC700 Descending Warp Pipe SFX ($012E=0x15), +5 Secret Bonus Coins, & Full Star Power!
+    // SUBROUTINE: Mario_CheckWarpPipe & Mario_UpdateWarpPipe (v0.10.0 MU-041!)
+    // REAL PHYSICAL INTER-REGIONAL 5-HUB OVERWORLD WARP PIPE NETWORK!
+    // Ground Pounding beside ANY Hub's Physical 3D Green SMW Warp Pipe enters the pipe:
+    //   - Hub 0: World 1 Yoshi's Island (0x2C, r09 c07, X=$08E0 Y=$0B20) -> Hub 1: Toad Town (slot 2, 0x18)!
+    //   - Hub 1: Toad Town Square (0x18/0x19, r12 c03, X=$0260 Y=$0780)  -> Hub 2: Cheep-Cheep Lake (slot 9, 0x35)!
+    //   - Hub 2: Cheep-Cheep Lake (0x35/0x3E, r04 c07, X=$0CE0 Y=$0E80)  -> Hub 3: Vanilla Dome (slot 0, 0x03)!
+    //   - Hub 3: Vanilla Dome Mtn (0x03/0x0B, r10 c05, X=$06A0 Y=$0340)  -> Hub 4: Forest of Illusion (slot 13, 0x12)!
+    //   - Hub 4: Forest of Illusion (0x12, r06 c05, X=$04A0 Y=$04C0)     -> Hub 0: Mario's House (slot 3, 0x2C)!
+    // Awards 1-time Persistent SRAM Discovery Dragon Coin (bits 0..4 in $7E:F400 -> ZERO infinite farming!).
     // =========================================================================
     a.label("Mario_CheckWarpPipe");
     a.abs(0xAD, W_GP_IMPACT);
-    a.branch(0xF0, "pipe_rts");
+    a.branch(0xF0, "pipe_rts_early");
+    a.abs(0xAD, W_PIPE_CD);
+    a.branch(0xD0, "pipe_rts_early");
     a.dp(0xA5, 0x10);
     a.imm8(0xC9, 0x09); // Overworld Mode only!
-    a.branch(0xD0, "pipe_rts");
+    a.branch(0xF0, "pipe_chk_h0");
+    a.label("pipe_rts_early");
+    a.op(0x60);
+
+    // Check Hub 0: Screen 0x2C (Mario's House Yard Green Pipe at r09 c07 -> X=$08C4..$08FF, Y=$0B10..$0B5F)
+    a.label("pipe_chk_h0");
     a.dp(0xA5, 0x8A);
-    a.imm8(0xC9, 0x2C); // World 1 Mario's House Green Warp Pipe (0x2C, r09 c07 -> X=0x08E0, Y=0x0B30)!
-    a.branch(0xD0, "pipe_rts");
+    a.imm8(0xC9, 0x2C);
+    a.branch(0xD0, "pipe_chk_h1");
     a.dp(0xA5, 0x23);
-    a.imm8(0xC9, 0x08); // X_hi == 0x08 (left half of Screen 0x2C, cols 0..7)
+    a.imm8(0xC9, 0x08);
+    a.branch(0xD0, "pipe_rts_early");
+    a.dp(0xA5, 0x21);
+    a.imm8(0xC9, 0x0B);
+    a.branch(0xD0, "pipe_rts_early");
+    a.dp(0xA5, 0x22);
+    a.imm8(0xC9, 0xC4);
+    a.branch(0x90, "pipe_rts_early");
+    a.dp(0xA5, 0x20);
+    a.imm8(0xC9, 0x10);
+    a.branch(0x90, "pipe_rts_early");
+    a.imm8(0xC9, 0x60);
+    a.branch(0xB0, "pipe_rts_early");
+    a.imm8(0xA9, 0x02); // Destination Slot 2 = Toad Town (Screen 0x18)!
+    a.imm8(0xA2, 0x00); // Hub 0 Dragon Coin
+    a.jmp("pipe_begin_enter");
+
+    // Check Hub 1: Area 0x18 (Toad Town Square Pipe at 0x19 r12 c03 -> X=$0214..$0298, Y=$0758..$07C0)
+    a.label("pipe_chk_h1");
+    a.imm8(0xC9, 0x18);
+    a.branch(0xD0, "pipe_chk_h2");
+    a.dp(0xA5, 0x23);
+    a.imm8(0xC9, 0x02);
+    a.branch(0xD0, "pipe_rts_early");
+    a.dp(0xA5, 0x21);
+    a.imm8(0xC9, 0x07);
+    a.branch(0xD0, "pipe_rts_early");
+    a.dp(0xA5, 0x22);
+    a.imm8(0xC9, 0x14);
+    a.branch(0x90, "pipe_rts_early");
+    a.imm8(0xC9, 0x98);
+    a.branch(0xB0, "pipe_rts_early");
+    a.dp(0xA5, 0x20);
+    a.imm8(0xC9, 0x58);
+    a.branch(0x90, "pipe_rts_early");
+    a.imm8(0xC9, 0xC0);
+    a.branch(0xB0, "pipe_rts_early");
+    a.imm8(0xA9, 0x00); // Destination Slot 0 = Vanilla Dome Mountain (Screen 0x03 — SMW Terracotta Mountain Palette!)
+    a.imm8(0xA2, 0x01); // Hub 1 Dragon Coin
+    a.jmp("pipe_begin_enter");
+
+    // Check Hub 2: Area 0x35 (Cheep-Cheep Lake Shoal & Pipe Island at 0x3E r04 c07 -> X=$0C80..$0CFF, Y=$0E58..$0EC8)
+    a.label("pipe_chk_h2");
+    a.imm8(0xC9, 0x35);
+    a.branch(0xD0, "pipe_chk_h3");
+    a.dp(0xA5, 0x23);
+    a.imm8(0xC9, 0x0C);
+    a.branch(0xD0, "pipe_rts_mid");
+    a.dp(0xA5, 0x21);
+    a.imm8(0xC9, 0x0E);
+    a.branch(0xD0, "pipe_rts_mid");
+    a.dp(0xA5, 0x22);
+    a.imm8(0xC9, 0x80);
+    a.branch(0x90, "pipe_rts_mid");
+    a.dp(0xA5, 0x20);
+    a.imm8(0xC9, 0x58);
+    a.branch(0x90, "pipe_rts_mid");
+    a.imm8(0xC9, 0xC8);
+    a.branch(0xB0, "pipe_rts_mid");
+    a.imm8(0xA9, 0x0D); // Destination Slot 13 = Forest of Illusion (Screen 0x12)!
+    a.imm8(0xA2, 0x02); // Hub 2 Dragon Coin
+    a.jmp("pipe_begin_enter");
+    a.label("pipe_rts_mid");
+    a.op(0x60);
+
+    // Check Hub 3: Area 0x03 (Vanilla Dome Green Pipe at 0x0B r10 c05 -> X=$0670..$06D8, Y=$0318..$0378)
+    a.label("pipe_chk_h3");
+    a.imm8(0xC9, 0x03);
+    a.branch(0xD0, "pipe_chk_h4");
+    a.dp(0xA5, 0x23);
+    a.imm8(0xC9, 0x06);
     a.branch(0xD0, "pipe_rts");
     a.dp(0xA5, 0x21);
-    a.imm8(0xC9, 0x0B); // Y_hi == 0x0B (lower half of Screen 0x2C, rows 8..15)
+    a.imm8(0xC9, 0x03);
     a.branch(0xD0, "pipe_rts");
     a.dp(0xA5, 0x22);
-    a.imm8(0xC9, 0xC4); // X_lo >= 0xC4 (right beside Green Warp Pipe at 0xE0, never at doorway 0xB8!)
+    a.imm8(0xC9, 0x70);
     a.branch(0x90, "pipe_rts");
-    a.dp(0xA5, 0x20);
-    a.imm8(0xC9, 0x10); // Y_lo >= 0x10
-    a.branch(0x90, "pipe_rts");
-    a.imm8(0xC9, 0x60); // Y_lo < 0x60
+    a.imm8(0xC9, 0xD8);
     a.branch(0xB0, "pipe_rts");
-    // TRIGGER PHYSICAL SMW GREEN WARP PIPE REWARD & SFX!
+    a.dp(0xA5, 0x20);
+    a.imm8(0xC9, 0x18);
+    a.branch(0x90, "pipe_rts");
+    a.imm8(0xC9, 0x78);
+    a.branch(0xB0, "pipe_rts");
+    a.imm8(0xA9, 0x09); // Destination Slot 9 = Lake Cheep-Cheep (Screen 0x35 — Frog Suit Swim!)
+    a.imm8(0xA2, 0x03); // Hub 3 Dragon Coin
+    a.jmp("pipe_begin_enter");
+
+    // Check Hub 4: Screen 0x12 (Forest of Illusion Pipe at 0x12 r06 c05 -> X=$0478..$04D8, Y=$0498..$04F8)
+    a.label("pipe_chk_h4");
+    a.imm8(0xC9, 0x12);
+    a.branch(0xD0, "pipe_rts");
+    a.dp(0xA5, 0x23);
+    a.imm8(0xC9, 0x04);
+    a.branch(0xD0, "pipe_rts");
+    a.dp(0xA5, 0x21);
+    a.imm8(0xC9, 0x04);
+    a.branch(0xD0, "pipe_rts");
+    a.dp(0xA5, 0x22);
+    a.imm8(0xC9, 0x78);
+    a.branch(0x90, "pipe_rts");
+    a.imm8(0xC9, 0xD8);
+    a.branch(0xB0, "pipe_rts");
+    a.dp(0xA5, 0x20);
+    a.imm8(0xC9, 0x98);
+    a.branch(0x90, "pipe_rts");
+    a.imm8(0xC9, 0xF8);
+    a.branch(0xB0, "pipe_rts");
+    a.imm8(0xA9, 0x03); // Destination Slot 3 = World 1 Mario's House (Screen 0x2C)!
+    a.imm8(0xA2, 0x04); // Hub 4 Dragon Coin
+
+    // BEGIN REAL WARP PIPE DESCENT! (A = dst slot, X = hub id 0..4)
+    a.label("pipe_begin_enter");
+    a.abs(0x8D, W_PIPE_DST);
+    a.op(0x8E); // STX W_PIPE_HUB
+    a.code.extend_from_slice(&W_PIPE_HUB.to_le_bytes());
+    a.imm8(0xA9, 0x01); // State 1 = Pipe Descent Fade-Out
+    a.abs(0x8D, W_PIPE_STATE);
+    a.imm8(0xA9, 0x0F); // 15-frame smooth screen fade-out & descent
+    a.abs(0x8D, W_PIPE_TMR);
     a.imm8(0xA9, 0x15);
     a.abs(0x8D, 0x012E); // Authentic Native SPC700 SMW Descending Warp Pipe Triple-Pulse SFX!
-    a.imm8(0xA9, 0x80);
-    a.abs(0x8D, 0xF36E); // Refill Star Power to 100% FULL!
-    a.imm8(0xA9, 0x05);
-    a.jsr("Mario_AddCoinsAndStar"); // +5 Warp Pipe Bonus Gold Coins!
     a.label("pipe_rts");
+    a.op(0x60);
+
+    // --- ACTIVE WARP PIPE STATE MACHINE (Descent -> Native JSL $0A:B8A5 -> Emerge!) ---
+    a.label("Mario_UpdateWarpPipe");
+    a.abs(0xAD, W_PIPE_STATE);
+    a.imm8(0xC9, 0x01);
+    a.branch(0xF0, "pipe_state_descend");
+    a.jmp("pipe_state_emerge");
+
+    a.label("pipe_state_descend");
+    a.imm8(0xA9, 0x01);
+    a.abs(0x8D, 0x037B); // Untouchable while entering Warp Pipe!
+    a.abs(0xAD, W_PIPE_TMR);
+    a.branch(0xF0, "pipe_exec_warp");
+    a.abs(0xCE, W_PIPE_TMR);
+    a.abs(0xAD, W_PIPE_TMR);
+    a.dp(0x85, 0x13); // Smooth hardware brightness fade-out (0x0E -> 0x00)!
+    a.op(0x60);
+
+    a.label("pipe_exec_warp");
+    // HARDWARE-LEGAL FORCED BLANK ($00:4200=0, $00:420C=0, $00:2100=$80) + ALTTP COMPLETE NATIVE WARP SEQUENCE!
+    // Matches vanilla $02:9F83..$02:9FA8 verbatim: JSL $00:8919 -> JSL $0D:F988 -> JSL $0A:B8A5 -> JSL $0A:B928!
+    a.imm8(0xA9, 0x00);
+    a.long(0x8F, 0x00, 0x4200); // Disable NMI during Overworld VRAM reload
+    a.long(0x8F, 0x00, 0x420C); // Disable HDMA during Overworld VRAM reload
+    a.op(0x48); // PHA ($00)
+    a.op(0xAB); // PLB -> DBR = $00 (required by $00:8919, $0D:F988, $0A:B8A5, $0A:B928!)
+    a.long(0x22, 0x00, 0x8919); // JSL $00:8919 (INIDISP=$80 Forced Blank + clear HDMA/Mosaic!)
+    a.long(0x22, 0x0D, 0xF988); // JSL $0D:F988 (Clear stale sprite/overlay graphics buffers!)
+                                // Load target destination slot into $1AF0 (16-bit) & invoke ALTTP native Overworld Warp Loader!
+    a.long(0xAF, 0x7E, W_PIPE_DST);
+    a.abs(0x8D, 0x1AF0);
+    a.abs(0x9C, 0x1AF1);
+    a.long(0x22, 0x0A, 0xB8A5); // JSL $0A:B8A5 (Map32 + Camera + Scroll + VRAM GFX + CGRAM + Sprites + Biome Music!)
+    a.imm8(0xE2, 0x30);
+    a.imm8(0xA9, 0x00);
+    a.op(0x48);
+    a.op(0xAB); // DBR = $00 for $0A:B928
+    a.long(0x22, 0x0A, 0xB928); // JSL $0A:B928 -> JSL $02:B215 -> JSR $EDDB (FULL 32x32 BG1+BG2 Tilemap Buffer & $17=#$04!)
+                                // Restore 8-bit A/X/Y & DBR = $7E safely after long calls!
+    a.imm8(0xE2, 0x30);
+    a.imm8(0xA9, 0x7E);
+    a.op(0x48);
+    a.op(0xAB);
+    a.abs(0x9C, 0x0200); // Keep menu/flute submodule cleanly 0!
+    a.dp(0x64, 0x11); // Overworld normal submodule 0!
+    a.dp(0x64, 0x5D); // Normal grounded state!
+    a.dp(0xA5, 0x8A);
+    a.abs(0x8D, W_LAST_AREA);
+    a.jsr("Mario_ResetAirborne");
+    a.jsr("Mario_ResetShell");
+    // Award 1-time Persistent SRAM Discovery Dragon Coin (bits 0..4 -> ZERO infinite farming!)
+    a.abs(0xAD, W_PIPE_HUB);
+    a.jsr("Mario_AwardDragonCoin");
+    // Keep Forced Blank ($13 = $80) for 1 NMI frame so NMI cleanly DMAs FULL BG tilemap ($17=4) & CGRAM ($15=1) with ZERO seams!
+    a.imm8(0xA9, 0x02);
+    a.abs(0x8D, W_PIPE_STATE);
+    a.abs(0x9C, W_PIPE_TMR); // TMR=0: frame 0 holds INIDISP=$80 for NMI VRAM DMA, frames 1..15 fade brightness 1->15!
+    a.imm8(0xA9, 0x01);
+    a.abs(0x8D, W_PAL_DIRTY);
+    a.dp(0x85, 0x15); // Trigger NMI CGRAM DMA refresh
+    a.imm8(0xA9, 0x04);
+    a.dp(0x85, 0x17); // Trigger NMI FULL BG1+BG2 Tilemap DMA refresh!
+    a.imm8(0xA9, 0x80);
+    a.dp(0x85, 0x13); // Hold Forced Blank through the NMI VRAM upload!
+    a.imm8(0xA9, 0x50); // 80-frame anti-double-trigger cooldown
+    a.abs(0x8D, W_PIPE_CD);
+    a.imm8(0xA9, 0x81);
+    a.long(0x8F, 0x00, 0x4200); // Re-enable NMI + Auto-Joypad!
+    a.imm8(0xA9, 0x15);
+    a.abs(0x8D, 0x012E); // Warp Pipe Emerge SFX!
+    a.op(0x60);
+
+    a.label("pipe_state_emerge");
+    a.abs(0xAD, W_PIPE_TMR);
+    a.branch(0xD0, "pipe_emerge_fade");
+    // Frame 0 of emerge: keep Forced Blank while NMI finishes uploading full BG1+BG2 tilemap ($17=4)!
+    a.imm8(0xA9, 0x80);
+    a.dp(0x85, 0x13);
+    a.abs(0xEE, W_PIPE_TMR);
+    a.op(0x60);
+    a.label("pipe_emerge_fade");
+    a.dp(0x85, 0x13); // Smooth fade-in 0x01 -> 0x0F!
+    a.abs(0xEE, W_PIPE_TMR);
+    a.abs(0xAD, W_PIPE_TMR);
+    a.imm8(0xC9, 0x10);
+    a.branch(0x90, "pipe_emerge_wait");
+    a.imm8(0xA9, 0x0F);
+    a.dp(0x85, 0x13); // Full brightness!
+    a.abs(0x9C, W_PIPE_STATE);
+    a.abs(0x9C, 0x037B);
+    a.imm8(0xA9, 0x01);
+    a.abs(0x8D, W_PAL_DIRTY);
+    a.label("pipe_emerge_wait");
     a.op(0x60);
 
     // =========================================================================
@@ -1313,7 +1797,9 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     // Starman always instant KOs!
     a.abs(0xAD, W_STAR_LO);
     a.abs(0x0D, W_STAR_HI);
-    a.branch(0xD0, "instant_kill");
+    a.branch(0xF0, "stomp_not_star");
+    a.jmp("instant_kill");
+    a.label("stomp_not_star");
 
     // Ice Shatter Bonus (Y == 5): Frozen enemy shatters for +3 Coins & +8 Star Power!
     a.abs(0xAD, W_TMP_B);
@@ -1329,8 +1815,25 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.jsr("Mario_AddCoinsAndStar");
     a.jmp("do_stomp_bounce");
 
-    // KOOPA SHELL RETRACT (Class 0x03, when no shell currently active -> Retract into Stunned Shell!)
+    // KOOPA SHELL RETRACT (Class 0x03) & AUTHENTIC SMW DRY BONES CRUMBLE (Class 0x06)!
     a.label("chk_koopa_retract");
+    // v0.10.0 — Authentic SMW Dry Bones (Class 0x06): ordinary stomp crumbles into rattling bone pile ($0EA0=0x78)!
+    // Ground Pound Slam (W_AIRBORNE == 4) shatters Dry Bones permanently for +3 Coins!
+    a.imm8(0xC9, 0x06);
+    a.branch(0xD0, "chk_koopa_c3");
+    a.abs(0xAD, W_AIRBORNE);
+    a.imm8(0xC9, 0x04); // Ground Pound Slam shatters Dry Bones permanently!
+    a.branch(0xF0, "instant_kill");
+    // Ordinary stomp -> crumble into stunned bone pile (120 frames rattling)!
+    a.imm8(0xA9, 0x78);
+    a.abs(0x9D, 0x0EA0);
+    a.abs(0x9E, 0x0D50); // Zero VX
+    a.abs(0x9E, 0x0D40); // Zero VY
+    a.imm8(0xA9, 0x08);
+    a.abs(0x8D, 0x012F); // Crisp bone-crumble Stomp Pop SFX!
+    a.jmp("do_stomp_bounce");
+
+    a.label("chk_koopa_c3");
     a.imm8(0xC9, 0x03);
     a.branch(0xD0, "normal_stomp_dmg");
     a.abs(0xAD, W_SHELL_STATE);
@@ -1382,6 +1885,12 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.imm8(0xA9, 0x04);
     a.label("combo_coin_ok");
     a.jsr("Mario_AddCoinsAndStar");
+    // Award 1-time Persistent Dragon Coin #7 on first airborne Multi-Stomp Combo (W_COMBO >= 1)!
+    a.abs(0xAD, W_COMBO);
+    a.branch(0xF0, "no_combo_dcoin");
+    a.imm8(0xA9, 0x07);
+    a.jsr("Mario_AwardDragonCoin");
+    a.label("no_combo_dcoin");
 
     a.abs(0xAD, W_AIRBORNE);
     a.branch(0xF0, "spr_next");
@@ -1604,6 +2113,8 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.op(0x5A); // PHY
     a.imm8(0xA9, 0x02);
     a.jsr("Mario_AddCoinsAndStar");
+    a.imm8(0xA9, 0x06); // Persistent Dragon Coin #6 (First Koopa Shell Bowling Strike!)
+    a.jsr("Mario_AwardDragonCoin");
     a.op(0x7A); // PLY
     a.label("bowl_next");
     a.op(0x88); // DEY
@@ -1791,9 +2302,14 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.label("Mario_UpdatePowerUps");
     a.abs(0xAD, W_STAR_LO);
     a.abs(0x0D, W_STAR_HI);
-    a.branch(0xD0, "star_tick");
+    a.branch(0xF0, "pu_not_star");
+    a.jmp("star_tick");
+    a.label("pu_not_star");
 
-    // Check L+R simultaneous activation for Balanced Super Starman
+    // Check L+R simultaneous chords:
+    //   - Down + L + R (grounded) -> Toggle Playable Luigi Mode (SRAM $7E:F407, higher floaty jump + Emerald CGRAM!)
+    //   - Up   + L + R (grounded) -> Activate Timed SMW P-Switch 2x Gold Rush (300 frames, -0x10 Star Power, Dragon Coin #10!)
+    //   - Neutral/Left/Right L+R  -> Balanced Super Starman!
     a.dp(0xA5, 0xF2);
     a.imm8(0x29, 0x30);
     a.imm8(0xC9, 0x30);
@@ -1802,8 +2318,46 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.label("star_chk_new");
     a.dp(0xA5, 0xF6);
     a.imm8(0x29, 0x30);
-    a.branch(0xD0, "star_chk_mp");
+    a.branch(0xD0, "lr_chord_dispatch");
     a.jmp("resolve_base_form");
+
+    a.label("lr_chord_dispatch");
+    // 1. Down ($F0 & $04) + L + R -> Toggle Playable Luigi Mode!
+    a.dp(0xA5, 0xF0);
+    a.imm8(0x29, 0x04);
+    a.branch(0xF0, "chk_pswitch_chord");
+    a.abs(0xAD, S_LUIGI_MODE);
+    a.imm8(0x49, 0x01); // Toggle 0 <-> 1 in real checksummed SRAM $7E:F407!
+    a.abs(0x8D, S_LUIGI_MODE);
+    a.imm8(0xA9, 0x01);
+    a.abs(0x8D, W_PAL_DIRTY);
+    a.imm8(0xA9, 0x2B);
+    a.abs(0x8D, 0x012E); // Mario/Luigi swap chime!
+    a.jmp("resolve_base_form");
+
+    // 2. Up ($F0 & $08) + L + R -> Activate Timed SMW P-Switch 2x Gold Rush (300 frames, costs 0x10 Star Power)!
+    a.label("chk_pswitch_chord");
+    a.dp(0xA5, 0xF0);
+    a.imm8(0x29, 0x08);
+    a.branch(0xF0, "star_chk_mp");
+    a.abs(0xAD, 0xF36E);
+    a.imm8(0xC9, 0x10);
+    a.branch(0xB0, "start_pswitch_now");
+    a.jmp("resolve_base_form");
+    a.label("start_pswitch_now");
+    a.op(0x38);
+    a.imm8(0xE9, 0x10);
+    a.abs(0x8D, 0xF36E);
+    a.imm8(0xA9, 0x2C); // 0x012C = 300 frames (6.0 s @ 50Hz) of 2x Gold Rush!
+    a.abs(0x8D, W_PSWITCH_LO);
+    a.imm8(0xA9, 0x01);
+    a.abs(0x8D, W_PSWITCH_HI);
+    a.imm8(0xA9, 0x25);
+    a.abs(0x8D, 0x012E); // Switch Clank SFX!
+    a.imm8(0xA9, 0x0A); // Persistent Dragon Coin #10 (P-Switch Activation!)
+    a.jsr("Mario_AwardDragonCoin");
+    a.jmp("resolve_base_form");
+
     a.label("star_chk_mp");
     // Require >= 0x18 Star Power in $7E:F36E (upfront cost 0x08 + continuous drain!)
     a.abs(0xAD, 0xF36E);
@@ -1870,8 +2424,58 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.jsr("Mario_LoadCgramPal");
     a.op(0x60);
 
-    // Resolve desired base Mario form (0=Classic, 1=Fire, 2=Ice, 3=Cape, 4=Yoshi) in A!
+    // Resolve desired base form (0=Classic, 1=Fire, 2=Ice, 3=Cape, 4=Yoshi, 9=Luigi, 10=Frog Suit!) in A!
     a.label("resolve_base_form");
+    // Auto-activate SMW Frog Suit (Pal 10 + Swim Turbo Boost!) whenever Deep Water Swimming ($5D == 0x04) with Flippers ($F356 != 0)!
+    a.dp(0xA5, 0x5D);
+    a.imm8(0xC9, 0x04);
+    a.branch(0xD0, "chk_non_frog_forms");
+    a.abs(0xAD, 0xF356);
+    a.branch(0xF0, "chk_non_frog_forms");
+    // Frog Suit Swim Turbo: +1 px every 2nd frame along held D-Pad direction ($F0: U=$08 D=$04 L=$02 R=$01)!
+    a.dp(0xA5, 0x1A);
+    a.imm8(0x29, 0x01);
+    a.branch(0xD0, "form_frog");
+    a.dp(0xA5, 0x11);
+    a.branch(0xD0, "form_frog");
+    a.dp(0xA5, 0xF0);
+    a.imm8(0x29, 0x01); // Right?
+    a.branch(0xF0, "frog_chk_l");
+    a.dp(0xE6, 0x22);
+    a.branch(0xD0, "frog_chk_ud");
+    a.dp(0xE6, 0x23);
+    a.branch(0x80, "frog_chk_ud");
+    a.label("frog_chk_l");
+    a.dp(0xA5, 0xF0);
+    a.imm8(0x29, 0x02); // Left?
+    a.branch(0xF0, "frog_chk_ud");
+    a.dp(0xA5, 0x22);
+    a.branch(0xD0, "frog_dec_xlo");
+    a.dp(0xC6, 0x23);
+    a.label("frog_dec_xlo");
+    a.dp(0xC6, 0x22);
+    a.label("frog_chk_ud");
+    a.dp(0xA5, 0xF0);
+    a.imm8(0x29, 0x04); // Down?
+    a.branch(0xF0, "frog_chk_u");
+    a.dp(0xE6, 0x20);
+    a.branch(0xD0, "form_frog");
+    a.dp(0xE6, 0x21);
+    a.branch(0x80, "form_frog");
+    a.label("frog_chk_u");
+    a.dp(0xA5, 0xF0);
+    a.imm8(0x29, 0x08); // Up?
+    a.branch(0xF0, "form_frog");
+    a.dp(0xA5, 0x20);
+    a.branch(0xD0, "frog_dec_ylo");
+    a.dp(0xC6, 0x21);
+    a.label("frog_dec_ylo");
+    a.dp(0xC6, 0x20);
+    a.label("form_frog");
+    a.imm8(0xA9, 0x0A); // Pal 10 = SMW Frog Suit!
+    a.jmp("apply_form");
+
+    a.label("chk_non_frog_forms");
     a.abs(0xAD, 0x0202);
     a.imm8(0xC9, 0x06); // Fire Flower?
     a.branch(0xF0, "form_fire");
@@ -1881,6 +2485,8 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.branch(0xF0, "form_cape");
     a.abs(0xAD, W_YOSHI_ACTIVE); // Riding Yoshi Companion?
     a.branch(0xD0, "form_yoshi");
+    a.abs(0xAD, S_LUIGI_MODE); // Playable Luigi Mode ($7E:F407)?
+    a.branch(0xD0, "form_luigi");
     a.imm8(0xA9, 0x00); // Classic Super Mario
     a.branch(0x80, "apply_form");
     a.label("form_fire");
@@ -1894,6 +2500,9 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.branch(0x80, "apply_form");
     a.label("form_yoshi");
     a.imm8(0xA9, 0x04);
+    a.branch(0x80, "apply_form");
+    a.label("form_luigi");
+    a.imm8(0xA9, 0x09); // Pal 9 = Playable Luigi Emerald Cap & Navy Overalls!
 
     a.label("apply_form");
     a.abs(0x8D, W_TMP_A);
@@ -1917,30 +2526,55 @@ pub fn assemble_mario_engine_65816() -> Result<Vec<u8>, String> {
     a.op(0x60);
 
     // =========================================================================
-    // SUBROUTINE: Mario_LoadCgramPal
-    // Input: A = palette index (0..8) -> copies 30 B from $22:B100 + A*30 into $7E:C6E2..$7E:C6FF
-    //        Max offset = 8 * 30 = 240 <= 255 -> fits cleanly in 8-bit X!
+    // SUBROUTINE: Mario_LoadCgramPal (v0.10.0 — supports up to 16 palettes: 0..10 active!)
+    // Input: A = palette index (0..10):
+    //   - A < 8  -> reads from $22:B100 + A*30 (offset 0..210, 8-bit X safe!)
+    //   - A >= 8 -> reads from $22:B1F0 + (A-8)*30 (offset 0..60, 8-bit X safe!)
     // =========================================================================
     a.label("Mario_LoadCgramPal");
+    a.imm8(0xC9, 0x08);
+    a.branch(0xB0, "pal_hi_bank");
     a.op(0x0A); // *2
     a.abs(0x8D, W_TMP_B);
     a.op(0x0A); // *4
     a.op(0x0A); // *8
     a.op(0x0A); // *16
-    a.op(0x0A); // *32 (note: for A=8, 8*32=256 wraps to 0; 0 - 16 = 240 mod 256! EXACT!)
-    a.op(0x38); // SEC
-    a.abs(0xED, W_TMP_B); // A = (A*32 - A*2) mod 256 = A * 30 EXACT for all A in 0..=8!
-    a.op(0xAA); // TAX
+    a.op(0x0A); // *32
+    a.op(0x38);
+    a.abs(0xED, W_TMP_B); // A * 30
+    a.op(0xAA);
     a.imm8(0xA0, 0x00);
-
-    a.label("pal_copy_loop");
+    a.label("pal_copy_lo");
     a.long(0xBF, MARIO_ENGINE_BANK, PAL_TABLES_ADDR);
     a.abs(0x99, 0xC6E2);
     a.op(0xE8);
     a.op(0xC8);
     a.imm8(0xC0, 0x1E);
-    a.branch(0x90, "pal_copy_loop");
+    a.branch(0x90, "pal_copy_lo");
+    a.branch(0x80, "pal_finish_dma");
 
+    a.label("pal_hi_bank");
+    a.op(0x38);
+    a.imm8(0xE9, 0x08); // A - 8
+    a.op(0x0A); // *2
+    a.abs(0x8D, W_TMP_B);
+    a.op(0x0A); // *4
+    a.op(0x0A); // *8
+    a.op(0x0A); // *16
+    a.op(0x0A); // *32
+    a.op(0x38);
+    a.abs(0xED, W_TMP_B); // (A - 8) * 30
+    a.op(0xAA);
+    a.imm8(0xA0, 0x00);
+    a.label("pal_copy_hi");
+    a.long(0xBF, MARIO_ENGINE_BANK, PAL_TABLES_ADDR + 0x00F0); // $22:B1F0 (Pal 8, 9 Luigi, 10 Frog Suit!)
+    a.abs(0x99, 0xC6E2);
+    a.op(0xE8);
+    a.op(0xC8);
+    a.imm8(0xC0, 0x1E);
+    a.branch(0x90, "pal_copy_hi");
+
+    a.label("pal_finish_dma");
     a.imm8(0xA9, 0x01);
     a.dp(0x85, 0x15); // Trigger NMI CGRAM DMA refresh!
     a.op(0x60);
@@ -1997,15 +2631,15 @@ pub fn inject_mario_gameplay_engine(
     )?;
     ops += 1;
 
-    // 3. Write 9 live BGR555 Mario Power-Up & Yoshi Palettes at $22:B100 (PC 0x113100, 270 B)
+    // 3. Write 11 live BGR555 Mario/Luigi/Frog/Yoshi/Starman Palettes at $22:B100 (PC 0x113100, 330 B)
     let pals = build_mario_powerup_palettes();
     session.swap_custom_bytes(
         rom_zelda,
         PAL_TABLES_PC,
         PAL_TABLES_PC,
         pals,
-        "Palettes Live 6 Formes Mario v0.8.0 ($22:B100, 270 B) : Super, Fire, Ice, Cape, Yoshi Rider & 4 Cycles Starman".into(),
-        SwapKind::PaletteBgr555 { color_count: 135 },
+        "Palettes Live 8 Formes Mario v0.10.0 ($22:B100, 330 B) : Super, Fire, Ice, Cape, Yoshi Rider, 4 Starman, Playable Luigi & Frog Suit".into(),
+        SwapKind::PaletteBgr555 { color_count: 165 },
     )?;
     ops += 1;
 
@@ -2057,6 +2691,10 @@ mod tests {
             code.windows(4).any(|w| w == [0xAF, 0x72, 0xC1, 0x7E]),
             "Ground Pound must read hardware Crystal Switch $7E:C172"
         );
+        assert!(
+            code.windows(4).any(|w| w == [0x22, 0xA5, 0xB8, 0x0A]),
+            "v0.10.0 Real Warp Pipe Network must invoke ALTTP native Overworld warp loader JSL $0A:B8A5"
+        );
         assert_eq!(*code.last().unwrap(), 0x60);
 
         let stomp = build_mario_stomp_table();
@@ -2071,6 +2709,14 @@ mod tests {
         assert_eq!(
             stomp[0x19], 4,
             "Boo (Poe) must use Orientation-Freeze AI (class 4)"
+        );
+        assert_eq!(
+            stomp[0x91], 6,
+            "Dry Bones (Stalfos Knight) must use Crumble/Rebuild AI (class 6)"
+        );
+        assert_eq!(
+            stomp[0xA7], 6,
+            "Dry Bones (Stalfos) must use Crumble/Rebuild AI (class 6)"
         );
         assert_eq!(
             stomp[0x08], 1,
@@ -2090,8 +2736,8 @@ mod tests {
         let pals = build_mario_powerup_palettes();
         assert_eq!(
             pals.len(),
-            270,
-            "9 power-up/Yoshi/Starman palettes * 30 bytes = 270 bytes"
+            330,
+            "11 power-up/Yoshi/Starman/Luigi/Frog palettes * 30 bytes = 330 bytes"
         );
         // Verify modular 8-bit palette offset arithmetic (A*32 - A*2) mod 256 == A*30 for A=0..=8!
         for a_idx in 0u8..=8u8 {

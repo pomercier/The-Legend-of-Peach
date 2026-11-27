@@ -1,29 +1,27 @@
-# Hardware & Multi-Emulator Validation Report — v0.9.0
+# SNES Hardware Validation Report (`v0.10.0`)
 
-**Target ROM:** `build/legend_of_peach_v0.9.0.sfc`  
-**Verified SHA-256:** `5546dfaec62b98dc8c91bbbc58a7b16df6de91b9d8e6f0d56a1b7f1b36693fbd`  
-**Format:** Standard 2 MiB LoROM (`2,097,152` bytes, Checksum `0xBC86`, Complement `0x4379`, Valid `true`, CRC32 `261F4214`, zero enhancement chips, zero MSU-1, zero overclock)
-
----
-
-## 1. Honest Execution Matrix (Zero Assumed Passes)
-
-| Target Platform / Emulator | Installed Locally? | Tested on v0.9.0? | Scenarios Executed | Result |
-|---|---|---|---:|---|
-| **Mednafen 1.32.1 — `snes_faust` (fast accuracy core)** | Yes | **Yes** | 8 / 10 `v0.9.0` scenarios (Physical Overworld SMW Green Warp Pipe + GP `+5` Coins, Morton Boss GP Stagger, Wendy Coral Sea Palace `DungPal[1]`, Lemmy Star-Ice Circus `DungPal[4]`, Larry Chocolate Pyramid `DungPal[5]`, Roy Midnight Koopa Castle `DungPal[10]`, Bowser Obsidian Keep `DungPal[13]`, Dark World Bowser Citadel `0x5B`) | `VISUAL_PASS` (zero crashes, zero softlocks, crisp SPC700 audio) |
-| **Mednafen 1.32.1 — `snes` (cycle-accurate bsnes core)** | Yes | **Yes** | 2 / 10 `v0.9.0` scenarios (`v090_01_title_peach_scepter_bsnes` Title Screen Royal Peach Star-Scepter with 0 Master Sword + `v090_10_bsnes_final_bowser_synergy` Final King Bowser + Fire Mario + Boss GP Synergy `250 -> 263` Coins + BUG 07 guard) | `VISUAL_PASS` (`0` divergence vs `snes_faust`) |
-| **Standalone `bsnes` GUI** | No | No | 0 | `NOT_TESTED` (Mednafen's `snes` module IS cycle-accurate bsnes) |
-| **`ares`** | No | No | 0 | `NOT_TESTED` |
-| **`Snes9x`** | No | No | 0 | `NOT_TESTED` |
-| **`Mesen 2`** | No | No | 0 | `NOT_TESTED` |
-| **Physical SNES / Super Famicom + FXPAK Pro / SD2SNES** | No (not attached to build host) | No | 0 | `NOT_TESTED` — **never claimed as `HARDWARE_PASS`** |
+**Release:** `v0.10.0 — Super Mario Adventure Beyond Limits`  
+**Output ROM:** `build/legend_of_peach_v0.10.0.sfc` (`2,097,152` bytes, 2 MiB LoROM)  
+**SHA-256:** `2da376f5c5cd6f760c07e465bdba252fe1aa1f03e69f17dcabcff1ecd6e072b1`  
+**CRC32:** `37CE4B03` | **SNES Checksum / Complement:** `0x930C` / `0x6CF3` (`XOR = 0xFFFF`, Valid: `true`)
 
 ---
 
-## 2. Automated Hardware Compliance Guarantees (`v0.9.0`)
+## 1. Static Hardware & Cartridge Compliance (`STATIC_PASS`)
 
-1. **LoROM Header & Checksum:** Internal title `THE LEGEND OF PEACH`, Map Mode `0x20` (LoROM), ROM Size `0x0B` (2 MiB), SRAM `0x03` (8 KiB), Region `0x06` (FR PAL), `0xBC86 + 0x4379 = 0xFFFF`.
-2. **Strict 32 KiB Single-Bank Guard:** All `226` relocated streams in `$23..$3F` and all `51` audited compressed LZ2 sheets (including `raw 0xA5` Royal Peach Star-Scepter & `raw 0x3E/0x3F` Overworld Warp Pipes) stay strictly within single 32 KiB banks.
-3. **Zero Memory Overlaps:** `audit_legend_of_peach_output()` verifies `0` overlaps across all `671` hardware ops and enforces isolation of `0x08A000..0x08A2FF`, `$20..$21`, `$22`, `$23..$3A`, and `$3B..$3F`.
-4. **Bit-Identical Deterministic Build:** Two independent clean builds verified via `cmp` (exit 0) and `sha256sum` (`5546dfaec62b98dc8c91bbbc58a7b16df6de91b9d8e6f0d56a1b7f1b36693fbd`).
-5. **Real Hardware Protocol (FXPAK Pro / SD2SNES):** Build locally via `snes-cli --build-peach`, verify `sha256sum`, copy to SD card with zero enhancement-chip overrides, and test the Royal Princess Peach Star-Scepter Title Screen, Overworld Green Warp Pipe Ground Pound bonus outside Mario's House, all 8 Koopaling/Bowser Fortresses, Boss GP Stagger & Synergy, and SRAM persistence across hardware resets.
+- **Mapping Mode:** Standard SlowROM 2 MiB LoROM (`$7FD5 = 0x20`, `$7FD6 = 0x02` ROM+RAM+Battery, `$7FD7 = 0x0B` 2 MiB, `$7FD8 = 0x03` 8 KiB SRAM, `$7FD9 = 0x06` FR PAL).
+- **Enhancement Chips / Overclock:** **None** (`0` SA-1, `0` Super FX, `0` MSU-1, `0` overclock).
+- **Bank Boundary & Firewall Audit:** `51` LZ2 graphics sheets verified, `268` relocated blocks cleanly allocated inside `$23..$3F` (`0` overlaps, `0` 32 KiB bank straddles).
+- **VRAM / PPU Legality:** All Overworld Warp Pipe transitions disable NMI (`$00:4200 = 0`) and HDMA (`$00:420C = 0`), assert hardware Forced Blank (`$00:2100 = $80`) via `JSL $00:8919`, invoke ALTTP's native `JSL $0D:F988`, `JSL $0A:B8A5`, and `JSL $0A:B928`, and hold `$13 = $80` across 1 NMI frame for `$17 = 4` full tilemap DMA before fading brightness up.
+- **Deterministic Build:** Dual independent builds compared via `cmp` and `sha256sum` -> **100% bit-identical**.
+- **Automated Rust Tests:** **`32 / 32 PASS`**, `0` clippy warnings, `0` repo safety leaks (`scripts/check_repo_safety.py`).
+
+## 2. Live Emulation & Differential Validation (`VISUAL_PASS` + `AUDIO_PASS` + `PLAYTHROUGH_PASS`)
+
+- **`mednafen:snes_faust`:** `12 / 12 VISUAL_PASS + AUDIO_PASS` (incl. 4-biome Warp Pipe tour, Frog Suit, Playable Luigi, P-Switch 2×, Yoshi Tongue, Dry Bones, 5 newly verified bestiary rooms, and 100% blank-SRAM opening playthrough + cold reboot).
+- **`mednafen:snes` (`bsnes-accuracy`):** `2 / 2 VISUAL_PASS + AUDIO_PASS` (bit-identical SRAM parity with `snes_faust` on 2-hop Warp Pipe tour + Final King Bowser Phase 2 Counterplay `250 -> 281` Coins).
+- **Not Installed Locally (`NOT_TESTED`):** Standalone `bsnes` GUI, `Ares`, `Snes9x`, `Mesen 2`.
+
+## 3. Physical SNES Hardware Status (`HARDWARE_NOT_TESTED`)
+
+**Physical SNES / Super Famicom / FXPAK Pro console execution is `0 / 1` (`HARDWARE_NOT_TESTED`)** — no physical console is connected to this build environment, and `HARDWARE_PASS` is **never** claimed without real console evidence. See [`docs/REAL_HARDWARE_TEST_GUIDE.md`](REAL_HARDWARE_TEST_GUIDE.md) for the complete FXPAK Pro / SD2SNES hardware validation protocol.

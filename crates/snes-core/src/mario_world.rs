@@ -2096,6 +2096,37 @@ fn patch_worldwide_bg_tilesets(
         )?;
         ops += 1;
     }
+    // v0.10.0 — Light World Vanilla Dome / Chocolate Mountain (OWMainPal[2] @ 0x0DE754, 70 bytes = 35 colors):
+    // Transform Zelda's desaturated grey-olive Death Mountain into warm SMW Vanilla Dome / Chocolate Mountain
+    // terracotta-ochre crags, sunny sandstone plateaus, and bright alpine sky highlights!
+    if 0x0DE754 + 70 <= rom_z.data.len() {
+        let mut lw_dm = rom_z.data[0x0DE754..0x0DE754 + 70].to_vec();
+        let set_c = |buf: &mut [u8], idx: usize, col: u16| {
+            let b = col.to_le_bytes();
+            buf[idx * 2] = b[0];
+            buf[idx * 2 + 1] = b[1];
+        };
+        set_c(&mut lw_dm, 0, rgb555(56, 36, 28)); // deep chocolate rock outline
+        set_c(&mut lw_dm, 1, rgb555(104, 64, 44)); // SMW Chocolate Mountain shade
+        set_c(&mut lw_dm, 2, rgb555(148, 92, 56)); // warm terracotta cliff face
+        set_c(&mut lw_dm, 3, rgb555(192, 128, 72)); // sunlit Vanilla Dome stone
+        set_c(&mut lw_dm, 4, rgb555(168, 120, 76)); // sandy mountain plateau
+        set_c(&mut lw_dm, 5, rgb555(216, 168, 104)); // bright SMW ochre path
+        set_c(&mut lw_dm, 6, rgb555(248, 216, 152)); // sunlit crest highlight
+        set_c(&mut lw_dm, 7, rgb555(56, 36, 28));
+        set_c(&mut lw_dm, 8, rgb555(112, 68, 48));
+        set_c(&mut lw_dm, 9, rgb555(160, 100, 60));
+        set_c(&mut lw_dm, 10, rgb555(208, 144, 84));
+        sess.swap_custom_bytes(
+            rom_z,
+            0x0DE754,
+            0x0DE754,
+            lw_dm,
+            "Montagne Lumière → VANILLA DOME & CHOCOLATE MOUNTAIN (OWMainPal[2] @ 0x0DE754) : Falaises Terre Cuite & Or SMW".into(),
+            crate::swapper::SwapKind::PaletteBgr555 { color_count: 35 },
+        )?;
+        ops += 1;
+    }
     // Dark World Pyramid of Power (`0x5B`, `0x5C`, `0x63` -> `OWAuxPal[17]` @ 0x0DEB36, 42 bytes = 21 colors):
     // Transform Zelda's golden-sand Egyptian Pyramid into BOWSER'S OBSIDIAN LAVA CITADEL!
     //   Row 0 (0..6): Volcanic magma sky & glowing ember crest highlights

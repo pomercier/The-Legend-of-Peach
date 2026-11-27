@@ -858,7 +858,7 @@ pub fn build_transformed_overworld_screen(
         set(&mut edited.tiles, 15, 4, 0x07CC);
         set(&mut edited.tiles, 15, 11, 0x07CC);
         set(&mut edited.tiles, 15, 12, 0x0166);
-    } else if screen_id < 0x80 {
+    } else if screen_id <= 0x80 {
         // Pure-walkable grass variants (`TileAttr == 0x48` on all 16 Map8 subtiles — 100% collision-identical to 0x001D!)
         let lw_meadow_palette: &[u16] = match biome {
             OverworldBiome::YoshisIslandHub => &[0x0166, 0x066A, 0x009F, 0x00AA],
@@ -867,6 +867,7 @@ pub fn build_transformed_overworld_screen(
             OverworldBiome::PeachCastleDomain => &[0x009F, 0x0166, 0x00AA, 0x066A],
             OverworldBiome::CharginChuckPlains => &[0x0166, 0x066A, 0x001C, 0x009F],
             OverworldBiome::CheepCheepAquatic => &[0x066A, 0x0166, 0x009F, 0x00AA],
+            OverworldBiome::SpecialArea => &[0x0166, 0x066A, 0x009F, 0x00AA], // Star Road Celestial Grove (0x80)!
             // Dark World (Bowser's Conquered Kingdom): distinct volcanic/haunted rhythm!
             OverworldBiome::BowserVolcanicValley
             | OverworldBiome::KoopaShadowVillage
@@ -893,21 +894,48 @@ pub fn build_transformed_overworld_screen(
         let mut pipe_placed = false;
         let is_warp_pipe_hub = matches!(
             screen_id,
-            0x13 | 0x18 | 0x1E | 0x2B | 0x35 | 0x58 | 0x5B | 0x5E | 0x6C | 0x75
+            0x13 | 0x1E | 0x2B | 0x58 | 0x5B | 0x5E | 0x6C | 0x75 | 0x80
         );
         let mut grass_candidates: Vec<(usize, usize)> = Vec::new();
-        let mut grass_edited = 0usize;
+        let mut fallback_05ff: Vec<(usize, usize)> = Vec::new();
+        let mut fallback_001f: Vec<(usize, usize)> = Vec::new();
+        let mut fallback_00_floor: Vec<(usize, usize, u16)> = Vec::new();
+        let mut any_edited = 0usize;
 
-        // Verified collision-identical decorative Map32 palettes across ALL major biome ground types:
-        //   - Forest / Courtyard floor `0x0106` (TileAttr 0x00) -> `[0x06A6, 0x0B53, 0x0CF5, 0x010C, 0x0B5E, 0x0E48, 0x06A7]`
-        //   - Desert / Swamp sand `0x05E5`      (TileAttr 0x08) -> `[0x073B, 0x0724, 0x08B2, 0x093E, 0x0790, 0x0C54]`
-        //   - Cheep-Cheep Aquatic water `0x0E90`(TileAttr 0x00) -> `[0x0FFC, 0x0EF7, 0x0EFE]`
+        // Verified collision-identical decorative Map32 palettes across ALL major biome ground types (ZRI-007 -> 0!):
+        //   - Forest / Courtyard floor `0x0106`/`0x1152`/`0x08F7`/`0x0AB3` (TileAttr 0x00, ZERO DirtPath!) -> `[0x06A6, 0x0B53, 0x0CF5, 0x010C, 0x0B5E, 0x0E48, 0x06A7]`
+        //   - Desert / Swamp sand `0x05E5`                 (TileAttr 0x08) -> `[0x073B, 0x0724, 0x08B2, 0x093E, 0x0790, 0x0C54]`
+        //   - Cheep-Cheep Aquatic water `0x0E90`           (TileAttr 0x00) -> `[0x0FFC, 0x0EF7, 0x0EFE]`
+        //   - Bowser Obsidian Citadel stone `0x1758`       (TileAttr 0x00) -> `[0x1776]`
+        //   - Toad Town / Shadow Village stone `0x080B`/`0x082A` (TileAttr 0x00, ZERO DirtPath!) -> `[0x081B]`
         const FOREST_FLOOR_PAL: [u16; 7] = [0x06A6, 0x0B53, 0x0CF5, 0x010C, 0x0B5E, 0x0E48, 0x06A7];
         const DESERT_SAND_PAL: [u16; 6] = [0x073B, 0x0724, 0x08B2, 0x093E, 0x0790, 0x0C54];
         const AQUATIC_SEA_PAL: [u16; 3] = [0x0FFC, 0x0EF7, 0x0EFE];
+        const VILLAGE_STONE_PAL: [u16; 1] = [0x081B];
+
+        // v0.10.0 — Curated 5-Hub Physical Green Warp Pipe Network landmarks right ON SCREEN beside native $02:EB67 arrival points!
+        //   - Screen 0x19 (Toad Town Square, slot 2 arrival 0x19 r13 c00)   -> Green Warp Pipe at (r12, c03)
+        //   - Screen 0x3E (Cheep-Cheep Lake, slot 9 arrival 0x3E r05 c04)   -> Green Warp Pipe at (r04, c07)
+        //   - Screen 0x0B (Vanilla Dome Mtn, slot 0 arrival 0x0B r09 c03)   -> Green Warp Pipe at (r10, c05)
+        //   - Screen 0x12 (Forest of Illusion, slot 13 arrival 0x12 r07 c07)-> Green Warp Pipe at (r06, c05)
+        if let Some((pr, pc)) = match screen_id {
+            0x19 => Some((12usize, 3usize)),
+            0x3E => Some((4usize, 7usize)),
+            0x0B => Some((10usize, 5usize)),
+            0x12 => Some((6usize, 5usize)),
+            _ => None,
+        } {
+            edited.tiles[pr * 16 + pc] = 0x02D4;
+            pipe_placed = true;
+            props_placed += 1;
+            any_edited += 1;
+        }
 
         for r in 1..15usize {
             for c in 1..15usize {
+                if edited.tiles[r * 16 + c] != orig.tiles[r * 16 + c] {
+                    continue;
+                }
                 let t = orig.tiles[r * 16 + c];
                 let hash = ((screen_id as usize)
                     .wrapping_mul(37)
@@ -917,17 +945,16 @@ pub fn build_transformed_overworld_screen(
 
                 if t == 0x001D {
                     grass_candidates.push((r, c));
-                    // v0.9.0: Place 1 Physical 3D SMW Green/Bowser Warp Pipe (`0x02D4`) inside an open 3x3 grass clearing
-                    // on curated Light & Dark World Overworld Hubs (ZRI-017 eliminated — zero corridor blocking!)
+                    // v0.9.0/v0.10.0: Place 1 Physical 3D SMW Green/Bowser Warp Pipe (`0x02D4`) inside an open 3x3 grass clearing
+                    // on curated Light/Dark World Hubs & Star Road (0x80)!
                     if is_warp_pipe_hub && !pipe_placed && is_open_center[r][c] {
                         edited.tiles[r * 16 + c] = 0x02D4;
                         pipe_placed = true;
                         props_placed += 1;
-                        grass_edited += 1;
+                        any_edited += 1;
                         continue;
                     }
                     // Place up to 2 well-spaced liftable SMW Turn-Block / Smiling Bush landmarks inside wide open clearings
-                    // (never on adjacent cells, never blocking any corridor since all 8 surrounding 32x32 tiles remain pure grass!)
                     if is_open_center[r][c]
                         && props_placed < 2
                         && (r % 3 == 1)
@@ -939,52 +966,103 @@ pub fn build_transformed_overworld_screen(
                                 | OverworldBiome::BowserMagmaPeak
                         )
                     {
-                        let prop_tile = if screen_id < 0x40 {
-                            // Light World: iconic SMW Turn-Block pair (0x06C7) or SMW Smiling Bushes (0x07CC)
+                        let prop_tile = if screen_id < 0x40 || screen_id == 0x80 {
                             if (screen_id as usize + props_placed).is_multiple_of(2) {
                                 0x06C7
                             } else {
                                 0x07CC
                             }
+                        } else if (screen_id as usize + props_placed).is_multiple_of(2) {
+                            0x07CC
                         } else {
-                            // Dark World: Bowser's Conquered Haunted Bush / Dark Turn-Block (via bg:3F!)
-                            if (screen_id as usize + props_placed).is_multiple_of(2) {
-                                0x07CC
-                            } else {
-                                0x06C7
-                            }
+                            0x06C7
                         };
                         edited.tiles[r * 16 + c] = prop_tile;
                         props_placed += 1;
-                        grass_edited += 1;
+                        any_edited += 1;
                         continue;
                     }
 
                     // Deterministic biome-tuned 100%-walkable Mario meadow enrichment (strictly TileAttr 0x48!)
                     if hash < 4 {
                         edited.tiles[r * 16 + c] = lw_meadow_palette[hash];
-                        grass_edited += 1;
+                        any_edited += 1;
                     }
-                } else if t == 0x0106 && hash < 4 {
-                    // Mushroom Forest / Bowser Dark Courtyard pure walkable floor (strictly TileAttr 0x00!)
-                    edited.tiles[r * 16 + c] =
-                        FOREST_FLOOR_PAL[(hash + screen_id as usize) % FOREST_FLOOR_PAL.len()];
+                } else if t == 0x05FF || t == 0x1B1F || t == 0x1B20 {
+                    // Pure walkable grass variant used on Eastern/Cliff/Dark East/Castle Gate screens (strictly TileAttr 0x48!)
+                    fallback_05ff.push((r, c));
+                    if hash < 4 {
+                        edited.tiles[r * 16 + c] = lw_meadow_palette[hash];
+                        any_edited += 1;
+                    }
+                } else if t == 0x001F {
+                    // 4x Liftable Bush cluster (strictly TileAttr 0x50!) -> enrich selected clusters into SMW Turn-Block / Smiling Bush plazas!
+                    fallback_001f.push((r, c));
+                    if hash < 3 {
+                        edited.tiles[r * 16 + c] = if hash == 0 { 0x06C7 } else { 0x07CC };
+                        any_edited += 1;
+                    }
+                } else if t == 0x0106 || t == 0x1152 || t == 0x08F7 || t == 0x0AB3 {
+                    // Mushroom Forest / Boo Haunted Woods / Castle Courtyard / Zora Basin pure walkable floor (strictly TileAttr 0x00!)
+                    fallback_00_floor.push((
+                        r,
+                        c,
+                        FOREST_FLOOR_PAL[(r + c) % FOREST_FLOOR_PAL.len()],
+                    ));
+                    if hash < 4 {
+                        edited.tiles[r * 16 + c] =
+                            FOREST_FLOOR_PAL[(hash + screen_id as usize) % FOREST_FLOOR_PAL.len()];
+                        any_edited += 1;
+                    }
+                } else if t == 0x1758 {
+                    // Bowser's Obsidian Citadel plaza stone (strictly TileAttr 0x00!) -> native carved citadel stone 0x1776!
+                    fallback_00_floor.push((r, c, 0x1776));
+                    if hash < 3 {
+                        edited.tiles[r * 16 + c] = 0x1776;
+                        any_edited += 1;
+                    }
+                } else if t == 0x080B || t == 0x082A {
+                    // Toad Town / Koopa Shadow Village floor (strictly TileAttr 0x00!)
+                    fallback_00_floor.push((
+                        r,
+                        c,
+                        VILLAGE_STONE_PAL[(r + c) % VILLAGE_STONE_PAL.len()],
+                    ));
+                    if hash < 3 {
+                        edited.tiles[r * 16 + c] = VILLAGE_STONE_PAL
+                            [(hash + screen_id as usize) % VILLAGE_STONE_PAL.len()];
+                        any_edited += 1;
+                    }
                 } else if t == 0x05E5 && hash < 4 {
-                    // Dry Dry Desert / Bowser Poison Swamp pure walkable sand (strictly TileAttr 0x08!)
+                    // Dry Dry Desert / Bowser Poison Swamp / Star Road stardust sand (strictly TileAttr 0x08!)
                     edited.tiles[r * 16 + c] =
                         DESERT_SAND_PAL[(hash + screen_id as usize) % DESERT_SAND_PAL.len()];
+                    any_edited += 1;
                 } else if t == 0x0E90 && hash < 2 {
                     // Cheep-Cheep Aquatic Sea / River subtle wave accents (strictly TileAttr 0x00!)
                     edited.tiles[r * 16 + c] =
                         AQUATIC_SEA_PAL[(hash + screen_id as usize) % AQUATIC_SEA_PAL.len()];
+                    any_edited += 1;
                 }
             }
         }
-        // Guarantee screens with sparse 0x001D grass still receive at least 1 pure-walkable meadow accent
-        if grass_edited == 0 && !grass_candidates.is_empty() {
-            let (r, c) = grass_candidates[grass_candidates.len() / 2];
-            edited.tiles[r * 16 + c] =
-                lw_meadow_palette[(screen_id as usize) % lw_meadow_palette.len()];
+        // Guarantee ALL 128/128 Light + Dark World screens (ZRI-007 -> 0!) receive at least 1 collision-identical Mario accent!
+        if any_edited == 0 {
+            if !grass_candidates.is_empty() {
+                let (r, c) = grass_candidates[grass_candidates.len() / 2];
+                edited.tiles[r * 16 + c] =
+                    lw_meadow_palette[(screen_id as usize) % lw_meadow_palette.len()];
+            } else if !fallback_05ff.is_empty() {
+                let (r, c) = fallback_05ff[fallback_05ff.len() / 2];
+                edited.tiles[r * 16 + c] =
+                    lw_meadow_palette[(screen_id as usize) % lw_meadow_palette.len()];
+            } else if !fallback_001f.is_empty() {
+                let (r, c) = fallback_001f[fallback_001f.len() / 2];
+                edited.tiles[r * 16 + c] = 0x06C7;
+            } else if !fallback_00_floor.is_empty() {
+                let (r, c, repl) = fallback_00_floor[fallback_00_floor.len() / 2];
+                edited.tiles[r * 16 + c] = repl;
+            }
         }
     }
 
@@ -1022,14 +1100,14 @@ pub fn patch_all_mushroom_kingdom_overworld(
     let mut all_orig: Vec<OverworldScreenMap> = Vec::with_capacity(128);
     let mut all_edit: Vec<OverworldScreenMap> = Vec::with_capacity(128);
 
-    for sid in 0u8..128u8 {
+    for sid in 0u8..=128u8 {
         let Some((orig, edited, changed)) = build_transformed_overworld_screen(&orig_snapshot, sid)
         else {
             continue;
         };
         if sid < 64 {
             report.light_world_audited += 1;
-        } else {
+        } else if sid < 128 {
             report.dark_world_audited += 1;
         }
 
@@ -1044,7 +1122,8 @@ pub fn patch_all_mushroom_kingdom_overworld(
             // 2. Validate Exact Hardware Collision Preservation (`$00:FBD9`):
             //    On general screens (sid != 0x2C), every edited Map16 subtile must EITHER preserve its EXACT
             //    4-subtile hardware TileAttr byte (`0x48->0x48`, `0x00->0x00`, `0x08->0x08`) OR upgrade pure
-            //    walkable grass (`0x48`) into a liftable Mario prop (`0x50` bush / `0x52` Turn-Block).
+            //    walkable grass (`0x48`) / liftable bush (`0x50`) into a walkable/liftable Mario prop (`0x48`/`0x50`/`0x52`),
+            //    OR place a Physical SMW Green Warp Pipe (`0x21B`) at an open 3x3 clearing or curated Hub arrival landmark!
             let mut coll_ok = true;
             if sid != 0x2C {
                 for k in 0..256 {
@@ -1056,6 +1135,10 @@ pub fn patch_all_mushroom_kingdom_overworld(
                             && (r_k - 1..=r_k + 1).all(|rr| {
                                 (c_k - 1..=c_k + 1).all(|cc| orig.tiles[rr * 16 + cc] == 0x001D)
                             });
+                        let is_curated_warp_hub_pipe = matches!(
+                            (sid, r_k, c_k),
+                            (0x19, 12, 3) | (0x3E, 4, 7) | (0x0B, 10, 5) | (0x12, 6, 5)
+                        );
                         let oq = decode_map32_quads(&orig_snapshot, orig.tiles[k]);
                         let eq = decode_map32_quads(&orig_snapshot, edited.tiles[k]);
                         if let (Some(oq), Some(eq)) = (oq, eq) {
@@ -1063,13 +1146,22 @@ pub fn patch_all_mushroom_kingdom_overworld(
                                 let oa = map16_hw_collision(&orig_snapshot, oq[q]);
                                 let ea = map16_hw_collision(&orig_snapshot, eq[q]);
                                 let identical = oa.is_some() && oa == ea;
-                                let grass_to_prop =
-                                    is_pure_walkable_grass_m16(&orig_snapshot, oq[q])
+                                let grass_or_bush_to_prop =
+                                    is_walkable_or_liftable_m16(&orig_snapshot, oq[q])
                                         && is_walkable_or_liftable_m16(&orig_snapshot, eq[q]);
-                                let grass_to_warp_pipe = is_open_3x3
+                                let orig_pure_walkable = matches!(
+                                    oa,
+                                    Some([0x48, 0x48, 0x48, 0x48])
+                                        | Some([0x00, 0x00, 0x00, 0x00])
+                                        | Some([0x08, 0x08, 0x08, 0x08])
+                                );
+                                let grass_to_warp_pipe = (is_open_3x3
                                     && is_pure_walkable_grass_m16(&orig_snapshot, oq[q])
-                                    && eq[q] == 0x21B;
-                                if !identical && !grass_to_prop && !grass_to_warp_pipe {
+                                    && eq[q] == 0x21B)
+                                    || (is_curated_warp_hub_pipe
+                                        && orig_pure_walkable
+                                        && (eq[q] == 0x21B || eq[q] == 0x034));
+                                if !identical && !grass_or_bush_to_prop && !grass_to_warp_pipe {
                                     coll_ok = false;
                                 }
                             }
@@ -1088,16 +1180,18 @@ pub fn patch_all_mushroom_kingdom_overworld(
                 report.total_map32_tiles_transformed += changed;
                 if sid < 64 {
                     report.light_world_transformed += 1;
-                } else {
+                } else if sid < 128 {
                     report.dark_world_transformed += 1;
                 }
-                all_orig.push(orig);
-                all_edit.push(edited);
-            } else {
+                if sid < 128 {
+                    all_orig.push(orig);
+                    all_edit.push(edited);
+                }
+            } else if sid < 128 {
                 all_orig.push(orig.clone());
                 all_edit.push(orig);
             }
-        } else {
+        } else if sid < 128 {
             all_orig.push(orig.clone());
             all_edit.push(orig);
         }
@@ -1277,13 +1371,13 @@ mod tests {
         );
         assert_eq!(rep.light_world_audited, 64);
         assert_eq!(rep.dark_world_audited, 64);
-        assert!(
-            rep.light_world_transformed >= 30,
-            "Must transform substantial Light World screens: {rep:?}"
+        assert_eq!(
+            rep.light_world_transformed, 64,
+            "v0.10.0 ZRI-007: ALL 64/64 Light World screens must be transformed: {rep:?}"
         );
-        assert!(
-            rep.dark_world_transformed >= 25,
-            "Must transform substantial Dark World screens: {rep:?}"
+        assert_eq!(
+            rep.dark_world_transformed, 64,
+            "v0.10.0 ZRI-007: ALL 64/64 Dark World screens must be transformed: {rep:?}"
         );
         assert!(
             rep.reloc_bytes_used < (OW_MAP32_RELOC_END_PC - OW_MAP32_RELOC_START_PC),

@@ -1,13 +1,16 @@
-# Next Actions & Roadmap (Post-v0.9.0 -> v1.0.0 The Legend of Peach)
+# Next Actions & Honest Gates Towards `v1.0.0`
 
-## Completed in v0.9.0 (`5546dfaec62b98dc8c91bbbc58a7b16df6de91b9d8e6f0d56a1b7f1b36693fbd`)
-- [x] **Title Screen Master Sword 100% Eliminated (`ZRI-009: 10 -> 0`):** Replaced all 10 `16×16` OAM Master Sword sprites in compressed sprite sheet `raw 0xA5` (`SP[0x32]`, PC `0x0B3CAD`) with an authentic Nintendo 16-bit **Royal Princess Peach Golden Star-Scepter & Super Star Crown** (SMW Super Star finial, Princess Peach jeweled crown, feathered Paratroopa wings, golden-pearl royal scepter shaft, and rounded jeweled golden orb tip, preserving original sparkles untouched — verified live on cycle-accurate `bsnes`).
-- [x] **Physical 3D Glossy Green SMW Overworld Warp Pipes (`ZRI-017: 10 -> 0`):** Sculpted 3D glossy emerald SMW Warp Pipe tiles (`build_smw_ow_warp_pipe_half_8x16`) into Light World (`raw 0x3E`) & Dark World (`raw 0x3F`) slot `m16 = 0x21B` (Pal 6 Emerald), relocated Heavy Rock Brick/Skull Blocks cleanly to `m16 = 0x239`, placed Physical SMW Warp Pipe `m32 = 0x02D4` directly in Mario's House Front Yard (`Screen 0x2C r09 c07`) and curated Light/Dark World open 3×3 hub clearings (`0` grammar/collision/border violations), and wired `Mario_CheckWarpPipe` (`+5` Bonus Coins `250 -> 255 -> 260`, Full Star Power, native SPC700 Descending Warp Pipe SFX `$012E=0x15`).
-- [x] **Complete 8 / 8 Bespoke Koopaling & King Bowser Fortress Palettes (`ZRI-008: 4 -> 0`):** Overhauled all 5 remaining major dungeons via ROM-disassembly-verified `$07:FA90` indices (`DungPal[1]` Wendy Coral Sea Palace, `DungPal[4]` Lemmy Star-Ice Circus Fortress, `DungPal[5]` Larry Sun-Baked Chocolate Desert Pyramid, `DungPal[10]` Roy Midnight Koopa Castle, `DungPal[13]` King Bowser Obsidian & Lava Keep), joining Morton (`[8]`), Iggy (`[9]`), and Ludwig (`[12]`).
-- [x] **65c816 Boss Combat Mechanics (`ZRI-019: 2 -> 0`):** Added Boss Encounter Class `0x05` across all 12 Boss sprite IDs (`$22:B000`) with **Boss Ground Pound Stagger & Coin Shower** (`$0EA0 = 0x16`, `$011A = 0x12`, `+3` Coins, safe `-2` HP chip only if `HP >= 4`), **Boss Hit Coin & Star-Power Synergy** (`W_BOSS_HIT_CD $7E:F51B`, `+2` Coins + `+4` Star Power + Coin Chime), and kicked-shell boss-script safety guard — visually verified live on Morton, Wendy (`250 -> 268`), Pokeys (`250 -> 261`), and cycle-accurate `bsnes` Final King Bowser (`250 -> 263`).
-- [x] **Scores & QA:** **Mario Identity Score `98.1%`** (up from `91.8%` in `v0.8.0`), **Perceptible Zelda Residue `1.9%`** (`8 / 416` honest remaining points), **Gameplay Depth `97.5%`**, `10/10` live dual-emulator `VISUAL_PASS` (`8 snes_faust + 2 bsnes`), `32/32` Rust tests, `51` audited LZ2 sheets (`226` relocated, `0` overlaps), `33/33` Mega SQLite DB tables (`980+` rows).
+`v0.10.0 — Super Mario Adventure Beyond Limits` deliberately stops short of `v1.0.0` until all true `1.0` readiness gates are honestly satisfied:
 
-## Final Milestone: **v1.0.0 — The Legend of Peach**
-1. **Final HUD Frame Polish (`ZRI-014`, 4 pts):** Refresh remaining vanilla HUD counter border tiles into authentic SMW coin/block bezel art (`ZRI -> ~1.0%`, `MII -> ~99.0%`).
-2. **Full Physical SNES / FXPAK Pro & Extended Multi-Emulator Verification:** Run the deterministic ROM on physical PAL 50 Hz SNES hardware (`FXPAK Pro` / `SD2SNES`) and standalone `ares`, `Snes9x`, and `Mesen 2`.
-3. **End-to-End Playthrough & Optional USA NTSC 60 Hz Offset Study:** Long-form dungeon-to-Bowser playthrough regression test and technical feasibility assessment for USA NTSC `1.0` base ROM support.
+## P0 — Mandatory Gates for `v1.0.0`
+1. **Physical SNES / FXPAK Pro Hardware Validation (`14_physical_hardware_validation: 0% -> 100%`):**
+   - Execute [`docs/REAL_HARDWARE_TEST_GUIDE.md`](REAL_HARDWARE_TEST_GUIDE.md) on a stock unmodified PAL SNES (`SNSP-001`) + FXPAK Pro / SD2SNES (and optionally an NTSC SNES / Super Famicom `60 Hz` check) confirming zero VRAM tearing, clean SPC700 audio, and battery-backed SRAM persistence across physical power cycles.
+2. **Continuous Uninterrupted Blank-SRAM Start-to-Credits Full Playthrough (`13_playthrough_completeness: 58% -> 100%`):**
+   - Complete an uninterrupted playthrough from 100% blank SRAM through all 3 Light World Relics, Peach's Castle Tower Bowser, all 7 Dark World Koopaling Fortresses, Final King Bowser, and the Ending Credits with zero softlocks and zero save-state/warp shortcuts.
+3. **Broader Reference Emulator Matrix (`12_qa_and_differential_test_coverage`):**
+   - Run cross-emulator spot checks on `Ares`, standalone `bsnes`, `Snes9x`, and `Mesen 2` in addition to `Mednafen snes_faust` + `Mednafen bsnes-accuracy`.
+
+## P1 — High-Value `v1.0.0` Polish Opportunities
+4. **Interactive Multi-Destination Warp Zone Selector:** Upgrade the 5-Hub ring cycle (`0x2C -> 0x18 -> 0x03 -> 0x35 -> 0x12 -> 0x2C`) with an optional Hub choice UI or D-Pad directional pipe selection, plus a water-edged tile frame for Lake Cheep-Cheep's pipe pad.
+5. **Custom SMW BRR Instrument Samples:** Evaluate replacing selected ALTTP BRR samples with custom-tuned Mario brass/marimba/bass samples for even higher `05_audio_authenticity` fidelity.
+6. **Deep Structural Residue (`ZRI-022`, `4/416`):** Replace the Toad Town Weathervane bird statue Map16 sprite/tile with a Mushroom Kingdom Golden Star Monument or Yoshi Egg Fountain.

@@ -6,6 +6,38 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ---
 
+## [0.10.0] — 2026-11-27 — Super Mario Adventure Beyond Limits
+
+### Pillar 1 — Real Physical Inter-Regional 5-Hub Warp Pipe Network (`mario_engine.rs`, `mario_map.rs`, `MU-041`)
+- Replaced `v0.9.0`'s stationary front-yard coin bonus with a **genuine 5-Hub Physical Inter-Regional Overworld Warp Pipe Network** connecting **World 1 Yoshi's Island (`0x2C r09 c07`) -> Toad Town Weathervane Plaza (`0x18` / `0x19 r12 c03`) -> Vanilla Dome Terracotta Mountain (`0x03` / `0x0B r10 c05`) -> Lake Cheep-Cheep (`0x35` / `0x3E r04 c07`) -> Forest of Illusion (`0x12 r06 c05`) -> Yoshi's Island (`0x2C`)**.
+- Implemented a hardware-legal 3-state Warp Pipe engine (`W_PIPE_STATE` `$7E:F540`) invoking ALTTP's complete native Bank `$00/$02/$0A/$0D` Overworld loader inside Forced Blank: 15-frame brightness fade-out + native SPC700 Warp Pipe triple-pulse SFX (`$012E = 0x15`) -> `JSL $00:8919` + `JSL $0D:F988` + `JSL $0A:B8A5` (`$1AF0` slot) + `JSL $0A:B928` (`JSL $02:B215 -> JSR $EDDB` full BG1+BG2 tilemap buffer + `$17 = 0x04`) -> 1-frame NMI Forced Blank DMA hold -> 15-frame emergence fade-in + 80-frame anti-retrigger cooldown.
+- Caught and fixed a Pass-1 half-screen VRAM tilemap seam by adding `JSL $0A:B928` + the 1-frame Forced Blank NMI DMA hold; Pass 2 verified **3 consecutive live warps across 4 biomes in a single uncut run (`0x2C -> 0x18 -> 0x03 -> 0x35`)** with zero seams and bit-identical SRAM parity on both `snes_faust` and cycle-accurate `bsnes` ([`docs/WARP_NETWORK_REPORT.md`](docs/WARP_NETWORK_REPORT.md)).
+
+### Pillar 2 — Complete `128 / 128` Overworld + Star Road `0x80` + Vanilla Dome Terracotta Palette + SMW Gold-Riveted HUD (`mario_map.rs`, `mario_world.rs`, `mario_ui.rs`, `ZRI-007 -> 0`, `ZRI-014 -> 0`)
+- Closed all remaining `20 / 128` untouched Overworld screens (`64/64` Light World + `64/64` Dark World = **`128 / 128`**) PLUS Special Area **`0x80` Star Road Celestial Grove** using collision-identical uniform `TileAttr` (`$00:FBD9`) pools (`0` grammar violations, `0` hardware collision regressions, `0` cross-screen border breaks across 224 edges; `ZRI-007: 4 -> 0`).
+- Overhauled Light World **Vanilla Dome / Chocolate Mountain (`OWMainPal[2]` @ `0x0DE754`, `MU-045`)** into sunlit SMW terracotta-amber crags & warm sandstone plateaus (live-verified on `snes_faust` & `bsnes`).
+- Redesigned vanilla HUD border tiles (`0x50..0x5D` in Sheet `0x6F`/`0xDB` and `0x8B/0x8F` in Sheet `0x70`/`0xDC`, **`ZRI-014: 4 -> 0`**) into an authentic **SMW Gold-Riveted Reserve Item Box**, **Golden-Capped Star-Power Capsule**, and **Mini-Star `- VIES -` accents**.
+
+### Pillar 3 — Deep 65c816 Gameplay Expansion & Checksummed SRAM Persistence (`mario_engine.rs`, WRAM `$7E:F500..$7E:F548`, SRAM `$7E:F400..$7E:F407`)
+- **Persistent Checksummed SRAM Dragon Coins (`$7E:F400..$7E:F404`):** 32 unique Dragon Coins stored inside ALTTP's native auto-checksummed `$7E:F000..$7E:F4FF` save slot — `+10` Coins 1-time (permanently eliminating `v0.9.0`'s infinite warp pipe coin farming!) + **1-UP Royal Full Heal & Star Refill** every 5 Dragon Coins ([`docs/SRAM_PERSISTENCE_REPORT.md`](docs/SRAM_PERSISTENCE_REPORT.md)).
+- **Playable Luigi Mode (`Down + L + R` grounded, SRAM `$7E:F407`, Pal 9):** Live Emerald Cap & Navy Overalls CGRAM + higher (`0x02F0`) floatier (`-0x001E`) Luigi jump physics, persisting across save/quit/reboot!
+- **SMW / SMB3 Frog Suit (`$5D == 0x04` + Flippers `$F356 != 0`, Pal 10):** Auto-activates Electric Lime Frog Suit CGRAM + 4-dir Swim Turbo Boost in deep water (live-verified swimming in Lake Cheep-Cheep & Zora's Waterfall!).
+- **Timed SMW P-Switch 2× Gold Rush (`Up + L + R` grounded or Dungeon ON/OFF flip):** 300-frame timed Gold Rush doubling all Mario coin rewards (`2×`, verified `250 -> 270 -> 272` on Turn-Block throw + Dragon Coin `#10`).
+- **Yoshi Companion Tongue Swallow (`B`/`Y` while riding Yoshi):** Gulps nearby edible enemies within 36 px into a puff for `+1` Full Heart (`+8` eighths), `+2` Coins, and Dragon Coin `#9` (live-verified healing `11 -> 12` hearts & `250 -> 262` coins!).
+- **Authentic SMW Dry Bones Crumble/Rebuild AI (`STOMP_TABLE` class `0x06`, `0x85/0x91/0x9E/0xA7`) & Final King Bowser Phase 2 Counterplay (`0xD6`):** Ordinary stomp crumbles Dry Bones into a 120-frame stunned bone pile while Ground Pound Slam shatters them permanently; Ground Pounding Final King Bowser triggers heavy throne tremor (`$011A = 0x18`), `+5` Bonus Coins, and Dragon Coin `#11` (live-verified `250 -> 281` Coins on cycle-accurate `bsnes`!).
+- **100% Bank `$1C` French Narrative Cleanse (`mario_intro.rs`, `MU-071`):** Eliminated all remaining `35` Zelda lore/item occurrences across all 372 Bank `$1C` French messages (`201` vanilla -> `35` `v0.9.0` -> **`0`** `v0.10.0`).
+
+### Pillar 4 — Honest 14-Dimension Scoring, Real Audio QA, Differential Parity & Clean-SRAM Playthrough
+- Replaced coupled quality scores with an **independent 14-dimension auditable rubric** ([`docs/QUALITY_SCORES.json`](docs/QUALITY_SCORES.json)), explicitly documenting why `v0.10.0` does not jump prematurely to `v1.0.0` (`14_physical_hardware_validation = 0% HARDWARE_NOT_TESTED`, `13_playthrough_completeness = 58%`).
+- Built **`scripts/qa_engine_v0100.py`** verifying **`14 / 14 VISUAL_PASS + AUDIO_PASS`** (real WAV spectrum extraction `-24.4..-27.8 dBFS`, `54.5%..88.8%` active energy, `0%` clipping), true **identical-scenario differential parity** between `snes_faust` and cycle-accurate `bsnes` (`BIT_IDENTICAL` saved `.srm`!), **5 newly live-verified bestiary rooms** (`Spiny 0x26`, `Chain Chomp 0x6A`, `Monty Mole 0x20`, `Lava Bubble 0x15`, `Snifit 0x0A`), **100% blank-SRAM opening playthrough -> Star-Torch chest -> Rainy Overworld -> Save -> Cold Reboot**, and real `v0.9.0` vs `v0.10.0` Before/After comparison plates. Updated 33-table Mega SQLite DB (`1,104` rows).
+- Added 6 dedicated engineering reports: [`WARP_NETWORK_REPORT.md`](docs/WARP_NETWORK_REPORT.md), [`FULL_PLAYTHROUGH_REPORT.md`](docs/FULL_PLAYTHROUGH_REPORT.md), [`PROGRESSION_GRAPH.json`](docs/PROGRESSION_GRAPH.json), [`AUDIO_VALIDATION_REPORT.md`](docs/AUDIO_VALIDATION_REPORT.md), [`CROSS_EMULATOR_REPORT.md`](docs/CROSS_EMULATOR_REPORT.md), [`SRAM_PERSISTENCE_REPORT.md`](docs/SRAM_PERSISTENCE_REPORT.md), and [`REAL_HARDWARE_TEST_GUIDE.md`](docs/REAL_HARDWARE_TEST_GUIDE.md).
+- Deterministic 2 MiB LoROM build (dual independent runs bit-identical via `cmp` + `sha256sum`): `756` hardware patches across `18` rules (`~2.9 s`), `51` LZ2 sheets audited, `268` relocated blocks in `$23..$3F` (`0` overlaps), `32/32` passing Rust tests, `0` clippy warnings, `0` repo safety leaks.
+- **SNES Checksum / Complement:** `0x930C` / `0x6CF3` (Valid: `true`)
+- **Output CRC32:** `37CE4B03`
+- **Output SHA-256:** `2da376f5c5cd6f760c07e465bdba252fe1aa1f03e69f17dcabcff1ecd6e072b1`
+
+---
+
 ## [0.9.0] — 2026-11-27 — The Ultimate Mario Adventure
 
 ### Pillar 1 — Title Screen Master Sword 100% Eliminated (`mario_intro.rs`, `ZRI-009: 10 -> 0`)

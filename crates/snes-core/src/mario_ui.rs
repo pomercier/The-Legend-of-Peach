@@ -266,7 +266,15 @@ pub fn patch_mario_hud_and_start_menu(
         "YK......",
     ]);
 
-    // HUD Bullet Bill (tiles 0x86, 0x87 -> local 0x06, 0x07; Pal 2: 3=BLACK body, 2=WHITE eye/rim, 1=GOLD tail glow)
+    // HUD SMW Mini-Star Accents flanking "- VIES -" (tiles 0x8B & 0x8F -> local 0x0B & 0x0F, Pal 2: 1=GOLD, 2=WHITE, 3=BLACK!)
+    let hud_mini_star_l = parse_ascii_8x8([
+        "...KK...", "..KWWK..", "KKWYYWKK", "KYYYYYYK", ".KYYYYK.", ".KYKKYK.", "KYY..YYK",
+        ".KK..KK.",
+    ]);
+    let hud_mini_star_r = parse_ascii_8x8([
+        "...KK...", "..KWWK..", "KKWYYWKK", "KYYYYYYK", ".KYYYYK.", ".KYKKYK.", "KYY..YYK",
+        ".KK..KK.",
+    ]);
     // Crisp white upper/lower highlight rim so the iconic Bullet Bill pops cleanly on both dark & bright HUDs!
     let hud_bullet_l = parse_ascii_8x8([
         "...WWWWW", "..WKKKKK", ".WKKWWKK", ".WKWKWWK", ".WKKKKKK", ".WKKKKKK", "..WKKKKK",
@@ -515,6 +523,8 @@ pub fn patch_mario_hud_and_start_menu(
             write_2bpp_8x8(raw, 0x09, &hud_bobomb_r);
             write_2bpp_8x8(raw, 0x06, &hud_bullet_l);
             write_2bpp_8x8(raw, 0x07, &hud_bullet_r);
+            write_2bpp_8x8(raw, 0x0B, &hud_mini_star_l);
+            write_2bpp_8x8(raw, 0x0F, &hud_mini_star_r);
 
             // Start Menu Bob-omb (0xB2, 0xB3, 0xC2 -> local 0x32, 0x33, 0x42)
             write_2bpp_8x8(raw, 0x32, &menu_bobomb_tl);
@@ -760,12 +770,52 @@ pub fn patch_mario_hud_and_start_menu(
         "KKKKKKKKKKKKKKKK",
     ]);
 
+    // 7. v0.10.0 — ELIMINATE ZRI-014 VANILLA HUD BORDERS (Sheet 0x6F tiles 0x50..0x5D, Pal 2: 1=SMW Gold, 2=White Specular, 3=Black):
+    //    Replace vanilla Zelda Magic Jar & Y-Item Box frame tiles with an authentic Super Mario World
+    //    Golden-Capped Star-Power Capsule & Rounded Gold-Riveted SMW Reserve Item Box!
+    let hud_star_tl = parse_ascii_8x8([
+        "........", "........", "......KK", ".....KYY", "....KYYW", "....KYWK", "....KYWK",
+        "....KYWK",
+    ]);
+    let hud_star_cap = parse_ascii_8x8([
+        "KKKKKKKK", "KYYYYYYK", "KYWWWWYK", "KYYYYYYK", "KKKKKKKK", "........", "........",
+        "........",
+    ]);
+    let hud_star_tr_box_tl = parse_ascii_8x8([
+        "........", "........", "KK......", "YYK.....", "WYYK.KKK", "KWYK.KYW", "KWYKKYWW",
+        "KWYKKYWK",
+    ]);
+    let hud_star_left = parse_ascii_8x8([
+        "....KYWK", "....KYWK", "....KYWK", "....KYWK", "....KYWK", "....KYWK", "....KYWK",
+        "....KYWK",
+    ]);
+    let hud_star_right_box_l = parse_ascii_8x8([
+        "KWYK.KYK", "KWYK.KWK", "KWYK.KYK", "KWYK.KYK", "KWYK.KYK", "KWYK.KYK", "KWYK.KWK",
+        "KWYK.KYK",
+    ]);
+    let hud_star_right_box_bl = parse_ascii_8x8([
+        "KWYKKYWK", "KWYKKYWW", "KWYK.KYW", "KWYK.KKK", "KWYK....", "KWYK....", "KWYK....",
+        "KWYK....",
+    ]);
+    let hud_box_hbar = parse_ascii_8x8([
+        "........", "........", "........", "........", "KKKKKKKK", "YYYYYYYY", "YWWWWWWY",
+        "KKKKKKKK",
+    ]);
+    let hud_box_corner = parse_ascii_8x8([
+        "........", "........", "........", "........", "KKK.....", "YYYK....", "WWYK....",
+        "KWYK....",
+    ]);
+    let hud_box_vbar = parse_ascii_8x8([
+        "KWYK....", "KYYK....", "KYYK....", "KWYK....", "KYYK....", "KYYK....", "KWYK....",
+        "KYYK....",
+    ]);
+
     if patch_alttp_2bpp_sheet(
         rom_zelda,
         session,
         0x6F,
         &[0xDB],
-        "Menu Équipement & Pendentifs 2bpp (Sheet 0x6F/0xDB) : Champignon, Fleur, Étoile, Casquette Mario, Yoshi, Botte Ailée & Tuyau Warp",
+        "HUD SMW & Menu 2bpp (Sheet 0x6F/0xDB) : Cadre Boîte Objet Or Riveté SMW (ZRI-014), Capsule Star-Power, Champignon, Fleur, Étoile, Casquette Mario, Yoshi, Botte & Tuyau Warp",
         free_cursor,
         free_end,
         &|raw| {
@@ -776,6 +826,17 @@ pub fn patch_mario_hud_and_start_menu(
             write_2bpp_16x16_quad(raw, 0x06, 0x07, 0x16, 0x17, &pend_flower_empty);
             write_2bpp_16x16_quad(raw, 0x20, 0x21, 0x22, 0x23, &pend_star_full);
             write_2bpp_16x16_quad(raw, 0x24, 0x25, 0x26, 0x27, &pend_star_empty);
+
+            // v0.10.0 SMW Gold-Riveted Item Box & Star-Power Capsule HUD Borders (ZRI-014 eliminated!)
+            write_2bpp_8x8(raw, 0x50, &hud_star_tl);
+            write_2bpp_8x8(raw, 0x52, &hud_star_tr_box_tl);
+            write_2bpp_8x8(raw, 0x54, &hud_star_left);
+            write_2bpp_8x8(raw, 0x56, &hud_star_cap);
+            write_2bpp_8x8(raw, 0x58, &hud_star_right_box_l);
+            write_2bpp_8x8(raw, 0x59, &hud_star_right_box_bl);
+            write_2bpp_8x8(raw, 0x5B, &hud_box_hbar);
+            write_2bpp_8x8(raw, 0x5C, &hud_box_corner);
+            write_2bpp_8x8(raw, 0x5D, &hud_box_vbar);
 
             write_2bpp_8x8(raw, 0x68, &menu_cap_tl);
             write_2bpp_8x8(raw, 0x78, &menu_cap_bl);

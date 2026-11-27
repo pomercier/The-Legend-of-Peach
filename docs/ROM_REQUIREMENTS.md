@@ -94,18 +94,18 @@ Applying these patches to an unverified revision would corrupt code or graphics,
 
 ## Expected Reproducible Output ROM Signature
 
-When built with release **`v0.9.0`** from the two verified ROMs above, the locally generated output ROM is **100% deterministic (bit-for-bit identical)** across machines and operating systems:
+When built with release **`v0.10.0`** from the two verified ROMs above, the locally generated output ROM is **100% deterministic (bit-for-bit identical)** across machines and operating systems:
 
-| Field | Deterministic Output Value (`v0.9.0`) |
+| Field | Deterministic Output Value (`v0.10.0`) |
 | :--- | :--- |
 | **Output Size** | `2,097,152` bytes (`2 MiB`, LoROM expanded from `1 MiB`) |
 | **Internal Header Title** | `THE LEGEND OF PEACH` |
-| **SNES Checksum / Complement** | `0xBC86` / `0x4379` (Valid) |
-| **CRC32** | `261F4214` |
-| **MD5** | `328dd4159addd531c4f9b14bb6fb278b` |
-| **SHA-1** | `d4fa3338e9d79879a316316a16a775615fafdfc3` |
-| **SHA-256** | `5546dfaec62b98dc8c91bbbc58a7b16df6de91b9d8e6f0d56a1b7f1b36693fbd` |
+| **SNES Checksum / Complement** | `0x930C` / `0x6CF3` (Valid) |
+| **CRC32** | `37CE4B03` |
+| **MD5** | `6b15f80549f01cccd504d667aae1aa5a` |
+| **SHA-1** | `d3c3faf451adf991445080e96ce4c2e4e6338d3e` |
+| **SHA-256** | `2da376f5c5cd6f760c07e465bdba252fe1aa1f03e69f17dcabcff1ecd6e072b1` |
 
-*(Previous releases: `v0.8.0` SHA-256 `2270d55f8f4d09a164a939213531be80e4237a94488f535749708801ba925fd8`, Checksum `0x1B55` / `0xE4AA`; `v0.7.0` SHA-256 `f975131b5eaeee99ee7215ae636a380946ddc48832d3e7be95a11ab5d344dfee`, Checksum `0x1285` / `0xED7A`; `v0.6.0` SHA-256 `2004714a74f35fbf6c6c581f25b86d0b40d6729dd38c089f65e7b69e68a202ca`, Checksum `0xC419` / `0x3BE6`; `v0.5.0` SHA-256 `93d3774f81119eb41d80b0c610d3b1bbcd1430c5f572f16b65b47b3ddd24975e`, Checksum `0x87FF` / `0x7800`; `v0.4.0` SHA-256 `eed0aac268c6523657ca083cc8cd40e620516757801bd69bbff38474f8b190ca`, Checksum `0x7C48` / `0x83B7`; `v0.3.0` SHA-256 `fe7390a1c4e58e219d8e6f023cc4f09ce6e7e6d5164bf1bb30b2dbf1c2828785`, Checksum `0x2EC1` / `0xD13E`; `v0.2.0` SHA-256 `c700d1d2b60f50e789e2214fa8528c0c3af132ebc8af35a2f7ced5aa16735edb`, Checksum `0xEE72` / `0x118D`; `v0.1.0` SHA-256 `32540c4629c6b797f6933c7966a419fd959a3f711f36347f4348ceb2fa85b99c`.)*
+*(Previous releases: `v0.9.0` SHA-256 `5546dfaec62b98dc8c91bbbc58a7b16df6de91b9d8e6f0d56a1b7f1b36693fbd`, Checksum `0xBC86` / `0x4379`; `v0.8.0` SHA-256 `2270d55f8f4d09a164a939213531be80e4237a94488f535749708801ba925fd8`, Checksum `0x1B55` / `0xE4AA`; `v0.7.0` SHA-256 `f975131b5eaeee99ee7215ae636a380946ddc48832d3e7be95a11ab5d344dfee`, Checksum `0x1285` / `0xED7A`; `v0.6.0` SHA-256 `2004714a74f35fbf6c6c581f25b86d0b40d6729dd38c089f65e7b69e68a202ca`, Checksum `0xC419` / `0x3BE6`; `v0.5.0` SHA-256 `93d3774f81119eb41d80b0c610d3b1bbcd1430c5f572f16b65b47b3ddd24975e`, Checksum `0x87FF` / `0x7800`; `v0.4.0` SHA-256 `eed0aac268c6523657ca083cc8cd40e620516757801bd69bbff38474f8b190ca`, Checksum `0x7C48` / `0x83B7`; `v0.3.0` SHA-256 `fe7390a1c4e58e219d8e6f023cc4f09ce6e7e6d5164bf1bb30b2dbf1c2828785`, Checksum `0x2EC1` / `0xD13E`; `v0.2.0` SHA-256 `c700d1d2b60f50e789e2214fa8528c0c3af132ebc8af35a2f7ced5aa16735edb`, Checksum `0xEE72` / `0x118D`; `v0.1.0` SHA-256 `32540c4629c6b797f6933c7966a419fd959a3f711f36347f4348ceb2fa85b99c`.)*
 
 > **Never commit, upload, or share the generated ROM file.** Both `roms/` and `build/` as well as all `.sfc`/`.smc` files are ignored by `.gitignore`.
