@@ -1524,7 +1524,433 @@ pub fn apply_mario_into_zelda_alttp_swap(
     let body_sword_down = make_sword_down_body(&body_down_w1);
     let body_sword_up = make_sword_up_body(&body_up_stand);
 
-    // Clone the entire 28,672-byte Link sprite bank (0x080000..0x087000) so FX/sword-arcs/sparkles/bunny stay intact
+    // =========================================================================
+    // v0.6.0 AUTHENTIC MARIO POSE COMPLETION (BUG 01 & BUG 02 — ALL 303 POSES!)
+    // Dedicated Hurt/Recoil, Fireball Throw, Push, Kneel, Swim, KO, & Electric Zap
+    // poses calibrated strictly to the 4bpp Mario palette (1=White, 2=Black, 3=Brown,
+    // 4/5/6=Skin, 7/8/9=Cap/Shirt [White in Fire Mario!], 10/11/12=Overalls [Red in Fire!], 15=Gold).
+    // =========================================================================
+    let make_hurt_head_down = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        // Startled SMW flinching front head: squinting > < eyes + open 'o' surprised mouth!
+        let mut out = *base;
+        for y in 7..=11usize {
+            for x in 4..=11usize {
+                if out[y][x] == 1 || out[y][x] == 2 {
+                    out[y][x] = 6;
+                }
+            }
+        }
+        // Left '>' squint eye & Right '<' squint eye
+        out[8][5] = 2;
+        out[9][6] = 2;
+        out[10][5] = 2;
+        out[8][10] = 2;
+        out[9][9] = 2;
+        out[10][10] = 2;
+        // Startled open 'o' mouth below mustache
+        out[13][7] = 2;
+        out[13][8] = 2;
+        out[14][7] = 7;
+        out[14][8] = 7;
+        out
+    };
+    let make_hurt_head_side = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        // Startled SMW side flinch head: tilted back slightly + wide startled eye + open mouth!
+        let mut out = [[0u8; 16]; 16];
+        for y in 0..16usize {
+            for x in 1..16usize {
+                out[y][x - 1] = base[y][x];
+            }
+        }
+        // Squint '<' eye & startled open mouth
+        out[8][9] = 1;
+        out[8][10] = 2;
+        out[9][9] = 2;
+        out[10][10] = 2;
+        out[13][10] = 7;
+        out[13][11] = 2;
+        out
+    };
+    let make_hurt_head_up = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        // Slightly jostled back head (shifted 1px up for knockback recoil!)
+        let mut out = [[0u8; 16]; 16];
+        out[..15].copy_from_slice(&base[1..16]);
+        out
+    };
+    let make_hurt_body_down = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        // Braced front recoil: both gloved hands flung slightly out to sides!
+        let mut out = *base;
+        for y in 2..=5usize {
+            out[y][1] = 1;
+            out[y][2] = 9;
+            out[y][13] = 9;
+            out[y][14] = 1;
+        }
+        out[2][0] = 2;
+        out[3][0] = 2;
+        out[4][0] = 2;
+        out[2][15] = 2;
+        out[3][15] = 2;
+        out[4][15] = 2;
+        out[1][1] = 2;
+        out[5][1] = 2;
+        out[1][14] = 2;
+        out[5][14] = 2;
+        out
+    };
+    let make_hurt_body_side = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        // Dynamic SMW knockback side recoil (leaned back 1px, arms flung for balance!)
+        let mut out = [[0u8; 16]; 16];
+        for y in 0..16usize {
+            for x in 1..16usize {
+                out[y][x - 1] = base[y][x];
+            }
+        }
+        // Rear arm flung back + forward glove raised
+        out[2][1] = 2;
+        out[3][1] = 1;
+        out[3][2] = 9;
+        out[4][1] = 1;
+        out[4][2] = 9;
+        out[5][1] = 2;
+        out[2][11] = 2;
+        out[3][11] = 1;
+        out[3][12] = 2;
+        out[4][11] = 1;
+        out[4][12] = 2;
+        out[5][11] = 2;
+        out
+    };
+    let make_hurt_body_up = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        // Back recoil: arms flared outward!
+        let mut out = *base;
+        out[2][1] = 2;
+        out[3][1] = 1;
+        out[4][1] = 1;
+        out[5][1] = 2;
+        out[2][14] = 2;
+        out[3][14] = 1;
+        out[4][14] = 1;
+        out[5][14] = 2;
+        out
+    };
+
+    // Authentic SMW Fireball Throw Bodies (BUG 02!): crisp extended throwing glove!
+    let make_fire_throw_down = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        let mut out = *base;
+        // Right throwing arm thrust boldly forward with bright white glove & flame-ready stance
+        for y in 3..=6usize {
+            out[y][11] = 9;
+            out[y][12] = 9;
+        }
+        out[4][13] = 1;
+        out[4][14] = 1;
+        out[4][15] = 2;
+        out[5][13] = 1;
+        out[5][14] = 1;
+        out[5][15] = 2;
+        out[6][13] = 1;
+        out[6][14] = 1;
+        out[6][15] = 2;
+        out[3][13] = 2;
+        out[3][14] = 2;
+        out[7][13] = 2;
+        out[7][14] = 2;
+        // Left arm braced back slightly
+        out[2][1] = 2;
+        out[3][1] = 1;
+        out[4][1] = 1;
+        out[5][1] = 2;
+        out
+    };
+    let make_fire_throw_side = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        // Classic SMW Fire Mario side throw: red/white sleeve extended straight ahead with open white palm!
+        let mut out = *base;
+        for y in 1..=7usize {
+            for x in 9..16usize {
+                out[y][x] = 0;
+            }
+        }
+        for x in 7..=11usize {
+            out[2][x] = 8;
+            out[3][x] = 9;
+            out[4][x] = 9;
+            out[5][x] = 7;
+        }
+        out[2][12] = 2;
+        out[2][13] = 2;
+        out[2][14] = 2;
+        out[3][12] = 1;
+        out[3][13] = 1;
+        out[3][14] = 1;
+        out[3][15] = 2;
+        out[4][12] = 1;
+        out[4][13] = 1;
+        out[4][14] = 1;
+        out[4][15] = 2;
+        out[5][12] = 1;
+        out[5][13] = 1;
+        out[5][14] = 2;
+        out[6][12] = 2;
+        out[6][13] = 2;
+        out
+    };
+    let make_fire_throw_up = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        // Back Fireball throw: right throwing arm lifted forward/up!
+        let mut out = *base;
+        for y in 1..=5usize {
+            out[y][12] = 9;
+            out[y][13] = 9;
+        }
+        out[0][12] = 2;
+        out[0][13] = 2;
+        out[0][14] = 2;
+        out[1][13] = 1;
+        out[1][14] = 1;
+        out[1][15] = 2;
+        out[2][13] = 1;
+        out[2][14] = 1;
+        out[2][15] = 2;
+        out[3][14] = 2;
+        out
+    };
+
+    // Push & Kneel Bodies (fixes double-head on 0x010, 0x014, 0x06A, 0x06F, 0x0FE, 0x100, 0x128!)
+    let make_kneel_body = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        // Compact crouching Mario (shifted down 2px into boots)
+        let mut out = [[0u8; 16]; 16];
+        out[2..16].copy_from_slice(&base[..14]);
+        // Keep sturdy grounded boots on rows 14..15
+        out[14] = base[14];
+        out[15] = base[15];
+        out
+    };
+
+    // Electric Zap / X-Ray Skeleton Mario (Poses 0x0A9..0x0AC — replaces unpatched Zelda skeleton!)
+    let make_spark_overlay = |base: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        let mut out = *base;
+        for &(x, y) in &[
+            (1usize, 2usize),
+            (2, 1),
+            (13, 1),
+            (14, 2),
+            (0, 8),
+            (15, 7),
+            (1, 13),
+            (14, 13),
+        ] {
+            out[y][x] = 15; // bright gold spark
+        }
+        for &(x, y) in &[(2usize, 3usize), (13, 3), (1, 9), (14, 8)] {
+            out[y][x] = 1; // white core
+        }
+        out
+    };
+    let make_shock_xray_head = || -> [[u8; 16]; 16] {
+        // Cartoon Nintendo Mario electric shock X-ray skull with Mario's cap silhouette!
+        let rows = [
+            "....22222222....",
+            "..221111111122..",
+            ".21111111111112.",
+            ".21122222222112.",
+            "2112111111112112",
+            "2121111111111212",
+            ".21112211221112.",
+            ".21112211221112.",
+            ".21111122111112.",
+            "..211111111112..",
+            "..212121212112..",
+            "...2111111112...",
+            "....22111122....",
+            "......2222......",
+            "................",
+            "................",
+        ];
+        let mut px = [[0u8; 16]; 16];
+        for (y, r) in rows.iter().enumerate() {
+            for (x, ch) in r.bytes().take(16).enumerate() {
+                px[y][x] = match ch {
+                    b'1' => 1,
+                    b'2' => 2,
+                    _ => 0,
+                };
+            }
+        }
+        // Electric sparks outside skull
+        px[1][0] = 15;
+        px[2][15] = 15;
+        px[9][0] = 15;
+        px[9][15] = 15;
+        px
+    };
+    let make_shock_xray_body = || -> [[u8; 16]; 16] {
+        let rows = [
+            ".....221122.....",
+            "...2211221122...",
+            "..211221122112..",
+            "..212111111212..",
+            ".212.221122.212.",
+            ".22..211112..22.",
+            ".....221122.....",
+            "....21122112....",
+            "....21122112....",
+            "....222..222....",
+            "....212..212....",
+            "....212..212....",
+            "...2112..2112...",
+            "...2222..2222...",
+            "................",
+            "................",
+        ];
+        let mut px = [[0u8; 16]; 16];
+        for (y, r) in rows.iter().enumerate() {
+            for (x, ch) in r.bytes().take(16).enumerate() {
+                px[y][x] = match ch {
+                    b'1' => 1,
+                    b'2' => 2,
+                    _ => 0,
+                };
+            }
+        }
+        px[2][0] = 15;
+        px[6][15] = 15;
+        px[11][1] = 15;
+        px[11][14] = 15;
+        px
+    };
+
+    // Crisp Mario Water Swim Ripples & Dive Splashes (replaces unpatched Zelda swirls in R08/R09/R11!)
+    let make_swim_ripple = |wide: bool| -> [[u8; 16]; 16] {
+        let rows = if wide {
+            [
+                "................",
+                "................",
+                "................",
+                "................",
+                "....11....11....",
+                "..111211112111..",
+                ".11211122111211.",
+                "2121121111211212",
+                ".22222222222222.",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+            ]
+        } else {
+            [
+                "................",
+                "................",
+                "................",
+                "................",
+                ".....111111.....",
+                "...1112112111...",
+                "..112111111211..",
+                "..222222222222..",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+                "................",
+            ]
+        };
+        let mut px = [[0u8; 16]; 16];
+        for (y, r) in rows.iter().enumerate() {
+            for (x, ch) in r.bytes().take(16).enumerate() {
+                px[y][x] = match ch {
+                    b'1' => 1,  // Crisp white water foam
+                    b'2' => 12, // Bright sky-blue water highlight (crimson spark in Fire)
+                    _ => 0,
+                };
+            }
+        }
+        px
+    };
+    let make_dive_splash = || -> [[u8; 16]; 16] {
+        let rows = [
+            ".......11.......",
+            "......1111......",
+            "...1..1221..1...",
+            "..111.1221.111..",
+            ".11211122111211.",
+            "..122211112221..",
+            "...1111221111...",
+            "....22222222....",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+        ];
+        let mut px = [[0u8; 16]; 16];
+        for (y, r) in rows.iter().enumerate() {
+            for (x, ch) in r.bytes().take(16).enumerate() {
+                px[y][x] = match ch {
+                    b'1' => 1,
+                    b'2' => 12,
+                    _ => 0,
+                };
+            }
+        }
+        px
+    };
+
+    // Knocked-Out Horizontal Mario (Pose 0x111 — replaces unpatched dead Link!)
+    // Head on right (+8, +8), overalls & boots on left (0, +8):
+    let make_ko_flat_head = |h: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        // Rotate Mario's sleeping head 90° clockwise so Mario lies flat cleanly!
+        let mut out = [[0u8; 16]; 16];
+        for y in 0..16usize {
+            for x in 0..16usize {
+                out[x][15 - y] = h[y][x];
+            }
+        }
+        out
+    };
+    let make_ko_flat_body = |b: &[[u8; 16]; 16]| -> [[u8; 16]; 16] {
+        // Rotate Mario's body 90° clockwise to connect seamlessly to ko_flat_head!
+        let mut out = [[0u8; 16]; 16];
+        for y in 0..16usize {
+            for x in 0..16usize {
+                out[x][15 - y] = b[y][x];
+            }
+        }
+        out
+    };
+
+    let head_hurt_down = make_hurt_head_down(&head_down);
+    let head_hurt_side = make_hurt_head_side(&head_side);
+    let head_hurt_up = make_hurt_head_up(&head_up);
+    let body_hurt_down = make_hurt_body_down(&body_down_stand);
+    let body_hurt_side = make_hurt_body_side(&body_side_fall);
+    let body_hurt_up = make_hurt_body_up(&body_up_stand);
+    let body_fire_down = make_fire_throw_down(&body_down_w1);
+    let body_fire_side = make_fire_throw_side(&body_side_w1);
+    let body_fire_up = make_fire_throw_up(&body_up_stand);
+    let body_push_side = make_fire_throw_side(&body_side_stand);
+    let body_push_up = make_carry_front_body(&body_up_w1);
+    let body_kneel_down = make_kneel_body(&body_down_stand);
+    let body_kneel_side = make_kneel_body(&body_side_stand);
+    let head_spark = make_spark_overlay(&head_hurt_down);
+    let body_spark = make_spark_overlay(&body_hurt_down);
+    let head_shock = make_shock_xray_head();
+    let body_shock = make_shock_xray_body();
+    let swim_ripple_wide = make_swim_ripple(true);
+    let swim_ripple_small = make_swim_ripple(false);
+    let dive_splash = make_dive_splash();
+    let ko_flat_head = make_ko_flat_head(&head_down_sleep);
+    let ko_flat_body = make_ko_flat_body(&body_down_stand);
+
+    // Clone the entire 28,672-byte Link sprite bank (0x080000..0x087000) so FX/sparkles stay intact
     let mut link_bank = rom_zelda.data[0x080000..0x087000].to_vec();
     let mut write_cell = |mx: usize, my: usize, px: &[[u8; 16]; 16]| {
         let base = (my * 32 + mx * 2) * 32;
@@ -1624,21 +2050,38 @@ pub fn apply_mario_into_zelda_alttp_swap(
     write_cell(6, 6, &head_up);
     write_cell(7, 6, &body_side_stand);
 
-    // Row 7: Swimming Heads (cols 5..7)
+    // Row 7: Fireball / Action / Push Bodies (cols 0..4, previously UNPATCHED Vanilla Link!) + Swimming Heads (cols 5..7)
+    write_cell(0, 7, &body_hurt_side);
+    write_cell(1, 7, &body_fire_up);
+    write_cell(2, 7, &body_fire_side);
+    write_cell(3, 7, &body_fire_down);
+    write_cell(4, 7, &body_push_side);
     write_cell(5, 7, &head_down);
     write_cell(6, 7, &head_side);
     write_cell(7, 7, &head_up);
 
-    // Row 8: Side Attack Bodies (cols 0..2 ONLY; cols 3..7 are sword spin arcs -> preserved!)
+    // Row 8: Side Attack Bodies (cols 0..2) + Crisp Mario Water Dive/Swim Ripples (cols 3..7, ZERO Vanilla Link!)
     write_cell(0, 8, &body_sword_side);
     write_cell(1, 8, &body_sword_side);
     write_cell(2, 8, &body_sword_side);
+    write_cell(3, 8, &dive_splash);
+    write_cell(4, 8, &dive_splash);
+    write_cell(5, 8, &swim_ripple_wide);
+    write_cell(6, 8, &swim_ripple_small);
+    write_cell(7, 8, &swim_ripple_small);
 
-    // Row 9: Swimming Mario (cols 3..4 ONLY; cols 0..2 are sword spin arcs & col 5 is splash -> preserved!)
+    // Row 9: Mario Swim Ripples (cols 0..2), Swimming Heads (cols 3..4), Mario Defeat/KO poses (cols 5..7, ZERO Vanilla Link!)
+    write_cell(0, 9, &swim_ripple_small);
+    write_cell(1, 9, &swim_ripple_wide);
+    write_cell(2, 9, &swim_ripple_wide);
     write_cell(3, 9, &head_down);
     write_cell(4, 9, &head_side);
+    write_cell(5, 9, &body_hurt_down);
+    write_cell(6, 9, &ko_flat_body);
+    write_cell(7, 9, &ko_flat_head);
 
-    // Row 10-11: Dash / Swim / Ledge Heads & Bodies (preserving sword arcs in Row 9 & (0,11)!)
+    // Row 10-11: Dash / Swim / Ledge Heads & Bodies (replacing unpatched R10C0 & R11C0 cleanly!)
+    write_cell(0, 10, &head_down);
     write_cell(1, 10, &body_up_stand);
     write_cell(2, 10, &body_down_stand);
     write_cell(3, 10, &head_side);
@@ -1646,6 +2089,7 @@ pub fn apply_mario_into_zelda_alttp_swap(
     write_cell(5, 10, &head_up);
     write_cell(6, 10, &body_side_w1);
     write_cell(7, 10, &head_down);
+    write_cell(0, 11, &swim_ripple_small);
     write_cell(1, 11, &head_side);
     write_cell(2, 11, &body_down_stand);
     write_cell(3, 11, &body_down_w1);
@@ -1722,18 +2166,20 @@ pub fn apply_mario_into_zelda_alttp_swap(
     write_cell(6, 16, &body_side_w1);
     write_cell(7, 16, &body_side_w2);
 
-    // Row 17-19: Verified Walk Cycle Bodies (eliminating all jpdasm-audited direction-flicker bugs!):
+    // Row 17-19: Verified Walk Cycle Bodies + Mario Electric Zap / X-Ray Skeleton (R17C0, R17C3..5, R18C0)!
     //   Walk Left/Right uses (6,17), (7,17), (3,18), (4,18) -> ALL body_side_*!
     //   Walk Down uses (5,18), (6,18) -> body_down_*!
     //   Walk Up uses (7,18), (3..7,19) -> ALL body_up_*!
+    write_cell(0, 17, &head_shock);
     write_cell(1, 17, &head_down);
     write_cell(2, 17, &head_up);
-    write_cell(3, 17, &body_side_r1);
-    write_cell(4, 17, &body_side_r2);
-    write_cell(5, 17, &body_down_w1);
+    write_cell(3, 17, &head_spark);
+    write_cell(4, 17, &body_spark);
+    write_cell(5, 17, &body_shock);
     write_cell(6, 17, &body_side_w1);
     write_cell(7, 17, &body_side_stand);
 
+    write_cell(0, 18, &body_shock);
     write_cell(1, 18, &head_side);
     write_cell(2, 18, &head_side);
     write_cell(3, 18, &body_side_w1);
@@ -1769,17 +2215,21 @@ pub fn apply_mario_into_zelda_alttp_swap(
     write_cell(6, 21, &body_up_w2);
     write_cell(7, 21, &body_side_w1);
 
-    // Row 22-25 & 27: Shieldless Side Walk / Dash / Carry / Climb / Chest Heads & Bodies (preserving Dark World Bunny in 25..26!)
-    write_cell(0, 22, &body_carry_side_w1);
-    write_cell(1, 22, &body_carry_side_w2);
-    write_cell(2, 22, &body_carry_side_stand);
-    write_cell(3, 22, &body_carry_side_w1);
-    write_cell(4, 22, &body_side_r2);
-    write_cell(5, 22, &body_side_w1);
-    write_cell(6, 22, &body_side_w2);
-    write_cell(7, 22, &body_side_stand);
+    // Row 22 (8 verified FREE Bank $10 cells!) -> Dedicated Mario Hurt/Recoil & Kneel Heads/Bodies (BUG 01!)
+    //   R22C0 (0xD800)=head_hurt_down, R22C1 (0xD840)=head_hurt_side, R22C2 (0xD880)=head_hurt_up,
+    //   R22C3 (0xD8C0)=body_hurt_down, R22C4 (0xD900)=body_hurt_side, R22C5 (0xD940)=body_hurt_up,
+    //   R22C6 (0xD980)=body_kneel_down, R22C7 (0xD9C0)=body_kneel_side!
+    write_cell(0, 22, &head_hurt_down);
+    write_cell(1, 22, &head_hurt_side);
+    write_cell(2, 22, &head_hurt_up);
+    write_cell(3, 22, &body_hurt_down);
+    write_cell(4, 22, &body_hurt_side);
+    write_cell(5, 22, &body_hurt_up);
+    write_cell(6, 22, &body_kneel_down);
+    write_cell(7, 22, &body_kneel_side);
 
-    write_cell(0, 23, &body_side_w1);
+    // Row 23: R23C0 (0xDC00, verified FREE!) = body_push_up; R23C1..7 = existing walk/carry cells
+    write_cell(0, 23, &body_push_up);
     write_cell(1, 23, &head_side);
     write_cell(2, 23, &body_side_w2);
     write_cell(3, 23, &body_side_stand);
@@ -1871,21 +2321,125 @@ pub fn apply_mario_into_zelda_alttp_swap(
     )?;
     ops += 1;
 
-    // 1b. Surgical Bank $0D Link Head OAM Y-offset patch (PC 0x068000..0x06838D, 303 entries x 3 bytes):
-    //     In vanilla ALTTP, Link_DrawOAM ALWAYS places Body at (Link_X, Link_Y + 8) ($0D:AA01 `ADC #$0800`),
-    //     while Head sits at (Link_X + entry.x, Link_Y + entry.y) — including sword thrust poses where vanilla
-    //     entry.y = +5/-5/+12 and entry.x = +-4! Patching ALL 299 Head+Body entries (fl & 0x0F != 0x0F) to
-    //     entry.y = -8 (0xF8) and entry.x = 0 locks Body_Y - Head_Y to EXACTLY 16px across walking, running,
-    //     AND every sword swing/thrust/spin direction with ZERO head-over-body overlap and ZERO neck gap!
+    // 1b. Surgical Bank $00 Link DMA Address Remap (PC 0x001346 Head + PC 0x0015A4 Body, 303×2B = 1212B):
+    //     Eliminates ALL 28 odd-row overlapping 24px Link poses (where vanilla shared an 8px row between Head
+    //     and Body, causing BUG 01's double-stacked heads on enemy contact 0x03F..0x042 AND BUG 02's inverted
+    //     red boots + vanilla Link on Fireball/Item Cast 0x043/0x046/0x049/0x04C!). Every single pose now
+    //     references clean, non-overlapping 16x16 Mario Head & Body cells in Bank $10 (0x080000..0x087000)!
+    const DMA_HEAD_TBL_PC: usize = 0x001346;
+    const DMA_BODY_TBL_PC: usize = 0x0015A4;
+    if DMA_BODY_TBL_PC + 303 * 2 <= rom_zelda.data.len() {
+        let mut dma_tables = rom_zelda.data[DMA_HEAD_TBL_PC..DMA_BODY_TBL_PC + 303 * 2].to_vec();
+        let set_dma = |tbl: &mut [u8], pose: usize, head_addr: u16, body_addr: u16| {
+            let h_off = pose * 2;
+            let b_off = (DMA_BODY_TBL_PC - DMA_HEAD_TBL_PC) + pose * 2;
+            tbl[h_off..h_off + 2].copy_from_slice(&head_addr.to_le_bytes());
+            tbl[b_off..b_off + 2].copy_from_slice(&body_addr.to_le_bytes());
+        };
+        // Cell helper: Bank $10 SNES address for aligned 16x16 cell (col 0..7, row 0..27)
+        let cell = |col: u16, row: u16| -> u16 { 0x8000 + row * 0x0400 + col * 0x0040 };
+
+        // Push Up / Side (0x010, 0x014, 0x06A, 0x06F) — previously double-headed!
+        set_dma(&mut dma_tables, 0x010, cell(2, 0), cell(0, 23));
+        set_dma(&mut dma_tables, 0x06F, cell(2, 0), cell(0, 23));
+        set_dma(&mut dma_tables, 0x014, cell(0, 0), cell(4, 7));
+        set_dma(&mut dma_tables, 0x06A, cell(0, 0), cell(4, 7));
+
+        // BUG 01: Contact / Hurt / Knockback / Recoil (0x03B, 0x03F..0x042) — dedicated Mario flinch poses!
+        set_dma(&mut dma_tables, 0x03B, cell(1, 22), cell(4, 22));
+        set_dma(&mut dma_tables, 0x03F, cell(2, 22), cell(5, 22)); // Hurt Up
+        set_dma(&mut dma_tables, 0x040, cell(0, 22), cell(3, 22)); // Hurt Down
+        set_dma(&mut dma_tables, 0x041, cell(1, 22), cell(4, 22)); // Hurt Right (fl=44)
+        set_dma(&mut dma_tables, 0x042, cell(1, 22), cell(4, 22)); // Hurt Left  (fl=00)
+
+        // BUG 02: Fireball / Rod / Item Cast (0x043, 0x046, 0x049, 0x04C) — authentic SMW Fireball Throw!
+        set_dma(&mut dma_tables, 0x043, cell(2, 0), cell(1, 7)); // Cast Up
+        set_dma(&mut dma_tables, 0x046, cell(1, 0), cell(3, 7)); // Cast Down
+        set_dma(&mut dma_tables, 0x049, cell(0, 0), cell(2, 7)); // Cast Right (fl=44)
+        set_dma(&mut dma_tables, 0x04C, cell(0, 0), cell(2, 7)); // Cast Left  (fl=00)
+
+        // Flute / Prayer / Action / Side Step (0x07D, 0x080, 0x0A3, 0x0A7, 0x0A8)
+        set_dma(&mut dma_tables, 0x07D, cell(1, 0), cell(3, 1));
+        set_dma(&mut dma_tables, 0x080, cell(1, 0), cell(4, 1));
+        set_dma(&mut dma_tables, 0x0A3, cell(2, 0), cell(6, 1));
+        set_dma(&mut dma_tables, 0x0A7, cell(0, 0), cell(2, 2));
+        set_dma(&mut dma_tables, 0x0A8, cell(0, 0), cell(2, 2));
+
+        // Electric Zap / X-Ray Shock (0x0A9..0x0AC) — authentic cartoon Mario shock & X-Ray!
+        set_dma(&mut dma_tables, 0x0A9, cell(3, 17), cell(4, 17));
+        set_dma(&mut dma_tables, 0x0AB, cell(3, 17), cell(4, 17));
+        set_dma(&mut dma_tables, 0x0AA, cell(0, 17), cell(5, 17));
+        set_dma(&mut dma_tables, 0x0AC, cell(0, 17), cell(5, 17));
+
+        // Kneel / Read / Map / Bed Sleep / Defeat (0x0FE, 0x100, 0x110, 0x111, 0x117, 0x128)
+        set_dma(&mut dma_tables, 0x0FE, cell(1, 0), cell(6, 22));
+        set_dma(&mut dma_tables, 0x100, cell(0, 0), cell(7, 22));
+        set_dma(&mut dma_tables, 0x110, cell(0, 22), cell(5, 9));
+        set_dma(&mut dma_tables, 0x111, cell(7, 9), cell(6, 9));
+        set_dma(&mut dma_tables, 0x117, cell(5, 0), cell(3, 1));
+        set_dma(&mut dma_tables, 0x128, cell(1, 0), cell(6, 22));
+
+        // Ledge / Portal Spin / Dive (0x12B..0x12E) — clean upright Mario (no V-flip inversion!)
+        set_dma(&mut dma_tables, 0x12B, cell(1, 0), cell(3, 1));
+        set_dma(&mut dma_tables, 0x12C, cell(1, 0), cell(4, 1));
+        set_dma(&mut dma_tables, 0x12D, cell(1, 0), cell(3, 1));
+        set_dma(&mut dma_tables, 0x12E, cell(2, 0), cell(6, 1));
+
+        session.swap_custom_bytes(
+            rom_zelda,
+            DMA_HEAD_TBL_PC,
+            DMA_HEAD_TBL_PC,
+            dma_tables,
+            "Patch Tables DMA Joueur Bank $00 (0x001346..0x001802) : 28 poses impaires/recul/feu remappées sans doublon tête ni bottes inversées".to_string(),
+            crate::swapper::SwapKind::CodePatch {
+                byte_count: 303 * 4,
+            },
+        )?;
+        ops += 1;
+    }
+
+    // 1c. Pose-Aware Bank $0D Link Head OAM Table Patch (PC 0x068000..0x06838D, 303 entries x 3 bytes):
+    //     Locks standard 2-piece Mario poses to (y = -8, x = 0) for exact 16px Head/Body height while
+    //     honoring single-tile pit-fall poses (0x03C..0x03E, 0x114), water-swim ripples (0x08E..0x0A1),
+    //     horizontal KO collapse (0x111: y=+8, x=+8), and clearing V-flip inversion on 0x12B..0x12C!
     let oam_table_pc = 0x068000usize;
     let oam_table_len = 303 * 3;
     if oam_table_pc + oam_table_len <= rom_zelda.data.len() {
         let mut oam_table = rom_zelda.data[oam_table_pc..oam_table_pc + oam_table_len].to_vec();
         for i in 0..303usize {
             let fl = oam_table[i * 3 + 2];
-            if (fl & 0x0F) != 0x0F {
-                oam_table[i * 3] = (-8i8) as u8;
-                oam_table[i * 3 + 1] = 0;
+            if (fl & 0x0F) == 0x0F || (fl & 0xF0) == 0xF0 {
+                // Single-piece or hidden pose (0x03C, 0x03D, 0x03E, 0x114): preserve vanilla!
+                continue;
+            }
+            match i {
+                // Swimming front/back/side ripples: nest Mario's head naturally IN the water ripple!
+                0x08E..=0x098 => {
+                    oam_table[i * 3] = (-2i8) as u8;
+                    oam_table[i * 3 + 1] = 0;
+                }
+                // Dive splash (H=splash, B=head): keep splash centered over head!
+                0x099..=0x09B => {
+                    oam_table[i * 3] = 0;
+                    oam_table[i * 3 + 1] = 0;
+                }
+                // Side swim stroke (H=water ripple, B=Mario head): place ripple cleanly below Mario's chin!
+                0x09C..=0x0A1 => {
+                    oam_table[i * 3] = 16;
+                }
+                // Horizontal knocked-out Mario (H=rotated head at +8,+8, B=rotated body at 0,+8): preserve!
+                0x111 => {}
+                // Ledge/Portal poses 0x12B..0x12E: clear V-flip bits (0x88) and align upright!
+                0x12B..=0x12E => {
+                    oam_table[i * 3] = (-8i8) as u8;
+                    oam_table[i * 3 + 1] = 0;
+                    oam_table[i * 3 + 2] = fl & !0x88;
+                }
+                // All standard 2-piece Super Mario poses (walk, run, jump, sword/hammer, hurt, fireball cast, carry, shock):
+                _ => {
+                    oam_table[i * 3] = (-8i8) as u8;
+                    oam_table[i * 3 + 1] = 0;
+                }
             }
         }
         session.swap_custom_bytes(
@@ -1893,7 +2447,7 @@ pub fn apply_mario_into_zelda_alttp_swap(
             oam_table_pc,
             oam_table_pc,
             oam_table,
-            "Patch OAM Bank $0D (0x068000..0x06838D) : Décalage tête Link Y=-8 (écart exact 16px tête/corps pour Super Mario 28px 100% fidèle SMW)".to_string(),
+            "Patch OAM Bank $0D (0x068000..0x06838D) : Alignement pose-par-pose Super Mario 16x32 (0 tête doublée, 0 nage/KO cassé)".to_string(),
             crate::swapper::SwapKind::CodePatch {
                 byte_count: oam_table_len,
             },

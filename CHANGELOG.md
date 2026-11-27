@@ -6,6 +6,44 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ---
 
+## [0.6.0] — 2026-11-27 — Super Mario World Authenticity
+
+### Complete Structural Resolution of All 7 Blocking Visual Defects
+- **BUG 01 — Mario Enemy Contact & All 303 Player DMA Poses (`demo.rs`, `mixer.rs`)**:
+  - Disassembled Bank `$00` Link DMA tables (`PC 0x001346..0x001802`) and Bank `$0D` pose OAM table (`PC 0x068000..0x06838D`), remapping all 28 odd-row/overlapping/`Body==R00C0` poses (including Hurt/Recoil `0x03B, 0x03F..0x042`) onto verified free even-row `16×16` cells in Bank `$10` (`R22C0..7`, `R07C1..4`, `R17C3..5`, `R23C0`).
+  - Patched all 19+ previously unpatched Vanilla Link cells with dedicated 4bpp Mario art (`make_hurt_head/body`, `make_kneel_body`, `make_shock_xray`, `make_swim_ripple`, `make_dive_splash`, `make_ko_flat`) so **0/303** poses have odd-row overlaps, active Vanilla Link tiles, or duplicate `Head == Body` slots.
+  - Replaced blanket Bank `$0D` OAM overwrites with a pose-aware table preserving single-tile, swim, and KO states. Verified live at `12 fps` during Blue Koopa collision (`0` double heads).
+- **BUG 02 — Fire Mario 4-Direction Fireball Cast & Zelda Rod Removal (`demo.rs`, `mario_ui.rs`)**:
+  - Added dedicated 4-direction `make_fire_throw_down/side/up` poses cleanly aligned in Bank `$10`, cleared erroneous vertical-flip inversion flags on `0x12B..0x12E`, and replaced the 6 residual vanilla Zelda Fire/Ice Rod staff tiles in `0x087000` with blazing Mario fireball cast flames and sparks. Verified live on both `snes_faust` and cycle-accurate `bsnes`.
+- **BUG 03 — Bit-Exact Map32→Map16 Terrain Grammar Validator & Screen `0x2C` Cleanse (`mario_map.rs`)**:
+  - Added ALTTP's packed 12-bit Map32 quadrant decoder (`0x018000`, `0x01B410`, `0x020000`, `0x023410`) and automated `validate_screen_terrain_grammar` enforcing continuous cliff tops and zero orphan dirt seams.
+  - Replaced buggy Screen `0x2C` tiles `0x1B76` / `0x06A0` with pure-grass SMW Turn-Blocks (`0x06C7` at `r09 c4 & c7`), pure grass above continuous cliff top (`0x0208` at `r10 c5`), and pure daisy grass (`0x0166` at `r15 c12`). Guarded by unit test `test_world1_screen2c_terrain_grammar_zero_seams`.
+- **BUG 04 — Authentic SMW Royal Blue Magikoopa Kamek (`mario_world.rs`, `mixer.rs`)**:
+  - Rebuilt Kamek modeled on official SMW `GFX03` (pointed royal-blue wizard hat, round white spectacles, yellow Koopa snout, white-trimmed blue wizard robe, animated pink-tipped wand).
+  - Relocated Robe F0/F1 to non-digit cells `(6,0)` (`$06`) & `(6,2)` (`$26`) in `raw 0xBE` leaving shop price digits `'0'..'9'` bit-identical to vanilla.
+  - Patched Shopkeeper prep (`0x030BFA = 0x08`), state 0 (`0x0F6F54 = 0x09`), and OAM table (`$05:F8F5`, `flags = 0x00` respecting `$05:DF6F`'s `EOR $05` contract so `0x00 ^ 0x09 = 0x09` activates OBJ Pal 4 `0x0DD272` Royal Blue `#4194FF / #004AAC`).
+- **BUG 05 — 16-Bit SMAS/SMRPG Toad Proportions & Clean Face/Shadow (`mario_world.rs`)**:
+  - Rebuilt Toad eliminating all `PalRow[02]` index-2 lime-green pixels from the mouth/face, cleared `raw 0xBD (6,0)` (`$86`) so ALTTP's native ground shadow renders without the giant grey head lump, and lifted `Sprite 0x35` head `dy` at `0x02E544` (`-4 -> -9`) and Innkeeper `0x0D7866/7E` (`-9 -> -11`).
+- **BUG 06 — Winged Iggy Koopa Anchored SMW Paratroopa Wings (`mario_bosses.rs`)**:
+  - Preserved Iggy Koopa's body (`cols 16..31`) 100% untouched while sculpting SMW `GFX01` Paratroopa feathered wings rooted at `x = 15` and pulling Mothula's OAM wing offsets at `PC 0x0D7CED` (`$1A:FCED`) inward from `dx = ±24` to **`dx = ±17`** with coordinated upstroke/downstroke flap `dy`.
+- **BUG 07 — Authentic SMW Final Boss King Bowser (`mario_bosses.rs`)**:
+  - NOP'd `JSR Ganon_DrawHeldTrident` at `PC 0x0E9AF5` (`20 1C 9C -> EA EA EA`), eliminating 100% of Ganon's blue/beige orb and diagonal stick clutter while preserving thrown attacks.
+  - Modeled Final King Bowser on SMW `GFX21` (wild crimson mane, sweeping ivory bull horns, fierce red brows, golden snout & fanged roar, hunched emerald spiked shell, spiked black leather collar tucked cleanly under the chin, wide horizontal-ribbed gold belly), lifted standing/dialogue Head `dy` in `PC 0x0E969A` (`-10 -> -15`), engineered exact disjoint `16×24` continuous arm strips across `sp:21` and `sp:41` (`$06/$16`, `$36/$46`, `$08/$18`, `$38/$48`, `$0A/$1A`), and extracted real SMW `GFX24` Giant Fireballs from `roms/super_mario_world.sfc`. Verified identically on both `snes_faust` and cycle-accurate `bsnes`.
+
+### Technical Documentation & Regression Suite
+- Added `docs/SPRITE_ANIMATION_AUDIT.md`, `docs/ART_DIRECTION.md`, `docs/METASPRITE_ARCHITECTURE.md`, `docs/TERRAIN_VALIDATION_REPORT.md`, `docs/CONTACT_COLLISION_REPORT.md`, `docs/POWERUP_ANIMATION_REPORT.md`, `docs/BOSS_VISUAL_REPORT.md`, `docs/HARDWARE_VALIDATION.md`, and `docs/TEST_COVERAGE.json`.
+- Added automated invariant guard `tests::test_v060_all_seven_blocking_bugs_structural_invariants` and `mario_map::tests::test_world1_screen2c_terrain_grammar_zero_seams` (`31/31` passing Rust tests, `0` clippy warnings).
+
+### Build & Verification (`v0.6.0`)
+- Deterministic 2 MiB LoROM build: `230` hardware patches across `18` rules (`~1.0 s`), `49` LZ2 sheets verified, `11` relocated in `$23..$3A` + Map32 in `$3B..$3F` (0 overlaps).
+- **SNES Checksum / Complement:** `0xC419` / `0x3BE6` (Valid: `true`)
+- **Output CRC32:** `D5E69FF4`
+- **Output MD5:** `947e35e7a81406693829eb88c5962e41`
+- **Output SHA-1:** `5f78310b0a85046ec016f3822d5b3b5e21016632`
+- **Output SHA-256:** `2004714a74f35fbf6c6c581f25b86d0b40d6729dd38c089f65e7b69e68a202ca`
+
+---
+
 ## [0.5.0] — 2026-11-26 — Super Mario Revolution
 
 ### Native 65c816 Super Mario Gameplay Engine (`mario_engine.rs`, Bank `$22:9000`)

@@ -86,7 +86,7 @@ Get-FileHash -Algorithm SHA256 C:\path\to\zelda_fr.sfc, C:\path\to\smw_eu.sfc
 
 ## Why Only These Exact Revisions Are Currently Supported
 
-*The Legend of Peach* applies 220 low-level SNES hardware patches directly to 65c816 routines, compressed Nintendo LC_LZ2 tile banks, Overworld Map32 pointer tables, OAM tables, CGRAM palettes, French dialogue tables, and SPC700 N-SPC music/SFX banks. Offsets in USA (NTSC), Japanese (NTSC-J), German, or other revisions differ by hundreds or thousands of bytes.
+*The Legend of Peach* applies 230 low-level SNES hardware patches directly to 65c816 routines, compressed Nintendo LC_LZ2 tile banks, Bank `$00/$0D/$10` player DMA/OAM tables, Overworld Map32 pointer tables, enemy/boss OAM tables, CGRAM palettes, French dialogue tables, and SPC700 N-SPC music/SFX banks. Offsets in USA (NTSC), Japanese (NTSC-J), German, or other revisions differ by hundreds or thousands of bytes.
 
 Applying these patches to an unverified revision would corrupt code or graphics, so unsupported hashes are strictly rejected by default. Multi-region support (including USA NTSC) is tracked on the project roadmap.
 
@@ -94,18 +94,18 @@ Applying these patches to an unverified revision would corrupt code or graphics,
 
 ## Expected Reproducible Output ROM Signature
 
-When built with release **`v0.5.0`** from the two verified ROMs above, the locally generated output ROM is **100% deterministic (bit-for-bit identical)** across machines and operating systems:
+When built with release **`v0.6.0`** from the two verified ROMs above, the locally generated output ROM is **100% deterministic (bit-for-bit identical)** across machines and operating systems:
 
-| Field | Deterministic Output Value (`v0.5.0`) |
+| Field | Deterministic Output Value (`v0.6.0`) |
 | :--- | :--- |
 | **Output Size** | `2,097,152` bytes (`2 MiB`, LoROM expanded from `1 MiB`) |
 | **Internal Header Title** | `THE LEGEND OF PEACH` |
-| **SNES Checksum / Complement** | `0x87FF` / `0x7800` (Valid) |
-| **CRC32** | `9E8F84EB` |
-| **MD5** | `74b5e46d58efa5f0f15cfe2b30383401` |
-| **SHA-1** | `50db6eed1ab3495d877e0701c10974df4f252dd3` |
-| **SHA-256** | `93d3774f81119eb41d80b0c610d3b1bbcd1430c5f572f16b65b47b3ddd24975e` |
+| **SNES Checksum / Complement** | `0xC419` / `0x3BE6` (Valid) |
+| **CRC32** | `D5E69FF4` |
+| **MD5** | `947e35e7a81406693829eb88c5962e41` |
+| **SHA-1** | `5f78310b0a85046ec016f3822d5b3b5e21016632` |
+| **SHA-256** | `2004714a74f35fbf6c6c581f25b86d0b40d6729dd38c089f65e7b69e68a202ca` |
 
-*(Previous releases: `v0.4.0` SHA-256 `eed0aac268c6523657ca083cc8cd40e620516757801bd69bbff38474f8b190ca`, Checksum `0x7C48` / `0x83B7`; `v0.3.0` SHA-256 `fe7390a1c4e58e219d8e6f023cc4f09ce6e7e6d5164bf1bb30b2dbf1c2828785`, Checksum `0x2EC1` / `0xD13E`; `v0.2.0` SHA-256 `c700d1d2b60f50e789e2214fa8528c0c3af132ebc8af35a2f7ced5aa16735edb`, Checksum `0xEE72` / `0x118D`; `v0.1.0` SHA-256 `32540c4629c6b797f6933c7966a419fd959a3f711f36347f4348ceb2fa85b99c`.)*
+*(Previous releases: `v0.5.0` SHA-256 `93d3774f81119eb41d80b0c610d3b1bbcd1430c5f572f16b65b47b3ddd24975e`, Checksum `0x87FF` / `0x7800`; `v0.4.0` SHA-256 `eed0aac268c6523657ca083cc8cd40e620516757801bd69bbff38474f8b190ca`, Checksum `0x7C48` / `0x83B7`; `v0.3.0` SHA-256 `fe7390a1c4e58e219d8e6f023cc4f09ce6e7e6d5164bf1bb30b2dbf1c2828785`, Checksum `0x2EC1` / `0xD13E`; `v0.2.0` SHA-256 `c700d1d2b60f50e789e2214fa8528c0c3af132ebc8af35a2f7ced5aa16735edb`, Checksum `0xEE72` / `0x118D`; `v0.1.0` SHA-256 `32540c4629c6b797f6933c7966a419fd959a3f711f36347f4348ceb2fa85b99c`.)*
 
 > **Never commit, upload, or share the generated ROM file.** Both `roms/` and `build/` as well as all `.sfc`/`.smc` files are ignored by `.gitignore`.

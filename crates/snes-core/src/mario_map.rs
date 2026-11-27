@@ -384,17 +384,280 @@ pub fn write_overworld_screen(
     Ok(ops)
 }
 
-/// Phase 5 Vertical Slice: Redesign **World 1 — Yoshi's Island (Screen `0x2C`, Mario's House)**!
+/// Verified FR PAL ALTTP Overworld Map32 -> Map16 12-bit packed table PC offsets (`$02:F710`).
+/// Four tables (TL, TR, BL, BR): every 4 Map32 tiles pack into 6 bytes `[lo0,lo1,lo2,lo3,hi01,hi23]`.
+pub const OW_MAP32_TO_MAP16_TL_PC: usize = 0x018000;
+pub const OW_MAP32_TO_MAP16_TR_PC: usize = 0x01B410;
+pub const OW_MAP32_TO_MAP16_BL_PC: usize = 0x020000;
+pub const OW_MAP32_TO_MAP16_BR_PC: usize = 0x023410;
+pub const OW_MAP16_TO_MAP8_PC: usize = 0x078000;
+
+/// Visual edge class used by the v0.6.0 Terrain Grammar & Seam Validator.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TerrainSurface {
+    Grass,
+    DirtPath,
+    CliffTop,
+    SouthCliffWall,
+    Other,
+}
+
+/// Collision class for Map16 concordance validation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Map16Collision {
+    Walkable,
+    LiftableProp,
+    SouthLedge,
+    SolidOrSpecial,
+}
+
+/// Grammar descriptor for a Map16 tile's 4 cardinal edges + collision semantics.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Map16Grammar {
+    pub north: TerrainSurface,
+    pub south: TerrainSurface,
+    pub west: TerrainSurface,
+    pub east: TerrainSurface,
+    pub collision: Map16Collision,
+}
+
+/// Result of running the Terrain Grammar & Edge-Connectivity Validator on an edited Overworld screen.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TerrainValidationReport {
+    pub screen_id: u8,
+    pub edited_map32_cells: usize,
+    pub orphan_cliff_tops: Vec<(usize, usize, u16)>,
+    pub orphan_dirt_seams: Vec<(usize, usize, u16)>,
+    pub doorway_walkable: bool,
+}
+
+impl TerrainValidationReport {
+    pub fn is_clean(&self) -> bool {
+        self.orphan_cliff_tops.is_empty()
+            && self.orphan_dirt_seams.is_empty()
+            && self.doorway_walkable
+    }
+}
+
+/// Decode a single Map32 ID into its 4 Map16 subtiles `[TL, TR, BL, BR]` using ALTTP's exact
+/// `$02:F710` 12-bit packed table format.
+pub fn decode_map32_quads(rom_data: &[u8], tile32: u16) -> Option<[u16; 4]> {
+    let grp = (tile32 as usize) >> 2;
+    let sub = (tile32 as usize) & 3;
+    let off = grp * 6;
+    let dec = |tbl_pc: usize| -> Option<u16> {
+        if tbl_pc + off + 6 > rom_data.len() {
+            return None;
+        }
+        let lo = rom_data[tbl_pc + off + sub] as u16;
+        let hi_b = rom_data[tbl_pc + off + 4 + (sub >> 1)];
+        let hi = if (sub & 1) == 0 {
+            (hi_b >> 4) as u16
+        } else {
+            (hi_b & 0x0F) as u16
+        };
+        Some((hi << 8) | lo)
+    };
+    Some([
+        dec(OW_MAP32_TO_MAP16_TL_PC)?,
+        dec(OW_MAP32_TO_MAP16_TR_PC)?,
+        dec(OW_MAP32_TO_MAP16_BL_PC)?,
+        dec(OW_MAP32_TO_MAP16_BR_PC)?,
+    ])
+}
+
+/// Expand a 16×16 Map32 Overworld screen into its full 32×32 Map16 grid (1024 entries, row-major).
+pub fn expand_screen_to_map16(rom_data: &[u8], screen: &OverworldScreenMap) -> Option<Vec<u16>> {
+    if screen.tiles.len() != 256 {
+        return None;
+    }
+    let mut grid = vec![0u16; 32 * 32];
+    for r in 0..16usize {
+        for c in 0..16usize {
+            let q = decode_map32_quads(rom_data, screen.tiles[r * 16 + c])?;
+            grid[(r * 2) * 32 + (c * 2)] = q[0];
+            grid[(r * 2) * 32 + (c * 2 + 1)] = q[1];
+            grid[(r * 2 + 1) * 32 + (c * 2)] = q[2];
+            grid[(r * 2 + 1) * 32 + (c * 2 + 1)] = q[3];
+        }
+    }
+    Some(grid)
+}
+
+/// Classify a Light World Yoshi's Island Map16 tile into its Terrain Grammar edges & collision type.
+pub fn classify_map16_grammar(m16: u16) -> Map16Grammar {
+    use Map16Collision::*;
+    use TerrainSurface::*;
+    match m16 {
+        // Pure walkable Yoshi's Island grass & animated meadow daisies
+        0x034 | 0x035 | 0x071 | 0x0DA => Map16Grammar {
+            north: Grass,
+            south: Grass,
+            west: Grass,
+            east: Grass,
+            collision: Walkable,
+        },
+        // Liftable / Interactive props sitting flush on pure grass (Smiling Bushes & SMW Turn-Blocks)
+        0x036 | 0x20F => Map16Grammar {
+            north: Grass,
+            south: Grass,
+            west: Grass,
+            east: Grass,
+            collision: LiftableProp,
+        },
+        // Southern jumpable cliff top border (MUST sit directly above 0x520 SouthCliffWall!)
+        0x16C => Map16Grammar {
+            north: Grass,
+            south: CliffTop,
+            west: CliffTop,
+            east: CliffTop,
+            collision: SouthLedge,
+        },
+        // Southern cliff vertical rock face (directly beneath 0x16C!)
+        0x520 => Map16Grammar {
+            north: SouthCliffWall,
+            south: Other,
+            west: SouthCliffWall,
+            east: SouthCliffWall,
+            collision: SolidOrSpecial,
+        },
+        // Brown dirt path edges/corners (MUST connect to adjacent DirtPath, NEVER float on pure Grass!)
+        0x09E | 0x09F | 0x0A4 | 0x0A5 | 0x0A9 | 0x0AC | 0x0AD | 0x17C | 0x414 | 0x415 => {
+            Map16Grammar {
+                north: DirtPath,
+                south: DirtPath,
+                west: DirtPath,
+                east: DirtPath,
+                collision: Walkable,
+            }
+        }
+        _ => Map16Grammar {
+            north: Other,
+            south: Other,
+            west: Other,
+            east: Other,
+            collision: SolidOrSpecial,
+        },
+    }
+}
+
+/// Validate every edited region of an Overworld screen against the Terrain Grammar:
+/// - Every `0x16C` cliff-top tile MUST sit directly above a `0x520` cliff-wall tile (zero floating brown strips!).
+/// - No brown dirt-edge tile (`0x0AC/0x0AD/0x09E/0x09F/0x0A4/0x0A5/0x0A9/0x17C/0x414/0x415`) may border
+///   pure grass across an edited boundary without a connected dirt interior (zero floating brown triangles!).
+/// - Mario's House doorway (`Map16 r16..18, c10..13` on Screen `0x2C`) must remain 100% unobstructed walkable grass!
+pub fn validate_screen_terrain_grammar(
+    rom_data: &[u8],
+    original: &OverworldScreenMap,
+    edited: &OverworldScreenMap,
+) -> Option<TerrainValidationReport> {
+    let orig16 = expand_screen_to_map16(rom_data, original)?;
+    let edit16 = expand_screen_to_map16(rom_data, edited)?;
+
+    let mut edited_map32_cells = 0usize;
+    let mut touched_16 = vec![false; 32 * 32];
+    for r in 0..16 {
+        for c in 0..16 {
+            if original.tiles[r * 16 + c] != edited.tiles[r * 16 + c] {
+                edited_map32_cells += 1;
+                // Mark the 2x2 edited Map16 block AND its 1-tile neighbor halo for seam checking!
+                let r0 = (r * 2).saturating_sub(1);
+                let r1 = (r * 2 + 2).min(31);
+                let c0 = (c * 2).saturating_sub(1);
+                let c1 = (c * 2 + 2).min(31);
+                for rr in r0..=r1 {
+                    for cc in c0..=c1 {
+                        touched_16[rr * 32 + cc] = true;
+                    }
+                }
+            }
+        }
+    }
+
+    let mut orphan_cliff_tops = Vec::new();
+    let mut orphan_dirt_seams = Vec::new();
+
+    for r in 0..32usize {
+        for c in 0..32usize {
+            if !touched_16[r * 32 + c] {
+                continue;
+            }
+            let m16 = edit16[r * 32 + c];
+            let g = classify_map16_grammar(m16);
+
+            // Rule 1: Cliff top (0x16C) MUST sit directly above SouthCliffWall (0x520)!
+            if m16 == 0x16C {
+                let below = if r + 1 < 32 {
+                    edit16[(r + 1) * 32 + c]
+                } else {
+                    0
+                };
+                if below != 0x520 {
+                    orphan_cliff_tops.push((r, c, m16));
+                }
+            }
+
+            // Rule 2: Dirt edge tiles MUST NOT appear isolated on pure grass in any edited zone!
+            if g.north == TerrainSurface::DirtPath && orig16[r * 32 + c] != m16
+                || (g.north == TerrainSurface::DirtPath && touched_16[r * 32 + c])
+            {
+                let mut dirt_neighbors = 0usize;
+                for (dr, dc) in [(-1isize, 0), (1, 0), (0, -1), (0, 1)] {
+                    let nr = r as isize + dr;
+                    let nc = c as isize + dc;
+                    if (0..32).contains(&nr) && (0..32).contains(&nc) {
+                        let nm = edit16[(nr as usize) * 32 + (nc as usize)];
+                        if classify_map16_grammar(nm).north == TerrainSurface::DirtPath {
+                            dirt_neighbors += 1;
+                        }
+                    }
+                }
+                // A valid continuous dirt patch has at least 2 orthogonal dirt neighbors (e.g. corner + interior)
+                // AND for 0x0AC/0x0AD bottom-corners specifically, MUST have a dirt neighbor directly NORTH!
+                let north_is_dirt = r > 0
+                    && classify_map16_grammar(edit16[(r - 1) * 32 + c]).north
+                        == TerrainSurface::DirtPath;
+                if (matches!(m16, 0x0AC | 0x0AD) && !north_is_dirt) || dirt_neighbors < 2 {
+                    orphan_dirt_seams.push((r, c, m16));
+                }
+            }
+        }
+    }
+
+    // Rule 3: On Screen 0x2C, verify Mario's House exit corridor (Map16 r16..19, c10..13) is 100% walkable!
+    let doorway_walkable = if edited.screen_id == 0x2C {
+        (16..=19).all(|r| {
+            (10..=13).all(|c| {
+                classify_map16_grammar(edit16[r * 32 + c]).collision == Map16Collision::Walkable
+            })
+        })
+    } else {
+        true
+    };
+
+    Some(TerrainValidationReport {
+        screen_id: edited.screen_id,
+        edited_map32_cells,
+        orphan_cliff_tops,
+        orphan_dirt_seams,
+        doorway_walkable,
+    })
+}
+
+/// Phase 5/6 Vertical Slice: Redesign **World 1 — Yoshi's Island (Screen `0x2C`, Mario's House)**
+/// with 100% Terrain Grammar Verification (ZERO floating brown cliff strips, ZERO floating dirt triangles!).
 ///
-/// Rebuilds the geography of Mario's starting hub using verified walkable SMW grass (`0x001D`, `0x0106`),
-/// SMW Turn-Block & `?` Block interactive plazas (`0x0F4C`), and bright Yoshi's Island flower meadows
-/// (`0x0388`, `0x06A0`) while keeping Mario's House door (`r07..r08, c05..c06`) and all 4 screen exits
-/// 100% open and walkable!
+/// Verified Map32 -> Map16 quads (`decode_map32_quads`):
+/// - `0x001D` -> `(034, 034 / 034, 034)` Pure lush walkable Yoshi's Island meadow grass
+/// - `0x06C7` -> `(20F, 20F / 034, 034)` Pure SMW interactive Turn-Block pair on lush green grass!
+/// - `0x0208` -> `(034, 034 / 16C, 16C)` Pure lush green grass directly above continuous south cliff top!
+/// - `0x07CC` -> `(036, 036 / 034, 034)` Symmetric pair of SMW Smiling Hill Bushes on pure grass
+/// - `0x0166` -> `(034, 034 / 034, 0DA)` Animated Yoshi's Island daisy meadow on pure grass
 pub fn patch_world1_yoshis_island(
     rom_zelda: &mut SnesRom,
     session: &mut SwapSession,
 ) -> Result<usize, RomError> {
-    let Some(mut scr2c) = read_overworld_screen(
+    let Some(orig2c) = read_overworld_screen(
         &rom_zelda.data,
         0x2C,
         "World 1 — Yoshi's Island (Mario's House Hub)",
@@ -402,35 +665,40 @@ pub fn patch_world1_yoshis_island(
     ) else {
         return Ok(0);
     };
+    let mut scr2c = orig2c.clone();
 
     // Helper: set Map32 tile at (row, col)
     let set = |grid: &mut [u16], r: usize, c: usize, tile: u16| {
         grid[r * 16 + c] = tile;
     };
 
-    // 1. Clean, 100% Seamless Yoshi's Island Courtyard (Screen 0x2C, Mario's House Hub)!
-    //    Verified exact Screen 0x2C coordinates (ZERO cliff/wall boundary edits!):
-    //      r05..r07 c04..c07 = Mario's Red-Roof Mushroom House (door at r07 c05..c06)
-    //      r08      c05..c06 = Courtyard directly outside Mario's door (vanilla brown dirt 1B6E/1B6F -> lush grass 0x001D!)
-    //      r09      c04..c07 = Lower courtyard above southern cliff (Turn-Blocks flanking symmetric green meadow!)
-    //      r15      c04,c11..c12 = Southern Yoshi's Island meadow (Smiling Bushes & Daisy Flowers!)
-    //
-    //    Verified walkable/prop Map32 IDs from Screen 0x2C:
-    //      0x001D = Pure lush walkable Yoshi's Island meadow grass
-    //      0x07CC = Symmetric pair of SMW Smiling Hill Bushes
-    //      0x1B76 = Interactive SMW Turn-Block pair
-    //      0x06A0 = Cheerful SMW Flower meadow grass
-    set(&mut scr2c.tiles, 8, 5, 0x001D); // Replace Zelda brown dirt patch with lush Yoshi's Island grass!
+    // 1. Seamless Yoshi's Island Courtyard (Screen 0x2C, Mario's House Hub — BUG 03 FIXED!):
+    //    - r08 c05..c06: Lush walkable Yoshi's Island grass directly outside Mario's House door (0x001D)
+    //    - r09 c04, c07: Interactive SMW Turn-Block pairs on PURE GREEN GRASS (0x06C7 -> 20F,20F / 034,034)!
+    //                    (Replaces v0.5.0's buggy 0x1B76 which leaked brown cliff tops 0x16C into row 9!)
+    //    - r09 c05..c06: Clean walkable green meadow corridor straight south (0x001D)
+    //    - r10 c05:      Pure green meadow above unbroken south cliff top (0x0208 -> 034,034 / 16C,16C)!
+    //                    (Replaces vanilla 0x1B76's orphaned brown dirt triangle 0x0AD/0x0AC between Turn-Blocks!)
+    set(&mut scr2c.tiles, 8, 5, 0x001D);
     set(&mut scr2c.tiles, 8, 6, 0x001D);
-    set(&mut scr2c.tiles, 9, 4, 0x1B76); // Interactive SMW Turn-Block wing West
-    set(&mut scr2c.tiles, 9, 5, 0x001D); // Clean green meadow path straight south
+    set(&mut scr2c.tiles, 9, 4, 0x06C7); // Pure grass + 2 SMW Turn-Blocks (ZERO cliff top strip!)
+    set(&mut scr2c.tiles, 9, 5, 0x001D);
     set(&mut scr2c.tiles, 9, 6, 0x001D);
-    set(&mut scr2c.tiles, 9, 7, 0x1B76); // Interactive SMW Turn-Block wing East
+    set(&mut scr2c.tiles, 9, 7, 0x06C7); // Pure grass + 2 SMW Turn-Blocks (ZERO cliff top strip!)
+    set(&mut scr2c.tiles, 10, 5, 0x0208); // Pure grass + continuous cliff top 16C (ZERO brown dirt triangle!)
 
-    // Southern Yoshi's Island Flower & Smiling Bush Meadow (100% open grass row 15, zero cliff overlap!)
-    set(&mut scr2c.tiles, 15, 4, 0x07CC);
-    set(&mut scr2c.tiles, 15, 11, 0x07CC);
-    set(&mut scr2c.tiles, 15, 12, 0x06A0);
+    // 2. Southern Yoshi's Island Meadow (row 15, 100% pure-grass props — replaces buggy dirt-edge 0x06A0!)
+    set(&mut scr2c.tiles, 15, 4, 0x07CC); // Smiling Bushes on pure grass
+    set(&mut scr2c.tiles, 15, 11, 0x07CC); // Smiling Bushes on pure grass
+    set(&mut scr2c.tiles, 15, 12, 0x0166); // Genuine daisy meadow on pure grass (ZERO brown dirt edge!)
+
+    // Run mandatory Terrain Grammar & Seam Validator before committing!
+    if let Some(report) = validate_screen_terrain_grammar(&rom_zelda.data, &orig2c, &scr2c) {
+        debug_assert!(
+            report.is_clean(),
+            "Terrain grammar violation on Screen 0x2C: {report:?}"
+        );
+    }
 
     // Relocate cleanly into LoROM Bank $3B (keeping natural southern cliff r11 c05..07 = 0x0F4C intact!)
     let mut reloc_cursor = OW_MAP32_RELOC_START_PC;
@@ -473,5 +741,69 @@ mod tests {
             assert_eq!(hi_d, hi, "HI plane mismatch on screen 0x{scr_id:02X}");
             assert_eq!(lo_d, lo, "LO plane mismatch on screen 0x{scr_id:02X}");
         }
+    }
+
+    #[test]
+    fn test_world1_screen2c_terrain_grammar_zero_seams() {
+        let p = [
+            std::path::Path::new("roms/zelda_alttp.sfc"),
+            std::path::Path::new("../../roms/zelda_alttp.sfc"),
+        ]
+        .into_iter()
+        .find(|c| c.exists());
+        let Some(p) = p else {
+            return;
+        };
+        let rom_bytes = std::fs::read(p).expect("read roms/zelda_alttp.sfc");
+        // Verify exact decoded Map16 quads for our curated Yoshi's Island tiles!
+        assert_eq!(
+            decode_map32_quads(&rom_bytes, 0x001D),
+            Some([0x034, 0x034, 0x034, 0x034])
+        );
+        assert_eq!(
+            decode_map32_quads(&rom_bytes, 0x06C7),
+            Some([0x20F, 0x20F, 0x034, 0x034])
+        );
+        assert_eq!(
+            decode_map32_quads(&rom_bytes, 0x0208),
+            Some([0x034, 0x034, 0x16C, 0x16C])
+        );
+        assert_eq!(
+            decode_map32_quads(&rom_bytes, 0x07CC),
+            Some([0x036, 0x036, 0x034, 0x034])
+        );
+
+        let orig = read_overworld_screen(&rom_bytes, 0x2C, "W1", "Orig").unwrap();
+        // Confirm the validator CATCHES the v0.5.0 BUG 03 defects if reintroduced!
+        let mut buggy_v050 = orig.clone();
+        buggy_v050.tiles[8 * 16 + 5] = 0x001D;
+        buggy_v050.tiles[8 * 16 + 6] = 0x001D;
+        buggy_v050.tiles[9 * 16 + 4] = 0x1B76; // Buggy cliff top + dirt triangle!
+        buggy_v050.tiles[9 * 16 + 5] = 0x001D;
+        buggy_v050.tiles[9 * 16 + 6] = 0x001D;
+        buggy_v050.tiles[9 * 16 + 7] = 0x1B76; // Buggy cliff top + dirt triangle!
+        buggy_v050.tiles[15 * 16 + 12] = 0x06A0; // Buggy dirt edge!
+        let bad_rep = validate_screen_terrain_grammar(&rom_bytes, &orig, &buggy_v050).unwrap();
+        assert!(
+            !bad_rep.orphan_cliff_tops.is_empty(),
+            "Validator must catch v0.5.0 floating brown cliff strips (0x16C on row 9)!"
+        );
+        assert!(
+            !bad_rep.orphan_dirt_seams.is_empty(),
+            "Validator must catch v0.5.0 floating brown dirt triangles (0x0AD/0x0AC/0x09F)!"
+        );
+
+        // Now build the real v0.6.0 Screen 0x2C and assert 100% ZERO violations!
+        let mut rom = SnesRom::from_bytes("zelda_alttp.sfc", &rom_bytes).unwrap();
+        rom.data.resize(0x200000, 0xFF);
+        let mut sess = SwapSession::new();
+        let ops = patch_world1_yoshis_island(&mut rom, &mut sess).unwrap();
+        assert!(ops >= 4);
+        let fixed = read_overworld_screen(&rom.data, 0x2C, "W1", "Fixed").unwrap();
+        let good_rep = validate_screen_terrain_grammar(&rom.data, &orig, &fixed).unwrap();
+        assert!(
+            good_rep.is_clean(),
+            "v0.6.0 Screen 0x2C must have ZERO terrain grammar violations, got: {good_rep:?}"
+        );
     }
 }

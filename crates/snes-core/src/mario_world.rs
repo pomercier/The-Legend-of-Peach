@@ -131,8 +131,15 @@ fn smw_tile(sheet: &[u8], tx: usize, ty: usize, lut: &[u8; 8]) -> [[u8; 16]; 16]
 
 // =============================================================================
 // PART A: TOAD TOWN (KAKARIKO VILLAGE & WORLDWIDE NPCs — 6 VANILLA SHEETS!)
-//   ALTTP NPC Palettes: 1=White, 2=Accent(Red/Pink), 3=TanShade, 4=PeachSkin,
-//                       5=DarkOutline, 6=Primary(Green/Blue/Red), 7=DarkPrimary
+//   VERIFIED LIVE ALTTP NPC CGRAM PALETTES (NEVER USE INDEX 2 ON TOAD FACES!):
+//   - Pal 3 (`PalRow[02]` @ 0x0DD254, Red Toads):
+//       1=Pure White (#F8F8F8), 2=Lime-Yellow (#D0D850 - AVOID ON FACE!),
+//       3=Warm Tan/Boots (#D08048), 4=Peach Skin (#F8C088),
+//       5=Charcoal Outline (#484848), 6=Vibrant Red (#F83030), 7=Deep Crimson (#B81010)
+//   - Pal 4 (`PalRow[03]` @ 0x0DD272, Blue Toads & SMW Kamek!):
+//       1=Pure White (#F8F8F8), 2=Pink Magic Gem (#F888B0),
+//       3=Warm Tan (#D07840), 4=Golden-Yellow Snout (#F8D080),
+//       5=Crisp Black Outline (#303030), 6=SMW Royal Blue (#4090F8), 7=Deep Royal Blue (#0048A8)
 // =============================================================================
 
 #[derive(Clone, Copy)]
@@ -146,86 +153,88 @@ enum ToadStyle {
     ShopkeeperFront,
 }
 
+/// Museum-grade 16-bit Nintendo SMAS / Super Mario RPG Toad Head (16x16, BUG 05 OVERHAUL!).
+/// - Plump, genuinely rounded shaded mushroom dome (NOT blocky/flat-top!)
+/// - 3D shaded red/blue cap spots (`6` bright + `7` shaded underside!)
+/// - Cute rounded peach face with shiny vertical Nintendo oval eyes (`5` pupil + `1` top glint!)
+/// - Warm subtle smile (`3` warm tan — ZERO lime-green `2` mouth artifact!)
 fn build_toad_head_16x16(style: ToadStyle) -> [[u8; 16]; 16] {
-    // Museum-grade pixel-exact Nintendo SMW/SMRPG Toad head (16x16),
-    // calibrated to ALTTP NPC palette: 1=White, 2=RedAccent, 3=TanShade, 4=PeachSkin,
-    // 5=DarkOutline, 6=Primary(Red/Blue/Green cap spots), 7=DarkPrimary.
-    let (cap_bg, spot_col, face_col) = match style {
-        ToadStyle::ToadetteFront | ToadStyle::ToadetteSide => (6u8, 1u8, 4u8),
-        ToadStyle::ToadsworthFront => (4u8, 3u8, 4u8),
-        ToadStyle::ShopkeeperFront => (1u8, 2u8, 4u8),
-        _ => (1u8, 6u8, 4u8),
+    let (cap_bg, spot_hi, spot_lo, face_col) = match style {
+        ToadStyle::ToadetteFront | ToadStyle::ToadetteSide => (6u8, 1u8, 1u8, 4u8),
+        ToadStyle::ToadsworthFront => (4u8, 3u8, 7u8, 4u8),
+        ToadStyle::ShopkeeperFront => (1u8, 6u8, 7u8, 4u8),
+        _ => (1u8, 6u8, 7u8, 4u8),
     };
     let rows: [&str; 16] = match style {
         ToadStyle::ClassicBack => [
-            "................",
-            "....55555555....",
-            "..55CCSSSSCC55..",
-            ".5CCCSSSSSSCCC5.",
+            ".....555555.....",
+            "...55CCSSCC55...",
+            "..5CCSSSSSSCC5..",
             ".5SCCSSSSSSCCS5.",
             "5SSCCCSSSSCCCSS5",
-            "5SSCCCCCCCCCCSS5",
-            "5SCCCCCCCCCCCCS5",
+            "5SSCCCDDDDCCCSS5",
+            "5SDCCCCCCCCCCDS5",
+            "5DCCCCCCCCCCCCD5",
             ".5CCCCCCCCCCCC5.",
-            ".5CCC555555CCC5.",
+            ".53CCCCCCCCCC35.",
             "..55CCSSSSCC55..",
-            "...5CCSSSSCC5...",
+            "...5CCSDDSCC5...",
             "....55CCCC55....",
-            "......5555......",
+            ".....555555.....",
             "................",
             "................",
         ],
         ToadStyle::ClassicSide | ToadStyle::ToadetteSide => [
-            "................",
-            "....55555555....",
-            "..55CCCSSSCC55..",
-            ".5CSSCCSSSCCSC5.",
-            ".5SSSCCSSCCCSS5.",
-            "5CSSCCCCCCCCSS5.",
-            "5CCCCCCCCCCCSS5.",
-            "5CCCCCCCCCCCC5..",
-            ".5CC5555555CC5..",
-            "..55FFFFFFFF5...",
-            "..5FFF5FFFFF5...",
-            "..5FFF5FFFFF5...",
+            ".....555555.....",
+            "...55CCSSCC55...",
+            "..5CCSSSSSSCC5..",
+            ".5SSCCSSSSCCCS5.",
+            "5SSCCCSSSSCCCSS5",
+            "5SDCCCCDDCCCCDS5",
+            "5DCCCCCCCCCCCCD5",
+            ".5CCCCCCCCCCCC5.",
+            ".535555555553C5.",
+            "..53FFFFFFFF55..",
+            "..5FF15FFFFF5...",
+            "..5FF55FFFFF5...",
             "..5FFFFFFFFF5...",
-            "...5FFF2FFF5....",
-            "....55FFF55.....",
-            "......555.......",
+            "...53FF33FF5....",
+            "....55FFFF5.....",
+            "......5555......",
         ],
         ToadStyle::ToadsworthFront => [
-            "................",
-            "....55555555....",
-            "..55CCSSSSCC55..",
-            ".5CCCSSSSSSCCC5.",
+            ".....555555.....",
+            "...55CCSSCC55...",
+            "..5CCSSSSSSCC5..",
             ".5SCCSSSSSSCCS5.",
             "5SSCCCSSSSCCCSS5",
-            "5SSCCCCCCCCCCSS5",
-            "5SCCCCCCCCCCCCS5",
-            ".5CC55555555CC5.",
-            "..55FFFFFFFF55..",
-            "..5F115FF511F5..",
+            "5SDCCCCDDCCCCDS5",
+            "5DCCCCCCCCCCCCD5",
+            ".5CCCCCCCCCCCC5.",
+            ".53555555555535.",
+            "..53FFFFFFFF35..",
             "..5F155FF551F5..",
-            "..5FFF1111FFF5..",
-            "...5FF1111FF5...",
+            "..5F515FF515F5..",
+            "..5FF111111FF5..",
+            "...53F1111F35...",
             "....55FFFF55....",
             "......5555......",
         ],
         _ => [
-            "................",
-            "....55555555....",
-            "..55CCSSSSCC55..",
-            ".5CCCSSSSSSCCC5.",
+            ".....555555.....",
+            "...55CCSSCC55...",
+            "..5CCSSSSSSCC5..",
             ".5SCCSSSSSSCCS5.",
             "5SSCCCSSSSCCCSS5",
-            "5SSCCCCCCCCCCSS5",
-            "5SCCCCCCCCCCCCS5",
-            ".5CC55555555CC5.",
-            "..55FFFFFFFF55..",
-            "..5FF5FFFF5FF5..",
-            "..5FF5FFFF5FF5..",
+            "5SDCCCCDDCCCCDS5",
+            "5DCCCCCCCCCCCCD5",
+            ".5CCCCCCCCCCCC5.",
+            ".53555555555535.",
+            "..53FFFFFFFF35..",
+            "..5FF15FF51FF5..",
+            "..5FF55FF55FF5..",
             "..5FFFFFFFFFF5..",
-            "...5FFF22FFF5...",
+            "...53FF33FF35...",
             "....55FFFF55....",
             "......5555......",
         ],
@@ -236,10 +245,10 @@ fn build_toad_head_16x16(style: ToadStyle) -> [[u8; 16]; 16] {
             px[y][x] = match ch {
                 b'.' => 0,
                 b'C' => cap_bg,
-                b'S' => spot_col,
+                b'S' => spot_hi,
+                b'D' => spot_lo,
                 b'F' => face_col,
                 b'1' => 1,
-                b'2' => 2,
                 b'3' => 3,
                 b'5' => 5,
                 _ => 0,
@@ -247,54 +256,57 @@ fn build_toad_head_16x16(style: ToadStyle) -> [[u8; 16]; 16] {
         }
     }
     if matches!(style, ToadStyle::ToadetteFront | ToadStyle::ToadetteSide) {
-        // Adorable twin Toadette pigtails
-        for &(cx, cy) in &[(2usize, 10usize), (13, 10)] {
+        // Adorable shaded twin Toadette pigtails
+        for &(cx, cy) in &[(1usize, 10usize), (14, 10)] {
             px[cy][cx] = 6;
-            px[cy + 1][cx] = 6;
-            px[cy][cx.saturating_sub(1)] = 5;
-            px[cy + 1][cx.saturating_sub(1)] = 5;
+            px[cy + 1][cx] = 7;
+            px[cy.saturating_sub(1)][cx] = 5;
+            px[cy + 2][cx] = 5;
+            if cx > 0 {
+                px[cy][cx - 1] = 5;
+                px[cy + 1][cx - 1] = 5;
+            }
             if cx + 1 < 16 {
                 px[cy][cx + 1] = 5;
                 px[cy + 1][cx + 1] = 5;
             }
-            px[cy.saturating_sub(1)][cx] = 5;
-            px[cy + 2][cx] = 5;
         }
     }
     px
 }
 
-fn build_toad_body_16x16(vest_col: u8, stride: isize, dress: bool) -> [[u8; 16]; 16] {
-    // Crisp, pixel-exact Nintendo Toad body aligned tightly under ALTTP's +8px NPC head offset!
-    // Open Toad vest over white shirt, plump white Toad shorts (ZERO red belly dot!), tidy brown boots.
+/// Museum-grade 16-bit Nintendo SMAS / Super Mario RPG Toad Body (16x16, BUG 05 OVERHAUL!).
+/// Tailored shaded open vest (`6`/`7`) with golden-tan trim (`3`) over crisp white shirt (`1`),
+/// adorable peach arms (`4`), plump white Toad shorts (`1`), and tidy chestnut boots (`3`).
+fn build_toad_body_16x16(vest_hi: u8, vest_lo: u8, stride: isize, dress: bool) -> [[u8; 16]; 16] {
     let rows: [&str; 16] = if dress {
         [
             "................",
-            ".....555555.....",
-            "...55V3113V55...",
-            "..544V3113V445..",
+            "....55555555....",
+            "...5VV3113VV5...",
+            "..54VV3113VV45..",
             "..545V3113V545..",
-            "...55VV11VV55...",
-            "...5VVV11VVV5...",
-            "...5VVV11VVV5...",
-            "..5VVVV11VVVV5..",
+            "...55VD11DV55...",
+            "...5VVD11DVV5...",
+            "..5VVVD11DVVV5..",
+            "..5VDD1111DDV5..",
             "..511111111115..",
             "...5555555555...",
             "...5335..5335...",
-            "...5335..5335...",
-            "...5555..5555...",
+            "..53335..53335..",
+            "..55555..55555..",
             "................",
             "................",
         ]
     } else if stride != 0 {
         [
             "................",
-            ".....555555.....",
-            "...55V3113V55...",
-            "..544V3113V445..",
-            "..545V3113V545..",
-            "...55V3113V55...",
+            "....55555555....",
             "...5VV3113VV5...",
+            "..54VV3113VV45..",
+            "..545V3113V545..",
+            "...55VD11DV55...",
+            "...5VVD11DVV5...",
             "...5111111115...",
             "...5111111115...",
             "...5111551115...",
@@ -308,12 +320,12 @@ fn build_toad_body_16x16(vest_col: u8, stride: isize, dress: bool) -> [[u8; 16];
     } else {
         [
             "................",
-            ".....555555.....",
-            "...55V3113V55...",
-            "..544V3113V445..",
-            "..545V3113V545..",
-            "...55V3113V55...",
+            "....55555555....",
             "...5VV3113VV5...",
+            "..54VV3113VV45..",
+            "..545V3113V545..",
+            "...55VD11DV55...",
+            "...5VVD11DVV5...",
             "...5111111115...",
             "...5111111115...",
             "...5111551115...",
@@ -330,7 +342,8 @@ fn build_toad_body_16x16(vest_col: u8, stride: isize, dress: bool) -> [[u8; 16];
         for (x, ch) in row.bytes().take(16).enumerate() {
             px[y][x] = match ch {
                 b'.' => 0,
-                b'V' => vest_col,
+                b'V' => vest_hi,
+                b'D' => vest_lo,
                 b'1' => 1,
                 b'3' => 3,
                 b'4' => 4,
@@ -342,30 +355,108 @@ fn build_toad_body_16x16(vest_col: u8, stride: isize, dress: bool) -> [[u8; 16];
     px
 }
 
-fn build_kamek_magikoopa_16x16(frame: usize) -> ([[u8; 16]; 16], [[u8; 16]; 16]) {
-    // Classic SMW Kamek / Magikoopa (pointed wizard hat, round white spectacles, magic wand!)
-    let mut h = Grid::new(16, 16);
-    h.tri(8, 0, 2, 8, 14, 8, 6); // pointed wizard hat!
-    h.rect(3, 7, 10, 2, 7); // hat brim
-    h.ellipse_o(8.0, 12.0, 5.0, 3.8, 4, 5); // yellow Koopa face
-    h.ellipse_o(5.5, 11.0, 2.2, 2.2, 1, 5); // round glasses L
-    h.ellipse_o(10.5, 11.0, 2.2, 2.2, 1, 5); // round glasses R
-    h.set(5, 11, 5);
-    h.set(10, 11, 5);
-    h.outline(5);
+/// Transparent ground tile for `Sprite 0x35` (`raw 0xBD (6,0)` = `$86`, drawn mirrored at `dy=+15`).
+/// Replaces the v0.5.0 bug where Toad's Back Head sat in `(6,0)` and rendered as a massive dark-grey lump,
+/// letting ALTTP's clean native sprite ground shadow render beneath Toad's shoes with zero double-shadowing!
+fn build_toad_ground_shadow_16x16() -> [[u8; 16]; 16] {
+    [[0u8; 16]; 16]
+}
 
-    let mut b = Grid::new(16, 16);
-    b.tri(8, 0, 2, 13, 14, 13, 6); // wizard robe
-    b.rect(6, 2, 4, 11, 7); // center robe pleat
-    b.rect(7, 4, 2, 2, 4); // gold clasp
-                           // Raised magic wand!
-    let wy = if frame == 0 { 3 } else { 5 };
-    b.rect(12, wy, 2, 8, 3);
-    b.ellipse_o(13.0, wy as f32, 2.2, 2.2, if frame == 0 { 1 } else { 2 }, 5);
-    b.ellipse_o(5.0, 14.0, 2.2, 1.5, 3, 5);
-    b.ellipse_o(11.0, 14.0, 2.2, 1.5, 3, 5);
-    b.outline(5);
-    (h.to_16x16(), b.to_16x16())
+/// Authentic Super Mario World Blue Magikoopa **Kamek** (BUG 04 OVERHAUL!).
+/// Calibrated strictly to Global Sprite Pal 4 (`PalRow[03]` @ 0x0DD272):
+/// - `1` = Pure White (`#F8F8F8`): Round glasses lenses, crisp wizard robe trim, magic sparkle core
+/// - `2` = Magic Pink (`#F888B0`): Glowing wand crystal & floating magic sparkles!
+/// - `3` = Warm Tan (`#D07840`): Beak underside shade & wooden wand staff
+/// - `4` = Golden Yellow (`#F8D080`): Iconic SMW Koopa snout & collar clasp
+/// - `5` = Crisp Black (`#303030`): Bold 16-bit Nintendo outline, spectacles frame & pupils
+/// - `6` = Vibrant SMW Royal Blue (`#4090F8`): Pointed Magikoopa wizard hat & flowing robe!
+/// - `7` = Deep SMW Royal Blue (`#0048A8`): Hat brim shadow & deep robe pleats!
+pub fn build_kamek_magikoopa_smw_16x16(frame: usize) -> ([[u8; 16]; 16], [[u8; 16]; 16]) {
+    // 1. Kamek Head (16x16): Authentic SMW GFX03 tilted pointed blue wizard hat, big round white
+    //    spectacles, expressive dark pupils, and friendly-wicked yellow Koopa snout!
+    let head_rows: [&str; 16] = [
+        "........555.....",
+        ".......56665....",
+        "......566675....",
+        ".....5666675....",
+        "....56666775....",
+        "...566666775....",
+        "..55777777755...",
+        ".5666666666775..",
+        ".5555555555555..",
+        "..55115551155...",
+        "..511555511545..",
+        "..5115555115445.",
+        "..5555444444445.",
+        "...54444444335..",
+        "....533333335...",
+        ".....5555555....",
+    ];
+    // 2. Kamek Robe & Magic Wand (16x16): Flowing royal-blue wizard cloak with crisp white trim,
+    //    golden chest clasp, cute boots, and glowing SMW magic wand (Frame 0 ready, Frame 1 raised + sparkle!)
+    let body_rows: [&str; 16] = if frame == 0 {
+        [
+            ".....555555.....",
+            "....51144115....",
+            "...5661661665...",
+            "..566616616665..",
+            ".56676167167665.",
+            ".54566177166545.",
+            "..5566177166552.",
+            "...5661771665315",
+            "...566177166532.",
+            "..5667177176635.",
+            "..566717717665..",
+            "..511111111115..",
+            "...5555555555...",
+            "...5335..5335...",
+            "...5555..5555...",
+            "................",
+        ]
+    } else {
+        [
+            ".....555555..1..",
+            "....51144115121.",
+            "...566166166525.",
+            "..5666166166635.",
+            ".56676167167635.",
+            ".54566177166545.",
+            "..556617716655..",
+            "...5661771665...",
+            "...5661771665...",
+            "..566717717665..",
+            "..566717717665..",
+            "..511111111115..",
+            "...5555555555...",
+            "...5335..5335...",
+            "...5555..5555...",
+            "................",
+        ]
+    };
+    let parse = |rows: [&str; 16]| -> [[u8; 16]; 16] {
+        let mut px = [[0u8; 16]; 16];
+        for (y, row) in rows.iter().enumerate() {
+            for (x, ch) in row.bytes().take(16).enumerate() {
+                px[y][x] = match ch {
+                    b'.' => 0,
+                    b'1' => 1,
+                    b'2' => 2,
+                    b'3' => 3,
+                    b'4' => 4,
+                    b'5' => 5,
+                    b'6' => 6,
+                    b'7' => 7,
+                    _ => 0,
+                };
+            }
+        }
+        px
+    };
+    (parse(head_rows), parse(body_rows))
+}
+
+fn build_kamek_magikoopa_16x16(frame: usize) -> ([[u8; 16]; 16], [[u8; 16]; 16]) {
+    build_kamek_magikoopa_smw_16x16(frame)
 }
 
 fn build_starman_fairy_16x16(frame: usize) -> [[u8; 16]; 16] {
@@ -415,11 +506,12 @@ fn patch_toad_town_npcs(
     let tw_f = build_toad_head_16x16(ToadStyle::ToadsworthFront);
     let ts_f = build_toad_head_16x16(ToadStyle::ShopkeeperFront);
 
-    let tb_1 = build_toad_body_16x16(6, 0, false);
-    let tb_2 = build_toad_body_16x16(6, 1, false);
-    let tb_alt = build_toad_body_16x16(2, 0, false);
-    let td_1 = build_toad_body_16x16(6, 0, true);
-    let td_2 = build_toad_body_16x16(2, 1, true);
+    let tb_1 = build_toad_body_16x16(6, 7, 0, false);
+    let tb_2 = build_toad_body_16x16(6, 7, 1, false);
+    let tb_alt = build_toad_body_16x16(7, 6, 0, false);
+    let td_1 = build_toad_body_16x16(6, 7, 0, true);
+    let td_2 = build_toad_body_16x16(7, 6, 1, true);
+    let toad_shadow = build_toad_ground_shadow_16x16();
     let (km_h0, km_b0) = build_kamek_magikoopa_16x16(0);
     let (km_h1, km_b1) = build_kamek_magikoopa_16x16(1);
     let sf0 = build_starman_fairy_16x16(0);
@@ -434,7 +526,7 @@ fn patch_toad_town_npcs(
         rom_z,
         sess,
         0xC2,
-        "Village Cocorico → TOAD TOWN 1/4 (sp:4F) : Toads, Toadettes & Papy Champi SMW (layout OAM exact)",
+        "Village Cocorico → TOAD TOWN 1/4 (sp:4F) : Toads, Toadettes & Papy Champi 16-bit SMAS/SMRPG",
         free_cursor,
         free_end,
         &|raw| {
@@ -449,18 +541,20 @@ fn patch_toad_town_npcs(
         ops += 1;
     }
 
-    // 2. Kakariko Villagers 2 / Lumberjacks / Bottle Vendor (sp:4A -> raw 0xBD): Exact verified vanilla layout!
-    //    Row 0: (0)=HeadS, (2)=HeadF, (4)=ToadsworthF, (6)=HeadB, (8)=HeadF, (10)=BODY, (12)=BODY
-    //    Row 2: (0)=BODY, (2)=BODY, (4)=BODY, (6)=BODY, (8)=HeadS, (10)=BODY, (12)=ShopkeeperF
+    // 2. Room 0x0103 Toad (`Sprite 0x35`) & Villagers 2 (sp:4A -> raw 0xBD):
+    //    EXACT VERIFIED `Sprite 0x35` OAM MAP ($05:E543):
+    //      Row 0: (0)=HeadF ($80), (2)=BodyF1 ($82), (4)=BodyF2 ($84), (6)=SubtleGroundShadow ($86!),
+    //             (8)=HeadF ($88), (10)=Body1 ($8A), (12)=Body2 ($8C)
+    //      Row 2: (0)=Body1, (2)=Body2, (4)=Body1, (6)=Body2, (8)=HeadS, (10)=BodyAlt, (12)=ShopHeadF
     if patch_alttp_raw_sheet_pub(
         rom_z,
         sess,
         0xBD,
-        "Village Cocorico → TOAD TOWN 2/4 (sp:4A) : Toads Bûcherons & Marchands SMW (layout OAM exact)",
+        "Maison Toad 0x0103 & Villageois 2/4 (sp:4A) : Toad 16-bit exact ($80 tête, $82/$84 corps, $86 ombre douce)",
         free_cursor,
         free_end,
         &|raw| {
-            let row0 = [&th_s, &th_f, &tw_f, &th_b, &th_f, &tb_1, &tb_2];
+            let row0 = [&th_f, &tb_1, &tb_2, &toad_shadow, &th_f, &tb_1, &tb_2];
             let row2 = [&tb_1, &tb_2, &tb_1, &tb_2, &th_s, &tb_alt, &ts_f];
             for i in 0..7 {
                 write_3bpp_16x16_pub(raw, i * 2, 0, row0[i]);
@@ -469,6 +563,85 @@ fn patch_toad_town_npcs(
         },
     )? {
         ops += 1;
+    }
+
+    // 2b. Surgical OAM & Palette Patches for BUG 04 (SMW Blue Kamek Shopkeeper) & BUG 05 (Toad Alignment):
+    //     - Shopkeeper (`Sprite 0xBB` @ 0x030BF9): ORA #$0C (Green) -> ORA #$08 (Global Pal 4 = SMW Royal Blue!)
+    //     - Shopkeeper (`$1E:EF54` @ 0x0F6F54):    LDA #$07 -> LDA #$09 (Pal 4 + NT 1 = SMW Royal Blue!)
+    //     - Shopkeeper OAM Table (`$05:F8F5` @ 0x02F8F5, 32B):
+    //         Frame 0: Head tile $00 @ (0, -12, pal 4 Blue), Body tile $06 @ (0, +2, pal 4 Blue) — ZERO digit overlap!
+    //         Frame 1: Head tile $00 @ (0, -11, pal 4 Blue), Body tile $26 @ (0, +2, pal 4 Blue) — wand raised!
+    //     - Room 0x0103 Toad (`Sprite 0x35` @ 0x02E544): Head dy = -4 (0xFC) -> dy = -9 (0xF7) (clean 13px separation!)
+    //     - Innkeeper Toad (`Sprite 0xBC` @ 0x0D7866 & 0x0D787E): Head dy = -9 (0xF7) -> dy = -11 (0xF5)!
+    if 0x030BFA < rom_z.data.len() && rom_z.data[0x030BF9] == 0x09 && rom_z.data[0x030BFA] == 0x0C {
+        sess.swap_custom_bytes(
+            rom_z,
+            0x030BFA,
+            0x030BFA,
+            vec![0x08],
+            "Palette Marchand Kamek (0x030BFA) : Vert 0x0C -> Bleu Royal SMW 0x08 (PalRow 3)"
+                .into(),
+            crate::swapper::SwapKind::CodePatch { byte_count: 1 },
+        )?;
+        ops += 1;
+    }
+    if 0x0F6F55 < rom_z.data.len() && rom_z.data[0x0F6F53] == 0xA9 && rom_z.data[0x0F6F54] == 0x07 {
+        sess.swap_custom_bytes(
+            rom_z,
+            0x0F6F54,
+            0x0F6F54,
+            vec![0x09],
+            "Palette Marchand Kamek État 0 (0x0F6F54) : Bleu Royal SMW 0x09 (Pal 4 + NT1)".into(),
+            crate::swapper::SwapKind::CodePatch { byte_count: 1 },
+        )?;
+        ops += 1;
+    }
+    if 0x02F915 <= rom_z.data.len() && rom_z.data[0x02F8F9] == 0x00 && rom_z.data[0x02F901] == 0x10
+    {
+        // NOTE: `Sprite_DrawMultiple_quantity_preset` ($05:DF6F) executes `EOR $05` (where $05 = $0F50,X = 0x09)!
+        // Keeping table `flags = 0x00` computes `0x00 ^ 0x09 = 0x09` => OBJ Pal 4 (0x0DD272 SMW Royal Blue) + NT1!
+        #[rustfmt::skip]
+        let kamek_oam: Vec<u8> = vec![
+            // Frame 0: Head (x=0, y=-12, tile=$00, flags=$00 -> ^$09 = Pal 4 Blue), Body (x=0, y=+2, tile=$06, flags=$00)
+            0x00, 0x00, 0xF4, 0xFF, 0x00, 0x00, 0x00, 0x02,
+            0x00, 0x00, 0x02, 0x00, 0x06, 0x00, 0x00, 0x02,
+            // Frame 1: Head (x=0, y=-11, tile=$00, flags=$00 -> ^$09 = Pal 4 Blue), Body (x=0, y=+2, tile=$26 wand up, flags=$00)
+            0x00, 0x00, 0xF5, 0xFF, 0x00, 0x00, 0x00, 0x02,
+            0x00, 0x00, 0x02, 0x00, 0x26, 0x00, 0x00, 0x02,
+        ];
+        sess.swap_custom_bytes(
+            rom_z,
+            0x02F8F5,
+            0x02F8F5,
+            kamek_oam,
+            "Table OAM Marchand Kamek ($05:F8F5, 32 B) : Robe propre $06/$26 (0 chiffres, flags=0x00 ^ 0x09 = Bleu Royal SMW)".into(),
+            crate::swapper::SwapKind::CodePatch { byte_count: 32 },
+        )?;
+        ops += 1;
+    }
+    if 0x02E544 < rom_z.data.len() && rom_z.data[0x02E544] == 0xFC && rom_z.data[0x02E545] == 0x80 {
+        sess.swap_custom_bytes(
+            rom_z,
+            0x02E544,
+            0x02E544,
+            vec![0xF7], // Head dy = -9px (Body at +4px -> crisp 13px separation!)
+            "Alignement OAM Tête Toad Room 0x0103 ($05:E544) : dy=-4 -> dy=-9 (proportions 16-bit propres)".into(),
+            crate::swapper::SwapKind::CodePatch { byte_count: 1 },
+        )?;
+        ops += 1;
+    }
+    for &inn_y in &[0x0D7866usize, 0x0D787Eusize] {
+        if inn_y < rom_z.data.len() && rom_z.data[inn_y] == 0xF7 {
+            sess.swap_custom_bytes(
+                rom_z,
+                inn_y,
+                inn_y,
+                vec![0xF5], // Head dy = -11px above body at 0px
+                format!("Alignement OAM Tête Toad Aubergiste (0x{inn_y:06X}) : dy=-9 -> dy=-11"),
+                crate::swapper::SwapKind::CodePatch { byte_count: 1 },
+            )?;
+            ops += 1;
+        }
     }
 
     // 3. Shopkeeper / Fortune Teller / Chest Game (sp:4D -> raw 0xC0) — keep sign at col 2..3 intact!

@@ -7,7 +7,7 @@
 </p>
 
 <h1 align="center">THE LEGEND OF PEACH</h1>
-<h3 align="center">A Mario to the Mushroom Kingdom — v0.5.0 Super Mario Revolution</h3>
+<h3 align="center">A Mario to the Mushroom Kingdom — v0.6.0 Super Mario World Authenticity</h3>
 
 <p align="center">
   <strong>Two legendary SNES worlds. One genuine Super Mario action-adventure built on native 65c816 hardware.</strong>
@@ -32,15 +32,20 @@
 
 **The Legend of Peach: A Mario to the Mushroom Kingdom** transforms *The Legend of Zelda: A Link to the Past* into a genuine top-down **Super Mario** SNES action-adventure — complete with native 65c816 **Mario Jumping**, **Mario Stomp Combat**, **Super Mario Hammer**, **Fire Mario live palette transformation**, **Super Starman rainbow invincibility**, **native SPC700 Mario Sound Effects**, **19 native N-SPC Mario musical tracks**, redesigned **World 1 Yoshi's Island** Map32 geography, and all **12 Super Mario World bosses**.
 
-Powered by a pure, headless **Rust** binary transformation engine, the project reads your own legally obtained original backups of *A Link to the Past* and *Super Mario World*, applies **220 verified SNES hardware patches** across **18 rules** (`49` audited compressed graphics sheets, custom 65c816 gameplay assembly in Bank `$22`, Map32 world screens in Bank `$3B`, rewritten zero-hyphen 372-message French narrative, 19 native N-SPC musical themes across 25 contexts, and native SPC700 Mario SFX), and outputs a **bit-for-bit deterministic 2 MiB SNES LoROM cartridge image**.
+Powered by a pure, headless **Rust** binary transformation engine, the project reads your own legally obtained original backups of *A Link to the Past* and *Super Mario World*, applies **230 verified SNES hardware patches** across **18 rules** (`49` audited compressed graphics sheets, all `303` player DMA poses remapped cleanly in Bank `$00`/`$0D`/`$10`, custom 65c816 gameplay assembly in Bank `$22`, Map32 world screens with terrain grammar validation in Bank `$3B`, rewritten zero-hyphen 372-message French narrative, 19 native N-SPC musical themes across 25 contexts, and native SPC700 Mario SFX), and outputs a **bit-for-bit deterministic 2 MiB SNES LoROM cartridge image**.
 
 > **Zero Copyrighted ROMs Included:** This repository contains **only original Rust source code, tooling, and documentation**. You must provide your own legal personal backups of both required SNES games to build the crossover locally. See [Required Original Games](#required-original-games).
 
 ---
 
-## Gameplay Showcase (`v0.5.0 — Super Mario Revolution`)
+## Gameplay Showcase (`v0.6.0 — Super Mario World Authenticity`)
 
-All screenshots below are **100% authentic, unretouched live captures** from the locally built `v0.5.0` ROM (`SHA-256: 93d3774f...`) running in **Mednafen (`snes_faust` and cycle-accurate `bsnes`)**, integer-scaled `3×` nearest-neighbor (`768×672`) directly from native `256×224` SNES video output.
+All screenshots below are **100% authentic, unretouched live captures** from the locally built `v0.6.0` ROM (`SHA-256: 2004714a...`) running in **Mednafen (`snes_faust` and cycle-accurate `snes` / bsnes)**, integer-scaled `3×` nearest-neighbor (`768×672`) directly from native `256×224` SNES video output.
+
+<p align="center">
+  <img src="docs/media/screenshots/21_v060_before_after_7bugs.png" alt="Before vs After comparison of all 7 blocking visual bugs fixed in v0.6.0" width="92%" /><br />
+  <sub><strong><code>v0.6.0</code> Visual Authenticity Proof Plate (Before vs. After)</strong> — All 7 visual regressions resolved structurally and verified live on Mednafen <code>snes_faust</code> and cycle-accurate <code>bsnes</code>.</sub>
+</p>
 
 <table>
   <tr>
@@ -75,22 +80,22 @@ All screenshots below are **100% authentic, unretouched live captures** from the
   </tr>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/media/screenshots/03_magikoopa_shop.png" alt="Kamek's Shop with Royal Crimson/Gold carpet, crisp 150/10/50 digits, Super Mushroom, Mini-Mushroom, and 10 Jet-Black Bob-ombs" width="100%" /><br />
-      <sub><strong>Kamek's Toad Town Shop</strong> — Royal Mushroom Crimson &amp; Gold carpet, crisp <code>150 / 10 / 50</code> coin prices, Super Mushroom, Mini-Mushroom, and 10 Jet-Black SMW Bob-ombs.</sub>
+      <img src="docs/media/screenshots/03_magikoopa_shop.png" alt="SMW Royal Blue Kamek Shopkeeper with crisp 150/10/50 digits, Super Mushroom, Mini-Mushroom, and 10 Jet-Black Bob-ombs" width="100%" /><br />
+      <sub><strong>SMW Royal Blue Kamek's Shop</strong> — Authentic SMW Blue Magikoopa (OBJ Pal 4), animated pink-tipped wand, non-digit robe tiles, and crisp <code>150 / 10 / 50</code> coin prices.</sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/media/screenshots/15_toad_town_crimson.png" alt="Toad Town House with rebuilt OAM-aligned Toad sprite on Crimson and Gold Mario carpet" width="100%" /><br />
-      <sub><strong>Toad Town Interiors</strong> — Pixel-exact OAM-aligned Nintendo Toad NPCs on Royal Crimson &amp; Gold carpets.</sub>
+      <img src="docs/media/screenshots/15_toad_town_crimson.png" alt="16-bit SMAS/SMRPG Toad NPC in Room 0x0103 on Crimson and Gold Mario carpet" width="100%" /><br />
+      <sub><strong>16-Bit Toad Town Interiors</strong> — Rebuilt SMAS/SMRPG Toad (warm peach face, lifted <code>dy=-9</code> head, clean shadow) on Royal Crimson &amp; Gold carpets.</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
-      <img src="docs/media/screenshots/19_bowser_french_dialogue.png" alt="Bowser Volcanic Throne Room with crisp zero-overlap French dialogue in bsnes" width="100%" /><br />
-      <sub><strong>Volcanic Bowser Throne &amp; Rewritten FR Script (bsnes)</strong> — Zero text overlap and zero hyphenated line breaks across all 372 French messages.</sub>
+      <img src="docs/media/screenshots/20_mario_koopa_contact_clean.png" alt="Clean Mario hurt/recoil animation on Blue Koopa contact with zero double heads" width="100%" /><br />
+      <sub><strong>All 303 Mario Poses Audited (Zero Contact Corruption)</strong> — Dedicated hurt/recoil and 4-dir Fire Mario cast poses remapped cleanly in Bank <code>$00/$0D/$10</code> with zero double heads.</sub>
     </td>
     <td align="center" width="50%">
-      <img src="docs/media/screenshots/09_boss_king_bowser.png" alt="Final Boss Giant King Bowser in Obsidian Volcanic Throne Room in bsnes" width="100%" /><br />
-      <sub><strong>Final Showdown — Giant King Bowser (bsnes)</strong> — Obsidian volcanic stone throne room, 4-sheet Giant King Bowser, exclusive BGR555 palettes, and dedicated Final Bowser N-SPC theme.</sub>
+      <img src="docs/media/screenshots/09_boss_king_bowser.png" alt="Authentic SMW Final Boss Giant King Bowser in Volcanic Throne Room in bsnes" width="100%" /><br />
+      <sub><strong>Authentic SMW Final King Bowser (bsnes)</strong> — 4-sheet SMW <code>GFX21</code> Bowser with hunched spiked shell, 16×24 spiked-cuff arms, <code>GFX24</code> Giant Fireballs, and zero Zelda Trident clutter.</sub>
     </td>
   </tr>
 </table>
@@ -117,7 +122,7 @@ All screenshots below are **100% authentic, unretouched live captures** from the
 
 ### Pure Rust Reproducible Build Pipeline
 - **Strict SHA-256 Input Enforcement:** Strips optional 512-byte SMC copier headers in memory and verifies exact No-Intro input ROM hashes before touching a byte.
-- **100% Deterministic 2 MiB LoROM Output:** Builds in ~1 second, enforces compile-time memory firewalls (`$20..$22` Intro + Engine, `$23..$3A` Relocated GFX, `$3B..$3F` Map32), audits all `49` modified compressed sheets for single-bank alignment and lossless LC_LZ2 round-trips, and validates SNES checksum/complement (`0x87FF` / `0x7800`).
+- **100% Deterministic 2 MiB LoROM Output:** Builds in ~1 second, enforces compile-time memory firewalls (`$20..$22` Intro + Engine, `$23..$3A` Relocated GFX, `$3B..$3F` Map32), audits all `49` modified compressed sheets and `303` Bank `$10` player DMA poses, validates Map32→Map16 terrain grammar, and verifies SNES checksum/complement (`0xC419` / `0x3BE6`).
 
 ---
 
@@ -171,7 +176,7 @@ Both original ROMs below are verified locally against **No-Intro** SNES catalog 
 | **Base ROM** | *The Legend of Zelda: A Link to the Past* (`Legend of Zelda, The - A Link to the Past (France).sfc`) | France (PAL), Rev 1.0 | `1,048,576` B (1 MiB) | `29a0d5812ccbb4b11bdb55d8f751a2a797b4110bf402ca8ba15eb2bf85db7b39` |
 | **Donor ROM** | *Super Mario World* (`Super Mario World (Europe).sfc`) | Europe (PAL), Rev 1.0 | `524,288` B (512 KiB) | `b5be1dba3012b6811a5660fbf2981cb23cdd1e48f845a42df00f0f55b19f0392` |
 
-> Full verification details (expected `v0.5.0` output SHA-256 `93d3774f81119eb41d80b0c610d3b1bbcd1430c5f572f16b65b47b3ddd24975e`, Checksum `0x87FF` / `0x7800`, CRC32 `9E8F84EB`) are documented in [`docs/ROM_REQUIREMENTS.md`](docs/ROM_REQUIREMENTS.md).
+> Full verification details (expected `v0.6.0` output SHA-256 `2004714a74f35fbf6c6c581f25b86d0b40d6729dd38c089f65e7b69e68a202ca`, Checksum `0xC419` / `0x3BE6`, CRC32 `D5E69FF4`) are documented in [`docs/ROM_REQUIREMENTS.md`](docs/ROM_REQUIREMENTS.md).
 
 ---
 
@@ -189,13 +194,13 @@ Both original ROMs below are verified locally against **No-Intro** SNES catalog 
                                                                    ▼
                                                       LoROM 2 MiB Allocator ($00..$3F)
                                                       + Hardware Firewall & Integrity Audit
-                                                      + SNES Checksum (0x87FF / 0x7800)
+                                                      + SNES Checksum (0xC419 / 0x3BE6)
                                                                    │
                                                                    ▼
                                                    [build/legend_of_peach.sfc] (Local)
 ```
 
-Read the full technical deep-dive in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/ROM_MEMORY.md`](docs/ROM_MEMORY.md), and [`docs/VISUAL_REGRESSION_REPORT.md`](docs/VISUAL_REGRESSION_REPORT.md).
+Read the full technical deep-dive in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/ROM_MEMORY.md`](docs/ROM_MEMORY.md), [`docs/VISUAL_REGRESSION_REPORT.md`](docs/VISUAL_REGRESSION_REPORT.md), [`docs/METASPRITE_ARCHITECTURE.md`](docs/METASPRITE_ARCHITECTURE.md), and [`docs/HARDWARE_VALIDATION.md`](docs/HARDWARE_VALIDATION.md).
 
 ---
 
@@ -240,14 +245,14 @@ Read the full technical deep-dive in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.
 
 | Target | Status | Notes |
 | :--- | :--- | :--- |
-| **Mednafen (`snes_faust`)** | **Verified** | Live-tested across File Select, Start Menu, World 1 Yoshi's Island, Mario Jump (`L`/`R`), Mario Stomp Combat (`+1` Coin + bounce), Fire Mario, Starman (`L+R`), Kamek's Shop, Toad Town, Iggy Koopa, and Final King Bowser. |
-| **Mednafen (`snes` / bsnes-accuracy)** | **Verified** | Cycle-accurate PPU/DMA/65c816/SPC700 verification of the 3D Title Screen, File Select, Yoshi's Island Overworld, Start Menu, Fire Mario, Starman, and Final Bowser Volcanic Throne Room + dialogue. |
-| **bsnes / Ares / RetroArch (`bsnes`, `snes9x`)** | **Expected Compatible** | Standard 2 MiB LoROM (`0x20`, PAL 50 Hz, no enhancement chips, no MSU-1). |
-| **Real SNES / Super Famicom / FXPAK Pro** | **Architecturally Compliant (Untested on Physical Hardware)** | Strictly respects LoROM 32 KiB single-bank boundaries, valid checksum/complement (`0x87FF` / `0x7800`), OAM/VRAM/CGRAM/SPC700 limits, and clean DMA timing. Community physical-hardware test reports are welcome! |
+| **Mednafen (`snes_faust`)** | **Verified** | Live-tested on `v0.6.0` (`2004714a...`) across World 1 Koopa contact (`12 fps`), Fire Mario 4-dir cast, seamless Screen `0x2C` terrain, Royal Blue Kamek Shop, 16-bit Toad Room `0x0103`, Sanctuary, Winged Iggy Koopa (anchored Paratroopa wings), and Final King Bowser. |
+| **Mednafen (`snes` / bsnes-accuracy)** | **Verified** | Cycle-accurate PPU/DMA/65c816/SPC700 verification of World 1 Screen `0x2C` terrain, Start Menu, Fire Mario, Starman Jump, and Final King Bowser Room `0x0000` + French dialogue + combat. |
+| **Standalone bsnes / Ares / Snes9x / RetroArch** | **Not Tested Locally** | Standard 2 MiB LoROM (`0x20`, PAL 50 Hz, no enhancement chips, no MSU-1). Expected compatible; see [`docs/HARDWARE_VALIDATION.md`](docs/HARDWARE_VALIDATION.md). |
+| **Real SNES / Super Famicom / FXPAK Pro** | **Architecturally Compliant (Untested on Physical Hardware)** | Strictly respects LoROM 32 KiB single-bank boundaries, valid checksum/complement (`0xC419` / `0x3BE6`), OAM/VRAM/CGRAM/SPC700 limits, and clean DMA timing. Community physical-hardware test reports are welcome! |
 
 ---
 
-## Roadmap (`v0.6.0+`)
+## Roadmap (`v0.7.0+`)
 
 See [`docs/NEXT_ACTIONS.md`](docs/NEXT_ACTIONS.md) for the complete backlog:
 

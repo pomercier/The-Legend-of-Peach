@@ -930,37 +930,55 @@ fn patch_boss_arrghus_wendy(
 // =============================================================================
 
 fn build_iggy_winged_left_half_32x32(wing_phase: usize) -> Canvas {
-    // Phase 5 Razor-Sharp Winged Iggy Koopa (left half of symmetric 64x32 sprite; x=31 is center mirror axis):
-    //   cols 0..14  = Distinct curved SMW Paratroopa Feather Wing with clean black contour gap at x=15!
-    //   cols 16..31 = Unmistakable Iggy Koopa: tall green/gold palm-tree hair, bold black-framed round glasses,
-    //                 wide golden Koopa snout & fangs, spiked blue/green shell & red clawed boots!
+    // v0.6.0 BUG 06 FIX:
+    // - PRESERVES Iggy Koopa's body (cols 16..31) 100% INTACT (user-approved body design!)
+    // - Rebuilds ONLY the wing half (cols 0..15) as authentic SMW Paratroopa feathered wings
+    //   extending ALL the way to x=15 with a solid shoulder-root anchor (x=13..15, y=17..24)
+    //   that locks directly into Iggy's shell shoulder when Mothula's OAM ($1A:FCED) pulls
+    //   wing dx inward from +-24 to +-17 (ZERO floating gap across every flap/hit/move frame!).
     let mut c = Canvas::new(32, 32);
 
-    // === LEFT PARATROOPA WING (x=1..14, cleanly separated from Iggy's body by black contour!) ===
+    // === LEFT SMW PARATROOPA FEATHERED WING (x=0..15, anchored directly into Iggy's shoulder at x=15!) ===
     if wing_phase == 0 {
-        // Upstroke feathered Paratroopa wing
-        c.ellipse_outline(7.5, 9.0, 6.0, 3.0, 1, 5);
-        c.ellipse_outline(8.5, 13.5, 5.2, 2.6, 6, 5);
-        c.ellipse_outline(10.5, 17.5, 4.0, 2.0, 2, 5);
-        c.line(4, 11, 13, 12, 5);
-        c.line(6, 15, 13, 16, 5);
-        // Golden Magic Wand held cleanly below wing
-        c.line(6, 25, 14, 21, 4);
-        c.ellipse_outline(5.0, 26.0, 2.2, 2.2, 3, 5);
-        c.set(5, 26, 1);
+        // Upstroke: proud swept-up SMW Paratroopa feathered wing rooted firmly into shoulder (x=15, y=18..24)
+        // Upper primary feather (crisp white `1` + cyan/silver shade `6` + dark outline `5`)
+        c.triangle(1, 5, 15, 15, 15, 22, 1);
+        c.ellipse_outline(7.5, 9.5, 6.2, 3.2, 1, 5);
+        // Middle secondary feather
+        c.ellipse_outline(9.5, 14.5, 5.8, 3.0, 1, 5);
+        c.ellipse(10.5, 15.5, 4.4, 2.0, 6);
+        // Lower covert feather & sturdy wing-root joint plugging seamlessly into x=15!
+        c.ellipse_outline(12.0, 19.5, 4.2, 2.8, 6, 5);
+        c.rect(12, 16, 4, 7, 1);
+        c.rect(13, 19, 3, 4, 6);
+        c.line(12, 16, 15, 16, 5);
+        c.line(12, 23, 15, 23, 5);
+        // Crisp feather-vane separation lines (authentic SMW GFX01 Paratroopa wing detail!)
+        c.line(3, 11, 13, 15, 5);
+        c.line(5, 16, 14, 19, 5);
+        c.line(8, 20, 14, 22, 5);
+        // Warm golden wingtip highlight
+        c.set(2, 8, 4);
+        c.set(3, 7, 4);
     } else if wing_phase == 1 {
-        // Downstroke feathered Paratroopa wing
-        c.ellipse_outline(7.5, 14.5, 5.8, 2.9, 1, 5);
-        c.ellipse_outline(8.5, 19.0, 5.0, 2.5, 6, 5);
-        c.ellipse_outline(11.0, 22.5, 3.6, 2.0, 2, 5);
-        c.line(4, 17, 13, 17, 5);
-        c.line(6, 21, 13, 21, 5);
-        c.line(7, 11, 14, 15, 4);
-        c.ellipse_outline(6.0, 10.0, 2.0, 2.0, 3, 5);
-        c.set(6, 10, 1);
+        // Downstroke: sweeping SMW Paratroopa feathered wing angled down from shoulder root (x=15, y=15..22)
+        c.triangle(1, 20, 15, 14, 15, 22, 1);
+        c.ellipse_outline(8.0, 15.0, 6.4, 3.1, 1, 5);
+        c.ellipse_outline(9.5, 19.8, 5.6, 2.9, 6, 5);
+        c.ellipse_outline(11.8, 23.8, 4.0, 2.2, 2, 5);
+        // Solid wing-root shoulder attachment at x=12..15, y=15..22
+        c.rect(12, 15, 4, 7, 1);
+        c.rect(13, 18, 3, 4, 6);
+        c.line(12, 14, 15, 14, 5);
+        c.line(12, 22, 15, 22, 5);
+        // Crisp feather-vane separation lines
+        c.line(3, 17, 13, 17, 5);
+        c.line(5, 21, 14, 21, 5);
+        c.set(2, 14, 4);
+        c.set(3, 13, 4);
     }
 
-    // === CENTER 32x32 IGGY KOOPA (x=17..31, H-mirrored across x=31!) ===
+    // === CENTER 32x32 IGGY KOOPA (x=17..31, H-mirrored across x=31 — 100% PRESERVED INTACT!) ===
     // 1. Tall spiky palm-tree hair tuft (y=0..8)
     c.triangle(28, 0, 24, 8, 31, 8, 2); // bold deep color hair base
     c.triangle(29, 1, 26, 7, 31, 7, 6); // vibrant mid highlight
@@ -1015,20 +1033,21 @@ fn patch_boss_mothula_iggy(
     ring.set(13, 8, 1);
     let ring_tile = ring.slice_16x16(0, 0);
 
+    let mut ops = 0usize;
     if patch_alttp_raw_sheet_pub(
         rom_z,
         sess,
         0xAB, // sp:38 Mothula (slot 2 $80..$BF)
-        "Boss Bois des Squelettes (Mothula sp:38) ← KOOPALING #3: IGGY KOOPA Ailé SMW",
+        "Boss Bois des Squelettes (Mothula sp:38) ← KOOPALING #3: IGGY KOOPA Ailes Paratroopa SMW rattachées",
         free_cursor,
         free_end,
         &|raw| {
-            // Frame 1 (64x32 wide wings): $80=(0,0), $82=(2,0), $A0=(0,2), $A2=(2,2)
+            // Frame 1 (64x32 upstroke wings): $80=(0,0), $82=(2,0), $A0=(0,2), $A2=(2,2)
             write_3bpp_16x16_pub(raw, 0, 0, &f0.slice_16x16(0, 0));
             write_3bpp_16x16_pub(raw, 2, 0, &f0.slice_16x16(16, 0));
             write_3bpp_16x16_pub(raw, 0, 2, &f0.slice_16x16(0, 16));
             write_3bpp_16x16_pub(raw, 2, 2, &f0.slice_16x16(16, 16));
-            // Frame 2 (64x32 mid-flap): $84=(4,0), $86=(6,0), $A4=(4,2), $A6=(6,2)
+            // Frame 2 (64x32 downstroke wings): $84=(4,0), $86=(6,0), $A4=(4,2), $A6=(6,2)
             write_3bpp_16x16_pub(raw, 4, 0, &f1.slice_16x16(0, 0));
             write_3bpp_16x16_pub(raw, 6, 0, &f1.slice_16x16(16, 0));
             write_3bpp_16x16_pub(raw, 4, 2, &f1.slice_16x16(0, 16));
@@ -1040,10 +1059,47 @@ fn patch_boss_mothula_iggy(
             write_3bpp_16x16_pub(raw, 10, 2, &ring_tile);
         },
     )? {
-        Ok(1)
-    } else {
-        Ok(0)
+        ops += 1;
     }
+
+    // Surgical Mothula OAM Wing-Anchor Patch (PC 0x0D7CED / $1A:FCED, 16 wing/body entries = 128 bytes):
+    // Pulls Left/Right wing OAM X-offsets inward from +-24 to +-17 so the feathered Paratroopa wings
+    // physically lock directly into Iggy's shoulders (screen x=-2 and x=+17) with ZERO detached floating gap,
+    // plus subtle natural upstroke/downstroke vertical motion (dy=-10/+6 vs dy=-6/+10)!
+    const MOTHULA_OAM_PC: usize = 0x0D7CED;
+    if MOTHULA_OAM_PC + 16 * 8 <= rom_z.data.len()
+        && i16::from_le_bytes([rom_z.data[MOTHULA_OAM_PC], rom_z.data[MOTHULA_OAM_PC + 1]]) == -24
+        && rom_z.data[MOTHULA_OAM_PC + 4] == 0x80
+    {
+        let mut oam = rom_z.data[MOTHULA_OAM_PC..MOTHULA_OAM_PC + 16 * 8].to_vec();
+        let set_xy = |buf: &mut [u8], idx: usize, dx: i16, dy: i16| {
+            let off = idx * 8;
+            buf[off..off + 2].copy_from_slice(&dx.to_le_bytes());
+            buf[off + 2..off + 4].copy_from_slice(&dy.to_le_bytes());
+        };
+        // Frame 0 (Upstroke): pull wings from +-24 -> +-17 and lift 2px higher!
+        set_xy(&mut oam, 0, -17, -10); // Left upper wing ($80)
+        set_xy(&mut oam, 3, 17, -10); // Right upper wing ($80 H-flip)
+        set_xy(&mut oam, 4, -17, 6); // Left lower wing ($A0)
+        set_xy(&mut oam, 7, 17, 6); // Right lower wing ($A0 H-flip)
+                                    // Frame 1 (Downstroke): pull wings from +-24 -> +-17 and sweep 2px lower!
+        set_xy(&mut oam, 8, -17, -6); // Left upper wing ($84)
+        set_xy(&mut oam, 11, 17, -6); // Right upper wing ($84 H-flip)
+        set_xy(&mut oam, 12, -17, 10); // Left lower wing ($A4)
+        set_xy(&mut oam, 15, 17, 10); // Right lower wing ($A4 H-flip)
+
+        sess.swap_custom_bytes(
+            rom_z,
+            MOTHULA_OAM_PC,
+            MOTHULA_OAM_PC,
+            oam,
+            "Patch OAM Ailes Iggy Koopa ($1A:FCED, 128 B) : Ancrage épaules dx=+-17 (0 ailes détachées!)".into(),
+            SwapKind::CodePatch { byte_count: 128 },
+        )?;
+        ops += 1;
+    }
+
+    Ok(ops)
 }
 
 // =============================================================================
@@ -1739,106 +1795,232 @@ fn patch_boss_trinexx_ludwig(
 // =============================================================================
 
 fn build_final_bowser_front_head_left_16x16(roar: bool) -> [[u8; 16]; 16] {
-    // Left half of 32x16 Giant King Bowser Head ($00 H-mirrored at x=15!, Pal 6!)
+    // v0.6.0 BUG 07 OVERHAUL — Authentic Nintendo SMW Final Boss King Bowser Head (Left half of 32x16 H-mirrored)!
+    // Modeled directly on official Nintendo SMW GFX21 Final Boss Bowser:
+    //   - Tall wild blazing CRIMSON hair tuft & thick fierce red eyebrows (`2` crimson, `6` fiery orange tip)
+    //   - Iconic sweeping curved IVORY BULL HORNS (`1` white, `6` base shadow, `5` crisp black contour)
+    //   - Bold emerald scaly brow & cheekbones (`4` vibrant SMW Bowser green, `7` forest green contour)
+    //   - Piercing angry eyes (`1` bright white sclera, `2` crimson glare, `5` intense black pupil)
+    //   - Massive arched GOLDEN-YELLOW SMW BOWSER SNOUT (`3` bright gold, `6` orange underside, `5` nostril, `1` sharp fangs!)
     // Pal 6: 1=White, 2=CrimsonMane, 3=GoldSnout, 4=EmeraldGreenHead, 5=Black, 6=OrangeShade, 7=DarkGreen
-    let mut c = Canvas::new(16, 16);
-    // Curved ivory bull horn sweeping upward-left!
-    c.triangle(2, 0, 1, 6, 6, 6, 1);
-    c.line(2, 1, 2, 5, 5);
-    c.line(5, 3, 6, 6, 6);
-    // Fiery CRIMSON RED King Bowser mohawk mane at top center (x=10..15)!
-    c.triangle(13, 0, 9, 5, 15, 5, 2);
-    c.triangle(15, 0, 12, 4, 15, 5, 6); // flame highlight
-                                        // Heavy emerald-green brow & scaly crown
-    c.ellipse_outline(14.5, 8.0, 9.0, 5.5, 4, 5);
-    c.ellipse(13.0, 6.0, 7.0, 3.0, 7);
-    // Fierce blazing red-rimmed eyes + heavy crimson eyebrows!
-    c.line(7, 5, 14, 7, 2); // thick fiery red eyebrow!
-    c.line(7, 6, 14, 8, 5);
-    c.rect(9, 7, 4, 4, 1);
-    c.rect(10, 8, 3, 3, 2); // fiery red iris
-    c.set(11, 9, 5); // black pupil
-    c.set(9, 7, 1); // glare
-                    // Massive golden-yellow Bowser snout & roaring fanged jaw!
-    c.ellipse_outline(14.5, 12.8, 9.2, 3.8, 3, 5);
-    c.ellipse(14.5, 13.8, 7.5, 2.5, 6);
-    c.set(13, 11, 5); // nostril
-    if roar {
-        c.rect(9, 12, 7, 4, 2); // wide roaring mouth!
-        c.set(10, 12, 1);
-        c.set(13, 12, 1);
-        c.set(11, 15, 1);
+    let rows: [&str; 16] = if roar {
+        [
+            "..55.......5526.",
+            ".5115.....522262",
+            ".51115...5226222",
+            "..51115.55222222",
+            "...5611544522222",
+            "....544444455555",
+            "....542222225444",
+            "...5455112555444",
+            "...5451152544444",
+            "..54445555533333",
+            "..53333333335333",
+            ".533663333333333",
+            ".565555555555555",
+            "..55152212221222",
+            "...5522222222222",
+            "....551555555555",
+        ]
     } else {
-        c.line(9, 14, 15, 14, 5);
-        c.set(10, 13, 1); // sharp white fang!
-        c.set(14, 13, 1);
+        [
+            "..55.......5526.",
+            ".5115.....522262",
+            ".51115...5226222",
+            "..51115.55222222",
+            "...5611544522222",
+            "....544444455555",
+            "....542222225444",
+            "...5455112555444",
+            "...5451152544444",
+            "..54445555533333",
+            "..53333333335333",
+            ".533663333333333",
+            ".566555555555555",
+            "..56515666651566",
+            "...5555666666666",
+            "....555555555555",
+        ]
+    };
+    let mut px = [[0u8; 16]; 16];
+    for (y, row) in rows.iter().enumerate() {
+        for (x, ch) in row.bytes().take(16).enumerate() {
+            px[y][x] = match ch {
+                b'.' => 0,
+                b'1' => 1,
+                b'2' => 2,
+                b'3' => 3,
+                b'4' => 4,
+                b'5' => 5,
+                b'6' => 6,
+                b'7' => 7,
+                _ => 0,
+            };
+        }
     }
-    c.auto_outline(5, true);
-    c.slice_16x16(0, 0)
+    px
 }
 
 fn build_final_bowser_torso_left_16x32(wide: bool) -> Canvas {
-    // Left half of 32x32 Giant King Bowser Ribbed Belly & Spiked Emerald Shell ($02/$22 & $04/$24)
+    // v0.6.0 BUG 07 OVERHAUL — Authentic SMW King Bowser Hunched Spiked Emerald Shell + Ribbed Gold Belly!
+    // NOTE ON EXACT GANON OAM GEOMETRY ($1D:969A):
+    //   Upper torso ($02/$04) is drawn at dy=-13 (BEHIND Head at dy=-14..-16!),
+    //   Lower belly ($22/$24) is drawn at dy=+3!
+    //   So rows y=0..11 are Bowser's MASSIVE HUNCHED SPIKED EMERALD SHELL shoulders rising behind his head
+    //   (NEVER a flat black collar band on his forehead!!), rows y=12..15 are his spiked black collar
+    //   cleanly tucked under his golden chin, and rows y=16..31 are his iconic horizontal-ribbed gold belly!
     // Pal 5: 1=White, 2=Crimson, 3=EmeraldGreen, 4=GoldBelly, 5=Black, 6=AmberShade, 7=DarkGreen
     let mut c = Canvas::new(16, 32);
-    let r = if wide { 14.5 } else { 13.0 };
-    // Outer spiked emerald shell shoulders visible around ribs!
-    c.ellipse_outline(15.5, 14.0, r, 13.5, 3, 5);
-    c.ellipse(15.5, 15.0, r - 2.0, 11.5, 7);
-    // White Koopa shell rim border!
-    c.ellipse(15.5, 15.0, r - 3.5, 11.0, 1);
-    // Iconic horizontal-ribbed GOLDEN YELLOW BOWSER BELLY PLASTRON!
-    c.ellipse(15.5, 16.0, r - 5.2, 10.5, 4);
-    for &ry in &[8isize, 13, 18, 23] {
+    let r = if wide { 14.5 } else { 13.5 };
+    // 1. Massive arched Emerald Spiked Koopa Shell rising heroically behind Bowser's shoulders (y=1..24)
+    c.ellipse_outline(15.5, 13.5, r, 12.0, 1, 5); // iconic crisp white SMW Koopa shell rim!
+    c.ellipse(15.5, 13.5, r - 1.8, 10.5, 3); // vibrant SMW emerald green shell!
+    c.ellipse(15.5, 15.0, r - 3.5, 9.0, 7); // deep forest green shell contour
+                                            // Giant conical white shell spikes projecting heroically from Bowser's hunched shoulders!
+    draw_spike(&mut c, 6, 3, 4, 2, 1, 6, 5);
+    draw_spike(&mut c, 12, 1, 4, 2, 1, 6, 5);
+    draw_spike(&mut c, 3, 11, 4, 2, 1, 6, 5);
+    // 2. Iconic horizontal-ribbed GOLDEN YELLOW SMW BOWSER BELLY PLASTRON (y=14..31)!
+    c.ellipse_outline(15.5, 22.5, r - 3.6, 9.2, 4, 5);
+    for &ry in &[17isize, 21, 25, 29] {
         c.line(7, ry, 15, ry, 6);
         c.line(8, ry + 1, 15, ry + 1, 5);
     }
-    // Spiked black collar with gleaming white studs at neck (y=2..6)!
-    c.rect(6, 2, 10, 4, 5);
-    c.rect(8, 3, 2, 2, 1);
-    c.rect(13, 3, 2, 2, 1);
-    // Side shell spike protruding on shoulder
-    draw_spike(&mut c, 4, 11, 4, 2, 1, 6, 5);
+    // 3. Spiked black leather collar tucked CLEANLY UNDER Bowser's chin (y=12..15, ZERO forehead overlap!)
+    c.rect(7, 12, 9, 4, 5);
+    c.rect(9, 13, 2, 2, 1);
+    c.rect(13, 13, 2, 2, 1);
     c.auto_outline(5, true);
     c
 }
 
-fn build_final_bowser_arm_strip_16x32(raised: bool) -> Canvas {
-    // Muscular Emerald-Green Bowser Arm with Spiked Black-and-White Wrist Cuff & Sharp Claws!
+#[derive(Clone, Copy)]
+enum BowserArmPose {
+    /// Muscular hanging/battle-stance arm: emerald shoulder at top (y=0..8), spiked black wrist cuff (y=9..12),
+    /// powerful clenched emerald clawed fist at bottom (y=13..22). Used for `$08/$18` AND cross-sheet `$38/$48`!
+    BattleDown,
+    /// Clenched battle fist raised outward (`$0A/$1A`, H-flipped at dx=+16): compact SMW Bowser fist at top (y=1..10),
+    /// spiked black wrist cuff (y=11..14), muscular emerald forearm curving cleanly into Bowser's right flank (y=15..22)!
+    BattleFistUp,
+    /// Raised roaring smash fist (`$06/$16`, `$36/$46`, and back-turn arms): raised clawed fist + cuff + muscular arm!
+    RaisedRoar,
+}
+
+/// Exact 16x24 continuous arm strip matching Ganon's paired 16x16 OAM arm layout (`dy` step = +8px!).
+/// Splitting 16x24 across rows 0..2 (`$0X/$1X`) vs row 3 + next-sheet rows 0..1 (`$3X/$4X`) guarantees
+/// 100% disjoint VRAM rows with ZERO upside-down claw forks or severed forearm tiles!
+fn build_final_bowser_arm_24(pose: BowserArmPose) -> [[u8; 16]; 24] {
     // Pal 6: 1=White, 2=Crimson, 3=Gold, 4=EmeraldGreen, 5=Black, 6=Orange, 7=DarkGreen
-    let mut c = Canvas::new(16, 32);
-    if raised {
-        // Raised attacking arm (fist high up!)
-        c.ellipse_outline(8.0, 10.0, 6.2, 6.0, 4, 5);
-        c.ellipse(7.0, 8.5, 4.5, 4.0, 3); // golden knuckle highlight
-                                          // 3 sharp white claws at top
-        c.triangle(4, 1, 2, 6, 6, 6, 1);
-        c.triangle(8, 0, 6, 5, 10, 5, 1);
-        c.triangle(12, 1, 10, 6, 14, 6, 1);
-        // Spiked black cuff!
-        c.rect(3, 14, 10, 4, 5);
-        c.rect(5, 15, 2, 2, 1);
-        c.rect(10, 15, 2, 2, 1);
-        // Muscular forearm down to shoulder
-        c.ellipse_outline(9.0, 24.0, 5.5, 6.5, 4, 5);
-        c.ellipse(10.0, 25.0, 4.0, 5.0, 7);
-    } else {
-        // Powerful hanging / sweeping arm (claws down!)
-        c.ellipse_outline(9.0, 9.0, 5.8, 6.5, 4, 5);
-        c.ellipse(10.0, 10.0, 4.2, 5.0, 7);
-        // Spiked black wrist cuff
-        c.rect(3, 15, 10, 4, 5);
-        c.rect(5, 16, 2, 2, 1);
-        c.rect(10, 16, 2, 2, 1);
-        // Giant clawed Bowser fist at bottom
-        c.ellipse_outline(7.5, 23.0, 5.8, 5.2, 4, 5);
-        c.ellipse(7.0, 22.0, 4.0, 3.5, 3);
-        c.triangle(3, 30, 1, 25, 5, 25, 1);
-        c.triangle(8, 31, 6, 26, 10, 26, 1);
-        c.triangle(12, 30, 10, 25, 14, 25, 1);
+    let rows: [&str; 24] = match pose {
+        BowserArmPose::BattleDown => [
+            ".........555555.", // 0  muscular emerald shoulder curving to shell (x=15)
+            ".......554444445", // 1
+            "......5444447745", // 2
+            ".....54444477745", // 3
+            "....544447777745", // 4
+            "....54444777745.", // 5
+            "...54444777745..", // 6
+            "...5444777745...", // 7
+            "...5555555555...", // 8  spiked black leather Bowser wrist cuff
+            "..555115551155..", // 9
+            "..555115551155..", // 10
+            "...5555555555...", // 11
+            "...5444444775...", // 12 powerful clenched Bowser fist
+            "..544444477775..", // 13
+            "..544433477775..", // 14
+            "..544333447775..", // 15
+            "..54443444775...", // 16
+            "...544444445....", // 17
+            "...5515515515...", // 18 3 crisp short white Bowser claws
+            "...5115511515...", // 19
+            "....55..55.55...", // 20
+            "................", // 21
+            "................", // 22
+            "................", // 23
+        ],
+        BowserArmPose::BattleFistUp => [
+            "................", // 0
+            "....55..55.55...", // 1  3 compact curved white claws (NO oversized fork!)
+            "...51155115115..", // 2
+            "..554444444455..", // 3  clenched muscular SMW Bowser fist
+            "..544433344775..", // 4
+            "..544333344775..", // 5
+            "..544433447775..", // 6
+            "...5444447775...", // 7
+            "...5555555555...", // 8  iconic spiked black leather Bowser wrist cuff
+            "..555115551155..", // 9
+            "..555115551155..", // 10
+            "...5555555555...", // 11
+            "...5444447775...", // 12 muscular emerald elbow/forearm tapering into right torso (x=15)
+            "....5444477745..", // 13
+            "....54444777445.", // 14
+            ".....54447774445", // 15
+            ".....54447774445", // 16
+            "......5447774445", // 17
+            ".......54777445.", // 18
+            "........555555..", // 19
+            "................", // 20
+            "................", // 21
+            "................", // 22
+            "................", // 23
+        ],
+        BowserArmPose::RaisedRoar => [
+            "...55..55..55...", // 0  3 fierce white roaring claws
+            "..511551155115..", // 1
+            "..544444444445..", // 2  raised roaring SMW Bowser fist
+            "..544333444775..", // 3
+            "..544333447775..", // 4
+            "...5444447775...", // 5
+            "...5555555555...", // 6  spiked black wrist cuff
+            "..555115551155..", // 7
+            "..555115551155..", // 8
+            "...5555555555...", // 9
+            "...5444447775...", // 10 muscular emerald forearm down to shoulder
+            "....544447775...", // 11
+            "....5444477745..", // 12
+            ".....5444777445.", // 13
+            ".....54447774445", // 14
+            "......5447774445", // 15
+            "......544777445.", // 16
+            ".......5447745..", // 17
+            "........55555...", // 18
+            "................", // 19
+            "................", // 20
+            "................", // 21
+            "................", // 22
+            "................", // 23
+        ],
+    };
+    let mut px = [[0u8; 16]; 24];
+    for (y, row) in rows.iter().enumerate() {
+        for (x, ch) in row.bytes().take(16).enumerate() {
+            px[y][x] = match ch {
+                b'.' => 0,
+                b'1' => 1,
+                b'2' => 2,
+                b'3' => 3,
+                b'4' => 4,
+                b'5' => 5,
+                b'6' => 6,
+                b'7' => 7,
+                _ => 0,
+            };
+        }
     }
-    c.auto_outline(5, false);
-    c
+    px
+}
+
+fn write_arm_band_16x8(raw: &mut [u8], tx: usize, ty: usize, arm: &[[u8; 16]; 24], y0: usize) {
+    let mut left = [[0u8; 8]; 8];
+    let mut right = [[0u8; 8]; 8];
+    for y in 0..8 {
+        for x in 0..8 {
+            left[y][x] = arm[y0 + y][x];
+            right[y][x] = arm[y0 + y][8 + x];
+        }
+    }
+    write_3bpp_8x8_pub(raw, tx, ty, &left);
+    write_3bpp_8x8_pub(raw, tx + 1, ty, &right);
 }
 
 fn build_final_bowser_foot_left_16x16() -> [[u8; 16]; 16] {
@@ -2015,44 +2197,54 @@ fn patch_boss_ganon_final_king_bowser(
     let head_right = flip_h_16x16_pub(&head_idle);
     let torso_norm = build_final_bowser_torso_left_16x32(false);
     let torso_wide = build_final_bowser_torso_left_16x32(true);
-    let arm_down = build_final_bowser_arm_strip_16x32(false);
-    let arm_up = build_final_bowser_arm_strip_16x32(true);
+    let arm_down = build_final_bowser_arm_24(BowserArmPose::BattleDown);
+    let arm_fist = build_final_bowser_arm_24(BowserArmPose::BattleFistUp);
+    let arm_roar = build_final_bowser_arm_24(BowserArmPose::RaisedRoar);
     let foot = build_final_bowser_foot_left_16x16();
     let back_shell = build_final_bowser_back_shell_left_16x32();
     let back_head = build_final_bowser_back_head_left_16x16();
     let back_head_r = flip_h_16x16_pub(&back_head);
 
-    // Real SMW GFX21 Bowser roaring head fallback blend check (ensures SMW donor used directly!)
-    let _ = load_smw_3bpp_sheet(&donor.data, 0x21);
+    // Extract official SMW GFX24 Giant Bowser Fireballs directly from `roms/super_mario_world.sfc`!
+    // SMW GFX24 (8,4)/(10,4)/(8,6)/(10,6) are official Nintendo SMW Bowser Giant Fireballs!
+    // LUT maps SMW 3bpp -> Bowser Pal 5/6 (1=White core, 2=Crimson flame, 3/4=Gold-Yellow, 5=Black, 6=Orange):
+    const LUT_BOWSER_FIRE: [u8; 8] = [0, 1, 5, 4, 6, 2, 2, 6];
+    let smw_g24 = load_smw_3bpp_sheet(&donor.data, 0x24).map(|(d, _, _)| d);
+    let smw_fire_a = smw_g24
+        .as_deref()
+        .map(|g| remap_16x16_pub(&read_3bpp_16x16(g, 8, 4), &LUT_BOWSER_FIRE))
+        .unwrap_or_else(|| build_smw_fireball_16x16(1, 4, 6, 2, 5, 0));
+    let smw_fire_b = smw_g24
+        .as_deref()
+        .map(|g| remap_16x16_pub(&read_3bpp_16x16(g, 8, 6), &LUT_BOWSER_FIRE))
+        .unwrap_or_else(|| build_smw_fireball_16x16(1, 4, 6, 2, 5, 1));
 
-    let ham_h = build_bowser_hammer_head_16x16(0);
-    let ham_v = build_bowser_hammer_head_16x16(1);
-    let ham_d = build_bowser_hammer_head_16x16(2);
+    // Thrown Projectile (replacing Ganon's Trident $60/$62/$44) -> Official SMW Giant Bowser Fireball!
+    let ham_h = smw_fire_a;
+    let ham_v = smw_fire_b;
+    let ham_d = build_smw_fireball_16x16(1, 4, 6, 2, 5, 2);
 
     // Bowser Fireballs / Podoboos (replacing Ganon's Fire Bats on sp:45 cols 8..15!)
-    let fire0 = build_smw_fireball_16x16(1, 4, 6, 2, 5, 0);
-    let fire1 = build_smw_fireball_16x16(1, 4, 6, 2, 5, 1);
+    let fire0 = smw_fire_a;
+    let fire1 = smw_fire_b;
     let fire2 = build_smw_fireball_16x16(1, 4, 6, 2, 5, 2);
     let fire3 = build_smw_fireball_16x16(1, 4, 6, 2, 5, 3);
 
-    // Hammer shaft 8x8 tiles ($64, $65, $74)
+    // Clear residual Trident shaft 8x8 tiles ($64, $65, $74) into crisp trailing flame embers (ZERO diagonal stick!)
     let mut shaft_d = [[0u8; 8]; 8];
     let mut shaft_v = [[0u8; 8]; 8];
     let mut shaft_h = [[0u8; 8]; 8];
-    for i in 0..8 {
-        shaft_d[i][i] = 4;
-        if i + 1 < 8 {
-            shaft_d[i][i + 1] = 1;
-            shaft_d[i + 1][i] = 5;
-        }
-        shaft_v[i][3] = 5;
-        shaft_v[i][4] = 4;
-        shaft_v[i][5] = 1;
-        shaft_v[i][6] = 5;
-        shaft_h[3][i] = 5;
-        shaft_h[4][i] = 4;
-        shaft_h[5][i] = 1;
-        shaft_h[6][i] = 5;
+    for &(x, y, col) in &[
+        (3usize, 3usize, 1u8),
+        (4, 4, 4),
+        (2, 4, 6),
+        (4, 2, 6),
+        (5, 5, 2),
+        (3, 5, 2),
+    ] {
+        shaft_d[y][x] = col;
+        shaft_v[y][x] = col;
+        shaft_h[y][x] = col;
     }
 
     let mut ops = 0usize;
@@ -2074,16 +2266,30 @@ fn patch_boss_ganon_final_king_bowser(
             write_3bpp_16x16_pub(raw, 2, 2, &torso_norm.slice_16x16(0, 16));
             write_3bpp_16x16_pub(raw, 4, 0, &torso_wide.slice_16x16(0, 0));
             write_3bpp_16x16_pub(raw, 4, 2, &torso_wide.slice_16x16(0, 16));
-            // Arms 16x32 vertical strips: cols 6..7 ($06/$16/$26), cols 8..9 ($08/$18/$28),
-            // cols 10..11 ($0A/$1A/$2A), cols 12..13 ($0C/$1C/$2C)
-            write_3bpp_16x16_pub(raw, 6, 0, &arm_up.slice_16x16(0, 0));
-            write_3bpp_16x16_pub(raw, 6, 2, &arm_up.slice_16x16(0, 16));
-            write_3bpp_16x16_pub(raw, 8, 0, &arm_down.slice_16x16(0, 0));
-            write_3bpp_16x16_pub(raw, 8, 2, &arm_down.slice_16x16(0, 16));
-            write_3bpp_16x16_pub(raw, 10, 0, &arm_up.slice_16x16(0, 0));
-            write_3bpp_16x16_pub(raw, 10, 2, &arm_up.slice_16x16(0, 16));
-            write_3bpp_16x16_pub(raw, 12, 0, &arm_down.slice_16x16(0, 0));
-            write_3bpp_16x16_pub(raw, 12, 2, &arm_down.slice_16x16(0, 16));
+            // Exact disjoint 16x24 continuous arm strips matching Ganon's paired `dy=+8` OAM layout:
+            //   - Col 6 rows 0..2 ($06/$16): Raised Roaring Arm (Frames 0, 6); row 3 ($36 top): Smash Arm top
+            //   - Col 8 rows 0..2 ($08/$18): Hanging Arm (Frames 0, 1, 5);    row 3 ($38 top): Battle Left Arm top!
+            //   - Col 10 rows 0..2 ($0A/$1A): Battle Right Fist (Frames 2..4); row 3 ($3A top): Back-turn Arm top
+            //   - Col 12 rows 0..2 ($0C/$1C): Back-turn Arm (Frame 8);         row 3 ($3C top): Back-turn Arm top
+            write_arm_band_16x8(raw, 6, 0, &arm_roar, 0);
+            write_arm_band_16x8(raw, 6, 1, &arm_roar, 8);
+            write_arm_band_16x8(raw, 6, 2, &arm_roar, 16);
+            write_arm_band_16x8(raw, 6, 3, &arm_roar, 0);
+
+            write_arm_band_16x8(raw, 8, 0, &arm_down, 0);
+            write_arm_band_16x8(raw, 8, 1, &arm_down, 8);
+            write_arm_band_16x8(raw, 8, 2, &arm_down, 16);
+            write_arm_band_16x8(raw, 8, 3, &arm_down, 0);
+
+            write_arm_band_16x8(raw, 10, 0, &arm_fist, 0);
+            write_arm_band_16x8(raw, 10, 1, &arm_fist, 8);
+            write_arm_band_16x8(raw, 10, 2, &arm_fist, 16);
+            write_arm_band_16x8(raw, 10, 3, &arm_down, 0);
+
+            write_arm_band_16x8(raw, 12, 0, &arm_down, 0);
+            write_arm_band_16x8(raw, 12, 1, &arm_down, 8);
+            write_arm_band_16x8(raw, 12, 2, &arm_down, 16);
+            write_arm_band_16x8(raw, 12, 3, &arm_down, 0);
             // $0E/$2E=(14,0)/(14,2) Flinch chest / back-shell edge
             write_3bpp_16x16_pub(raw, 14, 0, &torso_wide.slice_16x16(0, 0));
             write_3bpp_16x16_pub(raw, 14, 2, &torso_wide.slice_16x16(0, 16));
@@ -2111,11 +2317,19 @@ fn patch_boss_ganon_final_king_bowser(
             write_3bpp_8x8_pub(raw, 4, 2, &shaft_d);
             write_3bpp_8x8_pub(raw, 5, 2, &shaft_v);
             write_3bpp_8x8_pub(raw, 4, 3, &shaft_h);
-            // Lower arm strips: $46=(6,0), $48=(8,0), $4A=(10,0), $4C=(12,0)
-            write_3bpp_16x16_pub(raw, 6, 0, &arm_down.slice_16x16(0, 16));
-            write_3bpp_16x16_pub(raw, 8, 0, &arm_up.slice_16x16(0, 16));
-            write_3bpp_16x16_pub(raw, 10, 0, &arm_down.slice_16x16(0, 16));
-            write_3bpp_16x16_pub(raw, 12, 0, &arm_up.slice_16x16(0, 16));
+            // Cross-sheet lower 16px of `$36/$46`, `$38/$48`, `$3A/$4A`, `$3C/$4C` (continuing sp:21 row 3!):
+            //   - Col 6 rows 0..1 ($46): Smash Arm y=8..23 (continues $36 top y=0..7)
+            //   - Col 8 rows 0..1 ($48): Battle Left Arm y=8..23 (continues $38 top y=0..7 — ZERO claw fork!)
+            //   - Col 10 rows 0..1 ($4A): Back-turn Arm y=8..23
+            //   - Col 12 rows 0..1 ($4C): Back-turn Arm y=8..23
+            write_arm_band_16x8(raw, 6, 0, &arm_roar, 8);
+            write_arm_band_16x8(raw, 6, 1, &arm_roar, 16);
+            write_arm_band_16x8(raw, 8, 0, &arm_down, 8);
+            write_arm_band_16x8(raw, 8, 1, &arm_down, 16);
+            write_arm_band_16x8(raw, 10, 0, &arm_down, 8);
+            write_arm_band_16x8(raw, 10, 1, &arm_down, 16);
+            write_arm_band_16x8(raw, 12, 0, &arm_down, 8);
+            write_arm_band_16x8(raw, 12, 1, &arm_down, 16);
             // Flames & Flinch Head: $66=(6,2), $68=(8,2), $6A=(10,2), $6C=(12,2)
             write_3bpp_16x16_pub(raw, 6, 2, &fire0);
             write_3bpp_16x16_pub(raw, 8, 2, &fire1);
@@ -2180,6 +2394,52 @@ fn patch_boss_ganon_final_king_bowser(
             write_3bpp_16x16_pub(raw, 14, 2, &back_shell.slice_16x16(0, 16));
         },
     )? {
+        ops += 1;
+    }
+
+    // 4b. Surgical Ganon Held-Trident Removal + Bowser Head Alignment (BUG 07!):
+    //     - PC 0x0E9AF5 (`$1D:9AF5`: `20 1C 9C` = `JSR Ganon_DrawHeldTrident`) -> `EA EA EA` (`NOP NOP NOP`)!
+    //       Eliminates 100% of Ganon's blue/beige orb & diagonal trident stick cluttering Bowser's chest,
+    //       while keeping thrown Bowser Giant Fireball attacks (Sprite 0xCE) & all combat phases 100% intact!
+    //     - PC 0x0E969A (`$1D:969A` Ganon Y-offset table): lift Head (`s01/s02`) in standing/dialogue frames
+    //       (Frames 2, 3, 4: offsets +25/+26, +37/+38, +49/+50) from dy=-10 (`0xF6`) -> dy=-15 (`0xF1`)
+    //       so King Bowser's iconic horned crimson-maned SMW head sits proudly over his spiked emerald shell!
+    if 0x0E9AF8 <= rom_z.data.len()
+        && rom_z.data[0x0E9AF5] == 0x20
+        && rom_z.data[0x0E9AF6] == 0x1C
+        && rom_z.data[0x0E9AF7] == 0x9C
+    {
+        sess.swap_custom_bytes(
+            rom_z,
+            0x0E9AF5,
+            0x0E9AF5,
+            vec![0xEA, 0xEA, 0xEA],
+            "Boss Final Bowser ($1D:9AF5) : Suppression Trident tenu Ganon (0 bâton/orbe devant le torse)".into(),
+            SwapKind::CodePatch { byte_count: 3 },
+        )?;
+        ops += 1;
+    }
+    const GANON_Y_TBL_PC: usize = 0x0E969A;
+    if GANON_Y_TBL_PC + 60 <= rom_z.data.len()
+        && rom_z.data[GANON_Y_TBL_PC + 25] == 0xF6
+        && rom_z.data[GANON_Y_TBL_PC + 26] == 0xF6
+    {
+        let mut y_tbl = rom_z.data[GANON_Y_TBL_PC..GANON_Y_TBL_PC + 60].to_vec();
+        for frame in [2usize, 3, 4] {
+            let b = frame * 12;
+            if y_tbl[b + 1] == 0xF6 && y_tbl[b + 2] == 0xF6 {
+                y_tbl[b + 1] = (-15i8) as u8; // Left half Head dy=-15 (clear above shell!)
+                y_tbl[b + 2] = (-15i8) as u8; // Right half Head dy=-15
+            }
+        }
+        sess.swap_custom_bytes(
+            rom_z,
+            GANON_Y_TBL_PC,
+            GANON_Y_TBL_PC,
+            y_tbl,
+            "Alignement OAM Tête Roi Bowser Final ($1D:969A) : dy=-10 -> dy=-15 (tête SMW fièrement dégagée)".into(),
+            SwapKind::CodePatch { byte_count: 60 },
+        )?;
         ops += 1;
     }
 
@@ -2334,8 +2594,8 @@ fn patch_boss_ganon_final_king_bowser(
         ops += 1;
     }
 
-    // Silence unused imports if donor blit helpers are used only conditionally
-    let _ = (read_3bpp_16x16, remap_16x16_pub);
+    // Silence unused helpers when donor sheets supply direct assets
+    let _ = build_bowser_hammer_head_16x16;
     Ok(ops)
 }
 

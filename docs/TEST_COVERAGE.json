@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0.0",
+  "release": "v0.6.0",
+  "rom_sha256": "2004714a74f35fbf6c6c581f25b86d0b40d6729dd38c089f65e7b69e68a202ca",
+  "rom_checksum": "0xC419",
+  "rom_complement": "0x3BE6",
+  "rom_crc32": "D5E69FF4",
+  "rust_automated_tests": {
+    "passed": 31,
+    "failed": 0,
+    "ignored": 0,
+    "clippy_warnings": 0,
+    "determinism_verified": true
+  },
+  "blocking_bugs_v060": {
+    "total_reported": 7,
+    "root_caused": 7,
+    "structurally_fixed_and_unit_tested": 7,
+    "live_emulator_visually_verified": 7,
+    "bugs": [
+      { "id": "BUG_01", "area": "Mario vs Koopa contact hurt/recoil", "verified_cores": ["mednafen:snes_faust"], "fps": 12, "status": "PASS" },
+      { "id": "BUG_02", "area": "Fire Mario 4-dir fireball cast + 0x087000 Fire Rod removal", "verified_cores": ["mednafen:snes_faust", "mednafen:snes"], "fps": 1.5, "status": "PASS" },
+      { "id": "BUG_03", "area": "World 1 Screen 0x2C terrain grammar + zero dirt seams", "verified_cores": ["mednafen:snes_faust", "mednafen:snes"], "fps": 1.5, "status": "PASS" },
+      { "id": "BUG_04", "area": "Kamek Shopkeeper Royal Blue palette + non-digit robe + 150/10/50", "verified_cores": ["mednafen:snes_faust"], "fps": 2.5, "status": "PASS" },
+      { "id": "BUG_05", "area": "Room 0x0103 Toad face/mouth + shadow + dy=-9 proportions", "verified_cores": ["mednafen:snes_faust"], "fps": 2.5, "status": "PASS" },
+      { "id": "BUG_06", "area": "Winged Iggy Koopa anchored Paratroopa wings (body preserved)", "verified_cores": ["mednafen:snes_faust"], "fps": 4.0, "status": "PASS" },
+      { "id": "BUG_07", "area": "Final Boss King Bowser SMW silhouette, 16x24 arms, 0 Trident", "verified_cores": ["mednafen:snes_faust", "mednafen:snes"], "fps": 1.4, "status": "PASS" }
+    ]
+  },
+  "coverage_denominators_honest": {
+    "player_poses_bank10_structural_audit": { "verified": 303, "total": 303, "note": "0 odd-row overlaps, 0 unpatched Vanilla Link cells, 0 Head==Body duplicates" },
+    "player_states_live_emulated_v060": { "verified": 10, "total": 16, "untested_live": ["swim_dive", "electric_shock", "push_pull", "kneel_pitfall", "ko_flat", "heavy_carry"] },
+    "light_world_map32_roundtrip_verified": { "verified": 64, "total": 64 },
+    "light_world_map32_redesigned_mario": { "verified": 1, "total": 64, "screens": ["0x2C"] },
+    "compressed_gfx_sheets_audited": { "verified": 49, "total": 49, "relocated": 11 },
+    "french_dialogue_messages_verified": { "verified": 372, "total": 372, "duplicate_linebreaks": 0, "hyphenated_splits": 0 },
+    "bosses_live_emulated_in_v060": { "verified": 2, "total": 12, "verified_ids": ["Iggy Koopa", "Final King Bowser"], "note": "4 additional bosses were visually verified in v0.5.0 and remain unchanged in v0.6.0; 6 bosses are structurally audited only" },
+    "hardware_emulators": {
+      "tested": ["Mednafen 1.32.1 (snes_faust)", "Mednafen 1.32.1 (snes / bsnes-accuracy)"],
+      "not_tested_locally": ["Standalone bsnes", "Ares", "Snes9x", "Physical SNES / Super Famicom / FXPAK Pro"]
+    }
+  }
+}

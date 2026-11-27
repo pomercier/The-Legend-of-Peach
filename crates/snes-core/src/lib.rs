@@ -1359,4 +1359,142 @@ mod tests {
         let fake_rom = vec![0u8; 1_048_576];
         assert!(identify_known_rom(&fake_rom).is_none());
     }
+
+    #[test]
+    fn test_v060_all_seven_blocking_bugs_structural_invariants() {
+        let z_path = if std::path::Path::new("roms/zelda_alttp.sfc").exists() {
+            "roms/zelda_alttp.sfc"
+        } else {
+            "../../roms/zelda_alttp.sfc"
+        };
+        let m_path = if std::path::Path::new("roms/super_mario_world.sfc").exists() {
+            "roms/super_mario_world.sfc"
+        } else {
+            "../../roms/super_mario_world.sfc"
+        };
+        let (Ok(z_bytes), Ok(m_bytes)) = (std::fs::read(z_path), std::fs::read(m_path)) else {
+            return;
+        };
+        let mut target = super::rom::SnesRom::from_bytes("zelda_alttp.sfc", &z_bytes).unwrap();
+        let donor = super::rom::SnesRom::from_bytes("super_mario_world.sfc", &m_bytes).unwrap();
+        let recipe = super::mixer::legend_of_peach_canonical_recipe(z_path, m_path);
+        let mut donors = std::collections::HashMap::new();
+        donors.insert("smw".to_string(), donor);
+        let mut sess = super::swapper::SwapSession::new();
+        super::mixer::execute_mix_recipe(&mut target, &donors, &recipe, &mut sess).unwrap();
+
+        // BUG 01 & BUG 02: Across ALL 303 Link/Mario poses:
+        //   - ZERO odd-row overlapping 16x16 cells
+        //   - ZERO unpatched vanilla Link cells active in Head or Body slots
+        //   - ZERO same-cell Head == Body double-head bugs
+        let read_4bpp_cell = |rom: &[u8], addr: u16| -> Vec<u8> {
+            let pc_top = 0x080000 + (addr as usize - 0x8000);
+            let mut buf = Vec::with_capacity(128);
+            buf.extend_from_slice(&rom[pc_top..pc_top + 64]);
+            buf.extend_from_slice(&rom[pc_top + 0x200..pc_top + 0x240]);
+            buf
+        };
+        for pid in 0..303usize {
+            let ha = u16::from_le_bytes([
+                target.data[0x001346 + pid * 2],
+                target.data[0x001346 + pid * 2 + 1],
+            ]);
+            let ba = u16::from_le_bytes([
+                target.data[0x0015A4 + pid * 2],
+                target.data[0x0015A4 + pid * 2 + 1],
+            ]);
+            let fl = target.data[0x068000 + pid * 3 + 2];
+            if (fl & 0xF0) != 0xF0 {
+                assert_eq!(
+                    (ha - 0x8000) & 0x023F,
+                    0,
+                    "Pose 0x{pid:03X} Head addr 0x{ha:04X} must be even-row 16x16 aligned!"
+                );
+                let van_c = read_4bpp_cell(&z_bytes, ha);
+                let blt_c = read_4bpp_cell(&target.data, ha);
+                assert!(
+                    van_c.iter().all(|&b| b == 0) || van_c != blt_c,
+                    "Pose 0x{pid:03X} Head cell 0x{ha:04X} is still unpatched Vanilla Link!"
+                );
+            }
+            if (fl & 0x0F) != 0x0F {
+                assert_eq!(
+                    (ba - 0x8000) & 0x023F,
+                    0,
+                    "Pose 0x{pid:03X} Body addr 0x{ba:04X} must be even-row 16x16 aligned!"
+                );
+                let van_c = read_4bpp_cell(&z_bytes, ba);
+                let blt_c = read_4bpp_cell(&target.data, ba);
+                assert!(
+                    van_c.iter().all(|&b| b == 0) || van_c != blt_c,
+                    "Pose 0x{pid:03X} Body cell 0x{ba:04X} is still unpatched Vanilla Link!"
+                );
+            }
+            if (fl & 0xF0) != 0xF0 && (fl & 0x0F) != 0x0F {
+                assert_ne!(
+                    ha, ba,
+                    "Pose 0x{pid:03X} must never reuse Head cell for Body!"
+                );
+            }
+        }
+
+        // BUG 03: Screen 0x2C terrain grammar validation passes with ZERO orphan cliffs/dirt seams
+        let orig2c = super::mario_map::read_overworld_screen(&z_bytes, 0x2C, "W1", "Orig").unwrap();
+        let edit2c =
+            super::mario_map::read_overworld_screen(&target.data, 0x2C, "W1", "Edit").unwrap();
+        let rep = super::mario_map::validate_screen_terrain_grammar(&target.data, &orig2c, &edit2c)
+            .unwrap();
+        assert!(
+            rep.is_clean(),
+            "Screen 0x2C terrain grammar must be 100% clean: {rep:?}"
+        );
+
+        // BUG 04: Kamek Shopkeeper uses SMW Royal Blue palette (0x08/0x09 ^ 0x00 = 0x09 Pal 4 + NT1) and clean tiles ($06/$26)
+        assert_eq!(
+            target.data[0x030BFA], 0x08,
+            "Shopkeeper prep must set Blue Pal 4"
+        );
+        assert_eq!(
+            target.data[0x0F6F54], 0x09,
+            "Shopkeeper state 0 must set Pal 4 Blue + NT1"
+        );
+        assert_eq!(
+            target.data[0x02F8FA], 0x00,
+            "Kamek head table flags must be 0x00 so EOR $0F50(0x09) yields SMW Royal Blue Pal 4"
+        );
+        assert_eq!(
+            target.data[0x02F901], 0x06,
+            "Kamek body F0 must use clean tile $06"
+        );
+        assert_eq!(
+            target.data[0x02F911], 0x26,
+            "Kamek body F1 must use clean tile $26"
+        );
+        // Verify Shop Price Digits '0' & '1' at row 3 cols 0..1 of Sheet 0xBC (raw 0xBE) match vanilla 100%!
+        let (van_be, _, _) = super::mixer::load_alttp_3bpp_sheet(&z_bytes, 0xBC).unwrap();
+        let (blt_be, _, _) = super::mixer::load_alttp_3bpp_sheet(&target.data, 0xBC).unwrap();
+        assert_eq!(
+            &blt_be[48 * 24..50 * 24],
+            &van_be[48 * 24..50 * 24],
+            "Shop price digits '0' and '1' at row 3 cols 0..1 of Sheet 0xBC must be 100% intact!"
+        );
+
+        // BUG 05: Room 0x0103 Toad head OAM lifted to dy=-9 (0xF7) for clean 16-bit proportions
+        assert_eq!(target.data[0x02E544], 0xF7);
+
+        // BUG 06: Iggy Koopa wings anchored inward from +-24 to +-17 at $1A:FCED
+        assert_eq!(
+            i16::from_le_bytes([target.data[0x0D7CED], target.data[0x0D7CEE]]),
+            -17
+        );
+        assert_eq!(
+            i16::from_le_bytes([target.data[0x0D7D05], target.data[0x0D7D06]]),
+            17
+        );
+
+        // BUG 07: Ganon held Trident call ($1D:9AF5) NOP'd & Bowser standing Head lifted to dy=-15 (0xF1)
+        assert_eq!(&target.data[0x0E9AF5..0x0E9AF8], &[0xEA, 0xEA, 0xEA]);
+        assert_eq!(target.data[0x0E969A + 25], 0xF1);
+        assert_eq!(target.data[0x0E969A + 26], 0xF1);
+    }
 }

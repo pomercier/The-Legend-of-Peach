@@ -2583,32 +2583,26 @@ fn apply_rule_to_zelda(
             )? {
                 ops += 1;
             }
-            if let Some((mk1, mk2)) = extract_donor_16x16_for_zelda(donor, "magikoopa", false) {
+            {
+                let (km_head, km_body0) = crate::mario_world::build_kamek_magikoopa_smw_16x16(0);
+                let (_, km_body1) = crate::mario_world::build_kamek_magikoopa_smw_16x16(1);
                 if patch_alttp_comp_sheet_helper(
                     rom_zelda,
                     session,
                     0xBC,
                     &format!(
-                        "Marchand Kamek Boutique (Sheet 0xBC, chiffres '0'/'1' préservés!) ← {}:Magikoopa SMW",
+                        "Marchand Kamek Boutique (Sheet 0xBC, Bleu SMW, chiffres '0'..'9' 100% isolés!) ← {}:Magikoopa SMW",
                         rule.donor_alias
                     ),
                     free_cursor,
                     free_end,
                     &|raw| {
-                        // Head in rows 0..1 (16x16)
-                        write_3bpp_16x16(raw, 0, 0, &mk1);
-                        // Upper robe ONLY in row 2 (two 8x8 tiles: (0,2) and (1,2))!
-                        // Row 3 cols (0,3) & (1,3) hold Shop Price Digits '0' and '1' -> NEVER overwrite!
-                        let mut robe_l = [[0u8; 8]; 8];
-                        let mut robe_r = [[0u8; 8]; 8];
-                        for y in 0..8 {
-                            for x in 0..8 {
-                                robe_l[y][x] = mk2[y][x];
-                                robe_r[y][x] = mk2[y][x + 8];
-                            }
-                        }
-                        write_3bpp_8x8_pub(raw, 0, 2, &robe_l);
-                        write_3bpp_8x8_pub(raw, 1, 2, &robe_r);
+                        // Head in cols 0..1 rows 0..1 (tile $00);
+                        // Clean 16x16 Royal Blue Robe frames in cols 6..7 rows 0..1 (tile $06) & rows 2..3 (tile $26)!
+                        // Shop Price Digits '0'..'9' at cols 0..1 row 3 & cols 2..3 rows 0..3 remain 100% UNTOUCHED!
+                        write_3bpp_16x16(raw, 0, 0, &km_head);
+                        write_3bpp_16x16(raw, 6, 0, &km_body0);
+                        write_3bpp_16x16(raw, 6, 2, &km_body1);
                     },
                 )? {
                     ops += 1;
@@ -3578,10 +3572,21 @@ fn inject_smw_mario_hero_into_zelda(
     ops += 1;
     session.swap_custom_bytes(
         rom_zelda,
+        0x001346,
+        0x001346,
+        scratch.data[0x001346..0x001802].to_vec(),
+        "Patch Tables DMA Joueur Bank $00 (0x001346..0x001802) : 28 poses impaires/recul/feu remappées sans doublon".into(),
+        SwapKind::CodePatch {
+            byte_count: 303 * 4,
+        },
+    )?;
+    ops += 1;
+    session.swap_custom_bytes(
+        rom_zelda,
         0x068000,
         0x068000,
         scratch.data[0x068000..0x06838D].to_vec(),
-        "Patch OAM Bank $0D (Y=-8, X=0) pour Super Mario 16x32".into(),
+        "Patch OAM Bank $0D (pose-par-pose) pour Super Mario 16x32".into(),
         SwapKind::CodePatch {
             byte_count: 303 * 3,
         },

@@ -1,44 +1,39 @@
-# Visual Regression & Hardware Verification Report (`v0.5.0`)
+# Visual Regression Report — `v0.6.0 — Super Mario World Authenticity`
 
-**Build Target:** `v0.5.0 — Super Mario Revolution`  
-**Deterministic ROM SHA-256:** `93d3774f81119eb41d80b0c610d3b1bbcd1430c5f572f16b65b47b3ddd24975e`  
-**SNES Checksum / Complement:** `0x87FF` / `0x7800` (Valid: `true`)  
-**CRC32:** `9E8F84EB` | **MD5:** `74b5e46d58efa5f0f15cfe2b30383401` | **SHA-1:** `50db6eed1ab3495d877e0701c10974df4f252dd3`  
-**Hardware Operations:** `220 patches across 18 rules` | **Bank Audit:** `49 compressed sheets verified, 11 relocated, 0 overlaps`
-
----
-
-## 1. Resolution of All 5 Reported Visual Defects
-
-| # | Defect Reported | Root Cause Diagnosed | v0.5.0 Fix Applied | Live Verification Evidence |
-| :- | :--- | :--- | :--- | :--- |
-| **1** | **File Select**: Garbled name `1. MA[U/n]IO`, vanilla pink Fairy cursor, blue Zelda sword, dull olive-green stone BG | Test SRAM used wrong FR char code `0x11` (`R = 0x21`); live File Select cursor (`$A8/$AA`) and sword (`$85/$A1`) live in compressed `raw 0xCF`, not `Sheet 0x76/0x78`; `$0E:96B2` used pink palette `0x7E`; BG palette `0x0DD9AA` was Zelda olive | Fixed FR SRAM encoding (`[0x0C,0x00,0x21,0x08,0x0E,0xA9]`), replaced `raw 0xCF` cursor with 2-frame Golden SMW Super Star (`$0E:96B2 = 0x30`), replaced sword with upright Super Mario Hammer, upgraded `0x0DD9AA` to SMW Royal Sky Blue | Visually verified in `docs/media/screenshots/14_file_select_mario.png` |
-| **2** | **Toad NPC (Room `0x0103`)**: Distorted side face, red shoulder puffs, red belly dot | `mario_world.rs` assumed all 8 row-0 cells in `raw 0xC2/0xBD/0xC3` were heads; on `raw 0xC3`, col 10 row 0 is the sweeping villager's BODY, where `ClassicBack` mushroom cap had been placed | Audited vanilla `raw 0xC2/0xBD/0xC3` pixel-by-pixel, aligned every head/body cell to exact vanilla OAM slots, upgraded pixel art, and upgraded interior carpet (`0x0DD932`) to Royal Crimson & Gold | Visually verified in `docs/media/screenshots/15_toad_town_crimson.png` |
-| **3** | **Kamek's Shop**: Broken digits, vanilla red heart, red potion, blue bomb | Previous showcase video mistakenly reused a stale pre-`v0.2.0` clip (`v13_clips/03_toad_shop`) | Upgraded shop carpet (`0x0DD932`) to Royal Crimson & Gold and recorded 100% fresh `v0.5.0` footage directly from `93d3774f...` showing crisp `150 / 10 / 50`, Super Mushroom, Mini-Mushroom, and 10 Jet-Black Bob-ombs | Visually verified in `docs/media/screenshots/03_magikoopa_shop.png` |
-| **4** | **Iggy Koopa Boss (Room `0x0029`)**: Unreadable jumble of white rings & eyes | Mothula (`raw 0xAB`) OAM tile ordering did not match assumed grid | Rebuilt clean, crisp Winged Iggy Koopa + compact sparkle orb aligned to Mothula OAM layout | Visually verified in `docs/media/screenshots/18_boss_iggy_koopa.png` |
-| **5** | **Bowser Room `0x0000` Dialogue & Arena**: Overwritten text (`¿ri·galet` / `ne ·auser`) + brown Zelda Pyramid stone + hyphenated line breaks | `v0.3.0` Bank `$1C` repacker emitted duplicate `0x75`/`0x76` line breaks (overwriting existing VRAM line pixels) and preserved vanilla syllable hyphens (`mot-<LB>suite`) | Fixed deterministic single-emission line-break state machine, eliminated 100% of hyphenated breaks across all 372 French messages (enforced by unit test), rewrote marquee Mario dialogues, and upgraded Room `0x0000` (`0x0DE2C2`) to Obsidian Dark-Charcoal & Lava Volcanic Stone | Visually verified in both `snes_faust` and cycle-accurate `bsnes`: `docs/media/screenshots/19_bowser_french_dialogue.png` & `09_boss_king_bowser.png` |
+**Candidate ROM:** `build/legend_of_peach_v0.6.0.sfc` (`2,097,152` bytes, 2 MiB LoROM, PAL 50 Hz)  
+**Verified Output SHA-256:** `2004714a74f35fbf6c6c581f25b86d0b40d6729dd38c089f65e7b69e68a202ca`  
+**SNES Checksum / Complement:** `0xC419` / `0x3BE6` (Valid: `true`)  
+**CRC32:** `D5E69FF4`  
+**Emulators Verified Locally:** Mednafen `1.32.1` (`snes_faust` AND cycle-accurate `snes` / bsnes core).  
+**Before/After Evidence Plate:** [`docs/media/screenshots/21_v060_before_after_7bugs.png`](media/screenshots/21_v060_before_after_7bugs.png)
 
 ---
 
-## 2. Honest Validation Matrix
+## Executive Summary
 
-| Subsystem | Implemented | Compiled | Unit-Tested | Runtime-Tested (`snes_faust`) | Cycle-Accurate (`bsnes`) | Visually Verified | Physical SNES Hardware |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Top-Down Mario Jump (`L`/`R`, shadow, variable arc) | Yes | Yes | Yes | Yes | Yes | Yes | Untested |
-| Mario Stomp Combat (`$22:9800`, puff, bounce, +1 coin) | Yes | Yes | Yes | Yes | Yes | Yes | Untested |
-| Super Mario Hammer (melee, File Select, Start Menu) | Yes | Yes | Yes | Yes | Yes | Yes | Untested |
-| Fire Mario Live CGRAM Swap & Fireballs | Yes | Yes | Yes | Yes | Yes | Yes | Untested |
-| Super Starman Rainbow Invincibility (`L+R`) | Yes | Yes | Yes | Yes | Yes | Yes | Untested |
-| Native SPC700 Mario SFX (Coin/Jump/Stomp/Pipe/Hammer) | Yes | Yes | Yes | Yes | Yes | Audio-active | Untested |
-| Overworld Map32 JSON Engine & World 1 Screen `0x2C` | Yes | Yes | Yes (64 screens) | Yes | Yes | Yes | Untested |
-| Bank `$1C` 372-Message FR Script (0 overlap, 0 hyphens) | Yes | Yes | Yes | Yes | Yes | Yes | Untested |
-| Start Menu (Fire/Ice Flowers, Green Warp Pipe, Names) | Yes | Yes | Yes | Yes | Yes | Yes | Untested |
-| Bit-for-Bit Build Determinism & Hardware Audit | Yes | Yes | Yes (29/29) | N/A | N/A | N/A | Compliant (Untested) |
+All **7 user-reported blocking visual regressions** from `v0.5.0` were diagnosed to exact ROM PC offsets, 65c816 instructions, OAM tables, CGRAM palette entries, and Map32→Map16 tile indices, corrected structurally in Rust, protected by automated regression invariants (`cargo test`), and visually verified frame-by-frame across multi-frame temporal captures on both Mednafen `snes_faust` and cycle-accurate `snes` (bsnes).
+
+| Bug ID | Reported Defect (`v0.5.0`) | Root Cause (Verified in ROM) | Structural Fix (`v0.6.0`) | Live Verification Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **BUG 01** | Stacked double Mario heads / corruption during enemy contact (`Mario vs Koopa`) | Bank `$00` Link DMA pose tables (`0x001346` Head, `0x0015A4` Body) assigned 28 poses (including Hurt/Recoil `0x03B, 0x03F..0x042`) to overlapping odd-row 24px offsets (`Body == Head + 0x200`) or `Body == 0x8000` (`R00C0`), plus 19 unpatched Vanilla Link cells (`R07..R11, R17..R18`) and a blanket Bank `$0D` `oam_table` overwrite. | Remapped all 28 odd-row/overlapping poses onto verified free Bank `$10` cells (`R22, R07, R17, R23`), patched all 19+ remaining Vanilla Link cells with dedicated 4bpp Mario poses (hurt, recoil, shock, swim, dive, KO, kneel), and replaced blanket Bank `$0D` OAM overwrite with a pose-aware table (`demo.rs`, `mixer.rs`). | **PASS (Verified @ 12 fps)** — `imp_005..imp_012` show clean single Mario hurt/recoil frames and blink recovery on Koopa collision; `0/303` odd-row or unpatched cells. |
+| **BUG 02** | Fire Mario casting fireball showed inverted boots on head, unpatched Link head, and Zelda Fire Rod | Fireball cast poses (`0x043, 0x046, 0x049, 0x04C`) pointed to odd-row/unpatched Bank `$10` cells with vertical-flip OAM flags, while `0x087000` still retained vanilla Zelda Fire/Ice Rod staff tiles at `(4,0),(5,0),(6,0),(2,1),(5,1),(6,1)`. | Added dedicated 4-direction `make_fire_throw_down/side/up` Mario poses cleanly aligned in Bank `$10`, cleared erroneous vertical flips on `0x12B..0x12E`, and replaced Zelda Fire/Ice Rod staff tiles in `0x087000` with Mario fireball cast core & flame sparks (`demo.rs`, `mario_ui.rs`). | **PASS (Dual-Core Verified)** — `snes_faust` and cycle-accurate `bsnes` show crisp White/Red Fire Mario casting fireballs in all 4 directions with zero inverted boots and zero Zelda rod. |
+| **BUG 03** | Orphan brown dirt patches behind Turn-Blocks and floating brown dirt triangle on World 1 Screen `0x2C` | `mario_map.rs` placed Map32 `0x1B76` (which decodes to Map16 `0AD,0AC / 16C,16C` = dirt triangle + cliff top!) at `r09 c4 & c7`, left cliff-dirt transition `r10 c5`, and placed `0x06A0` (`09F,09F / 0A5,0A5` dirt edges) at `r15 c12`. | Implemented bit-exact Map32→Map16 decoder + `validate_screen_terrain_grammar` (`mario_map.rs`). Replaced `r09 c4 & c7` with `0x06C7` (`20F,20F / 034,034` pure Turn-Blocks on grass), `r10 c5` with `0x0208` (`034,034 / 16C,16C` pure grass above cliff top), and `r15 c12` with `0x0166` (pure grass daisy meadow). | **PASS (Dual-Core Verified)** — Zero orphan dirt seams or floating triangles on both `snes_faust` and `bsnes`; guarded by unit test `test_world1_screen2c_terrain_grammar_zero_seams`. |
+| **BUG 04** | Kamek Shopkeeper was green with corrupted robe / shop price digit overlap | Shopkeeper `Sprite 0xBB` (`$05:F8F5`) drew body tile `$10` (overlapping Head lower half and row 3 shop price digits `'0'`/`'1'` in Sheet `0xBC`), prep code at `0x030BFA` forced green (`0x0C`), and `Sprite_DrawMultiple` (`$05:DF6F`) executes `EOR $05`, so setting non-zero table `flags` XOR-cancelled palette bits into OBJ Pal 0 (Orange). | Rebuilt authentic SMW Royal Blue Kamek (`build_kamek_magikoopa_smw_16x16`), moved Robe F0/F1 to non-digit cells `(6,0)` (`$06`) & `(6,2)` (`$26`) leaving digits `'0'..'9'` 100% untouched, set prep `0x030BFA = 0x08`, state 0 `0x0F6F54 = 0x09` (Pal 4 Royal Blue `#4194FF/#004AAC` + NT1), and table `flags = 0x00` (`0x00 ^ 0x09 = 0x09`). | **PASS (Verified @ 4× zoom)** — Royal Blue SMW Kamek with pointed hat, white spectacles, white-trimmed robe, animated wand, and spotless `150 / 10 / 50` prices. |
+| **BUG 05** | Room `0x0103` Toad had a lime-green mouth and a giant dark-grey lump beneath his feet | `Sprite 0x35` (`$05:E543`) draws `raw 0xBD` (`sp:4A`) slot 2 where `$86` (`(6,0)`) is drawn mirrored at `dy=+15` (storing Toad's Back Head there produced the grey lump); in `PalRow[02]` (`0x0DD254`), color index `2` is lime-green `#D5DE52` (used for Toad's mouth); head `dy=-4` compressed proportions. | Rebuilt 16-bit SMAS/SMRPG Toad eliminating all index-2 lime-green pixels from the face, cleared `raw 0xBD (6,0)` (`$86`) so ALTTP's clean native ground shadow renders without double-shadowing, and lifted head `dy` at `0x02E544` (`-4 -> -9`) and Innkeeper `0x0D7866/7E` (`-9 -> -11`). | **PASS (Verified @ 4× zoom)** — Clean 16-bit Toad on Crimson/Gold carpet with warm face, zero lime-green mouth, zero dark-grey head lump, and balanced proportions. |
+| **BUG 06** | Winged Iggy Koopa's wings floated detached in midair (body was already good and had to be preserved) | Mothula's OAM table at `PC 0x0D7CED` (`$1A:FCED`) placed left/right wings at `dx = ±24`, leaving an ~8px air gap from Iggy's body shoulders. | Preserved Iggy's body (`cols 16..31`) 100% untouched; rebuilt wing half (`cols 0..15`) as SMW Paratroopa feathered wings rooted at `x=15`; patched Mothula's OAM table at `PC 0x0D7CED` pulling wings inward to `dx = ±17` with dynamic upstroke/downstroke `dy`. | **PASS (Verified @ 4 fps)** — Iggy's body intact; feathered Paratroopa wings stay locked flush onto his shoulders across both flap upstroke and downstroke frames. |
+| **BUG 07** | Final Boss King Bowser displayed Ganon's blue/beige Trident orb, diagonal stick, awkward collar/head, and severed/forked arm tiles | `JSR Ganon_DrawHeldTrident` at `PC 0x0E9AF5` drew Ganon's Trident over Bowser's chest; Frame 2..4 Head `dy=-10` sat below upper torso `dy=-13`; Ganon's paired arms (`$06/$16`, `$36/$46`, `$08/$18`, `$38/$48`, `$0A/$1A`) use 16×24 cross-sheet strips where row 3 of `sp:21` merges into row 0 of `sp:41` (`$38` mixed `arm_down` bottom claws with `arm_up` forearm). | NOP'd `0x0E9AF5` (`EA EA EA`); lifted Frame 2..4 Head `dy` in `$1D:969A` (`-10 -> -15`); sculpted SMW `GFX21`-inspired Bowser Head + hunched emerald spiked shell + under-chin collar + ribbed belly; engineered exact disjoint 16×24 continuous arms across `sp:21` rows `0..2` and `sp:21` row `3` + `sp:41` rows `0..1`; injected real SMW `GFX24` Giant Fireballs. | **PASS (Dual-Core Verified)** — Both `snes_faust` and cycle-accurate `bsnes` show iconic SMW King Bowser across dialogue, roar, and active combat with zero Trident clutter and zero severed/forked arm tiles. |
 
 ---
 
-## 3. De-Zeldafication Metrics (`v0.4.0` -> `v0.5.0`)
+## Automated Regression Guard (`cargo test`)
 
-- **Zelda Residue Index (ZRI):** `94.9` (`371 / 391`) -> **`19.2`** (`75 / 391`) — **79.8% reduction**!
-- **Mario Identity Index (MII):** `5.1` -> **`80.8`**!
-- See [`docs/ZELDA_RESIDUE_REGISTRY.json`](ZELDA_RESIDUE_REGISTRY.json) for full item-by-item scoring and honest remaining v0.6.0 backlog.
+All 7 structural fixes are permanently enforced in Rust by:
+- `mario_map::tests::test_world1_screen2c_terrain_grammar_zero_seams`
+- `tests::test_v060_all_seven_blocking_bugs_structural_invariants` (audits all 303 Link/Mario DMA poses for zero odd-row/unpatched/duplicate cells, verifies Screen `0x2C` terrain grammar, verifies Kamek palette/OAM + untouched shop price digits `'0'`/`'1'`, verifies Toad OAM `dy=-9`, verifies Iggy wing offsets `±17`, and verifies Ganon Trident NOP + Bowser Head `dy=-15`).
+
+---
+
+## Honest Scope Limitations & Untested Visual Areas
+
+- Visual captures in `v0.6.0` directly verified the Title Screen, File Select, World 1 Screen `0x2C` (Classic, Fire, Starman, Jump, Stomp, Koopa Contact), Start Menu, Kamek's Shop (`0x011F`), Toad House (`0x0103`), Sanctuary (`0x0012`), Winged Iggy Koopa (`0x0029`), and Final King Bowser (`0x0000`) on Mednafen (`snes_faust` and `snes`/bsnes).
+- Not every overworld screen (63 of 64 Light World screens remain un-redesigned Map32), dungeon room, secondary boss phase, or late-game cutscene was playtested end-to-end in `v0.6.0`. See [`docs/TEST_COVERAGE.json`](TEST_COVERAGE.json) and [`docs/SPRITE_ANIMATION_AUDIT.md`](SPRITE_ANIMATION_AUDIT.md) for exact verified vs. unverified counts.
