@@ -1,0 +1,180 @@
+{
+  "version": "v0.20.0",
+  "rom_sha256": "5e9c06a5db1ffc6be4879e258fa914bfdd56db101455082c7d2fb711df9cb910",
+  "emulator": "mednafen:snes_faust",
+  "initial_sram": "8192 bytes of 0x00 (100% blank SRAM, zero room warps, zero memory injection)",
+  "sram_post_save_audit": {
+    "slot": 1,
+    "alttp_sig": "0x55AA",
+    "alttp_checksum_valid": true,
+    "coins": 0,
+    "hp_max": 24,
+    "star_torch": 0,
+    "dragon_cnt": 0,
+    "char_id": 255,
+    "pipe_disc": "0xFF",
+    "luigi_mirror": 0,
+    "sram_v2_magic": "\u0000\u0000",
+    "sram_v2_version": 0,
+    "world_restore": "0x00",
+    "quest_lo": "0x00",
+    "stomp_total": 0,
+    "pipe_total": 0,
+    "sram_v2_crc_valid": false,
+    "sram_nonzero_bytes": 18,
+    "cold_reboot_completed": true
+  },
+  "audio_audit": {
+    "audio_extracted": true,
+    "duration_s": 81.38,
+    "sample_rate": 44100,
+    "channels": 2,
+    "rms_dbfs": -24.44,
+    "peak_dbfs": -3.14,
+    "clipped_samples": 0,
+    "active_window_pct": 88.2,
+    "zero_crossing_hz": 343.5,
+    "status": "AUDIO_PASS",
+    "clip_pct": 0.0
+  },
+  "events": [
+    {
+      "t_s": 9.86,
+      "input": "Start",
+      "dur_s": 0.16,
+      "note": "Exit Title Screen"
+    },
+    {
+      "t_s": 11.32,
+      "input": "Start",
+      "dur_s": 0.16,
+      "note": "Open Slot 1 Name Entry"
+    },
+    {
+      "t_s": 12.56,
+      "input": "A",
+      "dur_s": 0.14,
+      "note": "Letter 1"
+    },
+    {
+      "t_s": 13.21,
+      "input": "A",
+      "dur_s": 0.14,
+      "note": "Letter 2"
+    },
+    {
+      "t_s": 13.72,
+      "input": "Start",
+      "dur_s": 0.16,
+      "note": "Jump to FIN"
+    },
+    {
+      "t_s": 14.63,
+      "input": "A",
+      "dur_s": 0.16,
+      "note": "Confirm Slot 1"
+    },
+    {
+      "t_s": 15.99,
+      "input": "Start",
+      "dur_s": 0.16,
+      "note": "Select Slot 1"
+    },
+    {
+      "t_s": 17.55,
+      "input": "Start",
+      "dur_s": 0.16,
+      "note": "Begin New Adventure"
+    },
+    {
+      "t_s": 44.91,
+      "input": "A x36",
+      "dur_s": 20.0,
+      "note": "Advance Opening Legend, Peach Telepathy & Uncle Luigi Bedside Dialogue"
+    },
+    {
+      "t_s": 56.56,
+      "input": "Down",
+      "dur_s": 1.15,
+      "note": "Step out past table"
+    },
+    {
+      "t_s": 58.16,
+      "input": "Right",
+      "dur_s": 1.6,
+      "note": "Approach Star-Torch Chest"
+    },
+    {
+      "t_s": 58.51,
+      "input": "Up",
+      "dur_s": 0.35,
+      "note": "Face Chest"
+    },
+    {
+      "t_s": 58.73,
+      "input": "A",
+      "dur_s": 0.22,
+      "note": "Open Star-Torch Chest"
+    },
+    {
+      "t_s": 61.75,
+      "input": "A",
+      "dur_s": 0.22,
+      "note": "Dismiss Star-Torch Item Text"
+    },
+    {
+      "t_s": 63.85,
+      "input": "Left",
+      "dur_s": 0.9,
+      "note": "Align with Front Door"
+    },
+    {
+      "t_s": 65.3,
+      "input": "Down",
+      "dur_s": 1.45,
+      "note": "Exit Mario's House into Rainy Mushroom Kingdom (0x2C)"
+    },
+    {
+      "t_s": 68.65,
+      "input": "Down",
+      "dur_s": 0.55,
+      "note": "Step South onto Yoshi's Island courtyard in rain"
+    },
+    {
+      "t_s": 69.0,
+      "input": "L",
+      "dur_s": 0.35,
+      "note": "Test Mario Jump in Rainy Overworld"
+    },
+    {
+      "t_s": 71.65,
+      "input": "Right",
+      "dur_s": 2.2,
+      "note": "Walk East along Yoshi's Island yard"
+    },
+    {
+      "t_s": 72.9,
+      "input": "Up",
+      "dur_s": 1.25,
+      "note": "Follow East Garden Path North toward Peach's Castle Road"
+    },
+    {
+      "t_s": 74.3,
+      "input": "Right",
+      "dur_s": 1.4,
+      "note": "Cross into Rainy Overworld Road (0x2D)"
+    },
+    {
+      "t_s": 75.03,
+      "input": "Select",
+      "dur_s": 0.18,
+      "note": "Open Save Menu on Overworld"
+    },
+    {
+      "t_s": 76.93,
+      "input": "A",
+      "dur_s": 0.18,
+      "note": "Save and Quit"
+    }
+  ]
+}

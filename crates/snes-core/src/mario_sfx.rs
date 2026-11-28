@@ -42,16 +42,17 @@ const MARIO_SFX_PATCHES: &[SfxPatch] = &[
             0x04, 0x16, 0xC0, 0x00,
         ],
     },
-    // 2. SFX2 0x2C (Rupee 2 / Big Coin -> Sparkling High Mario Coin Chime B5->E6!)
+    // 2. SFX2 0x2C (Hero Swap / Big Coin -> Sparkling Rising Mario Chime B5->E6->G6!)
     SfxPatch {
-        name: "SFX2 0x2C (Pièce d'Or Scintillante Mario)",
+        name: "SFX2 0x2C (Pièce Scintillante & Changement de Héros Mario)",
         pc: 0x0D1389,
         orig_prefix: &[0xE0, 0x00, 0x0C, 0x78],
         max_len: 14,
         mario_seq: &[
-            0xE0, 0x0E, 0x04, 0x74, 0xBB, // B5
-            0x14, 0x74, 0xC0, // E6
-            0x05, 0x28, 0xC0, 0x00,
+            0xE0, 0x0E, 0x04, 0x74, 0xBB, // Crisp B5
+            0x05, 0x74, 0xC0, // Bright E6
+            0x0E, 0x6C, 0xC3, // Sparkling G6 resolution!
+            0x04, 0x28, 0x00,
         ],
     },
     // 3. SFX2 0x20 (Jump -> Playful SMW Mario Rising Jump Pitch-Sweep!)
@@ -91,17 +92,17 @@ const MARIO_SFX_PATCHES: &[SfxPatch] = &[
             0x05, 0x38, 0x9C, 0x00,
         ],
     },
-    // 6. SFX2 0x14 (Stairs Up / Exit -> Mario Warp Pipe Ascending Pulse!)
+    // 6. SFX2 0x14 (Stairs Up / Warp Pipe Emerge -> Crisp Ascending SMW Pipe Emerge!)
     SfxPatch {
-        name: "SFX2 0x14 (Sortie Tuyau Warp Mario)",
+        name: "SFX2 0x14 (Sortie Tuyau Warp Mario Ascendante)",
         pc: 0x0D1730,
         orig_prefix: &[0xE0, 0x07, 0x0C, 0x28],
         max_len: 16,
         mario_seq: &[
-            0xE0, 0x07, 0x05, 0x64, 0x9C, // Pulse 1
-            0x05, 0x64, 0xA0, // Pulse 2
-            0x05, 0x64, 0xA4, // Pulse 3
-            0x05, 0x40, 0xA8, 0x00,
+            0xE0, 0x07, 0x04, 0x68, 0x9E, // Pulse 1 low
+            0x04, 0x6C, 0xA2, // Pulse 2 mid
+            0x04, 0x70, 0xA6, // Pulse 3 high
+            0x06, 0x48, 0xAC, 0x00, // Bright emerge pop!
         ],
     },
     // 7. SFX1 0x01 (Sword Lv1 -> Punchy Mario Super Hammer Bonk/Whoosh!)

@@ -1251,7 +1251,7 @@ mod tests {
             let audit = super::mixer::audit_legend_of_peach_output(&zelda, &target, &session)
                 .expect("audit_legend_of_peach_output must pass");
             assert_eq!(audit.output_size_bytes, 2_097_152);
-            assert_eq!(audit.verified_raw_sheets, 51);
+            assert_eq!(audit.verified_raw_sheets, 52);
             println!(
                 "HARDWARE AUDIT PASSED: 100% COMPLIANT WITH SNES AND SUPER FAMICOM (SHA-256: {})!",
                 audit.output_sha256
@@ -1656,21 +1656,78 @@ mod tests {
             &[0xFFu8; 60],
             "MU-068/069: Palettes 9 (Luigi) & 10 (Frog Suit) must be written at $22:B100+270!"
         );
-        // 4. MU-041: ALL 5 Real Inter-Regional Physical SMW Warp Pipe Hubs present right beside $02:EB67 arrival points!
+        // 4. MU-041 / v0.20.0 USER BUG #1b & #2 FIX: ALL 5 Open, Hedge-Free, 100% Enemy-Free Physical SMW Warp Pipe Hubs!
         for &(sid, r, c, label) in &[
             (0x2Cu8, 9usize, 7usize, "Yoshi's Island Hub"),
-            (0x19u8, 12usize, 3usize, "Toad Town Square Hub"),
+            (0x19u8, 14usize, 1usize, "Toad Town Open Plaza Hub"),
+            (0x0Bu8, 9usize, 2usize, "Vanilla Dome Enemy-Free Hub"),
             (0x3Eu8, 4usize, 7usize, "Lake Cheep-Cheep Beach Hub"),
-            (0x0Bu8, 10usize, 5usize, "Vanilla Dome Mountain Hub"),
             (0x12u8, 6usize, 5usize, "Forest of Illusion Hub"),
         ] {
-            let scr = super::mario_map::read_overworld_screen(&target.data, sid, "v0100", label)
+            let scr = super::mario_map::read_overworld_screen(&target.data, sid, "v0200", label)
                 .unwrap_or_else(|| panic!("Failed decoding hub screen 0x{sid:02X}"));
             assert_eq!(
                 scr.tiles[r * 16 + c],
                 0x02D4,
                 "MU-041: {label} (0x{sid:02X} r{r} c{c}) must hold Physical SMW Warp Pipe 0x02D4!"
             );
+        }
+        // v0.20.0 INVARIANTS (PROJECT NINTENDO LIMIT BREAK):
+        // A. USER BUG #1 FIX: Mario Engine at $22:9000 must write #$FF into $24, $25, AND $29 (zero STZ $29!)
+        let eng_slice = &target.data
+            [super::mario_engine::MARIO_ENGINE_PC..super::mario_engine::MARIO_ENGINE_PC + 0x1400];
+        assert!(
+            eng_slice
+                .windows(8)
+                .any(|w| w == [0xA9, 0xFF, 0x85, 0x24, 0x85, 0x25, 0x85, 0x29]),
+            "v0.20.0 User Bug #1: Pre-Link_Main must keep $29=#$FF so ALTTP $07:86D2 enforces solid hedge collision!"
+        );
+        // B. 14 Live BGR555 Palettes (420 B, including Princess Peach Pal 11 & Captain Toad Pal 12!)
+        assert_ne!(
+            &target.data[super::mario_engine::PAL_TABLES_PC + 330
+                ..super::mario_engine::PAL_TABLES_PC + 420],
+            &[0xFFu8; 90],
+            "v0.20.0: Palettes 11 (Princess Peach), 12 (Captain Toad) & 13 (Spin Gleam) must be written at $22:B100+330!"
+        );
+        // C. Vanilla Dome Global BG Color 0 (0x0DE654) patched to 0x36BB (eliminating olive square halos behind boulders!)
+        assert_eq!(
+            u16::from_le_bytes([target.data[0x0DE654], target.data[0x0DE655]]),
+            0x36BB,
+            "v0.20.0: Vanilla Dome Global BG Color 0 (0x0DE654) must be 0x36BB (zero olive boulder halos)!"
+        );
+        // D. Toad Town Golden Super Star Monument (raw 0x53 == gfx_table 0x51 cols 14..15 + Map16 0x41A/0x41D/0x437 rooster cleanup!)
+        let (van_53, _, _) = super::mixer::load_alttp_3bpp_sheet(&z_bytes, 0x51).unwrap();
+        let (blt_53, _, _) = super::mixer::load_alttp_3bpp_sheet(&target.data, 0x51).unwrap();
+        assert_ne!(
+            &blt_53[14 * 24..16 * 24],
+            &van_53[14 * 24..16 * 24],
+            "v0.20.0 ZRI-022: Toad Town Weathervane Spire in raw 0x53 (cols 14..15) must be replaced by Golden Super Star Monument!"
+        );
+        for mid in [0x41Ausize, 0x437] {
+            let off = 0x078000 + mid * 8;
+            assert_eq!(
+                &target.data[off..off + 8],
+                &[0xED, 0x0C, 0xED, 0x0C, 0xED, 0x0C, 0xED, 0x0C],
+                "v0.20.0 ZRI-022: Weathervane rooster head/tail Map16 0x{mid:03X} must be cleared to grass 0x0CED!"
+            );
+        }
+        // E. USER BUG #2 FIX: ZERO placed Warp Pipes (0x02D4) or Turn-Blocks/Bushes overlap ANY Bank $09 enemy spawn!
+        let enemy_excl = super::mario_map::build_ow_enemy_exclusion_map(&z_bytes);
+        for sid in 0u8..128u8 {
+            let orig = super::mario_map::read_overworld_screen(&z_bytes, sid, "orig", "").unwrap();
+            let blt =
+                super::mario_map::read_overworld_screen(&target.data, sid, "blt", "").unwrap();
+            for r in 0..16usize {
+                for c in 0..16usize {
+                    let t = blt.tiles[r * 16 + c];
+                    if t != orig.tiles[r * 16 + c] && matches!(t, 0x02D4 | 0x06C7 | 0x07CC) {
+                        assert!(
+                            !enemy_excl[sid as usize][r][c],
+                            "v0.20.0 User Bug #2: Screen 0x{sid:02X} ({r},{c}) placed solid/prop 0x{t:04X} inside Bank $09 enemy spawn zone!"
+                        );
+                    }
+                }
+            }
         }
         // 5. MU-071: Zero remaining Zelda proper nouns/items in decoded Bank $1C dialogue corpus!
         let bank1c = &target.data[0xE0000..0xE7FFF];

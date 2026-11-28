@@ -7,7 +7,7 @@
 </p>
 
 <h1 align="center">THE LEGEND OF PEACH</h1>
-<h3 align="center">A Mario to the Mushroom Kingdom — v0.10.0 Super Mario Adventure Beyond Limits</h3>
+<h3 align="center">A Mario to the Mushroom Kingdom — v0.20.0 Project Nintendo Limit Break</h3>
 
 <p align="center">
   <strong>Two legendary SNES worlds. One genuine Super Mario action-adventure built on native 65c816 hardware.</strong>
@@ -30,17 +30,27 @@
 
 ---
 
-**The Legend of Peach: A Mario to the Mushroom Kingdom** transforms *The Legend of Zelda: A Link to the Past* into a genuine top-down **Super Mario** SNES action-adventure — featuring a **Real 5-Hub Physical Inter-Regional SMW Warp Pipe Network** (`0x2C Yoshi's Island -> 0x18 Toad Town -> 0x03 Vanilla Dome -> 0x35 Lake Cheep-Cheep -> 0x12 Forest of Illusion -> 0x2C`, zero VRAM seams on `snes_faust` & cycle-accurate `bsnes`), **SMW Gold-Riveted Reserve Item Box & Star-Power Capsule HUD (`ZRI-014 = 0`)**, **ALL `128 / 128` Transformed Overworld Screens + Star Road `0x80` + Vanilla Dome Terracotta Mountain (`ZRI-007 = 0`)**, **Persistent Checksummed SRAM Dragon Coins (`$7E:F400..$7E:F404`, zero infinite farming!)**, **Playable Luigi Mode (`Down + L + R`, Emerald Cap & higher floaty jump, persists in SRAM `$7E:F407`)**, **SMW/SMB3 Frog Suit (auto deep-water swim turbo)**, **Timed SMW P-Switch 2× Gold Rush (`Up + L + R`)**, **Playable Yoshi Companion (Flutter Jump, 1-Hit Shield & Yoshi Tongue Swallow `+1` Heart)**, **Authentic SMW Dry Bones Crumble/Rebuild AI**, **Koopa Shell Ricochet Bowling**, **SMW Boo Freeze AI**, **Ground Pound + Live Hardware ON/OFF Flip & Final King Bowser Phase 2 Counterplay**, **ALL `8 / 8` Bespoke Koopaling & King Bowser Fortresses**, **`0` residual Zelda terms across all 372 French messages**, and **`14 / 14 VISUAL_PASS + AUDIO_PASS`** live SPC700 acoustic verification (`14` independent honest quality dimensions in [`docs/QUALITY_SCORES.json`](docs/QUALITY_SCORES.json)).
+**The Legend of Peach: A Mario to the Mushroom Kingdom** transforms *The Legend of Zelda: A Link to the Past* into a genuine top-down **Super Mario** SNES action-adventure — powered by **Mario Engine v2.0** (`$22:9000`, `14` live BGR555 palettes = `420 B`), featuring **4 Playable Heroes (`Down + L + R`: Super Mario, Luigi, Princess Peach with 28-frame SMB2 Floating Dress Hover & Captain Toad with agile hop, `+2` Throw Coin & Star regeneration)**, **SMW Spin Jump (`R`: safe Spiny/Thwomp bounce & Dry Bones shatter)**, **6-frame Jump Input Buffer**, **Cape Mario 360° Spin Attack (`->` flips Dungeon SMW ON/OFF Switches)**, **Koopa/Buzzy Shell `->` ON/OFF Switch & Bob-omb 56px Chain Blast**, **Bidirectional Smart 5-Hub Warp Pipe Network 2.0** (input-locked smooth descent, coordinate-safe `$24` Z-hop emergence, `Right/Down` = Next, `Left` = Reverse, `Up` = Express Home — 4-hop live tour verified on cycle-accurate `bsnes`!), **Toad Town Golden Super Star Monument (`ZRI = 0.5%`, zero weathervane bird)**, **Clean Vanilla Dome Terracotta Boulders (0 olive halos)**, **Global 128-Screen Bank `$09` Enemy-Spawn Exclusion (0 overlaps)**, **Versioned 32-Byte Checksummed SRAM Schema v2 (`$7E:F400..$7E:F41F`, lossless `v0.10.0` migration + corruption recovery + 3-slot isolation)**, **ALL `128/128` LW+DW + 3 Special Areas (`131/160`) transformed**, **ALL `8/8` Bespoke Koopaling & Bowser Fortresses**, **`0` Zelda terms across all 372 French messages**, and **`15 / 15 VISUAL_PASS + AUDIO_PASS`** (`26` independent honest quality dimensions in [`docs/QUALITY_SCORES.json`](docs/QUALITY_SCORES.json)).
 
-Powered by a pure, headless **Rust** binary transformation engine, the project reads your own legally obtained original backups of *A Link to the Past* and *Super Mario World*, applies **756 verified SNES hardware patches** across **18 rules** (`51` audited compressed graphics sheets, all `303` player DMA poses remapped cleanly in Bank `$00`/`$0D`/`$10`, custom 65c816 Super Mario Universe Engine in Bank `$22:9000..$22:B2FF` with 11 live BGR555 palettes = 330 B, ALL `128/128` LW+DW + Star Road `0x80` relocated Map32 world screens across Banks `$3B..$3F` verified against hardware `$00:FBD9` collision & terrain grammar with `0` overlaps, 100%-cleansed 372-message French narrative, 19 native N-SPC musical themes across 25 contexts, and native SPC700 Mario SFX), and outputs a **bit-for-bit deterministic 2 MiB SNES LoROM cartridge image** (`SHA-256: 2da376f5c5cd6f760c07e465bdba252fe1aa1f03e69f17dcabcff1ecd6e072b1`, Checksum `0x930C / 0x6CF3`).
+Powered by a pure, headless **Rust** binary transformation engine, the project reads your own legally obtained original backups of *A Link to the Past* and *Super Mario World*, applies **773 verified SNES hardware patches** across **18 rules** (`52` audited compressed graphics sheets, all `303` player DMA poses remapped cleanly in Bank `$00`/`$0D`/`$10`, native 65c816 Mario Engine v2.0 in Bank `$22:9000..$22:B2A3`, `131` transformed Overworld areas across Banks `$3B..$3F` verified against hardware `$00:FBD9` collision & Bank `$09` enemy spawns with `0` overlaps, 100%-cleansed 372-message French narrative, 19 native N-SPC musical themes + 7 native SPC700 Mario SFX), and outputs a **bit-for-bit deterministic 2 MiB SNES LoROM cartridge image** (`SHA-256: 5e9c06a5db1ffc6be4879e258fa914bfdd56db101455082c7d2fb711df9cb910`, Checksum `0x5547 / 0xAAB8`, CRC32 `7A5A145B`).
 
 > **Zero Copyrighted ROMs Included:** This repository contains **only original Rust source code, tooling, and documentation**. You must provide your own legal personal backups of both required SNES games to build the crossover locally. See [Required Original Games](#required-original-games).
 
 ---
 
-## Gameplay Showcase (`v0.10.0 — Super Mario Adventure Beyond Limits`)
+## Gameplay Showcase (`v0.20.0 — Project Nintendo Limit Break`)
 
-All screenshots below are **100% authentic, unretouched live captures** from the locally built deterministic `v0.10.0` ROM (`SHA-256: 2da376f5...072b1`) running in **Mednafen (`snes_faust` and cycle-accurate `snes` / bsnes)**.
+All screenshots below are **100% authentic, unretouched live captures** from the locally built deterministic `v0.20.0` ROM (`SHA-256: 5e9c06a5...df9cb910`) running in **Mednafen (`snes_faust` and cycle-accurate `snes` / bsnes)**.
+
+<p align="center">
+  <img src="docs/media/screenshots/27_v0200_limit_break_gallery.png" alt="12-panel live showcase of v0.20.0 Project Nintendo Limit Break on snes_faust and cycle-accurate bsnes" width="95%" /><br />
+  <sub><strong>Project Nintendo Limit Break (<code>v0.20.0</code> — <code>15 / 15 VISUAL_PASS + AUDIO_PASS</code> | <code>131 OW Areas</code> | <code>ZRI 0.5%</code>)</strong> — User Bug #1 Hedge Collision Guard (<code>$29=#$FF</code>) + Toad Town Golden Super Star Monument &amp; Open Plaza Pipe, User Bug #2 Clean Vanilla Dome (0 olive halos, enemy-free pipe <code>(9,2)</code>), cycle-accurate <code>bsnes</code> 4-Hop Bidirectional Reverse &amp; Express Home Tour, Playable Princess Peach (28f SMB2 Dress Hover) &amp; Captain Toad (SRAM v2), SMW Spin Jump shattering Dry Bones (<code>0x026</code>), Cape Mario 360° Spin flipping SMW ON/OFF Switch (<code>0x077</code>), Reverse Warp Hub 4 (<code>0x12</code>) + Frog Suit, Live SMW Rex (<code>MU-060</code>), cycle-accurate <code>bsnes</code> Final King Bowser Multi-Phase (<code>285c</code>), and Extended 100% Blank-SRAM Playthrough.</sub>
+</p>
+
+<p align="center">
+  <img src="docs/media/screenshots/28_v0200_bugfixes_before_after.png" alt="Real side-by-side emulator Before (v0.10.0) vs After (v0.20.0) comparison proving all 3 user bug fixes, Golden Star Monument, 4 Heroes and Bidirectional Warp Pipes" width="95%" /><br />
+  <sub><strong>Real Emulator Before (<code>v0.10.0</code>) vs After (<code>v0.20.0</code>) Comparison</strong> — Direct empirical proof: Bug #1 Mario standing ON hedge + Weathervane Bird + blocked pipe vs <code>$29=#$FF</code> Hedge Guard + Golden Super Star Monument + Open Plaza Pipe; Bug #2 Vanilla Dome olive boulder halos + Deadrock-stuck pipe vs 0 olive halos + enemy-free pipe (<code>bsnes</code>); 2 Heroes vs 4 Playable Heroes (Princess Peach 28f SMB2 Dress Hover); and Fixed 1-Way Ring vs Bidirectional Reverse Warp + 32-Byte Checksummed SRAM v2.</sub>
+</p>
 
 <p align="center">
   <img src="docs/media/screenshots/25_v0100_beyond_limits_gallery.png" alt="12-panel live showcase of v0.10.0 Super Mario Adventure Beyond Limits on snes_faust and cycle-accurate bsnes" width="95%" /><br />
@@ -134,28 +144,25 @@ All screenshots below are **100% authentic, unretouched live captures** from the
 
 ## Key Features
 
-### Native 65c816 Super Mario Universe Engine (`mario_engine.rs`, Bank `$22:9000..$22:B2FF`)
-- **Variable Mario Jump (`L`/`R`), Cape Slow-Descent Glide & Yoshi Flutter Jump:** 8.8 fixed-point parabolic jump physics with crisp ground shadow, `-0.75 px/f` slow-descent glide with **Cape Mario** (`PLUME DE CAPE`), and 16-frame **Yoshi's Island Flutter Jump** while riding Yoshi.
-- **Authentic Mario Ground Pound & Hardware ON/OFF Block Flip:** Tap `Down` mid-air (`Z >= 7 px`) for a 6-frame stall -> `-5 px/f` slam -> hardware screen shake (`$011A`), armored enemy break (`+2` Coins), and **live hardware Dungeon ON/OFF Crystal Switch flipping (`$7E:C172 ^= 1`, Submodule `$16`)** visually verified toggling Room `0x077` `RED <-> BLUE`.
-- **Real Koopa Shell Retract, Kick & Dual Wall-Ricochet Bowling (`$22:B000` class `0x03`):** First stomp retracts Koopa Troopas / Hammer Bros / Buzzy Beetles into a Stunned Shell (`+1` Coin) -> walking into it kicks it at `±3 px/f`, ricocheting cleanly off walls and bowling through enemies (`+2` Coins).
-- **Authentic SMW Boo Orientation-Freeze AI (`$22:B000` class `0x04`):** Overworld (`0x19`) & Ghost House (`0x8B`) Boos freeze motionless when Mario faces them and creep stealthily toward Mario when he turns his back!
-- **6-Form Live CGRAM Power-Up State Machine (`$22:B100`, 270 B) + Playable Yoshi Companion:** Classic Mario, **Fire Mario** (`0x06`), **Ice Mario** (`0x07`, Electric Frost-Cyan + Ice Stomp Shatter), **Cape Mario** (`0x13`, SMW Golden Trim + Glide), **Playable Yoshi Companion** (`0x0E` `FILET YOSHI`, Emerald Saddle, Higher Jump, Flutter Jump & **SMW 1-Hit Damage Shield** absorbing 100% HP loss!), and **Resource-Balanced Super Starman (`L + R`)** with continuous Star-Power drain.
-- **Turn-Block / Bush Throw Coin Reward & Super Mario Hammer (`B`):** Throwing lifted Smiling Bushes / Turn-Blocks awards `+1` Gold Coin (`$7E:F360`) + `+4` Star Power + Coin Chime.
+### Native 65c816 Mario Engine v2.0 (`mario_engine.rs`, Bank `$22:9000..$22:B2A3`)
+- **4 Playable Heroes (`Down + L + R` grounded, persisted in SRAM v2):** Switch live between **Super Mario** (balanced), **Luigi** (highest floaty jump), **Princess Peach** (Pal 11 Golden Crown & Rose-Pink Gown + **28-frame SMB2 Floating Dress Hover**), and **Captain Toad** (Pal 12 Spotted Cap & Crimson Vest + agile hop + `+2` Turn-Block Throw Coin + passive Star recharge).
+- **Variable Jump (`L`), 6-Frame Jump Buffer, SMW Spin Jump (`R`), Cape Glide & Yoshi Flutter:** Hardware-guarded solid collision (`$29=#$FF`, zero walking onto hedges/walls!), Spin Jump safe bounce off Spinies/Thwomps & permanent Dry Bones shatter, `-0.75 px/f` Cape Glide, and 16-frame Yoshi Flutter.
+- **Systemic Mario Combat & Puzzles:** **Cape Mario 360° Spin Attack (`B`/`Y`)** & **Ground Pound (`Down` mid-air)** & **Kicked Koopa/Buzzy Shells** all flip Dungeon SMW ON/OFF Crystal Switches (`$7E:C172 ^= 1`, Submodule `$16`); **Bob-omb (`0x4A`) 56px Explosive Chain Blast**; **SMW Boo Orientation-Freeze AI**; **Yoshi Tongue Swallow (`+1` Heart)**; **Timed P-Switch 2× Gold Rush (`Up + L + R`)**; and **SMW Frog Suit** auto deep-water swim turbo.
+- **Bidirectional Smart 5-Hub Warp Pipe Network 2.0:** Input-locked (`$02E4=1`) vertical descent + coordinate-safe `$24` Z-hop emergence across Yoshi's Island (`0x2C`), Open Toad Town Star Plaza (`0x19 r14 c01`), Enemy-Free Vanilla Dome (`0x0B r09 c02`), Lake Cheep-Cheep (`0x35`), and Forest River Hub 4 (`0x12`), with `Right/Down` = Next, `Left` = Reverse, `Up` = Express Home.
+- **Versioned 32-Byte Checksummed SRAM Schema v2 (`$7E:F400..$7E:F41F`):** Magic `"MP"`, version `2`, 16-bit Fletcher/XOR CRC, lossless `v0.10.0` auto-migration, corruption recovery, and 3-slot isolation ([`docs/SAVE_SCHEMA.json`](docs/SAVE_SCHEMA.json)).
 
-### World, Fortresses, Cast, Bosses & Transparent Scoring
-- **Title Screen Royal Princess Peach Star-Scepter & Physical SMW Overworld Warp Pipes (`mario_intro.rs`, `mario_ui.rs`, `mario_map.rs`):** Master Sword 100% replaced (`raw 0xA5`) with a gleaming Golden Super Star, Princess Peach Crown, Paratroopa Wings & Royal Scepter; 3D glossy emerald SMW Warp Pipes (`m16 = 0x21B`, `m32 = 0x02D4`) placed in Mario's Front Yard (`Screen 0x2C r09 c07`) & Light/Dark World hubs with Ground Pound `+5` Coin & Full Star Power reward + native Warp Pipe SFX!
-- **108 / 128 Transformed Overworld Screens + ALL 8 / 8 Bespoke Koopaling & Bowser Fortresses (`mario_map.rs`, `mario_world.rs`):** `56/64` Light World + `52/64` Dark World Bowser Volcanic Kingdom screens (`0` seams/collision breaks), **Bowser's Obsidian Lava Citadel (`0x5B`)**, plus ROM-verified (`$07:FA90`) architectural palettes for **Wendy's Coral Sea Palace (`DungPal[1]`)**, **Lemmy's Star-Ice Circus Fortress (`DungPal[4]`)**, **Larry's Chocolate Desert Pyramid (`DungPal[5]`)**, **Morton's Volcanic Fortress (`DungPal[8]`)**, **Iggy's Indigo SMW Ghost House (`DungPal[9]`)**, **Roy's Midnight Koopa Castle (`DungPal[10]`)**, **Ludwig's Molten Mech Fortress (`DungPal[12]`)**, and **King Bowser's Obsidian & Lava Keep (`DungPal[13]`)**.
-- **Complete 100% Super Mario World Boss Roster (All 12 Bosses) + 65c816 Boss Combat Mechanics:** All 12 SMW Bosses live-verified with Boss Encounter Class `0x05` **Ground Pound Boss Stagger (`+3` Coins, safe `-2` HP)** and **Boss Hit Coin/Star Synergy (`+2` Coins)**.
-- **Zero-Overlap, Zero-Hyphen French Story (`mario_intro.rs`):** 372-message deterministic French narrative (`0` duplicate line breaks, `0` hyphenated word splits).
-- **Mario Universe Bible & Transparent Quality Scores:** `76` cataloged Mario elements ([`docs/MARIO_UNIVERSE_REGISTRY.json`](docs/MARIO_UNIVERSE_REGISTRY.json)) and multi-dimensional auditable scoring ([`docs/QUALITY_SCORES.json`](docs/QUALITY_SCORES.json)): **Perceptible Zelda Residue** reduced from `94.9%` (`v0.4.0`) -> `19.2%` (`v0.5.0`) -> `13.2%` (`v0.7.0`) -> `8.2%` (`v0.8.0`) -> **`1.9%`** (`v0.9.0`), raising **Mario Identity Score** to **`98.1%`** and **Gameplay Depth** to **`97.5%`**!
+### World, Fortresses, Cast, Bosses & Transparent 26-Dimension Scoring
+- **Title Screen Peach Star-Scepter & Toad Town Golden Super Star Monument (`mario_intro.rs`, `mario_world.rs`):** Master Sword 100% replaced (`raw 0xA5`) AND Toad Town Weathervane Bird replaced (`raw 0x53` + Map16 `0x41A/0x41D/0x437` cleanup) by a gleaming Golden Super Star Monument (`ZRI = 0.5%`, `2 / 416` honest deep structural residual).
+- **131 Transformed Overworld Areas (`128/128` LW+DW + Special `0x80..0x82`) + Zero Enemy-Spawn Overlaps + ALL `8/8` Bespoke Fortresses:** Compile-time Bank `$09` enemy-spawn exclusion across all 128 OW screens (`0` overlaps), Vanilla Dome clean terracotta boulder palettes (`0` olive halos), Bowser's Obsidian Citadel (`0x5B`), and all 8 Koopaling/Bowser fortress palettes.
+- **Complete 12/12 SMW Boss Roster + Multi-Phase Final King Bowser:** All 12 bosses live-verified with Ground Pound Stagger & Final King Bowser Multi-Phase Escalation (`bsnes 250 -> 285c`).
+- **100% Mario French Narrative (`372/372` messages, `0` Zelda terms, `0` hyphens) & `84` Cataloged Mario Elements (`79` live-verified):** Documented in [`docs/MARIO_UNIVERSE_REGISTRY.json`](docs/MARIO_UNIVERSE_REGISTRY.json) and 26 independent honest dimensions in [`docs/QUALITY_SCORES.json`](docs/QUALITY_SCORES.json).
 
-### Native SNES Hardware Audio (19 N-SPC Tracks + Native Mario SFX — No MSU-1)
+### Native SNES Hardware Audio (19 N-SPC Tracks + 7 Native Mario SFX — No MSU-1)
 - **19 Native SPC700 N-SPC Musical Tracks across 25 Contexts (`mario_music.rs`):** SMW Title Calypso, Overworld, Athletic, Forest of Illusion, Vanilla Dome, Star Road Waltz, Valley of Bowser, Bonus Room / Yoshi's House, Underwater Waltz, Ghost House, Castle, SMB 1-1 / 1-2 Underground, SMB3 Airship March, Koopalings Boss, Final King Bowser Battle, Peach Sanctuary, Starman, and Course Clear Fanfare.
-- **Native SPC700 Mario Sound Effects (`mario_sfx.rs`):** In-place Bank `$19` (`ARAM $17C0..$284F`) patches for Mario Coin chime (`B5 -> E6`), SMW Jump sweep, Mario Stomp pop, descending triple-pulse Warp Pipe, and Super Mario Hammer bonk.
+- **7 Native SPC700 Mario Sound Effects (`mario_sfx.rs`):** Coin chime (`B5 -> E6`), Jump sweep, Stomp pop, descending Warp Pipe (`0x15`), **ascending Warp Pipe Emerge (`0x14`)**, **Hero Swap chime (`0x2C`)**, and Super Mario Hammer bonk (`15 / 15 AUDIO_PASS`).
 
-### Pure Rust Reproducible Build Pipeline
-- **Strict SHA-256 Input Enforcement:** Strips optional 512-byte SMC copier headers in memory and verifies exact No-Intro input ROM hashes before touching a byte.
-- **100% Deterministic 2 MiB LoROM Output:** Builds in ~2.6 seconds, enforces compile-time memory firewalls (`$20..$22` Intro + Engine, `$23..$3A` Relocated GFX, `$3B..$3F` Map32), audits all `51` modified compressed sheets and `303` Bank `$10` player DMA poses, validates Map32→Map16 terrain grammar, and verifies SNES checksum/complement (`0xBC86` / `0x4379`).
+### Pure Rust Reproducible Build Pipeline & Peach Dev Studio Inspector
+- **Strict SHA-256 Input Enforcement & 100% Deterministic 2 MiB LoROM Output:** Builds in ~2.9 s (`773` patches, `52` audited sheets, `272` relocated blocks, `0` overlaps, `12.92%` expansion used / `913 KiB` free, Checksum `0x5547 / 0xAAB8`, CRC32 `7A5A145B`, `SHA-256: 5e9c06a5...df9cb910`), audited by zero-dependency [`scripts/peach_studio_inspector.py`](scripts/peach_studio_inspector.py) ([`docs/BUILD_REPRODUCIBILITY_REPORT.md`](docs/BUILD_REPRODUCIBILITY_REPORT.md)).
 
 ---
 
@@ -209,7 +216,7 @@ Both original ROMs below are verified locally against **No-Intro** SNES catalog 
 | **Base ROM** | *The Legend of Zelda: A Link to the Past* (`Legend of Zelda, The - A Link to the Past (France).sfc`) | France (PAL), Rev 1.0 | `1,048,576` B (1 MiB) | `29a0d5812ccbb4b11bdb55d8f751a2a797b4110bf402ca8ba15eb2bf85db7b39` |
 | **Donor ROM** | *Super Mario World* (`Super Mario World (Europe).sfc`) | Europe (PAL), Rev 1.0 | `524,288` B (512 KiB) | `b5be1dba3012b6811a5660fbf2981cb23cdd1e48f845a42df00f0f55b19f0392` |
 
-> Full verification details (expected `v0.10.0` output SHA-256 `2da376f5c5cd6f760c07e465bdba252fe1aa1f03e69f17dcabcff1ecd6e072b1`, Checksum `0x930C` / `0x6CF3`, CRC32 `37CE4B03`) are documented in [`docs/ROM_REQUIREMENTS.md`](docs/ROM_REQUIREMENTS.md) and [`docs/QUALITY_SCORES.json`](docs/QUALITY_SCORES.json).
+> Full verification details (expected `v0.20.0` output SHA-256 `5e9c06a5db1ffc6be4879e258fa914bfdd56db101455082c7d2fb711df9cb910`, Checksum `0x5547` / `0xAAB8`, CRC32 `7A5A145B`) are documented in [`docs/BUILD_REPRODUCIBILITY_REPORT.md`](docs/BUILD_REPRODUCIBILITY_REPORT.md), [`docs/ROM_REQUIREMENTS.md`](docs/ROM_REQUIREMENTS.md), and [`docs/QUALITY_SCORES.json`](docs/QUALITY_SCORES.json).
 
 ---
 
@@ -218,22 +225,22 @@ Both original ROMs below are verified locally against **No-Intro** SNES catalog 
 ```text
   [Zelda ALTTP (FR PAL)] ──┐
                            ├──► SHA-256 Verifier ──► Planar Tile & Palette Transcoder
-  [Super Mario World (EU)] ┘        (rom.rs)          + LC_LZ2 Compressor (51 audited sheets)
-                                                      + 65c816 Mario Engine (Warp/Luigi/Frog/P-Switch/SRAM)
-                                                      + ALL 128/128 OW + Star Road 0x80 (Banks $3B..$3F)
+  [Super Mario World (EU)] ┘        (rom.rs)          + LC_LZ2 Compressor (52 audited sheets)
+                                                      + 65c816 Mario Engine v2.0 (4 Heroes/Spin/Cape360/Pipes2.0/SRAMv2)
+                                                      + 131 Transformed OW Areas + Bank $09 Spawn Exclusion ($3B..$3F)
                                                       + 372-Msg FR Script (0 Zelda terms, 0 hyphens)
-                                                      + Native SPC700 Music (19) & Mario SFX (AUDIO_PASS)
+                                                      + Native SPC700 Music (19) & Mario SFX (7, 15/15 AUDIO_PASS)
                                                                    │
                                                                    ▼
-                                                      LoROM 2 MiB Allocator ($00..$3F)
-                                                      + Hardware Firewall & Integrity Audit
-                                                      + SNES Checksum (0x930C / 0x6CF3)
+                                                      LoROM 2 MiB Allocator ($00..$3F, 12.92% exp. used)
+                                                      + Hardware Firewall & 33-Test Integrity Audit
+                                                      + SNES Checksum (0x5547 / 0xAAB8)
                                                                    │
                                                                    ▼
                                                    [build/legend_of_peach.sfc] (Local)
 ```
 
-Read the full technical deep-dive in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/WARP_NETWORK_REPORT.md`](docs/WARP_NETWORK_REPORT.md), [`docs/SRAM_PERSISTENCE_REPORT.md`](docs/SRAM_PERSISTENCE_REPORT.md), [`docs/AUDIO_VALIDATION_REPORT.md`](docs/AUDIO_VALIDATION_REPORT.md), [`docs/CROSS_EMULATOR_REPORT.md`](docs/CROSS_EMULATOR_REPORT.md), [`docs/FULL_PLAYTHROUGH_REPORT.md`](docs/FULL_PLAYTHROUGH_REPORT.md), [`docs/PERFORMANCE_REPORT.md`](docs/PERFORMANCE_REPORT.md), [`docs/HARDWARE_VALIDATION.md`](docs/HARDWARE_VALIDATION.md), and [`docs/REAL_HARDWARE_TEST_GUIDE.md`](docs/REAL_HARDWARE_TEST_GUIDE.md).
+Read the full technical deep-dive in [`docs/MARIO_ENGINE_ARCHITECTURE.md`](docs/MARIO_ENGINE_ARCHITECTURE.md), [`docs/SAVE_SCHEMA.json`](docs/SAVE_SCHEMA.json), [`docs/REGRESSION_REGISTRY.json`](docs/REGRESSION_REGISTRY.json), [`docs/ROM_BANK_UTILIZATION.json`](docs/ROM_BANK_UTILIZATION.json), [`docs/WORLD_MASTER_MAP.json`](docs/WORLD_MASTER_MAP.json), [`docs/HARDWARE_COMPATIBILITY_MATRIX.json`](docs/HARDWARE_COMPATIBILITY_MATRIX.json), [`docs/BUILD_REPRODUCIBILITY_REPORT.md`](docs/BUILD_REPRODUCIBILITY_REPORT.md), [`docs/WARP_NETWORK_REPORT.md`](docs/WARP_NETWORK_REPORT.md), [`docs/SRAM_PERSISTENCE_REPORT.md`](docs/SRAM_PERSISTENCE_REPORT.md), [`docs/AUDIO_VALIDATION_REPORT.md`](docs/AUDIO_VALIDATION_REPORT.md), [`docs/CROSS_EMULATOR_REPORT.md`](docs/CROSS_EMULATOR_REPORT.md), [`docs/FULL_PLAYTHROUGH_REPORT.md`](docs/FULL_PLAYTHROUGH_REPORT.md), and [`docs/REAL_HARDWARE_TEST_GUIDE.md`](docs/REAL_HARDWARE_TEST_GUIDE.md).
 
 ---
 
@@ -278,19 +285,19 @@ Read the full technical deep-dive in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.
 
 | Target | Status | Notes |
 | :--- | :--- | :--- |
-| **Mednafen (`snes_faust`)** | **Verified (`12 / 12 VISUAL_PASS + AUDIO_PASS`)** | Live-tested on `v0.10.0` (`2da376f5...072b1`): 4-Biome Real Warp Pipe Tour (`0x2C -> 0x18 -> 0x03 -> 0x35`), Electric Lime Frog Suit, Playable Luigi + P-Switch 2× + Checksummed SRAM Save, Yoshi Tongue Swallow, Dry Bones Crumble/Shatter, 5 newly verified bestiary rooms (`Spiny`, `Chain Chomp`, `Monty Mole`, `Lava Bubble`, `Snifit`), and 100% Blank-SRAM Opening Playthrough -> Cold Reboot. |
-| **Mednafen (`snes` / bsnes-accuracy)** | **Verified (`2 / 2 VISUAL_PASS + AUDIO_PASS`)** | True identical-scenario differential parity on 2-hop Real Warp Pipe Network (`0x2C -> 0x18 -> 0x03` -> bit-identical saved `.srm` `dragon_bits=[3,0,0,0], coins=270`!) AND Final King Bowser Phase 2 Counterplay (`250 -> 281` Coins, `0` BUG 07 regression). |
-| **Standalone bsnes / Ares / Snes9x / Mesen 2** | **Not Installed Locally (`NOT_TESTED`)** | Standard 2 MiB LoROM (`0x20`, PAL 50 Hz, zero enhancement chips, zero MSU-1). See [`docs/CROSS_EMULATOR_REPORT.md`](docs/CROSS_EMULATOR_REPORT.md). |
-| **Real SNES / Super Famicom / FXPAK Pro** | **Architecturally Compliant (`HARDWARE_NOT_TESTED`)** | Strictly respects 32 KiB single-bank boundaries, valid checksum (`0x930C` / `0x6CF3`), hardware Forced Blank VRAM reloads, and `~0.38%–2.15%` custom hook CPU budget. Never claimed `HARDWARE_PASS` without a physical console run — see [`docs/REAL_HARDWARE_TEST_GUIDE.md`](docs/REAL_HARDWARE_TEST_GUIDE.md). |
+| **Mednafen (`snes_faust`)** | **Verified (`13 / 13 VISUAL_PASS + AUDIO_PASS`)** | Live-tested on `v0.20.0` (`5e9c06a5...df9cb910`): User Bug #1 Hedge Collision Guard + Golden Super Star Monument, Clean Vanilla Dome (0 halos), 4 Playable Heroes (Peach 28f Hover, Captain Toad), SMW Spin Jump Dry Bones shatter, Cape 360° -> ON/OFF Switch, Reverse Warp Hub 4 (`0x12`) + Frog Suit, Swooper (`MU-061`) & Rex (`MU-060`), 3-Slot SRAM v2 Migration/Recovery/Isolation, and Extended 100% Blank-SRAM Playthrough -> Cold Reboot. |
+| **Mednafen (`snes` / bsnes-accuracy)** | **Verified (`2 / 2 VISUAL_PASS + AUDIO_PASS`)** | Full 4-Hop Bidirectional Warp Pipe Tour (`0x2C -> 0x19 -> 0x0B -> Reverse 0x19 -> Express Home 0x2C`, `pipe_total=4`, SRAM v2 CRC valid, `coins=280`, `dragon_cnt=3`) AND Final King Bowser Multi-Phase Escalation (`250 -> 285` Coins, `0` BUG 07 regression). |
+| **Standalone bsnes / Ares / Snes9x / Mesen 2** | **Not Installed Locally (`NOT_TESTED`)** | Standard 2 MiB LoROM (`0x20`, PAL 50 Hz, zero enhancement chips, zero MSU-1). See [`docs/HARDWARE_COMPATIBILITY_MATRIX.json`](docs/HARDWARE_COMPATIBILITY_MATRIX.json). |
+| **Real SNES / Super Famicom / FXPAK Pro** | **Architecturally Compliant (`HARDWARE_NOT_TESTED`)** | Strictly respects 32 KiB single-bank boundaries, valid checksum (`0x5547` / `0xAAB8`), hardware Forced Blank VRAM reloads, and `~0.43%–2.73%` Mario Engine v2.0 CPU budget. Never claimed `HARDWARE_PASS` without a physical console run — see [`docs/REAL_HARDWARE_TEST_GUIDE.md`](docs/REAL_HARDWARE_TEST_GUIDE.md). |
 
 ---
 
 ## Roadmap Towards `v1.0.0 — The Legend of Peach`
 
-See [`docs/NEXT_ACTIONS.md`](docs/NEXT_ACTIONS.md) and [`docs/QUALITY_SCORES.json`](docs/QUALITY_SCORES.json) (14 independent honest quality dimensions):
+See [`docs/NEXT_ACTIONS.md`](docs/NEXT_ACTIONS.md) and [`docs/QUALITY_SCORES.json`](docs/QUALITY_SCORES.json) (26 independent honest quality dimensions):
 
-- [x] **Real 5-Hub Physical Inter-Regional Warp Pipe Network (`MU-041`), 128/128 OW + Star Road `0x80` (`ZRI-007 = 0`), SMW Gold-Riveted HUD (`ZRI-014 = 0`), Vanilla Dome Palette (`MU-045`)**
-- [x] **Playable Luigi (`Down+L+R`), SMW Frog Suit, Timed P-Switch 2× Gold Rush, Yoshi Tongue Swallow, Dry Bones AI, Persistent Checksummed SRAM Dragon Coins, 0 Zelda Terms in 372 FR Messages & `14/14 AUDIO_PASS`**
+- [x] **All 3 User-Reported Bugs Fixed & Guarded (`$29=#$FF` Hedge Guard, Locked Smooth Warp Pipes + Open Hub 1, Global 128-Screen Bank `$09` Enemy-Spawn Exclusion + 0 Olive Halos)**
+- [x] **Mario Engine v2.0: 4 Playable Heroes (Peach 28f SMB2 Hover, Captain Toad), SMW Spin Jump, Cape 360° -> ON/OFF Switch, Bidirectional Warp Pipes 2.0, Toad Town Golden Super Star Monument (`ZRI = 0.5%`), 32-Byte Checksummed SRAM v2 (3-Slot Verified) & `15/15 AUDIO_PASS`**
 - [ ] **Mandatory `v1.0.0` Gates:** Physical PAL SNES + FXPAK Pro console validation (`docs/REAL_HARDWARE_TEST_GUIDE.md`), uninterrupted 100% blank-SRAM start-to-credits 11-dungeon playthrough (`docs/FULL_PLAYTHROUGH_REPORT.md`), and broader reference emulator checks (`Ares`, standalone `bsnes`, `Snes9x`, `Mesen 2`).
 
 ---

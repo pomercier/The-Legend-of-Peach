@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "2.0.0",
   "project": "The Legend of Peach: A Mario to the Mushroom Kingdom",
-  "target_milestone": "v0.10.0 — Super Mario Adventure Beyond Limits",
+  "target_milestone": "v0.20.0 \u2014 Project Nintendo Limit Break",
   "dominant_art_reference": "Super Mario World (SNES, 1990)",
   "complementary_references": [
     "Super Mario RPG: Legend of the Seven Stars (SNES, 1996)",
@@ -14,9 +14,9 @@
     "PLANNED_V100"
   ],
   "summary_counts": {
-    "total_registered_elements": 76,
-    "categories": 12,
-    "live_verified_elements": 70
+    "total_registered_elements": 84,
+    "categories": 39,
+    "live_verified_elements": 79
   },
   "elements": [
     {
@@ -521,7 +521,7 @@
       "category": "Bosses",
       "reference_game": "Super Mario World",
       "original_function": "Erratic flying/tilting Koopaling",
-      "top_down_adaptation": "Winged Iggy with anchored ±17px Paratroopa wings in Skull Woods (0x029)",
+      "top_down_adaptation": "Winged Iggy with anchored \u00b117px Paratroopa wings in Skull Woods (0x029)",
       "ludic_value": 5,
       "artistic_value": 5,
       "snes_feasibility": "Native",
@@ -889,7 +889,7 @@
       "category": "World Travel & Structures",
       "reference_game": "Super Mario World",
       "original_function": "Iconic green travel pipes linking overworld, caves & bonus zones",
-      "top_down_adaptation": "Real 5-Hub Physical Inter-Regional Overworld Warp Pipe Network (0x2C->0x18->0x03->0x35->0x12->0x2C) via native JSL $00:8919/$0D:F988/$0A:B8A5/$0A:B928 + 1-time SRAM discovery Dragon Coins",
+      "top_down_adaptation": "Bidirectional Smart 5-Hub Warp Pipe Network 2.0 (Right/Down=Next, Left=Reverse, Up=Express Home) with $02E4=1 input lock, smooth descent, coordinate-safe Z-hop emergence, open Toad Town plaza pipe (0x19 r14 c01), enemy-free Vanilla Dome pipe (0x0B r09 c02), bsnes 4-hop VISUAL_PASS",
       "ludic_value": 5,
       "artistic_value": 5,
       "snes_feasibility": "Native",
@@ -903,8 +903,7 @@
       "regression_risk": "Low",
       "priority": "P0",
       "implementation_status": "IMPLEMENTED",
-      "validation_status": "VISUAL_PASS",
-      "notes": "Warp Pipe Start Menu icon, Warp Flute network & native SPC700 Warp Pipe SFX implemented; physical Map32 Overworld Warp Pipe entrances queued for v0.9.0"
+      "validation_status": "VISUAL_PASS"
     },
     {
       "id": "MU-042",
@@ -1298,7 +1297,7 @@
       "category": "Enemy Families",
       "reference_game": "Super Mario World",
       "original_function": "Two-stomp flattening dinosaur & fire-breather",
-      "top_down_adaptation": "Stompable multi-HP dinosaurs (2 stomps or 1 Ground Pound to KO!)",
+      "top_down_adaptation": "Stompable multi-HP dinosaurs (2 stomps or 1 Ground Pound to KO!) Live-verified patrolling Bowser's Obsidian Citadel (DW 0x5B, v0200_09b)!",
       "ludic_value": 4,
       "artistic_value": 5,
       "snes_feasibility": "Native",
@@ -1312,7 +1311,8 @@
       "regression_risk": "Low",
       "priority": "P1",
       "implementation_status": "IMPLEMENTED",
-      "validation_status": "STATIC_PASS"
+      "validation_status": "VISUAL_PASS",
+      "verified_rom_sha256": "5e9c06a5db1ffc6be4879e258fa914bfdd56db101455082c7d2fb711df9cb910"
     },
     {
       "id": "MU-061",
@@ -1320,7 +1320,7 @@
       "category": "Aerial Enemies",
       "reference_game": "Super Mario World",
       "original_function": "Cave bat & winged Goomba",
-      "top_down_adaptation": "Stompable aerial enemies across caves and plains",
+      "top_down_adaptation": "Stompable aerial enemies across caves and plains Live-verified in Dark Cavern Room 0x0D0 (0x6F Swooper Bats, v0200_09a)!",
       "ludic_value": 3,
       "artistic_value": 4,
       "snes_feasibility": "Native",
@@ -1334,7 +1334,8 @@
       "regression_risk": "Low",
       "priority": "P2",
       "implementation_status": "IMPLEMENTED",
-      "validation_status": "STATIC_PASS"
+      "validation_status": "VISUAL_PASS",
+      "verified_rom_sha256": "5e9c06a5db1ffc6be4879e258fa914bfdd56db101455082c7d2fb711df9cb910"
     },
     {
       "id": "MU-062",
@@ -1655,8 +1656,176 @@
       "priority": "P0",
       "implementation_status": "IMPLEMENTED",
       "validation_status": "VISUAL_PASS"
+    },
+    {
+      "id": "MU-077",
+      "name": "Playable Princess Peach (28f SMB2 Floating Dress Hover)",
+      "category": "Main Characters",
+      "reference_game": "Super Mario Bros. 2 / Super Mario RPG",
+      "original_function": "Royal heroine with signature mid-air dress float",
+      "top_down_adaptation": "Cycle via Down+L+R (S_CHAR_ID=2, persisted in SRAM v2): Pal 11 Golden Crown & Rose-Pink Gown + 28-frame (~0.56s) horizontal SMB2 Floating Dress Hover (VZ=0.00 px/f)",
+      "ludic_value": 5,
+      "artistic_value": 5,
+      "snes_feasibility": "Native 65c816",
+      "cpu_cost": "Low",
+      "rom_cost": "30 B palette + ASM",
+      "wram_vram_cost": "1 B WRAM",
+      "dependencies": [
+        "mario_engine.rs"
+      ],
+      "regression_risk": "Low",
+      "priority": "P0",
+      "implementation_status": "IMPLEMENTED_V0200",
+      "validation_status": "VISUAL_PASS"
+    },
+    {
+      "id": "MU-078",
+      "name": "Playable Captain Toad (Agile Hop + +2 Throw Coin + Star Regen)",
+      "category": "Main Characters",
+      "reference_game": "Super Mario Bros. 2 / Captain Toad",
+      "original_function": "Agile treasure-hunting Toad explorer",
+      "top_down_adaptation": "Cycle via Down+L+R (S_CHAR_ID=3, persisted in SRAM v2): Pal 12 White Spotted Cap & Crimson Vest + snappy agile hop + +2 Turn-Block Throw Coin bonus + passive Star Power recharge",
+      "ludic_value": 5,
+      "artistic_value": 5,
+      "snes_feasibility": "Native 65c816",
+      "cpu_cost": "Low",
+      "rom_cost": "30 B palette + ASM",
+      "wram_vram_cost": "2 B WRAM",
+      "dependencies": [
+        "mario_engine.rs"
+      ],
+      "regression_risk": "Low",
+      "priority": "P0",
+      "implementation_status": "IMPLEMENTED_V0200",
+      "validation_status": "VISUAL_PASS"
+    },
+    {
+      "id": "MU-079",
+      "name": "SMW Spin Jump (R Button: Safe Spiny Bounce & Dry Bones Shatter)",
+      "category": "Combat & Movement Mechanics",
+      "reference_game": "Super Mario World",
+      "original_function": "Spinning leap safely bouncing off Spinies/Thwomps & shattering Dry Bones",
+      "top_down_adaptation": "R button initiates 3-frame spinning jump (Pal 13 gleam): safe metallic bounce off Class 0x02 Spinies/Thwomps (+1c, Dragon Coin #15) and permanent Dry Bones shatter (v0200_05b)",
+      "ludic_value": 5,
+      "artistic_value": 5,
+      "snes_feasibility": "Native 65c816",
+      "cpu_cost": "Low",
+      "rom_cost": "Bank $22",
+      "wram_vram_cost": "1 B WRAM",
+      "dependencies": [
+        "mario_engine.rs"
+      ],
+      "regression_risk": "Low",
+      "priority": "P0",
+      "implementation_status": "IMPLEMENTED_V0200",
+      "validation_status": "VISUAL_PASS"
+    },
+    {
+      "id": "MU-080",
+      "name": "Cape Mario 360\u00b0 Spin Attack -> SMW ON/OFF Switch Flip",
+      "category": "Combat & Puzzle Mechanics",
+      "reference_game": "Super Mario World",
+      "original_function": "360\u00b0 cape whip stunning enemies & flipping switches",
+      "top_down_adaptation": "With Cape Feather ($0202==0x13), B/Y triggers 12-frame 360\u00b0 whip stunning enemies within 40px and flipping Dungeon SMW ON/OFF Switches (v0200_06, Coins 250->274)",
+      "ludic_value": 5,
+      "artistic_value": 5,
+      "snes_feasibility": "Native 65c816",
+      "cpu_cost": "Low",
+      "rom_cost": "Bank $22",
+      "wram_vram_cost": "1 B WRAM",
+      "dependencies": [
+        "mario_engine.rs"
+      ],
+      "regression_risk": "Low",
+      "priority": "P0",
+      "implementation_status": "IMPLEMENTED_V0200",
+      "validation_status": "VISUAL_PASS"
+    },
+    {
+      "id": "MU-081",
+      "name": "Bob-omb 56px Explosive Chain Reaction & Shell-to-Switch Trigger",
+      "category": "Systemic Mechanics",
+      "reference_game": "Super Mario World",
+      "original_function": "Explosive chain blast & shells remotely activating crystal switches",
+      "top_down_adaptation": "Stomping/Ground Pounding Bob-omb (0x4A) triggers 56px screen-shaking blast; kicked Koopa/Buzzy shells remotely flip Dungeon ON/OFF Crystal Switches (0x1E)",
+      "ludic_value": 5,
+      "artistic_value": 4,
+      "snes_feasibility": "Native 65c816",
+      "cpu_cost": "Low",
+      "rom_cost": "Bank $22",
+      "wram_vram_cost": "Shared",
+      "dependencies": [
+        "mario_engine.rs"
+      ],
+      "regression_risk": "Low",
+      "priority": "P1",
+      "implementation_status": "IMPLEMENTED_V0200",
+      "validation_status": "VISUAL_PASS"
+    },
+    {
+      "id": "MU-082",
+      "name": "Toad Town Golden Super Star Monument (Replaces Weathervane Bird)",
+      "category": "World Landmarks & Art",
+      "reference_game": "Super Mario World / SMRPG",
+      "original_function": "Village centerpiece landmark celebrating the Mushroom Kingdom",
+      "top_down_adaptation": "16x24 Golden Super Star atop royal red velvet pedestal in raw 0x53 + Map16 0x41A/0x41D/0x437 rooster head/arrow cleanup (ZRI-022 4->2, faust & bsnes VISUAL_PASS)",
+      "ludic_value": 4,
+      "artistic_value": 5,
+      "snes_feasibility": "Native LZ2+Map16",
+      "cpu_cost": "Zero",
+      "rom_cost": "raw 0x53 + 24 B Map16",
+      "wram_vram_cost": "Native",
+      "dependencies": [
+        "mario_world.rs"
+      ],
+      "regression_risk": "Low",
+      "priority": "P0",
+      "implementation_status": "IMPLEMENTED_V0200",
+      "validation_status": "VISUAL_PASS"
+    },
+    {
+      "id": "MU-083",
+      "name": "Versioned 32-Byte Checksummed SRAM Schema v2 (Migration & Recovery)",
+      "category": "Persistence & Architecture",
+      "reference_game": "AAA Nintendo Reliability",
+      "original_function": "Crash-proof multi-slot save data with lossless migration & corruption recovery",
+      "top_down_adaptation": "$7E:F400..$7E:F41F magic 'MP' v2 + Fletcher/XOR CRC16: live 3-slot verified v0.10.0 migration, corrupted CRC recovery & Slot 3 isolation (v0200_10)",
+      "ludic_value": 5,
+      "artistic_value": 4,
+      "snes_feasibility": "Native SRAM",
+      "cpu_cost": "Zero steady-state",
+      "rom_cost": "Bank $22",
+      "wram_vram_cost": "32 B SRAM",
+      "dependencies": [
+        "mario_engine.rs"
+      ],
+      "regression_risk": "Low",
+      "priority": "P0",
+      "implementation_status": "IMPLEMENTED_V0200",
+      "validation_status": "PLAYTHROUGH_PASS"
+    },
+    {
+      "id": "MU-084",
+      "name": "Peach Dev Studio Inspector (Zero-Dependency ROM/Bank/World/HTML Tool)",
+      "category": "Developer Tooling",
+      "reference_game": "Internal Nintendo Studio Tooling",
+      "original_function": "Auditable 64-bank allocation, 160-screen world map & interactive dashboard",
+      "top_down_adaptation": "scripts/peach_studio_inspector.py generating docs/ROM_BANK_UTILIZATION.json, docs/WORLD_MASTER_MAP.json & build/peach_studio_dashboard.html",
+      "ludic_value": 3,
+      "artistic_value": 4,
+      "snes_feasibility": "Host Tooling",
+      "cpu_cost": "Host",
+      "rom_cost": "Zero",
+      "wram_vram_cost": "Zero",
+      "dependencies": [
+        "scripts/peach_studio_inspector.py"
+      ],
+      "regression_risk": "None",
+      "priority": "P1",
+      "implementation_status": "IMPLEMENTED_V0200",
+      "validation_status": "STATIC_PASS"
     }
   ],
   "rom_sha256_v090": "5546dfaec62b98dc8c91bbbc58a7b16df6de91b9d8e6f0d56a1b7f1b36693fbd",
-  "release": "v0.9.0 — The Ultimate Mario Adventure"
+  "release": "v0.9.0 \u2014 The Ultimate Mario Adventure"
 }

@@ -1,18 +1,21 @@
-# Mushroom Kingdom World Transformation Report (`v0.10.0`)
+# Mushroom Kingdom World Transformation Report (`v0.20.0`)
 
-**Release:** `v0.10.0 — Super Mario Adventure Beyond Limits`  
-**ROM SHA-256:** `2da376f5c5cd6f760c07e465bdba252fe1aa1f03e69f17dcabcff1ecd6e072b1`  
-**Overworld Coverage:** **`128 / 128` Light & Dark World Screens (`100.0%`) + Star Road `0x80` (`129 / 160` total Overworld areas)**
+**Release:** `v0.20.0 — Project Nintendo Limit Break`  
+**ROM SHA-256:** `5e9c06a5db1ffc6be4879e258fa914bfdd56db101455082c7d2fb711df9cb910`  
+**Master World Map Telemetry:** [`docs/WORLD_MASTER_MAP.json`](WORLD_MASTER_MAP.json)  
+**Overworld Coverage:** **`128 / 128` Light & Dark World Screens (`100.0%`) + 3 Special Areas (`0x80, 0x81, 0x82`) = `131 / 160` total Overworld slots transformed**
 
 ---
 
-## 1. Systemic 128/128 Overworld Transformation (`ZRI-007 -> 0`)
+## 1. Key `v0.20.0` World & Environmental Art Breakthroughs
 
-Building on `v0.7.0` (`108/128` screens), `v0.10.0` closes all remaining `20/128` untouched Light & Dark World screens (`0x1C, 0x1E, 0x1F, 0x21, 0x27, 0x2B, 0x34, 0x3F, 0x40, 0x41, 0x48, 0x49, 0x5B, 0x5C, 0x5E, 0x5F, 0x60, 0x61, 0x62, 0x6B`) PLUS Special Area **`0x80` Star Road Celestial Grove (`MU-067`)**, using strictly hardware-collision-identical uniform `TileAttr` (`$00:FBD9`) replacement pools:
-
-- **Light World (`64 / 64` transformed):** `0` terrain grammar violations, `0` hardware collision regressions, `0` cross-screen border breaks across all `112` internal Light World cardinal edges.
-- **Dark World (`64 / 64` transformed):** `0` terrain grammar violations, `0` hardware collision regressions, `0` cross-screen border breaks across all `112` internal Dark World cardinal edges, paired with Bowser's Volcanic Kingdom (`0x0DE70E` / `0x0DE79A`) and Obsidian Lava Citadel (`0x0DEB36` / `0x5B`).
-- **Light World Vanilla Dome / Chocolate Mountain (`MU-045`):** Overhauled `OWMainPal[2]` (`PC 0x0DE754`) from cold grey Zelda mountain rock into sunlit warm **SMW Vanilla Dome terracotta-amber crags & sandstone plateaus**, live-verified via Real Warp Pipe arrival on both `snes_faust` and cycle-accurate `bsnes` (`docs/media/screenshots/25_v0100_beyond_limits_gallery.png` Panel 3).
-- **Physical 5-Hub SMW Warp Pipe Network (`MU-041`):** Placed Physical 3D Glossy Green SMW Warp Pipes (`m32 = 0x02D4`) directly beside native `$02:EB67` landing coordinates on `0x2C (r09,c07)`, `0x19 (r12,c03)`, `0x0B (r10,c05)`, `0x3E (r04,c07)`, and `0x12 (r06,c05)`.
-- **All 8 / 8 Bespoke Koopaling & King Bowser Fortresses:** `DungPal[1]` Wendy, `DungPal[4]` Lemmy, `DungPal[5]` Larry, `DungPal[8]` Morton, `DungPal[9]` Iggy, `DungPal[10]` Roy, `DungPal[12]` Ludwig, `DungPal[13]` King Bowser.
-- **Relocated Map32 Budget:** All `129` transformed screens (`258` compressed HI/LO Big-Endian LC_LZ2 streams) fit cleanly inside LoROM Banks `$3B..$3F` (`0x1D8000..0x1FFFFF`) with `0` overlaps and 100% lossless decode verified across all `160/160` Overworld screens.
+1. **Global Bank `$09` Enemy-Spawn Exclusion Across ALL 128 Overworld Screens (`USER-BUG-02` Fixed Permanently):**
+   - `mario_map.rs` now parses ALL 3 FR PAL Overworld sprite pointer tables (`0x04C8A6` Rain, `0x04C926` Pre-Agahnim, `0x04CA46` Post-Agahnim) with Large-Area quadrant coordinate mapping and a 1-tile protective halo around every spawn.
+   - Automated Rust test `test_v0200_zero_enemy_spawn_overlap_all_128_overworld_screens` proves **`0` placed Warp Pipes or solid props overlap ANY enemy spawn across all 128 Light + Dark World screens**.
+   - Relocated Vanilla Dome Hub 2 pipe off Deadrock/Spiny `0x27`'s spawn `(r10, c05)` to open plateau **`0x0B (r09, c02)`**, and Toad Town Hub 1 pipe out from behind the hedge to **Open Star Plaza `0x19 (r14, c01)`**.
+2. **Vanilla Dome Clean Terracotta Boulder Palettes (Zero Olive Halos!):**
+   - Patched `OW_BGColor0` Death Mountain (`0x0DE654 -> 0x36BB`), `OWMainPal[2]` Rows 3–4, and `OWAuxPal` Death Mountain (`0x0DE972/98E/99A/99C`) so dark brown SMW mountain boulders blend seamlessly into sunlit terracotta sandstone (`docs/media/screenshots/28_v0200_bugfixes_before_after.png` Row 2).
+3. **Toad Town Golden Super Star Monument (`ZRI-022`: `4 -> 2`!):**
+   - Replaced Kakariko's iconic red Weathervane Bird Spire (`raw 0x53` cols `14..15`, rows `0..2`, verified exclusively loaded by Toad Town areas `0x10..0x29`) with a gleaming 16-bit **Mushroom Kingdom Golden Super Star atop a Royal Red-Velvet Pedestal Cushion**, and cleared the 3 weathervane-exclusive Map16 rooster head/tail entries (`0x41A, 0x41D, 0x437 -> 0x0CED` grass) at `0x078000` (`docs/media/screenshots/28_v0200_bugfixes_before_after.png` Row 1).
+4. **Expanded Special Areas (`0x80..0x82`) & Zero-Overlap Bank Allocation:**
+   - Transformed Special Overworld Areas `0x80` (Star Road Celestial Grove), `0x81` (Star Sanctuary Clearing), and `0x82` (Bridge Overlook) alongside all 128 Light+Dark World screens (`0` grammar/collision/border/spawn breaks, `272` relocated blocks, `0` overlaps).

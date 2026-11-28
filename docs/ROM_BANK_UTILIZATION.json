@@ -1,0 +1,653 @@
+{
+  "rom_size_bytes": 2097152,
+  "rom_mapping": "LoROM (Mode $20, 2 MiB / 16 Mbit)",
+  "bank_count": 64,
+  "sha256": "5e9c06a5db1ffc6be4879e258fa914bfdd56db101455082c7d2fb711df9cb910",
+  "crc32": "7A5A145B",
+  "expansion_banks_used_bytes": 135442,
+  "expansion_banks_free_bytes": 913134,
+  "expansion_utilization_pct": 12.92,
+  "lorom_4mib_required": false,
+  "banks": [
+    {
+      "bank_hex": "$00",
+      "pc_start": "0x000000",
+      "pc_end": "0x007FFF",
+      "size_bytes": 32768,
+      "used_bytes": 32408,
+      "free_bytes": 360,
+      "utilization_pct": 98.9,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$01",
+      "pc_start": "0x008000",
+      "pc_end": "0x00FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 32150,
+      "free_bytes": 618,
+      "utilization_pct": 98.11,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$02",
+      "pc_start": "0x010000",
+      "pc_end": "0x017FFF",
+      "size_bytes": 32768,
+      "used_bytes": 32258,
+      "free_bytes": 510,
+      "utilization_pct": 98.44,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$03",
+      "pc_start": "0x018000",
+      "pc_end": "0x01FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 32365,
+      "free_bytes": 403,
+      "utilization_pct": 98.77,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$04",
+      "pc_start": "0x020000",
+      "pc_end": "0x027FFF",
+      "size_bytes": 32768,
+      "used_bytes": 32403,
+      "free_bytes": 365,
+      "utilization_pct": 98.89,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$05",
+      "pc_start": "0x028000",
+      "pc_end": "0x02FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 32335,
+      "free_bytes": 433,
+      "utilization_pct": 98.68,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$06",
+      "pc_start": "0x030000",
+      "pc_end": "0x037FFF",
+      "size_bytes": 32768,
+      "used_bytes": 32254,
+      "free_bytes": 514,
+      "utilization_pct": 98.43,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$07",
+      "pc_start": "0x038000",
+      "pc_end": "0x03FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 32352,
+      "free_bytes": 416,
+      "utilization_pct": 98.73,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$08",
+      "pc_start": "0x040000",
+      "pc_end": "0x047FFF",
+      "size_bytes": 32768,
+      "used_bytes": 31566,
+      "free_bytes": 1202,
+      "utilization_pct": 96.33,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$09",
+      "pc_start": "0x048000",
+      "pc_end": "0x04FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 31989,
+      "free_bytes": 779,
+      "utilization_pct": 97.62,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$0A",
+      "pc_start": "0x050000",
+      "pc_end": "0x057FFF",
+      "size_bytes": 32768,
+      "used_bytes": 32208,
+      "free_bytes": 560,
+      "utilization_pct": 98.29,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$0B",
+      "pc_start": "0x058000",
+      "pc_end": "0x05FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 32445,
+      "free_bytes": 323,
+      "utilization_pct": 99.01,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$0C",
+      "pc_start": "0x060000",
+      "pc_end": "0x067FFF",
+      "size_bytes": 32768,
+      "used_bytes": 31581,
+      "free_bytes": 1187,
+      "utilization_pct": 96.38,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$0D",
+      "pc_start": "0x068000",
+      "pc_end": "0x06FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 29136,
+      "free_bytes": 3632,
+      "utilization_pct": 88.92,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$0E",
+      "pc_start": "0x070000",
+      "pc_end": "0x077FFF",
+      "size_bytes": 32768,
+      "used_bytes": 31638,
+      "free_bytes": 1130,
+      "utilization_pct": 96.55,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$0F",
+      "pc_start": "0x078000",
+      "pc_end": "0x07FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 32518,
+      "free_bytes": 250,
+      "utilization_pct": 99.24,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$10",
+      "pc_start": "0x080000",
+      "pc_end": "0x087FFF",
+      "size_bytes": 32768,
+      "used_bytes": 32519,
+      "free_bytes": 249,
+      "utilization_pct": 99.24,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$11",
+      "pc_start": "0x088000",
+      "pc_end": "0x08FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 31015,
+      "free_bytes": 1753,
+      "utilization_pct": 94.65,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$12",
+      "pc_start": "0x090000",
+      "pc_end": "0x097FFF",
+      "size_bytes": 32768,
+      "used_bytes": 30521,
+      "free_bytes": 2247,
+      "utilization_pct": 93.14,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$13",
+      "pc_start": "0x098000",
+      "pc_end": "0x09FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 29700,
+      "free_bytes": 3068,
+      "utilization_pct": 90.64,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$14",
+      "pc_start": "0x0A0000",
+      "pc_end": "0x0A7FFF",
+      "size_bytes": 32768,
+      "used_bytes": 30041,
+      "free_bytes": 2727,
+      "utilization_pct": 91.68,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$15",
+      "pc_start": "0x0A8000",
+      "pc_end": "0x0AFFFF",
+      "size_bytes": 32768,
+      "used_bytes": 24529,
+      "free_bytes": 8239,
+      "utilization_pct": 74.86,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$16",
+      "pc_start": "0x0B0000",
+      "pc_end": "0x0B7FFF",
+      "size_bytes": 32768,
+      "used_bytes": 26506,
+      "free_bytes": 6262,
+      "utilization_pct": 80.89,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$17",
+      "pc_start": "0x0B8000",
+      "pc_end": "0x0BFFFF",
+      "size_bytes": 32768,
+      "used_bytes": 25905,
+      "free_bytes": 6863,
+      "utilization_pct": 79.06,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$18",
+      "pc_start": "0x0C0000",
+      "pc_end": "0x0C7FFF",
+      "size_bytes": 32768,
+      "used_bytes": 28834,
+      "free_bytes": 3934,
+      "utilization_pct": 87.99,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$19",
+      "pc_start": "0x0C8000",
+      "pc_end": "0x0CFFFF",
+      "size_bytes": 32768,
+      "used_bytes": 32019,
+      "free_bytes": 749,
+      "utilization_pct": 97.71,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$1A",
+      "pc_start": "0x0D0000",
+      "pc_end": "0x0D7FFF",
+      "size_bytes": 32768,
+      "used_bytes": 32357,
+      "free_bytes": 411,
+      "utilization_pct": 98.75,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$1B",
+      "pc_start": "0x0D8000",
+      "pc_end": "0x0DFFFF",
+      "size_bytes": 32768,
+      "used_bytes": 30348,
+      "free_bytes": 2420,
+      "utilization_pct": 92.61,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$1C",
+      "pc_start": "0x0E0000",
+      "pc_end": "0x0E7FFF",
+      "size_bytes": 32768,
+      "used_bytes": 32417,
+      "free_bytes": 351,
+      "utilization_pct": 98.93,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$1D",
+      "pc_start": "0x0E8000",
+      "pc_end": "0x0EFFFF",
+      "size_bytes": 32768,
+      "used_bytes": 31973,
+      "free_bytes": 795,
+      "utilization_pct": 97.57,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$1E",
+      "pc_start": "0x0F0000",
+      "pc_end": "0x0F7FFF",
+      "size_bytes": 32768,
+      "used_bytes": 32154,
+      "free_bytes": 614,
+      "utilization_pct": 98.13,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$1F",
+      "pc_start": "0x0F8000",
+      "pc_end": "0x0FFFFF",
+      "size_bytes": 32768,
+      "used_bytes": 31235,
+      "free_bytes": 1533,
+      "utilization_pct": 95.32,
+      "role": "Base ALTTP FR PAL + Patched Engine/UI/Audio/Text"
+    },
+    {
+      "bank_hex": "$20",
+      "pc_start": "0x100000",
+      "pc_end": "0x107FFF",
+      "size_bytes": 32768,
+      "used_bytes": 32014,
+      "free_bytes": 754,
+      "utilization_pct": 97.7,
+      "role": "3D Intro Frames (32x 2KB)"
+    },
+    {
+      "bank_hex": "$21",
+      "pc_start": "0x108000",
+      "pc_end": "0x10FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 32011,
+      "free_bytes": 757,
+      "utilization_pct": 97.69,
+      "role": "3D Intro Frames (32x 2KB)"
+    },
+    {
+      "bank_hex": "$22",
+      "pc_start": "0x110000",
+      "pc_end": "0x117FFF",
+      "size_bytes": 32768,
+      "used_bytes": 5568,
+      "free_bytes": 27200,
+      "utilization_pct": 16.99,
+      "role": "Mario Engine v2.0 65c816 Code + Stomp Table + 14 Palettes"
+    },
+    {
+      "bank_hex": "$23",
+      "pc_start": "0x118000",
+      "pc_end": "0x11FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 9708,
+      "free_bytes": 23060,
+      "utilization_pct": 29.63,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$24",
+      "pc_start": "0x120000",
+      "pc_end": "0x127FFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$25",
+      "pc_start": "0x128000",
+      "pc_end": "0x12FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$26",
+      "pc_start": "0x130000",
+      "pc_end": "0x137FFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$27",
+      "pc_start": "0x138000",
+      "pc_end": "0x13FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$28",
+      "pc_start": "0x140000",
+      "pc_end": "0x147FFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$29",
+      "pc_start": "0x148000",
+      "pc_end": "0x14FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$2A",
+      "pc_start": "0x150000",
+      "pc_end": "0x157FFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$2B",
+      "pc_start": "0x158000",
+      "pc_end": "0x15FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$2C",
+      "pc_start": "0x160000",
+      "pc_end": "0x167FFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$2D",
+      "pc_start": "0x168000",
+      "pc_end": "0x16FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$2E",
+      "pc_start": "0x170000",
+      "pc_end": "0x177FFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$2F",
+      "pc_start": "0x178000",
+      "pc_end": "0x17FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$30",
+      "pc_start": "0x180000",
+      "pc_end": "0x187FFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$31",
+      "pc_start": "0x188000",
+      "pc_end": "0x18FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$32",
+      "pc_start": "0x190000",
+      "pc_end": "0x197FFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$33",
+      "pc_start": "0x198000",
+      "pc_end": "0x19FFFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$34",
+      "pc_start": "0x1A0000",
+      "pc_end": "0x1A7FFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$35",
+      "pc_start": "0x1A8000",
+      "pc_end": "0x1AFFFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$36",
+      "pc_start": "0x1B0000",
+      "pc_end": "0x1B7FFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$37",
+      "pc_start": "0x1B8000",
+      "pc_end": "0x1BFFFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$38",
+      "pc_start": "0x1C0000",
+      "pc_end": "0x1C7FFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$39",
+      "pc_start": "0x1C8000",
+      "pc_end": "0x1CFFFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$3A",
+      "pc_start": "0x1D0000",
+      "pc_end": "0x1D7FFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated LZ2 3bpp Mario Graphics Sheets"
+    },
+    {
+      "bank_hex": "$3B",
+      "pc_start": "0x1D8000",
+      "pc_end": "0x1DFFFF",
+      "size_bytes": 32768,
+      "used_bytes": 32299,
+      "free_bytes": 469,
+      "utilization_pct": 98.57,
+      "role": "Relocated Big-Endian LZ2 Overworld Map32 Screens"
+    },
+    {
+      "bank_hex": "$3C",
+      "pc_start": "0x1E0000",
+      "pc_end": "0x1E7FFF",
+      "size_bytes": 32768,
+      "used_bytes": 23842,
+      "free_bytes": 8926,
+      "utilization_pct": 72.76,
+      "role": "Relocated Big-Endian LZ2 Overworld Map32 Screens"
+    },
+    {
+      "bank_hex": "$3D",
+      "pc_start": "0x1E8000",
+      "pc_end": "0x1EFFFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated Big-Endian LZ2 Overworld Map32 Screens"
+    },
+    {
+      "bank_hex": "$3E",
+      "pc_start": "0x1F0000",
+      "pc_end": "0x1F7FFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated Big-Endian LZ2 Overworld Map32 Screens"
+    },
+    {
+      "bank_hex": "$3F",
+      "pc_start": "0x1F8000",
+      "pc_end": "0x1FFFFF",
+      "size_bytes": 32768,
+      "used_bytes": 0,
+      "free_bytes": 32768,
+      "utilization_pct": 0.0,
+      "role": "Relocated Big-Endian LZ2 Overworld Map32 Screens"
+    }
+  ]
+}

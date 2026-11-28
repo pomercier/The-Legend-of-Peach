@@ -1968,6 +1968,112 @@ fn patch_worldwide_bg_tilesets(
         ops += 1;
     }
 
+    // 4b. v0.20.0 ZRI-022 ELIMINATED — TOAD TOWN GOLDEN SUPER STAR MONUMENT (`raw 0x53` cols 14..15 rows 0..2 + Map16 cleanup)!
+    //     Replaces Zelda's Kakariko Weathervane Bird Spire (`m32 0x0833` / `0x088B`: `m16 0x41A, 0x41D, 0x436, 0x437, 0x439`)
+    //     with an unmistakable 16×24 16-bit Mushroom Kingdom Golden Super Star atop a Royal Red-Velvet Pedestal Cushion!
+    //     Verified `AuxRow 0` (`BG Pal 2` in Toad Town): 0=grass, 1=dark outline, 2=bronze, 3=warm gold, 4=bright gold/cream,
+    //     5=deep Mario red, 6=vibrant Mario red, 7=pure white.
+    //     Also clears the weathervane-exclusive rooster head (`m16 0x41A, 0x41D`) & tail arrow (`m16 0x437`) to grass `0x0CED`.
+    if patch_alttp_raw_sheet_pub(
+        rom_z,
+        sess,
+        0x53,
+        "Monument Girouette Cocorico → MONUMENT SUPER ÉTOILE D'OR TOAD TOWN (bg:53 cols 14..15, ZRI-022 -> 0)",
+        free_cursor,
+        free_end,
+        &|raw| {
+            // 16x16 Gleaming SMW Golden Super Star (uses ONLY gold/white/outline indices 1,2,3,4,7 — ZERO stray red!)
+            let star_rows: [&str; 16] = [
+                ".......11.......",
+                "......1771......",
+                "......1471......",
+                ".....147741.....",
+                "1111114774111111",
+                "1774447777444771",
+                ".14477177177441.",
+                "..134717717431..",
+                "...1341771431...",
+                "...1344774431...",
+                "..133447744331..",
+                "..123443344321..",
+                ".12233111133221.",
+                ".12211....11221.",
+                ".111........111.",
+                "................",
+            ];
+            // 16x8 Royal Red-Velvet & Gold-Trimmed Monument Plinth Cushion (uses royal red 5/6 + white trim 7 + gold 3/4!)
+            let plinth_rows: [&str; 8] = [
+                "...1111111111...",
+                "..147777777741..",
+                "..136667766631..",
+                ".11566777766511.",
+                ".14566677666541.",
+                ".13555666655531.",
+                "1111111111111111",
+                "1234447777444321",
+            ];
+            let mut star_px = [[0u8; 16]; 16];
+            for (y, row) in star_rows.iter().enumerate() {
+                for (x, ch) in row.bytes().take(16).enumerate() {
+                    star_px[y][x] = if ch == b'.' { 0 } else { ch - b'0' };
+                }
+            }
+            write_3bpp_16x16_pub(raw, 14, 0, &star_px);
+            let mut pl_l = [[0u8; 8]; 8];
+            let mut pl_r = [[0u8; 8]; 8];
+            for (y, row) in plinth_rows.iter().enumerate() {
+                let bytes = row.as_bytes();
+                for x in 0..8 {
+                    pl_l[y][x] = if bytes[x] == b'.' { 0 } else { bytes[x] - b'0' };
+                    pl_r[y][x] = if bytes[x + 8] == b'.' {
+                        0
+                    } else {
+                        bytes[x + 8] - b'0'
+                    };
+                }
+            }
+            write_3bpp_8x8_pub(raw, 14, 2, &pl_l);
+            write_3bpp_8x8_pub(raw, 15, 2, &pl_r);
+        },
+    )? {
+        ops += 1;
+    }
+    // Erase leftover rooster head (m16 0x41A TR/BR, m16 0x41D TR) & weathervane arrow tail (m16 0x437 TL/BL)
+    // in OW Map16 table (PC 0x078000). Verified these 3 Map16 IDs are used ONLY by Toad Town statue m32 0x0833 & 0x088B!
+    const OW_MAP16_BASE: usize = 0x078000;
+    let clear_m16_patches: [(usize, [u16; 4], &str); 3] = [
+        (
+            0x41A,
+            [0x0CED, 0x0CED, 0x0CED, 0x0CED],
+            "Clear Toad Town Weathervane Rooster Head (m16 0x41A -> grass)",
+        ),
+        (
+            0x41D,
+            [0x0CED, 0x0CED, 0x08AA, 0x0D44],
+            "Clear Toad Town Weathervane Rooster Neck (m16 0x41D TR -> grass, keep pedestal corner)",
+        ),
+        (
+            0x437,
+            [0x0CED, 0x0CED, 0x0CED, 0x0CED],
+            "Clear Toad Town Weathervane Arrow Tail (m16 0x437 -> grass)",
+        ),
+    ];
+    for (mid, words, desc) in clear_m16_patches {
+        let mut buf = [0u8; 8];
+        for (i, &w) in words.iter().enumerate() {
+            buf[i * 2..i * 2 + 2].copy_from_slice(&w.to_le_bytes());
+        }
+        sess.swap_custom_bytes(
+            rom_z,
+            OW_MAP16_BASE + mid * 8,
+            0,
+            buf.to_vec(),
+            desc.to_string(),
+            crate::swapper::SwapKind::CodePatch { byte_count: 8 },
+        )?;
+        ops += 1;
+    }
+
     // 5. bg:4C (raw 0x4C) — Castle / Sanctuary Exterior -> SMW Castle Battlement Crest!
     if patch_alttp_raw_sheet_pub(
         rom_z,
@@ -2096,9 +2202,9 @@ fn patch_worldwide_bg_tilesets(
         )?;
         ops += 1;
     }
-    // v0.10.0 — Light World Vanilla Dome / Chocolate Mountain (OWMainPal[2] @ 0x0DE754, 70 bytes = 35 colors):
+    // v0.10.0/v0.20.0 — Light World Vanilla Dome / Chocolate Mountain (OWMainPal[2] @ 0x0DE754 + OW_BGColor0 @ 0x0DE654 + OWAuxPal):
     // Transform Zelda's desaturated grey-olive Death Mountain into warm SMW Vanilla Dome / Chocolate Mountain
-    // terracotta-ochre crags, sunny sandstone plateaus, and bright alpine sky highlights!
+    // terracotta-ochre crags, sunny sandstone plateaus, AND eliminate ALL olive-green square halos behind boulders!
     if 0x0DE754 + 70 <= rom_z.data.len() {
         let mut lw_dm = rom_z.data[0x0DE754..0x0DE754 + 70].to_vec();
         let set_c = |buf: &mut [u8], idx: usize, col: u16| {
@@ -2106,26 +2212,76 @@ fn patch_worldwide_bg_tilesets(
             buf[idx * 2] = b[0];
             buf[idx * 2 + 1] = b[1];
         };
+        let dm_ground_shade = rgb555(168, 120, 76); // 0x25F5 sandy plateau shade
+        let dm_ground_main = rgb555(216, 168, 104); // 0x36BB bright SMW Vanilla Dome ochre!
+        let dm_ground_hi = rgb555(248, 216, 152); // 0x4F7F sunlit crest highlight
         set_c(&mut lw_dm, 0, rgb555(56, 36, 28)); // deep chocolate rock outline
         set_c(&mut lw_dm, 1, rgb555(104, 64, 44)); // SMW Chocolate Mountain shade
         set_c(&mut lw_dm, 2, rgb555(148, 92, 56)); // warm terracotta cliff face
         set_c(&mut lw_dm, 3, rgb555(192, 128, 72)); // sunlit Vanilla Dome stone
-        set_c(&mut lw_dm, 4, rgb555(168, 120, 76)); // sandy mountain plateau
-        set_c(&mut lw_dm, 5, rgb555(216, 168, 104)); // bright SMW ochre path
-        set_c(&mut lw_dm, 6, rgb555(248, 216, 152)); // sunlit crest highlight
+        set_c(&mut lw_dm, 4, dm_ground_shade);
+        set_c(&mut lw_dm, 5, dm_ground_main);
+        set_c(&mut lw_dm, 6, dm_ground_hi);
         set_c(&mut lw_dm, 7, rgb555(56, 36, 28));
         set_c(&mut lw_dm, 8, rgb555(112, 68, 48));
         set_c(&mut lw_dm, 9, rgb555(160, 100, 60));
         set_c(&mut lw_dm, 10, rgb555(208, 144, 84));
+        // v0.20.0: Eliminate olive-grey 0x2611 / 0x2A53 ground bleed in Rows 3 & 4 (CGRAM pals 5 & 6)!
+        set_c(&mut lw_dm, 25, dm_ground_shade); // 0x0DE786
+        set_c(&mut lw_dm, 26, dm_ground_main); // 0x0DE788
+        set_c(&mut lw_dm, 32, dm_ground_shade); // 0x0DE794
+        set_c(&mut lw_dm, 33, dm_ground_main); // 0x0DE796
+        set_c(&mut lw_dm, 34, dm_ground_hi); // 0x0DE798
         sess.swap_custom_bytes(
             rom_z,
             0x0DE754,
             0x0DE754,
             lw_dm,
-            "Montagne Lumière → VANILLA DOME & CHOCOLATE MOUNTAIN (OWMainPal[2] @ 0x0DE754) : Falaises Terre Cuite & Or SMW".into(),
+            "Montagne Lumière → VANILLA DOME & CHOCOLATE MOUNTAIN (OWMainPal[2] @ 0x0DE754, 0 halos olives)".into(),
             crate::swapper::SwapKind::PaletteBgr555 { color_count: 35 },
         )?;
         ops += 1;
+
+        // Patch Vanilla Dome Global BG Color 0 (0x0DE654: 0x2A53 -> 0x36BB) & OWAuxPal Death Mountain olive slots!
+        for &(pc_col, new_col, label) in &[
+            (
+                0x0DE654usize,
+                dm_ground_main,
+                "Vanilla Dome Global BG Color 0 (0x0DE654) : Olive 0x2A53 -> Ocre SMW 0x36BB (0 halos rochers!)",
+            ),
+            (
+                0x0DE972usize,
+                dm_ground_main,
+                "Vanilla Dome OWAuxPal Backdrop A (0x0DE972) : Olive 0x2A53 -> Ocre SMW 0x36BB",
+            ),
+            (
+                0x0DE98Eusize,
+                dm_ground_main,
+                "Vanilla Dome OWAuxPal Backdrop B (0x0DE98E) : Olive 0x2A53 -> Ocre SMW 0x36BB",
+            ),
+            (
+                0x0DE99Ausize,
+                dm_ground_shade,
+                "Vanilla Dome OWAuxPal Shade (0x0DE99A) : Olive 0x2611 -> Terre Cuite 0x25F5",
+            ),
+            (
+                0x0DE99Cusize,
+                dm_ground_main,
+                "Vanilla Dome OWAuxPal Backdrop C (0x0DE99C) : Olive 0x2A53 -> Ocre SMW 0x36BB",
+            ),
+        ] {
+            if pc_col + 2 <= rom_z.data.len() {
+                sess.swap_custom_bytes(
+                    rom_z,
+                    pc_col,
+                    pc_col,
+                    new_col.to_le_bytes().to_vec(),
+                    label.into(),
+                    crate::swapper::SwapKind::PaletteBgr555 { color_count: 1 },
+                )?;
+                ops += 1;
+            }
+        }
     }
     // Dark World Pyramid of Power (`0x5B`, `0x5C`, `0x63` -> `OWAuxPal[17]` @ 0x0DEB36, 42 bytes = 21 colors):
     // Transform Zelda's golden-sand Egyptian Pyramid into BOWSER'S OBSIDIAN LAVA CITADEL!

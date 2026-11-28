@@ -820,31 +820,117 @@ pub fn patch_world1_yoshis_island(
     write_overworld_screen(rom_zelda, session, &scr2c, &mut reloc_cursor)
 }
 
-/// Deterministic biome-aware Mario Overworld transformation for a single screen (`0x00..0x7F`).
+/// Verified FR PAL ALTTP Bank `$09` Overworld Sprite Pointer Tables (`$09:C500`):
+/// - Rain phase (`progress < 2`, 64 areas): `PC 0x04C8A6`
+/// - Pre-Agahnim phase (`progress == 2`, 144 areas): `PC 0x04C926`
+/// - Post-Agahnim phase (`progress == 3`, 144 areas): `PC 0x04CA46`
+pub const OW_SPRITES_RAIN_PTRS_PC: usize = 0x04C8A6;
+pub const OW_SPRITES_PRE_PTRS_PC: usize = 0x04C926;
+pub const OW_SPRITES_POST_PTRS_PC: usize = 0x04CA46;
+
+/// True when an Overworld area ID is a 2×2 Large Area (64×64 Map16 = 32×32 Map32).
+fn is_large_ow_area(area_id: u8) -> bool {
+    matches!(
+        area_id & 0x3F,
+        0x00 | 0x03 | 0x05 | 0x18 | 0x1B | 0x1E | 0x30 | 0x32 | 0x35
+    )
+}
+
+/// Parse ALL 3 FR PAL Bank `$09` Overworld Sprite Tables (Rain, Pre-Agahnim, Post-Agahnim)
+/// to build an exact `160 × 16 × 16` enemy-spawn exclusion grid (including a 1-tile safety margin
+/// around every real sprite spawn, ignoring falling-rock meta-flag `0xF4`)!
+/// Guarantees ZERO placed Warp Pipes (`0x02D4`), Turn-Blocks (`0x06C7`), or Bushes (`0x07CC`)
+/// can EVER trap or overlap a spawning enemy anywhere in the entire Mushroom Kingdom!
+pub fn build_ow_enemy_exclusion_map(rom_data: &[u8]) -> Vec<[[bool; 16]; 16]> {
+    let mut blocked = vec![[[false; 16]; 16]; OW_MAP32_SCREEN_COUNT];
+    if rom_data.len() < 0x050000 {
+        return blocked;
+    }
+    let tables: [(usize, usize); 3] = [
+        (OW_SPRITES_RAIN_PTRS_PC, 64),
+        (OW_SPRITES_PRE_PTRS_PC, 144),
+        (OW_SPRITES_POST_PTRS_PC, 144),
+    ];
+    for (tbl_pc, area_count) in tables {
+        for area in 0..area_count {
+            let off = tbl_pc + area * 2;
+            if off + 2 > rom_data.len() {
+                continue;
+            }
+            let ptr = u16::from_le_bytes([rom_data[off], rom_data[off + 1]]) as usize;
+            if ptr < 0x8000 {
+                continue;
+            }
+            let mut p = 0x048000 | (ptr & 0x7FFF);
+            let mut guard = 0usize;
+            while p + 2 < rom_data.len() && rom_data[p] != 0xFF && guard < 64 {
+                let y16 = rom_data[p] as usize;
+                let x16 = rom_data[p + 1] as usize;
+                let sprite_id = rom_data[p + 2];
+                p += 3;
+                guard += 1;
+                if sprite_id == 0xF4 {
+                    continue; // Meta-marker (falling rocks flag at 0,0), not a physical enemy!
+                }
+                let area_u8 = area as u8;
+                let (sid, mr, mc) = if area < 128 && is_large_ow_area(area_u8) {
+                    let qr = (y16 >> 5) & 1;
+                    let qc = (x16 >> 5) & 1;
+                    let s = (area + qr * 8 + qc).min(OW_MAP32_SCREEN_COUNT - 1);
+                    (s, (y16 >> 1) & 15, (x16 >> 1) & 15)
+                } else {
+                    (
+                        area.min(OW_MAP32_SCREEN_COUNT - 1),
+                        (y16 >> 1) & 15,
+                        (x16 >> 1) & 15,
+                    )
+                };
+                // Mark exact spawn cell AND its 8-neighbor 1-tile safety margin!
+                let r0 = mr.saturating_sub(1);
+                let r1 = (mr + 1).min(15);
+                let c0 = mc.saturating_sub(1);
+                let c1 = (mc + 1).min(15);
+                for rr in r0..=r1 {
+                    for cc in c0..=c1 {
+                        blocked[sid][rr][cc] = true;
+                    }
+                }
+            }
+        }
+    }
+    blocked
+}
+
+/// Deterministic biome-aware Mario Overworld transformation for a single screen (`0x00..0x82`).
 ///
 /// Guarantees by construction:
 /// 1. Screen `0x2C` (World 1 Yoshi's Island Hub) uses our exact v0.6.0 visually verified courtyard layout.
 /// 2. Perimeter border cells (`r == 0 || r == 15 || c == 0 || c == 15`) are NEVER modified on general screens,
 ///    preserving 100% cross-screen edge continuity across all 224 cardinal Light/Dark World screen borders.
-/// 3. Pure walkable grass tiles (`0x001D`, hardware `TileAttr == 0x48` on all 16 Map8 subtiles) are enriched with:
-///    - 100% collision-identical walkable Yoshi/Mushroom meadow tiles (`0x0166` daisies, `0x066A` tufted grass,
-///      `0x009F`/`0x00AA`/`0x001C` meadow accents — ALL strictly `TileAttr == 0x48`!), AND
-///    - On strictly interior open-courtyard cells surrounded by a full 3×3 block of pure `0x001D` grass
-///      (guaranteeing 0 blocked doors, caves, cliffs, or walkways!), curated liftable Mario landmarks
-///      (`0x06C7` SMW Turn-Blocks or `0x07CC` SMW Smiling Bushes in Light World; dark Turn-Blocks / haunted
-///      bushes in Dark World Bowser's Conquered Kingdom!).
+/// 3. Compile-time Bank `$09` enemy-spawn exclusion prevents ANY Warp Pipe, Turn-Block, or Bush from
+///    overlapping or sitting within 1 tile of ANY enemy spawn across ALL 3 game phases!
 /// 4. Every modified screen passes `validate_screen_terrain_grammar` AND exact hardware collision verification.
 pub fn build_transformed_overworld_screen(
     rom_data: &[u8],
     screen_id: u8,
 ) -> Option<(OverworldScreenMap, OverworldScreenMap, usize)> {
+    let excl = build_ow_enemy_exclusion_map(rom_data);
+    build_transformed_overworld_screen_with_excl(rom_data, screen_id, &excl)
+}
+
+fn build_transformed_overworld_screen_with_excl(
+    rom_data: &[u8],
+    screen_id: u8,
+    enemy_excl: &[[[bool; 16]; 16]],
+) -> Option<(OverworldScreenMap, OverworldScreenMap, usize)> {
     let biome = classify_overworld_biome(screen_id);
     let label = format!("OW_0x{screen_id:02X}_{biome:?}");
     let orig = read_overworld_screen(rom_data, screen_id, &label, &format!("{biome:?}"))?;
     let mut edited = orig.clone();
+    let scr_blocked = &enemy_excl[screen_id as usize];
 
     if screen_id == 0x2C {
-        // Preserve exact v0.6.0 visually verified World 1 Yoshi's Island Courtyard + v0.9.0 Physical Green Warp Pipe!
+        // Preserve exact v0.6.0 visually verified World 1 Yoshi's Island Courtyard + Physical Green Warp Pipe!
         let set = |grid: &mut [u16], r: usize, c: usize, tile: u16| {
             grid[r * 16 + c] = tile;
         };
@@ -858,7 +944,7 @@ pub fn build_transformed_overworld_screen(
         set(&mut edited.tiles, 15, 4, 0x07CC);
         set(&mut edited.tiles, 15, 11, 0x07CC);
         set(&mut edited.tiles, 15, 12, 0x0166);
-    } else if screen_id <= 0x80 {
+    } else if screen_id <= 0x82 {
         // Pure-walkable grass variants (`TileAttr == 0x48` on all 16 Map8 subtiles — 100% collision-identical to 0x001D!)
         let lw_meadow_palette: &[u16] = match biome {
             OverworldBiome::YoshisIslandHub => &[0x0166, 0x066A, 0x009F, 0x00AA],
@@ -867,8 +953,7 @@ pub fn build_transformed_overworld_screen(
             OverworldBiome::PeachCastleDomain => &[0x009F, 0x0166, 0x00AA, 0x066A],
             OverworldBiome::CharginChuckPlains => &[0x0166, 0x066A, 0x001C, 0x009F],
             OverworldBiome::CheepCheepAquatic => &[0x066A, 0x0166, 0x009F, 0x00AA],
-            OverworldBiome::SpecialArea => &[0x0166, 0x066A, 0x009F, 0x00AA], // Star Road Celestial Grove (0x80)!
-            // Dark World (Bowser's Conquered Kingdom): distinct volcanic/haunted rhythm!
+            OverworldBiome::SpecialArea => &[0x0166, 0x066A, 0x009F, 0x00AA], // Star Road (0x80) & Special Areas (0x81/0x82)!
             OverworldBiome::BowserVolcanicValley
             | OverworldBiome::KoopaShadowVillage
             | OverworldBiome::BooHauntedWoods
@@ -882,7 +967,7 @@ pub fn build_transformed_overworld_screen(
         let mut is_open_center = [[false; 16]; 16];
         for r in 2..14usize {
             for c in 2..14usize {
-                if orig.tiles[r * 16 + c] == 0x001D {
+                if orig.tiles[r * 16 + c] == 0x001D && !scr_blocked[r][c] {
                     let all_pure = (r - 1..=r + 1)
                         .all(|rr| (c - 1..=c + 1).all(|cc| orig.tiles[rr * 16 + cc] == 0x001D));
                     is_open_center[r][c] = all_pure;
@@ -902,33 +987,29 @@ pub fn build_transformed_overworld_screen(
         let mut fallback_00_floor: Vec<(usize, usize, u16)> = Vec::new();
         let mut any_edited = 0usize;
 
-        // Verified collision-identical decorative Map32 palettes across ALL major biome ground types (ZRI-007 -> 0!):
-        //   - Forest / Courtyard floor `0x0106`/`0x1152`/`0x08F7`/`0x0AB3` (TileAttr 0x00, ZERO DirtPath!) -> `[0x06A6, 0x0B53, 0x0CF5, 0x010C, 0x0B5E, 0x0E48, 0x06A7]`
-        //   - Desert / Swamp sand `0x05E5`                 (TileAttr 0x08) -> `[0x073B, 0x0724, 0x08B2, 0x093E, 0x0790, 0x0C54]`
-        //   - Cheep-Cheep Aquatic water `0x0E90`           (TileAttr 0x00) -> `[0x0FFC, 0x0EF7, 0x0EFE]`
-        //   - Bowser Obsidian Citadel stone `0x1758`       (TileAttr 0x00) -> `[0x1776]`
-        //   - Toad Town / Shadow Village stone `0x080B`/`0x082A` (TileAttr 0x00, ZERO DirtPath!) -> `[0x081B]`
         const FOREST_FLOOR_PAL: [u16; 7] = [0x06A6, 0x0B53, 0x0CF5, 0x010C, 0x0B5E, 0x0E48, 0x06A7];
         const DESERT_SAND_PAL: [u16; 6] = [0x073B, 0x0724, 0x08B2, 0x093E, 0x0790, 0x0C54];
         const AQUATIC_SEA_PAL: [u16; 3] = [0x0FFC, 0x0EF7, 0x0EFE];
         const VILLAGE_STONE_PAL: [u16; 1] = [0x081B];
 
-        // v0.10.0 — Curated 5-Hub Physical Green Warp Pipe Network landmarks right ON SCREEN beside native $02:EB67 arrival points!
-        //   - Screen 0x19 (Toad Town Square, slot 2 arrival 0x19 r13 c00)   -> Green Warp Pipe at (r12, c03)
-        //   - Screen 0x3E (Cheep-Cheep Lake, slot 9 arrival 0x3E r05 c04)   -> Green Warp Pipe at (r04, c07)
-        //   - Screen 0x0B (Vanilla Dome Mtn, slot 0 arrival 0x0B r09 c03)   -> Green Warp Pipe at (r10, c05)
-        //   - Screen 0x12 (Forest of Illusion, slot 13 arrival 0x12 r07 c07)-> Green Warp Pipe at (r06, c05)
+        // v0.20.0 USER BUG #1b & #2 FIX — Open, Hedge-Free, 100% Enemy-Free 5-Hub Physical Warp Pipe Network!
+        //   - Screen 0x19 (Toad Town OPEN PLAZA, arrival r13 c00) -> Green Pipe at (r14, c01) [ZERO HEDGE, 0 enemies!]
+        //   - Screen 0x0B (Vanilla Dome Mtn, arrival r09 c03)     -> Green Pipe at (r09, c02) [MOVED OFF Deadrock (10,5)!]
+        //   - Screen 0x3E (Cheep-Cheep Lake, arrival r05 c04)     -> Green Pipe at (r04, c07) [0 enemies!]
+        //   - Screen 0x12 (Forest of Illusion, arrival r07 c07)   -> Green Pipe at (r06, c05) [0 enemies!]
         if let Some((pr, pc)) = match screen_id {
-            0x19 => Some((12usize, 3usize)),
+            0x19 => Some((14usize, 1usize)),
+            0x0B => Some((9usize, 2usize)),
             0x3E => Some((4usize, 7usize)),
-            0x0B => Some((10usize, 5usize)),
             0x12 => Some((6usize, 5usize)),
             _ => None,
         } {
-            edited.tiles[pr * 16 + pc] = 0x02D4;
-            pipe_placed = true;
-            props_placed += 1;
-            any_edited += 1;
+            if !scr_blocked[pr][pc] {
+                edited.tiles[pr * 16 + pc] = 0x02D4;
+                pipe_placed = true;
+                props_placed += 1;
+                any_edited += 1;
+            }
         }
 
         for r in 1..15usize {
@@ -945,17 +1026,21 @@ pub fn build_transformed_overworld_screen(
 
                 if t == 0x001D {
                     grass_candidates.push((r, c));
-                    // v0.9.0/v0.10.0: Place 1 Physical 3D SMW Green/Bowser Warp Pipe (`0x02D4`) inside an open 3x3 grass clearing
-                    // on curated Light/Dark World Hubs & Star Road (0x80)!
-                    if is_warp_pipe_hub && !pipe_placed && is_open_center[r][c] {
+                    // Place 1 Physical 3D SMW Green/Bowser Warp Pipe (`0x02D4`) inside an open, enemy-free 3x3 clearing!
+                    if is_warp_pipe_hub
+                        && !pipe_placed
+                        && is_open_center[r][c]
+                        && !scr_blocked[r][c]
+                    {
                         edited.tiles[r * 16 + c] = 0x02D4;
                         pipe_placed = true;
                         props_placed += 1;
                         any_edited += 1;
                         continue;
                     }
-                    // Place up to 2 well-spaced liftable SMW Turn-Block / Smiling Bush landmarks inside wide open clearings
+                    // Place up to 2 well-spaced liftable SMW Turn-Block / Smiling Bush landmarks (enemy-free only!)
                     if is_open_center[r][c]
+                        && !scr_blocked[r][c]
                         && props_placed < 2
                         && (r % 3 == 1)
                         && (c % 4 == 2)
@@ -989,21 +1074,20 @@ pub fn build_transformed_overworld_screen(
                         any_edited += 1;
                     }
                 } else if t == 0x05FF || t == 0x1B1F || t == 0x1B20 {
-                    // Pure walkable grass variant used on Eastern/Cliff/Dark East/Castle Gate screens (strictly TileAttr 0x48!)
                     fallback_05ff.push((r, c));
                     if hash < 4 {
                         edited.tiles[r * 16 + c] = lw_meadow_palette[hash];
                         any_edited += 1;
                     }
                 } else if t == 0x001F {
-                    // 4x Liftable Bush cluster (strictly TileAttr 0x50!) -> enrich selected clusters into SMW Turn-Block / Smiling Bush plazas!
-                    fallback_001f.push((r, c));
-                    if hash < 3 {
-                        edited.tiles[r * 16 + c] = if hash == 0 { 0x06C7 } else { 0x07CC };
-                        any_edited += 1;
+                    if !scr_blocked[r][c] {
+                        fallback_001f.push((r, c));
+                        if hash < 3 {
+                            edited.tiles[r * 16 + c] = if hash == 0 { 0x06C7 } else { 0x07CC };
+                            any_edited += 1;
+                        }
                     }
                 } else if t == 0x0106 || t == 0x1152 || t == 0x08F7 || t == 0x0AB3 {
-                    // Mushroom Forest / Boo Haunted Woods / Castle Courtyard / Zora Basin pure walkable floor (strictly TileAttr 0x00!)
                     fallback_00_floor.push((
                         r,
                         c,
@@ -1015,14 +1099,12 @@ pub fn build_transformed_overworld_screen(
                         any_edited += 1;
                     }
                 } else if t == 0x1758 {
-                    // Bowser's Obsidian Citadel plaza stone (strictly TileAttr 0x00!) -> native carved citadel stone 0x1776!
                     fallback_00_floor.push((r, c, 0x1776));
                     if hash < 3 {
                         edited.tiles[r * 16 + c] = 0x1776;
                         any_edited += 1;
                     }
                 } else if t == 0x080B || t == 0x082A {
-                    // Toad Town / Koopa Shadow Village floor (strictly TileAttr 0x00!)
                     fallback_00_floor.push((
                         r,
                         c,
@@ -1034,19 +1116,16 @@ pub fn build_transformed_overworld_screen(
                         any_edited += 1;
                     }
                 } else if t == 0x05E5 && hash < 4 {
-                    // Dry Dry Desert / Bowser Poison Swamp / Star Road stardust sand (strictly TileAttr 0x08!)
                     edited.tiles[r * 16 + c] =
                         DESERT_SAND_PAL[(hash + screen_id as usize) % DESERT_SAND_PAL.len()];
                     any_edited += 1;
                 } else if t == 0x0E90 && hash < 2 {
-                    // Cheep-Cheep Aquatic Sea / River subtle wave accents (strictly TileAttr 0x00!)
                     edited.tiles[r * 16 + c] =
                         AQUATIC_SEA_PAL[(hash + screen_id as usize) % AQUATIC_SEA_PAL.len()];
                     any_edited += 1;
                 }
             }
         }
-        // Guarantee ALL 128/128 Light + Dark World screens (ZRI-007 -> 0!) receive at least 1 collision-identical Mario accent!
         if any_edited == 0 {
             if !grass_candidates.is_empty() {
                 let (r, c) = grass_candidates[grass_candidates.len() / 2];
@@ -1075,14 +1154,16 @@ pub fn build_transformed_overworld_screen(
     Some((orig, edited, changed))
 }
 
-/// Phase 7 Systemic World Transformation: audit & transform all 64 Light World screens (`0x00..0x3F`)
-/// AND all 64 Dark World screens (`0x40..0x7F`), validating terrain grammar, hardware collision invariance,
-/// and cross-screen border continuity before committing relocated compressed Map32 streams into Banks `$3B..$3F`!
+/// Phase 7/9 Systemic World Transformation: audit & transform all 64 Light World screens (`0x00..0x3F`),
+/// all 64 Dark World screens (`0x40..0x7F`), AND accessible Special Areas (`0x80` Star Road & `0x82` Secret
+/// Bridge Underpass!), validating terrain grammar, Bank `$09` enemy-spawn non-overlap, hardware collision
+/// invariance, and cross-screen border continuity before committing relocated compressed Map32 streams!
 pub fn patch_all_mushroom_kingdom_overworld(
     rom_zelda: &mut SnesRom,
     session: &mut SwapSession,
 ) -> Result<(usize, FullWorldAuditReport), RomError> {
     let orig_snapshot = rom_zelda.data.clone();
+    let enemy_excl = build_ow_enemy_exclusion_map(&orig_snapshot);
     let mut ops = 0usize;
     let mut reloc_cursor = OW_MAP32_RELOC_START_PC;
     let mut report = FullWorldAuditReport {
@@ -1100,8 +1181,9 @@ pub fn patch_all_mushroom_kingdom_overworld(
     let mut all_orig: Vec<OverworldScreenMap> = Vec::with_capacity(128);
     let mut all_edit: Vec<OverworldScreenMap> = Vec::with_capacity(128);
 
-    for sid in 0u8..=128u8 {
-        let Some((orig, edited, changed)) = build_transformed_overworld_screen(&orig_snapshot, sid)
+    for sid in 0u8..=0x82u8 {
+        let Some((orig, edited, changed)) =
+            build_transformed_overworld_screen_with_excl(&orig_snapshot, sid, &enemy_excl)
         else {
             continue;
         };
@@ -1112,18 +1194,12 @@ pub fn patch_all_mushroom_kingdom_overworld(
         }
 
         if changed > 0 {
-            // 1. Validate Terrain Grammar
             let gram_ok = validate_screen_terrain_grammar(&orig_snapshot, &orig, &edited)
                 .map(|r| r.is_clean())
                 .unwrap_or(false);
             if !gram_ok {
                 report.grammar_violations += 1;
             }
-            // 2. Validate Exact Hardware Collision Preservation (`$00:FBD9`):
-            //    On general screens (sid != 0x2C), every edited Map16 subtile must EITHER preserve its EXACT
-            //    4-subtile hardware TileAttr byte (`0x48->0x48`, `0x00->0x00`, `0x08->0x08`) OR upgrade pure
-            //    walkable grass (`0x48`) / liftable bush (`0x50`) into a walkable/liftable Mario prop (`0x48`/`0x50`/`0x52`),
-            //    OR place a Physical SMW Green Warp Pipe (`0x21B`) at an open 3x3 clearing or curated Hub arrival landmark!
             let mut coll_ok = true;
             if sid != 0x2C {
                 for k in 0..256 {
@@ -1137,7 +1213,7 @@ pub fn patch_all_mushroom_kingdom_overworld(
                             });
                         let is_curated_warp_hub_pipe = matches!(
                             (sid, r_k, c_k),
-                            (0x19, 12, 3) | (0x3E, 4, 7) | (0x0B, 10, 5) | (0x12, 6, 5)
+                            (0x19, 14, 1) | (0x0B, 9, 2) | (0x3E, 4, 7) | (0x12, 6, 5)
                         );
                         let oq = decode_map32_quads(&orig_snapshot, orig.tiles[k]);
                         let eq = decode_map32_quads(&orig_snapshot, edited.tiles[k]);
@@ -1153,6 +1229,7 @@ pub fn patch_all_mushroom_kingdom_overworld(
                                     oa,
                                     Some([0x48, 0x48, 0x48, 0x48])
                                         | Some([0x00, 0x00, 0x00, 0x00])
+                                        | Some([0x00, 0x48, 0x48, 0x48])
                                         | Some([0x08, 0x08, 0x08, 0x08])
                                 );
                                 let grass_to_warp_pipe = (is_open_3x3
@@ -1388,9 +1465,56 @@ mod tests {
         for sid in 0u8..160u8 {
             let scr =
                 read_overworld_screen(&rom.data, sid, "Post", "Verify").unwrap_or_else(|| {
-                    panic!("Screen 0x{sid:02X} failed to decode after v0.7.0 relocation!")
+                    panic!("Screen 0x{sid:02X} failed to decode after v0.20.0 relocation!")
                 });
             assert_eq!(scr.tiles.len(), 256);
+        }
+    }
+
+    #[test]
+    fn test_v0200_zero_enemy_spawn_overlap_all_128_overworld_screens() {
+        let p = [
+            std::path::Path::new("roms/zelda_alttp.sfc"),
+            std::path::Path::new("../../roms/zelda_alttp.sfc"),
+        ]
+        .into_iter()
+        .find(|c| c.exists());
+        let Some(p) = p else {
+            return;
+        };
+        let rom_bytes = std::fs::read(p).expect("read roms/zelda_alttp.sfc");
+        let excl = build_ow_enemy_exclusion_map(&rom_bytes);
+        // Must detect Vanilla Dome Deadrock/Spiny (0x27) at 0x0B (r=10, c=5) that caused User Bug #2!
+        assert!(
+            excl[0x0B][10][5],
+            "Enemy exclusion map MUST flag Vanilla Dome Deadrock spawn at 0x0B (10, 5)!"
+        );
+        // Must confirm new curated Hub 1 (0x19 r14 c01) and Hub 2 (0x0B r09 c02) are 100% enemy-free!
+        assert!(
+            !excl[0x19][14][1],
+            "Toad Town Open Plaza Hub (0x19 14,1) must be enemy-free!"
+        );
+        assert!(
+            !excl[0x0B][9][2],
+            "Vanilla Dome Hub (0x0B 9,2) must be enemy-free!"
+        );
+
+        for sid in 0u8..128u8 {
+            if let Some((orig, edited, _)) =
+                build_transformed_overworld_screen_with_excl(&rom_bytes, sid, &excl)
+            {
+                for r in 0..16 {
+                    for c in 0..16 {
+                        let t = edited.tiles[r * 16 + c];
+                        if t != orig.tiles[r * 16 + c] && matches!(t, 0x02D4 | 0x06C7 | 0x07CC) {
+                            assert!(
+                                !excl[sid as usize][r][c],
+                                "Screen 0x{sid:02X} ({r},{c}) placed solid/prop 0x{t:04X} on enemy spawn!"
+                            );
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -6,6 +6,36 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ---
 
+## [0.20.0] — 2026-11-28 — Project Nintendo Limit Break
+
+### Pillar 1 — All 3 User-Reported P0 Bugs Permanently Fixed & Automated-Guarded (`USER-BUG-01`, `USER-BUG-01B`, `USER-BUG-02`)
+- **USER BUG #1 Fixed (*"mario ne peut pas marcher sur la haie"* — `mario_engine.rs`):** Disassembly of ALTTP `Link_Move` (`$07:86CD..$07:86D5`) proved `v0.10.0`'s `STZ $29` (`0x00`, positive) caused `LDA $29; BPL +$3C` to skip solid-tile collision `JSR $D077` on every airborne frame. Replaced `STZ $29` with `LDA #$FF; STA $29` across all airborne/jump paths and added a permanent Rust unit guard forbidding opcode `64 29` (`STZ $29`). Live-verified in `v0200_01_bug1_hedge_guard_and_star_monument` (Mario jumping/spin-jumping against Toad Town's solid hedge is 100% blocked!).
+- **USER BUG #1b Fixed (Warp Pipe Animation Lock & Open Toad Town Hub 1 Pipe — `mario_engine.rs`, `mario_map.rs`, `mario_sfx.rs`):** Pre-hook locks player control via native `$02E4 = 1`, zeroes joypad inputs (`$F0..$F6`), and locks facing Down (`$2F = 2`) throughout smooth `7px` vertical descent + hardware-legal Forced Blank warp (`JSL $00:8919 -> $0D:F988 -> $0A:B8A5 -> $0A:B928`) + coordinate-safe `$24` Z-altitude SMW Pop-Out Parabolic Hop emergence (`0 -> 14px -> 0`, paired with new ascending `SFX2 0x14`). Relocated Hub 1 pipe out from behind the hedge to **Open Star Plaza `0x19 (r14, c01)`**.
+- **USER BUG #2 Fixed (*"ennemi prit dans objet"* + Vanilla Dome Olive Boulder Halos — `mario_map.rs`, `mario_world.rs`, `mario_engine.rs`):** Added a compile-time Bank `$09` enemy-spawn exclusion map parsing all 3 FR PAL sprite tables (`0x04C8A6`, `0x04C926`, `0x04CA46`) across all 128 OW screens (`0` overlaps enforced by `test_v0200_zero_enemy_spawn_overlap_all_128_overworld_screens`), relocated Vanilla Dome Hub 2 pipe off Deadrock `0x27`'s `(r10, c05)` spawn to open plateau **`0x0B (r09, c02)`**, added runtime `Mario_UnstickEnemies`, and patched `0x0DE654 -> 0x36BB` + `OWMainPal[2]` + `OWAuxPal` to eliminate 100% of olive square halos behind Vanilla Dome boulders!
+
+### Pillar 2 — Mario Engine v2.0 (`$22:9000`, 14 Live BGR555 Palettes = 420 B, WRAM `$7E:F500..$7E:F54E`)
+- **4 Playable Heroes (`Down + L + R` grounded -> cycles `S_CHAR_ID = 0..3`, persisted in SRAM v2, new `SFX2 0x2C` chime):**
+  - `0 — Super Mario` (Pal 0 classic balanced jump), `1 — Luigi` (Pal 9 highest floaty jump), **`2 — Princess Peach`** (Pal 11 Golden Crown & Rose-Pink Gown + **28-frame SMB2 Floating Dress Hover**!), and **`3 — Captain Toad`** (Pal 12 White Spotted Cap & Crimson Vest + agile hop + `+2` Turn-Block Throw Coin + passive Star Power regeneration!).
+- **6-Frame Jump Input Buffer (`W_JUMP_BUF`) & SMW Spin Jump (`R`, `W_SPIN_JUMP`):** Rapid 3-frame spin cycle with Pal 13 gleam, safe metallic bounce off Spiked/Armored Spinies & Thwomps (`+1` Coin + Dragon Coin `#15`), and permanent **Dry Bones (`0xA7`) shatter** (`v0200_05b`).
+- **Systemic Mechanics v2.0:** **Cape Mario 360° Spin Attack (`B`/`Y`)** stunning foes & flipping Dungeon SMW ON/OFF Crystal Switches (`v0200_06`: Coins `250 -> 274`!), **Koopa/Buzzy Shell -> Remote ON/OFF Switch (`0x1E`)**, **Bob-omb (`0x4A`) 56px Explosive Chain Reaction**, **Bidirectional Smart 5-Hub Warp Pipe Network 2.0** (takeoff-latched `W_PIPE_STEP`: Right/Down=Next, Left=Reverse, Up=Express Home — 4-hop live tour verified on cycle-accurate `bsnes` + Reverse Hub 4 `0x12` verified live!), **World Restoration Persistence (`$7E:F37A -> $7E:F40B`)**, and **Final King Bowser Multi-Phase Escalation (`bsnes 250 -> 285c`)**.
+
+### Pillar 3 — Toad Town Golden Super Star Monument (`ZRI: 1.0% -> 0.5%`), Versioned 32-Byte Checksummed SRAM v2 & Peach Dev Studio Inspector
+- **Toad Town Golden Super Star Monument (`mario_world.rs`, `ZRI-022: 4 -> 2`):** Replaced Kakariko's Weathervane Bird Spire (`raw 0x53` cols `14..15` + cleared weathervane-exclusive Map16 `0x41A/0x41D/0x437` rooster head & arrow tail to grass `0x0CED`) with a gleaming 16×24 Mushroom Kingdom Golden Super Star atop a royal red velvet pedestal (verified on `snes_faust` & `bsnes`).
+- **Expanded Overworld Transformation (`131 / 160`):** All `128 / 128` LW+DW screens + 3 Special Areas (`0x80, 0x81, 0x82`), `0` overlaps.
+- **Versioned 32-Byte Checksummed SRAM Schema v2 (`$7E:F400..$7E:F41F`, magic `"MP"`, version `2`, seeded Fletcher/XOR CRC16 — [`docs/SAVE_SCHEMA.json`](docs/SAVE_SCHEMA.json)):** Live 3-slot concurrent test (`v0200_10`) proved lossless `v0.10.0` migration (Slot 1), corrupted CRC `0xBEEF` + out-of-bounds recovery (Slot 2), Slot 3 Princess Peach isolation, and ALTTP new-file `$FF` sanitization.
+- **Peach Dev Studio Inspector (`scripts/peach_studio_inspector.py`):** Zero-dependency analyzer exporting 64-bank telemetry ([`docs/ROM_BANK_UTILIZATION.json`](docs/ROM_BANK_UTILIZATION.json): `135,442 B` used / `913,134 B` free = `12.92%`), 160-screen [`docs/WORLD_MASTER_MAP.json`](docs/WORLD_MASTER_MAP.json), and standalone HTML dashboard.
+
+### Pillar 4 — 26-Dimension Honest Scoring, 15-Scenario Dual-Core QA & Reconciled Engineering Docs
+- Upgraded [`docs/QUALITY_SCORES.json`](docs/QUALITY_SCORES.json) to **26 independent dimensions** (honestly maintaining `14_physical_hardware_validation = 0% HARDWARE_NOT_TESTED` and `13_playthrough_completeness = 62%` — why `v0.20.0` stops short of `v1.0.0`).
+- Built **`scripts/qa_engine_v0200.py`** achieving **`15 / 15 VISUAL_PASS + AUDIO_PASS`** (`-24.4..-28.2 dBFS`, `0%` clipping), promoting **`MU-060` (SMW Rex)** & **`MU-061` (SMW Swooper)** to `VISUAL_PASS`, logging [`docs/PLAYTHROUGH_REPLAY_MANIFEST.json`](docs/PLAYTHROUGH_REPLAY_MANIFEST.json), rendering Before (`v0.10.0`) vs After (`v0.20.0`) plates (`27_` & `28_`), and updating the 33-table Mega SQLite DB (`1,218` rows).
+- Added [`MARIO_ENGINE_ARCHITECTURE.md`](docs/MARIO_ENGINE_ARCHITECTURE.md), [`SAVE_SCHEMA.json`](docs/SAVE_SCHEMA.json), [`REGRESSION_REGISTRY.json`](docs/REGRESSION_REGISTRY.json), [`HARDWARE_COMPATIBILITY_MATRIX.json`](docs/HARDWARE_COMPATIBILITY_MATRIX.json), and [`BUILD_REPRODUCIBILITY_REPORT.md`](docs/BUILD_REPRODUCIBILITY_REPORT.md).
+- Deterministic 2 MiB LoROM build (dual runs bit-identical via `cmp` + `sha256sum`): `773` hardware patches across `18` rules (`~2.9 s`), `52` LZ2 sheets verified, `272` relocated blocks in `$23..$3F` (`0` overlaps), `33/33` Rust tests, `0` clippy warnings, `0` repo safety leaks.
+- **SNES Checksum / Complement:** `0x5547` / `0xAAB8` (Valid: `true`)
+- **Output CRC32:** `7A5A145B`
+- **Output SHA-256:** `5e9c06a5db1ffc6be4879e258fa914bfdd56db101455082c7d2fb711df9cb910`
+
+---
+
 ## [0.10.0] — 2026-11-27 — Super Mario Adventure Beyond Limits
 
 ### Pillar 1 — Real Physical Inter-Regional 5-Hub Warp Pipe Network (`mario_engine.rs`, `mario_map.rs`, `MU-041`)

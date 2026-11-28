@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.0.0",
+  "release": "v0.20.0 — Project Nintendo Limit Break",
+  "rom_sha256": "5e9c06a5db1ffc6be4879e258fa914bfdd56db101455082c7d2fb711df9cb910",
+  "rom_crc32": "7A5A145B",
+  "snes_header_compliance": {
+    "mapping_mode": "LoROM (0x20, SlowROM 2.68 MHz compatible)",
+    "rom_size_bytes": 2097152,
+    "rom_size_header_byte": "0x0B (2 MiB / 16 Mbit)",
+    "sram_size_bytes": 8192,
+    "sram_size_header_byte": "0x03 (64 Kbit / 8 KiB)",
+    "enhancement_chips": "NONE (0x02 ROM + RAM + Battery)",
+    "overclock_required": false,
+    "msu1_required": false,
+    "checksum_hex": "0x5547",
+    "complement_hex": "0xAAB8",
+    "checksum_valid": true,
+    "vram_dma_legality": "All bulk VRAM/tilemap reloads execute strictly during NMI or hardware Forced Blank ($2100 = $80, $4200 = $00, $420C = $00).",
+    "bank_boundary_crossings": 0,
+    "memory_overlaps": 0
+  },
+  "targets": [
+    {
+      "target": "Mednafen 1.32.1 (snes_faust)",
+      "category": "Emulator (Fast Accurate)",
+      "installed_on_host": true,
+      "executed": true,
+      "scenarios_passed": "13 / 13",
+      "audio_passed": "13 / 13",
+      "status": "VISUAL_PASS+AUDIO_PASS"
+    },
+    {
+      "target": "Mednafen 1.32.1 (snes / bsnes-accuracy)",
+      "category": "Emulator (Cycle-Accurate Reference)",
+      "installed_on_host": true,
+      "executed": true,
+      "scenarios_passed": "2 / 2 (4-Hop Bidirectional Pipes + SRAM v2 Parity, Final King Bowser Multi-Phase)",
+      "audio_passed": "2 / 2",
+      "status": "VISUAL_PASS+AUDIO_PASS"
+    },
+    {
+      "target": "Standalone bsnes GUI",
+      "category": "Emulator (Reference)",
+      "installed_on_host": false,
+      "executed": false,
+      "status": "NOT_INSTALLED"
+    },
+    {
+      "target": "Ares",
+      "category": "Emulator (Cycle-Accurate)",
+      "installed_on_host": false,
+      "executed": false,
+      "status": "NOT_INSTALLED"
+    },
+    {
+      "target": "Snes9x",
+      "category": "Emulator (Mainstream)",
+      "installed_on_host": false,
+      "executed": false,
+      "status": "NOT_INSTALLED"
+    },
+    {
+      "target": "Mesen 2",
+      "category": "Emulator (Debugger / Cycle-Accurate)",
+      "installed_on_host": false,
+      "executed": false,
+      "status": "NOT_INSTALLED"
+    },
+    {
+      "target": "Stock PAL SNES (SNSP-001) + FXPAK Pro / SD2SNES",
+      "category": "Physical Console Hardware",
+      "installed_on_host": false,
+      "executed": false,
+      "static_readiness_pct": 97.0,
+      "guide": "docs/REAL_HARDWARE_TEST_GUIDE.md",
+      "status": "HARDWARE_NOT_TESTED"
+    },
+    {
+      "target": "Stock NTSC SNES / Super Famicom (SHVC-001, 60 Hz)",
+      "category": "Physical Console Hardware",
+      "installed_on_host": false,
+      "executed": false,
+      "notes": "Base ROM is FR PAL (50 Hz); runs on NTSC via FXPAK Pro region patch or 50Hz/60Hz dual-region check.",
+      "status": "HARDWARE_NOT_TESTED"
+    }
+  ]
+}

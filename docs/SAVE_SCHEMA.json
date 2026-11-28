@@ -1,0 +1,50 @@
+{
+  "schema_name": "LegendOfPeach_SRAM_v2",
+  "schema_version": 2,
+  "release": "v0.20.0 — Project Nintendo Limit Break",
+  "rom_sha256": "5e9c06a5db1ffc6be4879e258fa914bfdd56db101455082c7d2fb711df9cb910",
+  "sram_total_size_bytes": 8192,
+  "slot_layout": {
+    "slot_1_primary": "$70:0000..$70:04FF",
+    "slot_2_primary": "$70:0500..$70:09FF",
+    "slot_3_primary": "$70:0A00..$70:0EFF",
+    "slot_1_mirror": "$70:1000..$70:14FF",
+    "slot_2_mirror": "$70:1500..$70:19FF",
+    "slot_3_mirror": "$70:1A00..$70:1EFF",
+    "alttp_slot_magic_offset": "+$03E5 (0x55AA)",
+    "alttp_slot_checksum_offset": "+$04FE (additive complement summing 639 u16 words to 0x5A5A)"
+  },
+  "mario_v2_block": {
+    "wram_mirror_range": "$7E:F400..$7E:F41F",
+    "slot_offset_range": "+$0400..+$041F",
+    "size_bytes": 32,
+    "vanilla_alttp_gameplay_conflicts": 0,
+    "vanilla_new_file_quirk_handled": "ALTTP File Select new-file creation writes 0xFF to +$0405/+$0406 before first gameplay frame; Mario_InitOrVerifySramV2 sanitizes S_PIPE_DISC >= 0x20 and S_DRAGON_CNT >= 0x21 on first gameplay frame.",
+    "fields": [
+      { "offset": "+$0400..+$0403", "wram": "$7E:F400..$7E:F403", "symbol": "S_DRAGON_BITS", "size_bytes": 4, "type": "u32_bitmask", "description": "Unique Dragon Coins collected (bits 0..31; prevents infinite farming)" },
+      { "offset": "+$0404", "wram": "$7E:F404", "symbol": "S_DRAGON_CNT", "size_bytes": 1, "type": "u8 (0..32)", "description": "Total unique Dragon Coins collected; every 5 grants 1-UP full heal + Star refill" },
+      { "offset": "+$0405", "wram": "$7E:F405", "symbol": "S_CHAR_ID", "size_bytes": 1, "type": "u8 (0..3)", "description": "Active Playable Hero: 0=Super Mario, 1=Luigi, 2=Princess Peach, 3=Captain Toad" },
+      { "offset": "+$0406", "wram": "$7E:F406", "symbol": "S_PIPE_DISC", "size_bytes": 1, "type": "u8_bitmask (0..0x1F)", "description": "Discovered Overworld Warp Pipe Hubs (bits 0..4)" },
+      { "offset": "+$0407", "wram": "$7E:F407", "symbol": "S_LUIGI_MODE", "size_bytes": 1, "type": "u8 (0..1)", "description": "Backward-compatible v0.10.0 Luigi mirror (1 iff S_CHAR_ID == 1)" },
+      { "offset": "+$0408..+$0409", "wram": "$7E:F408..$7E:F409", "symbol": "S_MAGIC_0/1", "size_bytes": 2, "type": "ascii", "description": "Fixed schema header magic: 0x4D 0x50 ('MP')" },
+      { "offset": "+$040A", "wram": "$7E:F40A", "symbol": "S_VERSION", "size_bytes": 1, "type": "u8", "description": "Schema version byte: 0x02" },
+      { "offset": "+$040B", "wram": "$7E:F40B", "symbol": "S_WORLD_RESTORE", "size_bytes": 1, "type": "u8_bitmask", "description": "Mirror of conquered Koopaling Fortress Crystals ($7E:F37A)" },
+      { "offset": "+$040C..+$040D", "wram": "$7E:F40C..$7E:F40D", "symbol": "S_QUEST_LO/HI", "size_bytes": 2, "type": "u16_bitmask", "description": "Side-quest & achievement milestones (bit0=Stomp, bit1=Pipe, bit2=CapeSwitch, bit3=SpinSpiny, bit4=BobombChain, bit5=HeroSwap)" },
+      { "offset": "+$040E", "wram": "$7E:F40E", "symbol": "S_STOMP_TOTAL", "size_bytes": 1, "type": "u8 (sat 255)", "description": "Cumulative Mario Stomp counter" },
+      { "offset": "+$040F", "wram": "$7E:F40F", "symbol": "S_PIPE_TOTAL", "size_bytes": 1, "type": "u8 (sat 255)", "description": "Cumulative Warp Pipe travel counter" },
+      { "offset": "+$0410", "wram": "$7E:F410", "symbol": "S_BOWSER_FLG", "size_bytes": 1, "type": "u8_bitmask", "description": "Final King Bowser Multi-Phase encounter flag" },
+      { "offset": "+$0411..+$041D", "wram": "$7E:F411..$7E:F41D", "symbol": "S_RESERVED", "size_bytes": 13, "type": "u8[13]", "description": "Zero-initialized forward-compatible expansion area included in CRC" },
+      { "offset": "+$041E..+$041F", "wram": "$7E:F41E..$7E:F41F", "symbol": "S_CRC_LO/HI", "size_bytes": 2, "type": "u16_checksum", "description": "16-bit seeded Fletcher/XOR checksum over $F400..$F41D (seed lo=0x5A, hi=0xA5; reverse loop idx=0x1D..0: lo=(lo+b)&0xFF, hi=((hi^lo)+0x13)&0xFF)" }
+    ]
+  },
+  "migration_and_recovery_policy": {
+    "v0100_auto_migration": "When S_MAGIC != 'MP' or S_VERSION != 2, preserves legacy S_DRAGON_BITS ($F400..$F403), S_DRAGON_CNT ($F404 <= 32), S_PIPE_DISC ($F406 < 0x20), migrates S_LUIGI_MODE ($F407 & 1) -> S_CHAR_ID ($F405), zeroes $F408..$F41D, writes 'MP' + v2, and seals valid CRC16.",
+    "corruption_recovery": "When S_MAGIC == 'MP' and S_VERSION == 2 but CRC16 mismatches, sanitizes S_CHAR_ID &= 3 and clamps S_DRAGON_CNT (zero if >32), then re-seals valid CRC16 without crashing.",
+    "live_verification_scenario": "v0200_10_sram_v2_3slot_migration_and_recovery",
+    "live_verified_results": {
+      "slot_1_legacy_v0100": "Migrated cleanly: magic='MP', version=2, char_id=1, luigi_mirror=1, dragon_cnt=3, pipe_disc=0x03, sram_v2_crc_valid=true, alttp_checksum_valid=true",
+      "slot_2_corrupted_crc": "Recovered cleanly from 0xBEEF CRC + char_id=0xFF + dragon_cnt=99 -> magic='MP', version=2, char_id=3, dragon_cnt=0, sram_v2_crc_valid=true, alttp_checksum_valid=true",
+      "slot_3_peach_isolation": "Completely untouched across Slot 1 & Slot 2 save/reboot cycles: char_id=2 (Princess Peach), sram_v2_crc_valid=true, alttp_checksum_valid=true"
+    }
+  }
+}

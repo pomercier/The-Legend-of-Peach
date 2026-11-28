@@ -1,0 +1,161 @@
+{
+  "schema_version": "1.0.0",
+  "release": "v0.20.0 — Project Nintendo Limit Break",
+  "rom_sha256": "5e9c06a5db1ffc6be4879e258fa914bfdd56db101455082c7d2fb711df9cb910",
+  "summary": {
+    "total_tracked_bugs": 15,
+    "resolved_and_guarded": 15,
+    "open_regressions": 0
+  },
+  "entries": [
+    {
+      "id": "BUG-01",
+      "introduced_or_reported": "v0.5.0",
+      "resolved_in": "v0.6.0",
+      "severity": "P0",
+      "title": "Double Mario Head / OAM Pose Corruption",
+      "automated_guard": "test_v060_all_seven_blocking_bugs_structural_invariants (303 poses audited)",
+      "status_v0200": "VERIFIED_NO_REGRESSION"
+    },
+    {
+      "id": "BUG-02",
+      "introduced_or_reported": "v0.5.0",
+      "resolved_in": "v0.6.0",
+      "severity": "P0",
+      "title": "Kamek Shop Palette & Digit Alignment",
+      "automated_guard": "test_kamek_shop_mini_mushroom_in_087000 + test_v060_all_seven_blocking_bugs_structural_invariants",
+      "status_v0200": "VERIFIED_NO_REGRESSION"
+    },
+    {
+      "id": "BUG-03",
+      "introduced_or_reported": "v0.5.0",
+      "resolved_in": "v0.6.0",
+      "severity": "P0",
+      "title": "Mario Glove Green Flicker",
+      "automated_guard": "lib.rs: 0x0DEDF5..0x0DEDF9 == 0x7FFF",
+      "status_v0200": "VERIFIED_NO_REGRESSION"
+    },
+    {
+      "id": "BUG-04",
+      "introduced_or_reported": "v0.5.0",
+      "resolved_in": "v0.6.0",
+      "severity": "P0",
+      "title": "Toad NPC Head-Body Alignment (dy=-9)",
+      "automated_guard": "test_v060_all_seven_blocking_bugs_structural_invariants",
+      "status_v0200": "VERIFIED_NO_REGRESSION"
+    },
+    {
+      "id": "BUG-05",
+      "introduced_or_reported": "v0.5.0",
+      "resolved_in": "v0.6.0",
+      "severity": "P0",
+      "title": "Winged Iggy Boss Detached Wings (±17px OAM)",
+      "automated_guard": "test_v060_all_seven_blocking_bugs_structural_invariants",
+      "status_v0200": "VERIFIED_NO_REGRESSION"
+    },
+    {
+      "id": "BUG-06",
+      "introduced_or_reported": "v0.5.0",
+      "resolved_in": "v0.6.0",
+      "severity": "P0",
+      "title": "File Select / Dialogue Name Corruption & Hyphen Splits",
+      "automated_guard": "test_bank1c_repacker_invariants (372/372 messages, 0 hyphens)",
+      "status_v0200": "VERIFIED_NO_REGRESSION"
+    },
+    {
+      "id": "BUG-07",
+      "introduced_or_reported": "v0.5.0",
+      "resolved_in": "v0.6.0",
+      "severity": "P0",
+      "title": "Final King Bowser Trident / Dialogue Overlap",
+      "automated_guard": "v0200_11_bsnes_final_bowser_multiphase (bsnes VISUAL_PASS)",
+      "status_v0200": "VERIFIED_NO_REGRESSION"
+    },
+    {
+      "id": "V0100-PASS1-01",
+      "introduced_or_reported": "v0.10.0-pass1",
+      "resolved_in": "v0.10.0",
+      "severity": "P0",
+      "title": "Half-Screen VRAM Tilemap Seam After Overworld Warp Pipe",
+      "automated_guard": "JSL $00:8919 -> $0D:F988 -> $0A:B8A5 -> $0A:B928 + 1-frame Forced Blank DMA hold; v0200_02 & v0200_03 VISUAL_PASS",
+      "status_v0200": "VERIFIED_NO_REGRESSION"
+    },
+    {
+      "id": "USER-BUG-01",
+      "introduced_or_reported": "v0.10.0 (user screenshot)",
+      "resolved_in": "v0.20.0",
+      "severity": "P0",
+      "title": "Mario Could Jump/Walk Onto Solid Hedges ('mario ne peut pas marcher sur la haie')",
+      "root_cause": "STZ $29 (0x00, positive) caused ALTTP $07:86D1 (LDA $29; BPL +$3C) to bypass solid-tile collision JSR $D077 on every airborne frame.",
+      "fix": "Replaced STZ $29 with LDA #$FF; STA $29 across all airborne & jump hooks in mario_engine.rs.",
+      "automated_guard": "test_mario_engine_65816_assembles_cleanly (forbids 64 29 STZ $29) + lib.rs + v0200_01_bug1_hedge_guard_and_star_monument (VISUAL_PASS)",
+      "status_v0200": "FIXED_AND_GUARDED"
+    },
+    {
+      "id": "USER-BUG-01B",
+      "introduced_or_reported": "v0.10.0 (user report)",
+      "resolved_in": "v0.20.0",
+      "severity": "P0",
+      "title": "Warp Pipe Animation Glitches & Hedge-Blocked Hub 1 Pipe",
+      "root_cause": "W_PIPE_STATE did not freeze Link_Control ($02E4) before JSL $07:8000, and Toad Town Hub 1 pipe at 0x19 (12,3) sat behind a solid hedge.",
+      "fix": "Pre-hook locks $02E4=1, zeroes $F0..$F6, locks facing Down ($2F=2), animates smooth 7px vertical descent & Z-altitude pop-out hop; moved Hub 1 pipe to open Star Plaza 0x19 (14,1).",
+      "automated_guard": "v0200_01, v0200_02 (faust), v0200_03 (bsnes) VISUAL_PASS",
+      "status_v0200": "FIXED_AND_GUARDED"
+    },
+    {
+      "id": "USER-BUG-02",
+      "introduced_or_reported": "v0.10.0 (user screenshot)",
+      "resolved_in": "v0.20.0",
+      "severity": "P0",
+      "title": "Vanilla Dome Enemy Stuck Inside Warp Pipe ('ennemi prit dans objet') + Olive Boulder Halos",
+      "root_cause": "FR PAL Bank $09 Area 0x03 spawns Deadrock/Spiny 0x27 at (y16=53,x16=10) = Screen 0x0B (r10,c05), colliding directly with v0.10.0's pipe; 0x0DE654 BGColor0 retained vanilla olive 0x2A53.",
+      "fix": "Added compile-time Bank $09 enemy-spawn exclusion map across all 128 OW screens (3 phases + 1-tile halo), moved Hub 2 pipe to 0x0B (9,2), added runtime Mario_UnstickEnemies guard, and patched 0x0DE654->0x36BB + OWMainPal[2] + OWAuxPal.",
+      "automated_guard": "test_v0200_zero_enemy_spawn_overlap_all_128_overworld_screens + lib.rs (0x0DE654==0x36BB) + v0200_02/v0200_03 (VISUAL_PASS)",
+      "status_v0200": "FIXED_AND_GUARDED"
+    },
+    {
+      "id": "V0200-PASS1-01",
+      "introduced_or_reported": "v0.20.0-pass1 (pixel audit)",
+      "resolved_in": "v0.20.0",
+      "severity": "P1",
+      "title": "Toad Town Monument Leftover Rooster Head/Arrow & Red Star Indices",
+      "root_cause": "m16 0x41A/0x41D held rooster head (0x10D/0x11D/0x12D) and m16 0x437 held arrow tail (0x1DE); AuxRow 0 uses indices 5/6 for red, 4/7 for gold/white.",
+      "fix": "Cleared Map16 0x41A/0x41D/0x437 weathervane parts to grass 0x0CED and repainted raw 0x53 cols 14..15 using pure gold/white star + royal red velvet cushion.",
+      "automated_guard": "lib.rs (m16 0x41A/0x437 == 0x0CED + raw 0x53 delta) + v0200_01/v0200_03 VISUAL_PASS",
+      "status_v0200": "FIXED_AND_GUARDED"
+    },
+    {
+      "id": "V0200-PASS1-02",
+      "introduced_or_reported": "v0.20.0-pass1 (pixel audit)",
+      "resolved_in": "v0.20.0",
+      "severity": "P0",
+      "title": "Lake Cheep-Cheep (Slot 9) Whirlpool Clip During Pipe Emergence",
+      "root_cause": "Shifting $20 += 7px South at warp arrival dipped Mario into Lake Cheep-Cheep's south-west whirlpool trigger.",
+      "fix": "Removed Y-offset on emergence and animated an authentic coordinate-safe $24 Z-altitude SMW Pop-Out Parabolic Hop (0->14->0px).",
+      "automated_guard": "v0200_02, v0200_03 (bsnes), v0200_08 VISUAL_PASS",
+      "status_v0200": "FIXED_AND_GUARDED"
+    },
+    {
+      "id": "V0200-PASS1-03",
+      "introduced_or_reported": "v0.20.0-pass1 (blank SRAM audit)",
+      "resolved_in": "v0.20.0",
+      "severity": "P1",
+      "title": "ALTTP New-File Creation Wrote 0xFF into $7E:F405/$7E:F406",
+      "root_cause": "Vanilla File Select initializes +$0405/+$0406 to 0xFF on new files.",
+      "fix": "Mario_InitOrVerifySramV2 sanitizes S_PIPE_DISC >= 0x20 and S_DRAGON_CNT >= 0x21 while preserving real v0.10.0 legacy saves.",
+      "automated_guard": "v0200_10_sram_v2_3slot_migration_and_recovery + v0200_12 VISUAL_PASS",
+      "status_v0200": "FIXED_AND_GUARDED"
+    },
+    {
+      "id": "V0200-PASS1-04",
+      "introduced_or_reported": "v0.20.0-pass1 (bidirectional audit)",
+      "resolved_in": "v0.20.0",
+      "severity": "P1",
+      "title": "Ground Pound Down Input Overwrote $2F Before Bidirectional Pipe Check",
+      "root_cause": "Pressing Down mid-air for Ground Pound caused ALTTP to set $2F=2 before landing impact.",
+      "fix": "Latched takeoff direction $2F into W_PIPE_STEP at jump initiation (init_jump_state) and widened Hub 1 pipe X-zone to $01E8..$0257.",
+      "automated_guard": "v0200_02 (faust), v0200_03 (bsnes 4-hop pipe_total=4), v0200_08 (Reverse -> Hub 4 0x12) VISUAL_PASS",
+      "status_v0200": "FIXED_AND_GUARDED"
+    }
+  ]
+}

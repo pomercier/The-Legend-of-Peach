@@ -1,0 +1,1764 @@
+{
+  "version": "v0.20.0",
+  "overworld_summary": {
+    "total_slots": 160,
+    "light_world_transformed": 64,
+    "dark_world_transformed": 64,
+    "special_world_unique_screens": 14,
+    "special_world_transformed": 3,
+    "total_transformed_screens": 131
+  },
+  "underworld_summary": {
+    "total_rooms": 296,
+    "bespoke_mario_fortresses": 11,
+    "boss_encounters_transformed": 12
+  },
+  "warp_pipe_network_v2": [
+    {
+      "hub_id": 0,
+      "name": "World 1 \u2014 Yoshi's Island (Mario's House)",
+      "screen": "0x2C",
+      "pipe_tile": [
+        9,
+        7
+      ],
+      "alttp_slot": 3,
+      "next_slot": 2,
+      "prev_slot": 13,
+      "enemy_spawn_conflict": false
+    },
+    {
+      "hub_id": 1,
+      "name": "Toad Town Open Star Plaza",
+      "screen": "0x19",
+      "pipe_tile": [
+        14,
+        1
+      ],
+      "alttp_slot": 2,
+      "next_slot": 0,
+      "prev_slot": 3,
+      "enemy_spawn_conflict": false
+    },
+    {
+      "hub_id": 2,
+      "name": "Vanilla Dome Mountain",
+      "screen": "0x0B",
+      "pipe_tile": [
+        9,
+        2
+      ],
+      "alttp_slot": 0,
+      "next_slot": 9,
+      "prev_slot": 2,
+      "enemy_spawn_conflict": false
+    },
+    {
+      "hub_id": 3,
+      "name": "Lake Cheep-Cheep Beach",
+      "screen": "0x3E",
+      "pipe_tile": [
+        4,
+        7
+      ],
+      "alttp_slot": 9,
+      "next_slot": 13,
+      "prev_slot": 0,
+      "enemy_spawn_conflict": false
+    },
+    {
+      "hub_id": 4,
+      "name": "Forest of Illusion",
+      "screen": "0x12",
+      "pipe_tile": [
+        6,
+        5
+      ],
+      "alttp_slot": 13,
+      "next_slot": 3,
+      "prev_slot": 9,
+      "enemy_spawn_conflict": false
+    }
+  ],
+  "fortresses": [
+    {
+      "id": 1,
+      "name": "Peach's Castle & Secret Passage",
+      "dung_pal": "bg:06 + vanilla royal",
+      "boss": "Armored Koopa & Bowser Tower",
+      "rooms_range": "0x000..0x072"
+    },
+    {
+      "id": 2,
+      "name": "Chargin' Chuck Eastern Ruins (Eastern Palace)",
+      "dung_pal": "bg:08 + SMW '?' blocks",
+      "boss": "Giant Chargin' Chucks (0x53)",
+      "rooms_range": "0x089..0x0C9"
+    },
+    {
+      "id": 3,
+      "name": "Larry's Sun-Baked Chocolate Desert Pyramid",
+      "dung_pal": "DungPal[5] @ 0x0DDAB8",
+      "boss": "3 Giant Pokeys / Larry Koopa (0x54/0xBD)",
+      "rooms_range": "0x033..0x085"
+    },
+    {
+      "id": 4,
+      "name": "Vanilla Dome Star Tower (Tower of Hera)",
+      "dung_pal": "bg:09 + SMW Star floors",
+      "boss": "Giant Wiggler (0x09)",
+      "rooms_range": "0x007..0x077"
+    },
+    {
+      "id": 5,
+      "name": "Morton's Volcanic Basalt Fortress (Palace of Darkness)",
+      "dung_pal": "DungPal[8] @ 0x0DDCD4",
+      "boss": "Morton Koopa Jr. (0x92)",
+      "rooms_range": "0x009..0x05A"
+    },
+    {
+      "id": 6,
+      "name": "Wendy's Coral Sea Palace (Swamp Palace)",
+      "dung_pal": "DungPal[1] @ 0x0DD7E8",
+      "boss": "Wendy O. Koopa (0x8C)",
+      "rooms_range": "0x006..0x076"
+    },
+    {
+      "id": 7,
+      "name": "Iggy & Big Boo's Haunted Ghost House (Skull Woods)",
+      "dung_pal": "DungPal[9] @ 0x0DDD88",
+      "boss": "Winged Iggy Koopa (0x88)",
+      "rooms_range": "0x029..0x068"
+    },
+    {
+      "id": 8,
+      "name": "Roy's Midnight Koopa Castle (Thieves' Town)",
+      "dung_pal": "DungPal[10] @ 0x0DDE3C",
+      "boss": "Roy Koopa (0xCE)",
+      "rooms_range": "0x044..0x0DC"
+    },
+    {
+      "id": 9,
+      "name": "Lemmy's Star-Ice Circus Fortress (Ice Palace)",
+      "dung_pal": "DungPal[4] @ 0x0DDA04",
+      "boss": "Lemmy Koopa (0xA2)",
+      "rooms_range": "0x00E..0x0DE"
+    },
+    {
+      "id": 10,
+      "name": "Ludwig's Molten Mech Fortress (Turtle Rock)",
+      "dung_pal": "DungPal[12] @ 0x0DDFA4",
+      "boss": "Ludwig Mech Bowser (0xCB/CC/CD)",
+      "rooms_range": "0x004..0x0D6"
+    },
+    {
+      "id": 11,
+      "name": "King Bowser's Final Obsidian Lava Keep (Ganon's Tower)",
+      "dung_pal": "DungPal[13] @ 0x0DE058",
+      "boss": "Final King Bowser Multi-Phase (0xD6)",
+      "rooms_range": "0x000..0x096"
+    }
+  ],
+  "overworld_screens": [
+    {
+      "screen_id": "0x00",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Forest of Illusion & Mushroom Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x01",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Forest of Illusion & Mushroom Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x02",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Forest of Illusion & Mushroom Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 5,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x03",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Vanilla Dome & Chocolate Mountain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x04",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Vanilla Dome & Chocolate Mountain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x05",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Vanilla Dome & Chocolate Mountain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": true,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x06",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Vanilla Dome & Chocolate Mountain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x07",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Vanilla Dome & Chocolate Mountain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 10,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x08",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Forest of Illusion & Mushroom Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x09",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Forest of Illusion & Mushroom Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x0A",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Forest of Illusion & Mushroom Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x0B",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Vanilla Dome & Chocolate Mountain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 7,
+      "has_warp_pipe": true,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x0C",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Vanilla Dome & Chocolate Mountain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 6,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x0D",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Vanilla Dome & Chocolate Mountain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x0E",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Vanilla Dome & Chocolate Mountain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x0F",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Vanilla Dome & Chocolate Mountain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x10",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Forest of Illusion & Mushroom Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x11",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Forest of Illusion & Mushroom Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x12",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Forest of Illusion & Mushroom Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": true,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x13",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Princess Peach's Castle Domain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x14",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Princess Peach's Castle Domain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x15",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Princess Peach's Castle Domain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x16",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Chargin' Chuck Plains & Yoshi Ruins",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x17",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Chargin' Chuck Plains & Yoshi Ruins",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x18",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Toad Town & Star Plaza",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x19",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Toad Town & Star Plaza",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": true,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x1A",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Princess Peach's Castle Domain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x1B",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Princess Peach's Castle Domain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 5,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x1C",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Princess Peach's Castle Domain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 7,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x1D",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Princess Peach's Castle Domain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x1E",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Chargin' Chuck Plains & Yoshi Ruins",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x1F",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Chargin' Chuck Plains & Yoshi Ruins",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x20",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Toad Town & Star Plaza",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x21",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Toad Town & Star Plaza",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x22",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Toad Town & Star Plaza",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x23",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Princess Peach's Castle Domain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x24",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Princess Peach's Castle Domain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x25",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Princess Peach's Castle Domain",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 6,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x26",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Chargin' Chuck Plains & Yoshi Ruins",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x27",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Chargin' Chuck Plains & Yoshi Ruins",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x28",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Toad Town & Star Plaza",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x29",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Toad Town & Star Plaza",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x2A",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Toad Town & Star Plaza",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x2B",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "World 1 \u2014 Yoshi's Island Hub",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x2C",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "World 1 \u2014 Yoshi's Island Hub",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 10,
+      "has_warp_pipe": true,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x2D",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "World 1 \u2014 Yoshi's Island Hub",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x2E",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Chargin' Chuck Plains & Yoshi Ruins",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x2F",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Chargin' Chuck Plains & Yoshi Ruins",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": true,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x30",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Dry Dry Desert & Larry's Pyramid",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x31",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Dry Dry Desert & Larry's Pyramid",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 5,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x32",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Dry Dry Desert & Larry's Pyramid",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x33",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Dry Dry Desert & Larry's Pyramid",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x34",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "World 1 \u2014 Yoshi's Island Hub",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x35",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Lake Cheep-Cheep & Coral Shoals",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x36",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Lake Cheep-Cheep & Coral Shoals",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 5,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x37",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Lake Cheep-Cheep & Coral Shoals",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x38",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Dry Dry Desert & Larry's Pyramid",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 12,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x39",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Dry Dry Desert & Larry's Pyramid",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 12,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x3A",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Dry Dry Desert & Larry's Pyramid",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x3B",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Lake Cheep-Cheep & Coral Shoals",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x3C",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "World 1 \u2014 Yoshi's Island Hub",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 5,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x3D",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Lake Cheep-Cheep & Coral Shoals",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 5,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x3E",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Lake Cheep-Cheep & Coral Shoals",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 9,
+      "has_warp_pipe": true,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x3F",
+      "world": "Light World (Mushroom Kingdom)",
+      "biome": "Lake Cheep-Cheep & Coral Shoals",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x40",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Big Boo's Haunted Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x41",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Big Boo's Haunted Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x42",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Big Boo's Haunted Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 6,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x43",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Magma Peak & Lava Keep",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x44",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Magma Peak & Lava Keep",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x45",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Magma Peak & Lava Keep",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": true,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x46",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Magma Peak & Lava Keep",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x47",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Magma Peak & Lava Keep",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 5,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x48",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Big Boo's Haunted Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x49",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Big Boo's Haunted Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x4A",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Big Boo's Haunted Woods",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x4B",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Magma Peak & Lava Keep",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x4C",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Magma Peak & Lava Keep",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x4D",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Magma Peak & Lava Keep",
+      "relocated_bank": "$3B",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x4E",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Magma Peak & Lava Keep",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 5,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x4F",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Magma Peak & Lava Keep",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x50",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Big Boo's Haunted Woods",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x51",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Big Boo's Haunted Woods",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x52",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Big Boo's Haunted Woods",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 6,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x53",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Obsidian Citadel & Valley",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 7,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x54",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Obsidian Citadel & Valley",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x55",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Obsidian Citadel & Valley",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x56",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Morton's Dark Fortress East",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x57",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Morton's Dark Fortress East",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x58",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Koopa Shadow Village",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x59",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Koopa Shadow Village",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x5A",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Obsidian Citadel & Valley",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x5B",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Obsidian Citadel & Valley",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 6,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x5C",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Obsidian Citadel & Valley",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 5,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x5D",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Obsidian Citadel & Valley",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x5E",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Morton's Dark Fortress East",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x5F",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Morton's Dark Fortress East",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x60",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Koopa Shadow Village",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x61",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Koopa Shadow Village",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x62",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Koopa Shadow Village",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x63",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Obsidian Citadel & Valley",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x64",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Obsidian Citadel & Valley",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x65",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Obsidian Citadel & Valley",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 5,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x66",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Morton's Dark Fortress East",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x67",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Morton's Dark Fortress East",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x68",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Koopa Shadow Village",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x69",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Koopa Shadow Village",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x6A",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Koopa Shadow Village",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x6B",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Morton's Dark Fortress East",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x6C",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Morton's Dark Fortress East",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x6D",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Morton's Dark Fortress East",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x6E",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Morton's Dark Fortress East",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x6F",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Morton's Dark Fortress East",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": true,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x70",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x71",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 13,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x72",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x73",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x74",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x75",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 7,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x76",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x77",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x78",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x79",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x7A",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 8,
+      "has_warp_pipe": true,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x7B",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x7C",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x7D",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x7E",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 6,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x7F",
+      "world": "Dark World (Bowser's Conquered Kingdom)",
+      "biome": "Bowser's Poison Swamp & Lemmy Ice",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 4,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x80",
+      "world": "Special World",
+      "biome": "Star Road Celestial Grove (Master Star Pedestal)",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 3,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x81",
+      "world": "Special World",
+      "biome": "Cheep-Cheep Waterfall Grotto (Zora's Domain)",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 1,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x82",
+      "world": "Special World",
+      "biome": "Secret Bridge Underpass",
+      "relocated_bank": "$3C",
+      "map32_tiles_changed": 2,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "TRANSFORMED"
+    },
+    {
+      "screen_id": "0x83",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x83",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "VANILLA_SPECIAL_COMPAT"
+    },
+    {
+      "screen_id": "0x84",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x84",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x85",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x85",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x86",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x86",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x87",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x87",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x88",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x88",
+      "relocated_bank": "$0C",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "VANILLA_SPECIAL_COMPAT"
+    },
+    {
+      "screen_id": "0x89",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x89",
+      "relocated_bank": "$0C",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "VANILLA_SPECIAL_COMPAT"
+    },
+    {
+      "screen_id": "0x8A",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x8A",
+      "relocated_bank": "$0C",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "VANILLA_SPECIAL_COMPAT"
+    },
+    {
+      "screen_id": "0x8B",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x8B",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x8C",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x8C",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x8D",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x8D",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x8E",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x8E",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x8F",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x8F",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x90",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x90",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x91",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x91",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x92",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x92",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x93",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x93",
+      "relocated_bank": "$0C",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x94",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x94",
+      "relocated_bank": "$0C",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "VANILLA_SPECIAL_COMPAT"
+    },
+    {
+      "screen_id": "0x95",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x95",
+      "relocated_bank": "$0C",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "VANILLA_SPECIAL_COMPAT"
+    },
+    {
+      "screen_id": "0x96",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x96",
+      "relocated_bank": "$0C",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "VANILLA_SPECIAL_COMPAT"
+    },
+    {
+      "screen_id": "0x97",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x97",
+      "relocated_bank": "$0C",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "VANILLA_SPECIAL_COMPAT"
+    },
+    {
+      "screen_id": "0x98",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x98",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x99",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x99",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x9A",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x9A",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x9B",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x9B",
+      "relocated_bank": "$0B",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x9C",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x9C",
+      "relocated_bank": "$0C",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "VANILLA_SPECIAL_COMPAT"
+    },
+    {
+      "screen_id": "0x9D",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x9D",
+      "relocated_bank": "$0C",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": true,
+      "status": "SPECIAL_DUMMY_ALIAS"
+    },
+    {
+      "screen_id": "0x9E",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x9E",
+      "relocated_bank": "$0C",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "VANILLA_SPECIAL_COMPAT"
+    },
+    {
+      "screen_id": "0x9F",
+      "world": "Special World",
+      "biome": "Special Overworld Slot 0x9F",
+      "relocated_bank": "$0C",
+      "map32_tiles_changed": 0,
+      "has_warp_pipe": false,
+      "is_special_dummy_duplicate": false,
+      "status": "VANILLA_SPECIAL_COMPAT"
+    }
+  ]
+}
